@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.13;
 
-import './LimitPoolManagerStructs.sol';
-
-abstract contract LimitPoolFactoryStructs is LimitPoolManagerStructs {
+abstract contract LimitPoolFactoryStructs {
     struct LimitPoolParams {
         address owner;
         address token0;

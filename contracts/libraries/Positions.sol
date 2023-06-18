@@ -3,7 +3,6 @@ pragma solidity ^0.8.13;
 
 import '../interfaces/modules/curves/ICurveMath.sol';
 import './Ticks.sol';
-import './Deltas.sol';
 import '../interfaces/ILimitPoolStructs.sol';
 import './math/OverflowMath.sol';
 import '../interfaces/modules/curves/ICurveMath.sol';
@@ -33,12 +32,7 @@ library Positions {
         uint128 liquidityBurned,
         uint128 tokenInClaimed,
         uint128 tokenOutClaimed,
-        uint128 tokenOutBurned,
-        uint128 amountInDeltaMaxStashedBurned,
-        uint128 amountOutDeltaMaxStashedBurned,
-        uint128 amountInDeltaMaxBurned,
-        uint128 amountOutDeltaMaxBurned,
-        uint160 claimPriceLast
+        uint128 tokenOutBurned
     );
 
     function resize(
@@ -51,12 +45,14 @@ library Positions {
         uint256
     )
     {
-        ConstantProduct.checkTicks(params.lower, params.upper, constants.tickSpread);
+        ConstantProduct.checkTicks(params.lower, params.upper, constants.tickSpacing);
 
         ILimitPoolStructs.PositionCache memory cache = ILimitPoolStructs.PositionCache({
             position: position,
             priceLower: ConstantProduct.getPriceAtTick(params.lower, constants),
             priceUpper: ConstantProduct.getPriceAtTick(params.upper, constants),
+            requiredStart: params.zeroForOne ? params.lower
+                                             : params.upper,
             liquidityMinted: 0
         });
 
@@ -71,6 +67,9 @@ library Positions {
             params.zeroForOne ? 0 : uint256(params.amount),
             params.zeroForOne ? uint256(params.amount) : 0
         );
+
+        // trim position if undercutting way below market price
+        // execute market swap if liquidity available
 
         // handle partial mints
         if (params.zeroForOne) {
@@ -119,6 +118,8 @@ library Positions {
             position: position,
             priceLower: ConstantProduct.getPriceAtTick(params.lower, constants),
             priceUpper: ConstantProduct.getPriceAtTick(params.upper, constants),
+            requiredStart: params.zeroForOne ? params.lower
+                                             : params.upper,
             liquidityMinted: 0
         });
         /// call if claim != lower and liquidity being added
@@ -130,9 +131,9 @@ library Positions {
             // safety check in case we somehow get here
             if (
                 params.zeroForOne
-                    ? EpochMap.get(TickMap.next(params.lower, tickMap, constants), tickMap, constants)
+                    ? EpochMap.get(TickMap.next(tickMap, params.lower, constants.tickSpacing), tickMap, constants)
                             > cache.position.swapEpochLast
-                    : EpochMap.get(TickMap.previous(params.upper, tickMap, constants), tickMap, constants)
+                    : EpochMap.get(TickMap.previous(tickMap, params.upper, constants.tickSpacing), tickMap, constants)
                             > cache.position.swapEpochLast
             ) {
                 require (false, string.concat('UpdatePositionFirstAt(', String.from(params.lower), ', ', String.from(params.upper), ')'));
@@ -183,15 +184,11 @@ library Positions {
         // initialize cache
         ILimitPoolStructs.PositionCache memory cache = ILimitPoolStructs.PositionCache({
             position: positions[params.owner][params.lower][params.upper],
-            deltas: ILimitPoolStructs.Deltas(0,0,0,0),
-            requiredStart: params.zeroForOne ? state.latestTick - int24(constants.tickSpread) * constants.minPositionWidth
-                                             : state.latestTick + int24(constants.tickSpread) * constants.minPositionWidth,
-            auctionCount: uint24((params.upper - params.lower) / constants.tickSpread),
+            requiredStart: params.zeroForOne ? params.lower
+                                             : params.upper,
             priceLower: ConstantProduct.getPriceAtTick(params.lower, constants),
             priceUpper: ConstantProduct.getPriceAtTick(params.upper, constants),
-            priceAverage: 0,
-            liquidityMinted: 0,
-            denomTokenIn: true
+            liquidityMinted: 0
         });
         // convert percentage to liquidity amount
         params.amount = _convert(cache.position.liquidity, params.amount);
@@ -200,25 +197,14 @@ library Positions {
         if (params.amount > cache.position.liquidity) {
             require (false, 'NotEnoughPositionLiquidity()');
         } else {
-            _size(
-                ILimitPoolStructs.SizeParams(
-                    cache.priceLower,
-                    cache.priceUpper,
-                    cache.position.liquidity - params.amount,
-                    params.zeroForOne,
-                    state.latestTick,
-                    cache.auctionCount
-                ),
-                constants
-            );
             /// @dev - validate needed in case user passes in wrong tick
             if (
                 params.zeroForOne
                     ? state.latestTick < params.upper ||
-                        EpochMap.get(TickMap.previous(params.upper, tickMap, constants), tickMap, constants)
+                        EpochMap.get(TickMap.previous(tickMap, params.upper, constants.tickSpacing), tickMap, constants)
                             > cache.position.swapEpochLast
                     : state.latestTick > params.lower ||
-                        EpochMap.get(TickMap.next(params.lower, tickMap, constants), tickMap, constants)
+                        EpochMap.get(TickMap.next(tickMap, params.lower, constants.tickSpacing), tickMap, constants)
                             > cache.position.swapEpochLast
             ) {
                 require (false, 'WrongTickClaimedAt()');
@@ -243,7 +229,6 @@ library Positions {
         {
             // update max deltas
             ILimitPoolStructs.Tick memory finalTick = ticks[params.zeroForOne ? params.lower : params.upper];
-            (finalTick, cache.deltas) = Deltas.update(finalTick, params.amount, cache.priceLower, cache.priceUpper, params.zeroForOne, false);
             ticks[params.zeroForOne ? params.lower : params.upper] = finalTick;
         }
 
@@ -265,11 +250,7 @@ library Positions {
                     params.zeroForOne,
                     params.amount,
                     0, 0,
-                    cache.position.amountOut,
-                    0, 0,
-                    cache.deltas.amountInDeltaMax,
-                    cache.deltas.amountOutDeltaMax,
-                    cache.position.claimPriceLast
+                    cache.position.amountOut
             );
         }
         return (params.amount, state);
@@ -306,10 +287,6 @@ library Positions {
 
         if (cache.earlyReturn)
             return (state, pool, params.claim);
-
-        pool.amountInDelta = cache.pool.amountInDelta;
-        pool.amountInDeltaMaxClaimed  = cache.pool.amountInDeltaMaxClaimed;
-        pool.amountOutDeltaMaxClaimed = cache.pool.amountOutDeltaMaxClaimed;
 
         // save claim tick
         ticks[params.claim] = cache.claimTick;
@@ -382,12 +359,7 @@ library Positions {
             params.amount,
             cache.position.amountIn,
             cache.finalDeltas.amountOutDelta,
-            cache.position.amountOut - cache.finalDeltas.amountOutDelta,
-            uint128(cache.amountInFilledMax),
-            uint128(cache.amountOutUnfilledMax),
-            cache.finalDeltas.amountInDeltaMax,
-            cache.finalDeltas.amountOutDeltaMax,
-            cache.position.claimPriceLast
+            cache.position.amountOut - cache.finalDeltas.amountOutDelta
         );
         // return cached position in memory and transfer out
         return (state, pool, params.claim);
@@ -477,8 +449,8 @@ library Positions {
             priceLower: ConstantProduct.getPriceAtTick(params.lower, constants),
             priceClaim: ConstantProduct.getPriceAtTick(params.claim, constants),
             priceUpper: ConstantProduct.getPriceAtTick(params.upper, constants),
-            priceSpread: ConstantProduct.getPriceAtTick(params.zeroForOne ? params.claim - constants.tickSpread 
-                                                                          : params.claim + constants.tickSpread,
+            priceSpread: ConstantProduct.getPriceAtTick(params.zeroForOne ? params.claim - constants.tickSpacing 
+                                                                          : params.claim + constants.tickSpacing,
                                                         constants),
             amountInFilledMax: 0,
             amountOutUnfilledMax: 0,
@@ -506,110 +478,10 @@ library Positions {
         if (cache.earlyReturn) {
             return (cache, state);
         }
-        if (params.amount > 0)
-            _size(
-                ILimitPoolStructs.SizeParams(
-                    cache.priceLower,
-                    cache.priceUpper,
-                    cache.position.liquidity - params.amount,
-                    params.zeroForOne,
-                    state.latestTick,
-                    uint24((params.upper - params.lower) / constants.tickSpread)
-                ),
-                constants
-            );
         // get deltas from claim tick
         cache = Claims.getDeltas(cache, params);
-        /// @dev - section 1 => position start - previous auction
-        cache = Claims.section1(cache, params, constants);
-        /// @dev - section 2 => position start -> claim tick
-        cache = Claims.section2(cache, params);
-        // check if auction in progress 
-        if (params.claim == state.latestTick 
-            && params.claim != (params.zeroForOne ? params.lower : params.upper)) {
-            /// @dev - section 3 => claim tick - unfilled section
-            cache = Claims.section3(cache, params, cache.pool);
-            /// @dev - section 4 => claim tick - filled section
-            cache = Claims.section4(cache, params, cache.pool);
-        }
-        /// @dev - section 5 => claim tick -> position end
-        cache = Claims.section5(cache, params);
-        // adjust position amounts based on deltas
-        cache = Claims.applyDeltas(state, cache, params);
 
         return (cache, state);
-    }
-
-    function _size(
-        ILimitPoolStructs.SizeParams memory params,
-        ILimitPoolStructs.Immutables memory constants
-    ) internal pure  
-    {
-        // early return if 100% of position burned
-        if (params.liquidityAmount == 0 || params.auctionCount == 0) return;
-        // set minAmountPerAuction based on token decimals
-        uint256 minAmountPerAuction; bool denomTokenIn;
-        if (params.latestTick > 0) {
-            if (constants.minAmountLowerPriced) {
-                // token1 is the lower priced token
-                denomTokenIn = !params.zeroForOne;
-                minAmountPerAuction = constants.minAmountPerAuction / 10**(18 - constants.token1Decimals);
-            } else {
-                // token0 is the higher priced token
-                denomTokenIn = params.zeroForOne;
-                minAmountPerAuction = constants.minAmountPerAuction / 10**(18 - constants.token0Decimals);
-            }
-        } else {
-            if (constants.minAmountLowerPriced) {
-                // token0 is the lower priced token
-                denomTokenIn = params.zeroForOne;
-                minAmountPerAuction = constants.minAmountPerAuction / 10**(18 - constants.token0Decimals);
-            } else {
-                // token1 is the higher priced token
-                denomTokenIn = !params.zeroForOne;
-                minAmountPerAuction = constants.minAmountPerAuction / 10**(18 - constants.token1Decimals);
-            }
-        }
-        if (params.zeroForOne) {
-            //calculate amount in the position currently
-            uint128 amount = uint128(ConstantProduct.getDx(
-                params.liquidityAmount,
-                params.priceLower,
-                params.priceUpper,
-                false
-            ));
-            if (denomTokenIn) {
-                if (amount / params.auctionCount < minAmountPerAuction)
-                    require (false, 'PositionAuctionAmountTooSmall()');
-            } else {
-                // denominate in incoming token
-                uint256 priceAverage = (params.priceUpper + params.priceLower) / 2;
-                uint256 convertedAmount = amount * priceAverage / Q96 
-                                                 * priceAverage / Q96; // convert by squaring price
-                if (convertedAmount / params.auctionCount < minAmountPerAuction) 
-                    require (false, 'PositionAuctionAmountTooSmall()');
-            }
-        } else {
-            uint128 amount = uint128(ConstantProduct.getDy(
-                params.liquidityAmount,
-                params.priceLower,
-                params.priceUpper,
-                false
-            ));
-            if (denomTokenIn) {
-                // denominate in token1
-                // calculate amount in position currently
-                if (amount / params.auctionCount < minAmountPerAuction) 
-                    require (false, 'PositionAuctionAmountTooSmall()');
-            } else {
-                // denominate in token0
-                uint256 priceAverage = (params.priceUpper + params.priceLower) / 2;
-                uint256 convertedAmount = amount * Q96 / priceAverage 
-                                                 * Q96 / priceAverage; // convert by squaring price
-                if (convertedAmount / params.auctionCount < minAmountPerAuction) 
-                    require (false, 'PositionAuctionAmountTooSmall()');
-            }
-        }
     }
 
     function _checkpoint(
@@ -633,8 +505,8 @@ library Positions {
         if (pool.price == cache.priceClaim && params.claim == state.latestTick){
             cache.position.claimPriceLast = cache.priceSpread;
             // set claim tick to claim + tickSpread
-            params.claim = params.zeroForOne ? params.claim - constants.tickSpread
-                                             : params.claim + constants.tickSpread;
+            params.claim = params.zeroForOne ? params.claim - constants.tickSpacing
+                                             : params.claim + constants.tickSpacing;
         }
         return (cache, params);
     }

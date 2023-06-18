@@ -103,7 +103,6 @@ library BurnCall {
             cache,
             positions,
             ILimitPoolStructs.CollectParams(
-                cache.syncFees,
                 params.to, //address(0) goes to msg.sender
                 params.lower,
                 params.claim,

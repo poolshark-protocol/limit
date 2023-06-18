@@ -57,7 +57,6 @@ library MintCall {
         Collect.mint(
             cache,
             ILimitPoolStructs.CollectParams(
-                cache.syncFees,
                 params.to, //address(0) goes to msg.sender
                 params.lower,
                 0, // not needed for mint collect

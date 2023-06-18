@@ -158,7 +158,7 @@ library ConstantProduct {
         uint160 price
     ) {
         ILimitPoolStructs.Immutables memory constants;
-        constants.tickSpread = tickSpacing;
+        constants.tickSpacing = tickSpacing;
         return getPriceAtTick(minTick(tickSpacing), constants);
     }
 
@@ -168,7 +168,7 @@ library ConstantProduct {
         uint160 price
     ) {
         ILimitPoolStructs.Immutables memory constants;
-        constants.tickSpread = tickSpacing;
+        constants.tickSpacing = tickSpacing;
         return getPriceAtTick(maxTick(tickSpacing), constants);
     }
 
@@ -204,7 +204,7 @@ library ConstantProduct {
         uint160 price
     ) {
         uint256 absTick = tick < 0 ? uint256(-int256(tick)) : uint256(int256(tick));
-        if (absTick > uint256(uint24(maxTick(constants.tickSpread)))) require (false, 'TickOutOfBounds()');
+        if (absTick > uint256(uint24(maxTick(constants.tickSpacing)))) require (false, 'TickOutOfBounds()');
         unchecked {
             uint256 ratio = absTick & 0x1 != 0
                 ? 0xfffcb933bd6fad37aa2d162d1a594001

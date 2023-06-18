@@ -37,7 +37,7 @@ contract LimitPoolFactory is
         }
         // check if tick spacing supported
         params.owner = owner;
-        if (!ILimitPoolManager(owner).tickSpacing(tickSpacing)) revert TickSpacingNotSupported();
+        if (!ILimitPoolManager(owner).tickSpacings(tickSpacing)) revert TickSpacingNotSupported();
         params.tickSpacing = tickSpacing;
 
         // launch pool and save address

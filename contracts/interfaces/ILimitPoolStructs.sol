@@ -25,9 +25,8 @@ interface ILimitPoolStructs {
     struct PoolState {
         uint160 price; /// @dev Starting price current
         uint128 liquidity; /// @dev Liquidity currently active
-        uint128 amountInDelta; /// @dev Delta for the current tick auction
-        uint128 amountInDeltaMaxClaimed;  /// @dev - needed when users claim and don't burn; should be cleared when users burn liquidity
-        uint128 amountOutDeltaMaxClaimed; /// @dev - needed when users claim and don't burn; should be cleared when users burn liquidity
+        int24 tickAtPrice;
+        uint16 protocolFee;
     }
 
     struct TickMap {
@@ -40,10 +39,7 @@ interface ILimitPoolStructs {
     struct Tick {
         Deltas deltas;
         int128  liquidityDelta;
-        uint128 amountInDeltaMaxMinus;
-        uint128 amountOutDeltaMaxMinus;
-        uint128 amountInDeltaMaxStashed;
-        uint128 amountOutDeltaMaxStashed;
+        uint128 epochLast;
     }
 
     struct Deltas {
@@ -75,6 +71,7 @@ interface ILimitPoolStructs {
 
     struct MintParams {
         address to;
+        address refundTo;
         uint128 amount;
         int24 lower;
         int24 upper;
@@ -162,9 +159,10 @@ interface ILimitPoolStructs {
         GlobalState state;
         Position position;
         Immutables constants;
-        PoolState pool0;
-        PoolState pool1;
+        PoolState pool;
         uint256 liquidityMinted;
+        int256 amountIn;
+        uint256 amountOut;
     }
 
     struct BurnCache {
@@ -178,13 +176,15 @@ interface ILimitPoolStructs {
     struct SwapCache {
         GlobalState state;
         Immutables constants;
-        PoolState pool0;
-        PoolState pool1;
+        PoolState pool;
         uint256 price;
         uint256 liquidity;
         uint256 amountIn;
         uint256 input;
         uint256 output;
+        uint160 crossPrice;
+        int24 crossTick;
+        bool cross;
     }
 
     struct PositionCache {
@@ -192,6 +192,7 @@ interface ILimitPoolStructs {
         uint160 priceLower;
         uint160 priceUpper;
         uint256 liquidityMinted;
+        int24 requiredStart;
     }
 
     struct UpdatePositionCache {

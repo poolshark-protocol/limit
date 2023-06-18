@@ -6,7 +6,6 @@ import './interfaces/ILimitPoolManager.sol';
 import './base/storage/LimitPoolStorage.sol';
 import './base/structs/LimitPoolFactoryStructs.sol';
 import './utils/LimitPoolErrors.sol';
-import './libraries/Epochs.sol';
 import './libraries/pool/SwapCall.sol';
 import './libraries/pool/QuoteCall.sol';
 import './libraries/pool/MintCall.sol';
@@ -45,22 +44,15 @@ contract LimitPool is
         owner      = params.owner;
         token0     = params.token0;
         token1     = params.token1;
-        
-        // set token decimals
-        token0Decimals = ERC20(token0).decimals();
-        token1Decimals = ERC20(token1).decimals();
-        if (token0Decimals > 18 || token1Decimals > 18
-          || token0Decimals < 6 || token1Decimals < 6) {
-            revert InvalidTokenDecimals();
-        }
 
         // set other immutables
         tickSpacing    = params.tickSpacing;
 
         // set price boundaries
-        (minPrice, maxPrice) = ConstantProduct.priceBounds(tickSpread);
+        (minPrice, maxPrice) = ConstantProduct.priceBounds(params.tickSpacing);
     }
 
+    // limitSwap
     function mint(
         MintParams memory params
     ) external override lock {
@@ -70,9 +62,19 @@ contract LimitPool is
                                         : positions1[params.to][params.lower][params.upper],
             constants: _immutables(),
             liquidityMinted: 0,
-            pool0: pool0,
-            pool1: pool1
+            pool: params.zeroForOne ? pool0 : pool1,
+            amountIn: 0,
+            amountOut: 0
         });
+        // check if pool price in range
+        (cache.amountIn, cache.amountOut,) = swap(SwapParams({
+            to: params.to,
+            refundTo: params.refundTo,
+            priceLimit: params.zeroForOne ? ConstantProduct.getPriceAtTick(params.lower, cache.constants)
+                                          : ConstantProduct.getPriceAtTick(params.upper, cache.constants),
+            amountIn: params.amount,
+            zeroForOne: params.zeroForOne
+        }));
         cache = MintCall.perform(
             params,
             cache,
@@ -80,8 +82,11 @@ contract LimitPool is
             params.zeroForOne ? ticks0 : ticks1,
             params.zeroForOne ? positions0 : positions1
         );
-        pool0 = cache.pool0;
-        pool1 = cache.pool1;
+        if (params.zeroForOne) {
+            pool0 = cache.pool;
+        } else {
+            pool1 = cache.pool;
+        }
         globalState = cache.state;
     }
 
@@ -97,21 +102,6 @@ contract LimitPool is
             pool0: pool0,
             pool1: pool1
         });
-        if (params.sync)
-            (
-                cache.state,
-                cache.syncFees,
-                cache.pool0,
-                cache.pool1
-            ) = Epochs.syncLatest(
-                ticks0,
-                ticks1,
-                tickMap,
-                cache.pool0,
-                cache.pool1,
-                cache.state,
-                cache.constants
-        );
         cache = BurnCall.perform(
             params, 
             cache, 
@@ -126,47 +116,37 @@ contract LimitPool is
 
     function swap(
         SwapParams memory params
-    ) external override lock returns (
+    ) public override lock returns (
         int256 inAmount,
         uint256 outAmount,
         uint256 priceAfter
     ) 
     {
         SwapCache memory cache;
-        cache.pool0 = pool0;
-        cache.pool1 = pool1;
+        cache.pool = params.zeroForOne ? pool1 : pool0;
         cache.state = globalState;
         cache.constants = _immutables();
-        (
-            cache.state,
-            cache.syncFees,
-            cache.pool0,
-            cache.pool1
-        ) = Epochs.syncLatest(
-            ticks0,
-            ticks1,
-            tickMap,
-            cache.pool0,
-            cache.pool1,
-            cache.state,
-            _immutables()
-        );
 
-        cache = SwapCall.perform(params, cache);
-        pool0 = cache.pool0;
-        pool1 = cache.pool1;
+        cache.pool = SwapCall.perform(
+            params,
+            cache,
+            tickMap,
+            params.zeroForOne ? ticks1 : ticks0
+        );
         globalState = cache.state;
 
         if (params.zeroForOne) {
+            pool1 = cache.pool;
             return (
-                int128(params.amountIn) - int256(cache.input) - int128(cache.syncFees.token0),
-                cache.output + cache.syncFees.token1,
+                int128(params.amountIn) - int256(cache.input),
+                cache.output,
                 cache.price 
             );
         } else {
+            pool0 = cache.pool;
             return (
-                int128(params.amountIn) - int256(cache.input) - int128(cache.syncFees.token1),
-                cache.output + cache.syncFees.token0,
+                int128(params.amountIn) - int256(cache.input),
+                cache.output,
                 cache.price 
             );
         }
@@ -180,35 +160,25 @@ contract LimitPool is
         uint256 priceAfter
     ) {
         SwapCache memory cache;
-        cache.pool0 = pool0;
-        cache.pool1 = pool1;
+        cache.pool = params.zeroForOne ? pool1 : pool0;
         cache.state = globalState;
         cache.constants = _immutables();
-        (
-            cache.state,
-            cache.syncFees,
-            cache.pool0,
-            cache.pool1
-        ) = Epochs.simulateSync(
-            ticks0,
-            ticks1,
+        (cache.pool, cache) = QuoteCall.perform(
+            params,
+            cache,
             tickMap,
-            cache.pool0,
-            cache.pool1,
-            cache.state,
-            cache.constants
+            params.zeroForOne ? ticks1 : ticks0
         );
-        cache = QuoteCall.perform(params, cache);
         if (params.zeroForOne) {
             return (
-                int128(params.amountIn) - int256(cache.input) - int128(cache.syncFees.token0),
-                cache.output + cache.syncFees.token1,
+                int128(params.amountIn) - int256(cache.input),
+                cache.output,
                 cache.price 
             );
         } else {
             return (
-                int128(params.amountIn) - int256(cache.input) - int128(cache.syncFees.token1),
-                cache.output + cache.syncFees.token0,
+                int128(params.amountIn) - int256(cache.input),
+                cache.output,
                 cache.price 
             );
         }

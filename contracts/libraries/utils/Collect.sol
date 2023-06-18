@@ -2,7 +2,6 @@
 pragma solidity ^0.8.13;
 
 import '../../interfaces/ILimitPoolStructs.sol';
-import '../Epochs.sol';
 import '../Positions.sol';
 import '../utils/SafeTransfers.sol';
 
@@ -11,19 +10,9 @@ library Collect {
         ILimitPoolStructs.MintCache memory cache,
         ILimitPoolStructs.CollectParams memory params
     ) internal {
-        if (params.syncFees.token0 == 0 && params.syncFees.token1 == 0) return;
         // store amounts for transferOut
         uint128 amountIn;
         uint128 amountOut;
-
-        // factor in sync fees
-        if (params.zeroForOne) {
-            amountIn  += params.syncFees.token1;
-            amountOut += params.syncFees.token0;
-        } else {
-            amountIn  += params.syncFees.token0;
-            amountOut += params.syncFees.token1;
-        }
 
         /// zero out balances and transfer out
         if (amountIn > 0) {
@@ -46,15 +35,6 @@ library Collect {
         // store amounts for transferOut
         uint128 amountIn  = positions[msg.sender][params.lower][params.upper].amountIn;
         uint128 amountOut = positions[msg.sender][params.lower][params.upper].amountOut;
-
-        // factor in sync fees
-        if (params.zeroForOne) {
-            amountIn  += params.syncFees.token1;
-            amountOut += params.syncFees.token0;
-        } else {
-            amountIn  += params.syncFees.token0;
-            amountOut += params.syncFees.token1;
-        }
 
         /// zero out balances and transfer out
         if (amountIn > 0) {

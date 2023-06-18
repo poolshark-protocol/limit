@@ -45,12 +45,7 @@ abstract contract LimitPoolFactoryErrors {
     error OwnerOnly();
     error PoolAlreadyExists();
     error FeeTierNotSupported();
-    error VolatilityTierNotSupported();
-    error InvalidTickSpread();
-    error TwapSourceNotFound();
-    error CurveMathNotFound();
-    error TickSpreadNotMultipleOfTickSpacing();
-    error TickSpreadNotAtLeastDoubleTickSpread();
+    error TickSpacingNotSupported();
 }
 
 abstract contract CoverTransferErrors {

@@ -1,16 +1,11 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { getNonce } from '../../../tasks/utils'
 import {
-    UniswapV3FactoryMock,
-    UniswapV3PoolMock,
     LimitPool,
     LimitPoolFactory,
     Positions,
     Ticks,
     Token20,
-    UniswapV3Source,
-    Epochs,
-    Deltas,
     Claims,
     LimitPoolManager,
     TickMap,
@@ -23,18 +18,13 @@ import { SwapCall } from '../../../typechain'
 import { QuoteCall } from '../../../typechain'
 
 export interface BeforeEachProps {
-    coverPool: LimitPool
-    coverPool2: LimitPool
-    coverPoolManager: LimitPoolManager
-    coverPoolFactory: LimitPoolFactory
-    uniswapV3FactoryMock: UniswapV3FactoryMock
-    uniswapV3PoolMock: UniswapV3PoolMock
+    limitPool: LimitPool
+    limitPool2: LimitPool
+    limitPoolManager: LimitPoolManager
+    limitPoolFactory: LimitPoolFactory
     tickMapLib: TickMap
-    deltasLib: Deltas
-    epochsLib: Epochs
     epochMapLib: EpochMap
     ticksLib: Ticks
-    uniswapV3Source: UniswapV3Source
     claimsLib: Claims
     positionsLib: Positions
     mintCall: MintCall
@@ -74,18 +64,13 @@ export class GetBeforeEach {
     }
 
     public retrieveProps(): BeforeEachProps {
-        let coverPool: LimitPool
-        let coverPool2: LimitPool
-        let coverPoolManager: LimitPoolManager
-        let coverPoolFactory: LimitPoolFactory
-        let uniswapV3FactoryMock: UniswapV3FactoryMock
-        let uniswapV3PoolMock: UniswapV3PoolMock
+        let limitPool: LimitPool
+        let limitPool2: LimitPool
+        let limitPoolManager: LimitPoolManager
+        let limitPoolFactory: LimitPoolFactory
         let tickMapLib: TickMap
-        let deltasLib: Deltas
-        let epochsLib: Epochs
         let epochMapLib: EpochMap
         let ticksLib: Ticks
-        let uniswapV3Source: UniswapV3Source
         let claimsLib: Claims
         let positionsLib: Positions
         let mintCall: MintCall
@@ -103,18 +88,13 @@ export class GetBeforeEach {
         let carol: SignerWithAddress
 
         return {
-            coverPool,
-            coverPool2,
-            coverPoolManager,
-            coverPoolFactory,
-            uniswapV3FactoryMock,
-            uniswapV3PoolMock,
+            limitPool,
+            limitPool2,
+            limitPoolManager,
+            limitPoolFactory,
             tickMapLib,
-            deltasLib,
-            epochsLib,
             epochMapLib,
             ticksLib,
-            uniswapV3Source,
             claimsLib,
             positionsLib,
             mintCall,

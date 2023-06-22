@@ -33,54 +33,30 @@ library BurnCall {
     ) external returns (ILimitPoolStructs.BurnCache memory) {
        if (cache.position.claimPriceLast > 0
             || params.claim != (params.zeroForOne ? params.upper : params.lower) 
-            || params.claim == cache.state.latestTick)
+            || params.claim == cache.pool.tickAtPrice)
         {
             // if position has been crossed into
-            if (params.zeroForOne) {
-                (
-                    cache.state,
-                    cache.pool0,
-                    params.claim
-                ) = Positions.update(
-                    positions,
-                    ticks,
-                    tickMap,
-                    cache.state,
-                    cache.pool0,
-                    ILimitPoolStructs.UpdateParams(
-                        msg.sender,
-                        params.to,
-                        params.burnPercent,
-                        params.lower,
-                        params.upper,
-                        params.claim,
-                        params.zeroForOne
-                    ),
-                    cache.constants
-                );
-            } else {
-                (
-                    cache.state,
-                    cache.pool1,
-                    params.claim
-                ) = Positions.update(
-                    positions,
-                    ticks,
-                    tickMap,
-                    cache.state,
-                    cache.pool1,
-                    ILimitPoolStructs.UpdateParams(
-                        msg.sender,
-                        params.to,
-                        params.burnPercent,
-                        params.lower,
-                        params.upper,
-                        params.claim,
-                        params.zeroForOne
-                    ),
-                    cache.constants
-                );
-            }
+            (
+                cache.state,
+                cache.pool,
+                params.claim
+            ) = Positions.update(
+                positions,
+                ticks,
+                tickMap,
+                cache.state,
+                cache.pool,
+                ILimitPoolStructs.UpdateParams(
+                    msg.sender,
+                    params.to,
+                    params.burnPercent,
+                    params.lower,
+                    params.upper,
+                    params.claim,
+                    params.zeroForOne
+                ),
+                cache.constants
+            );
         } else {
             // if position hasn't been crossed into
             (, cache.state) = Positions.remove(

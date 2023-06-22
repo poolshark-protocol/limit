@@ -16,7 +16,7 @@ import {
     getPrice,
     getTick,
     getPositionLiquidity,
-} from '../utils/contracts/coverpool'
+} from '../utils/contracts/limitpool'
 
 alice: SignerWithAddress
 describe('LimitPool Tests', function () {
@@ -47,10 +47,9 @@ describe('LimitPool Tests', function () {
         let currentBlock = await ethers.provider.getBlockNumber()
         let currentTime = (await ethers.provider.getBlock(currentBlock)).timestamp
         let lastTime = (await ethers.provider.getBlock(currentBlock - 1)).timestamp
-        const pool0: PoolState = await hre.props.coverPool.pool0()
+        const pool0: PoolState = await hre.props.limitPool.pool0()
         const liquidity = pool0.liquidity
-        const globalState = await hre.props.coverPool.globalState()
-        const genesisTime = await hre.props.coverPool.genesisTime()
+        const globalState = await hre.props.limitPool.globalState()
         const amountInDelta = pool0.amountInDelta
         const price = pool0.price
         const latestTick = globalState.latestTick
@@ -75,12 +74,9 @@ describe('LimitPool Tests', function () {
         await mintSigners20(hre.props.token0, tokenAmount.mul(10), [hre.props.alice, hre.props.bob])
 
         await mintSigners20(hre.props.token1, tokenAmount.mul(10), [hre.props.alice, hre.props.bob])
-
-        await hre.props.uniswapV3PoolMock.setObservationCardinality('5', '5')
     })
 
     it('pool0 - Should wait until enough observations', async function () {
-        await hre.props.uniswapV3PoolMock.setObservationCardinality('4', '5')
         // mint should revert
         await validateMint({
             signer: hre.props.alice,
@@ -127,7 +123,6 @@ describe('LimitPool Tests', function () {
     })
 
     it('pool1 - Should wait until enough observations', async function () {
-        await hre.props.uniswapV3PoolMock.setObservationCardinality('4', '5')
         // mint should revert
         await validateMint({
             signer: hre.props.alice,
@@ -203,12 +198,6 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
 
-        if (deltaMaxBeforeCheck) {
-            console.log('final tick')
-            console.log('deltainmax  before:', (await hre.props.coverPool.ticks0('-40')).amountInDeltaMaxMinus.toString())
-            console.log('deltaoutmax before:', (await hre.props.coverPool.ticks0('-40')).amountOutDeltaMaxMinus.toString())
-        }
-
         // process two burns
         for (let i = 0; i < 2; i++) {
             await validateBurn({
@@ -226,13 +215,8 @@ describe('LimitPool Tests', function () {
             })
         }
         if (balanceCheck) {
-            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.coverPool.address)).toString())
-            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.coverPool.address)).toString())
-        }
-        if (deltaMaxAfterCheck) {
-            console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-40')).amountInDeltaMaxMinus.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-40')).amountOutDeltaMaxMinus.toString())
+            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
+            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
         }
     })
 
@@ -310,13 +294,8 @@ describe('LimitPool Tests', function () {
             revertMessage: 'NotEnoughPositionLiquidity()',
         })
         if (balanceCheck) {
-            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.coverPool.address)).toString())
-            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.coverPool.address)).toString())
-        }
-        if (deltaMaxAfterCheck) {
-            console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-40')).amountInDeltaMaxMinus.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-40')).amountOutDeltaMaxMinus.toString())
+            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
+            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
         }
     })
 
@@ -396,13 +375,8 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
         if (balanceCheck) {
-            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.coverPool.address)).toString())
-            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.coverPool.address)).toString())
-        }
-        if (deltaMaxAfterCheck) {
-            console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-40')).amountInDeltaMaxMinus.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-40')).amountOutDeltaMaxMinus.toString())
+            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
+            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
         }
     })
 
@@ -467,13 +441,8 @@ describe('LimitPool Tests', function () {
         })
 
         if (balanceCheck) {
-            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.coverPool.address)).toString())
-            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.coverPool.address)).toString())
-        }
-        if (deltaMaxAfterCheck) {
-            console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-40')).amountInDeltaMaxMinus.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-40')).amountOutDeltaMaxMinus.toString())
+            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
+            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
         }
     })
 
@@ -524,13 +493,8 @@ describe('LimitPool Tests', function () {
         })
 
         if (balanceCheck) {
-            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.coverPool.address)).toString())
-            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.coverPool.address)).toString())
-        }
-        if (deltaMaxAfterCheck) {
-            console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-60')).amountInDeltaMaxMinus.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-60')).amountOutDeltaMaxMinus.toString())
+            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
+            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
         }
 
         await validateSync(0)
@@ -609,16 +573,8 @@ describe('LimitPool Tests', function () {
         })
 
         if (balanceCheck) {
-            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.coverPool.address)).toString())
-            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.coverPool.address)).toString())
-        }
-        if (deltaMaxAfterCheck) {
-            console.log('claim tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-20')).amountInDeltaMaxMinus.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-20')).amountOutDeltaMaxMinus.toString())
-            console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-40')).amountInDeltaMaxMinus.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-40')).amountOutDeltaMaxMinus.toString())
+            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
+            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
         }
     })
 
@@ -704,13 +660,13 @@ describe('LimitPool Tests', function () {
         await validateSync(-20)
 
         if (balanceCheck) {
-            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.coverPool.address)).toString())
-            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.coverPool.address)).toString())
+            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
+            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
         }
         if (deltaMaxAfterCheck) {
             console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-60')).amountInDeltaMaxMinus.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-60')).amountOutDeltaMaxMinus.toString())
+            console.log('deltainmax  after:', (await hre.props.limitPool.ticks0('-60')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.limitPool.ticks0('-60')).amountOutDeltaMaxMinus.toString())
         }
     })
 
@@ -734,7 +690,7 @@ describe('LimitPool Tests', function () {
 
         await validateSync(0)
         await validateSync(-20)
-        expect((await hre.props.coverPool.pool0()).liquidity).to.eq("24951283310825598484485");
+        expect((await hre.props.limitPool.pool0()).liquidity).to.eq("24951283310825598484485");
 
         await validateSwap({
             signer: hre.props.alice,
@@ -761,19 +717,19 @@ describe('LimitPool Tests', function () {
             expectedUpper: '-40',
             revertMessage: '',
         });
-        expect((await hre.props.coverPool.pool0()).liquidity).to.eq("12475641655412799242244");
+        expect((await hre.props.limitPool.pool0()).liquidity).to.eq("12475641655412799242244");
         if (debugMode) await getTick(true, -20, debugMode)
         await validateSync(-40);
         if (debugMode) await getTick(true, -40, debugMode)
-        expect((await hre.props.coverPool.pool0()).liquidity).to.eq("12475641655412799242244");
+        expect((await hre.props.limitPool.pool0()).liquidity).to.eq("12475641655412799242244");
 
         await validateSync(-60);
-        expect((await hre.props.coverPool.pool0()).liquidity).to.eq("12475641655412799242244");
+        expect((await hre.props.limitPool.pool0()).liquidity).to.eq("12475641655412799242244");
         if (debugMode) await getTick(true, -60, debugMode)
         if (debugMode) await getTick(true, -80, debugMode)
         await validateSync(-80);
         if (debugMode) await getTick(true, -80, debugMode)
-        expect((await hre.props.coverPool.pool0()).liquidity).to.eq("0");
+        expect((await hre.props.limitPool.pool0()).liquidity).to.eq("0");
         // // Notice that the following burn reverts -- if the subtraction from the end tick in section2
         // // is removed the double counting no longer occurs -- and the burn can succeed.
 
@@ -839,7 +795,7 @@ describe('LimitPool Tests', function () {
         await validateSync(0)
 
         await validateSync(-20)
-        expect((await hre.props.coverPool.pool0()).liquidity).to.eq("49902566621651196968970");
+        expect((await hre.props.limitPool.pool0()).liquidity).to.eq("49902566621651196968970");
 
         await validateSwap({
             signer: hre.props.alice,
@@ -1051,21 +1007,21 @@ describe('LimitPool Tests', function () {
         // Price goes into Alice's position
         await validateSync(0);
 
-        let upperTick = await hre.props.coverPool.ticks0(0);
+        let upperTick = await hre.props.limitPool.ticks0(0);
         expect(upperTick.liquidityDelta).to.eq("33285024970969944913475");
 
         // After going down to -20, tick 0 will be the cross tick and the liquidityDelta will be cleared
         await validateSync(-20);
-        upperTick = await hre.props.coverPool.ticks0(0);
+        upperTick = await hre.props.limitPool.ticks0(0);
         expect(upperTick.liquidityDelta).to.eq("0");
 
         // Pool has active liquidity once tick0 is crossed.
-        expect((await hre.props.coverPool.pool0()).liquidity).to.eq("33285024970969944913475");
+        expect((await hre.props.limitPool.pool0()).liquidity).to.eq("33285024970969944913475");
 
         // Go back up to tick 0. Since there is no liquidity delta on tick0 anymore, the system
         // will not kick in any liquidity into the pool for swapping.
         await validateSync(0);
-        expect((await hre.props.coverPool.pool0()).liquidity).to.eq("0");
+        expect((await hre.props.limitPool.pool0()).liquidity).to.eq("0");
 
         // Nothing gained from swap as no liquidity is active in the pool
         await validateSwap({
@@ -1131,14 +1087,14 @@ describe('LimitPool Tests', function () {
         })
         if(debugMode) console.log("--------------- Sync 0 -------------");
         await validateSync(0)
-        expect((await hre.props.coverPool.pool0()).liquidity).to.eq("16617549983581976690927");
+        expect((await hre.props.limitPool.pool0()).liquidity).to.eq("16617549983581976690927");
         if(debugMode) console.log("--------------- Sync 20 -------------");
         await validateSync(-20)
-        expect((await hre.props.coverPool.pool0()).liquidity).to.eq("16617549983581976690927");
+        expect((await hre.props.limitPool.pool0()).liquidity).to.eq("16617549983581976690927");
 
         if(debugMode) console.log("--------------- Sync 40 -------------");
         await validateSync(-40);
-        expect((await hre.props.coverPool.pool0()).liquidity).to.eq("16617549983581976690927");
+        expect((await hre.props.limitPool.pool0()).liquidity).to.eq("16617549983581976690927");
 
         if(debugMode) console.log("--------------- Alice #1 burn ---------------");
 
@@ -1212,7 +1168,7 @@ describe('LimitPool Tests', function () {
         await validateSync(0);  // Trigger Auction from 0 -> -20
 
         // Active liquidity consists of liquidity which Alice and Bob provided.
-        expect((await hre.props.coverPool.pool0()).liquidity).to.eq("199910016499174777287538");
+        expect((await hre.props.limitPool.pool0()).liquidity).to.eq("199910016499174777287538");
 
         // User swaps in 10 tokens.
         // Now the pool should consist of 190 token0 and 10 token1.
@@ -1323,11 +1279,11 @@ describe('LimitPool Tests', function () {
         // his position is fully filled.
         if (deltaMaxAfterCheck) {
             console.log('claim tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-20')).amountInDeltaMaxStashed.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-20')).amountOutDeltaMaxStashed.toString())
+            console.log('deltainmax  after:', (await hre.props.limitPool.ticks0('-20')).amountInDeltaMaxStashed.toString())
+            console.log('deltaoutmax after:', (await hre.props.limitPool.ticks0('-20')).amountOutDeltaMaxStashed.toString())
             console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-80')).amountInDeltaMaxMinus.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-80')).amountOutDeltaMaxMinus.toString())
+            console.log('deltainmax  after:', (await hre.props.limitPool.ticks0('-80')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.limitPool.ticks0('-80')).amountOutDeltaMaxMinus.toString())
         }
 
         await validateBurn({
@@ -1359,16 +1315,16 @@ describe('LimitPool Tests', function () {
         });
 
         if (balanceCheck) {
-            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.coverPool.address)).toString())
-            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.coverPool.address)).toString())
+            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
+            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
         }
         if (deltaMaxAfterCheck) {
             console.log('claim tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-20')).amountInDeltaMaxStashed.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-20')).amountOutDeltaMaxStashed.toString())
+            console.log('deltainmax  after:', (await hre.props.limitPool.ticks0('-20')).amountInDeltaMaxStashed.toString())
+            console.log('deltaoutmax after:', (await hre.props.limitPool.ticks0('-20')).amountOutDeltaMaxStashed.toString())
             console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-80')).amountInDeltaMaxMinus.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-80')).amountOutDeltaMaxMinus.toString())
+            console.log('deltainmax  after:', (await hre.props.limitPool.ticks0('-80')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.limitPool.ticks0('-80')).amountOutDeltaMaxMinus.toString())
         }
 
     });
@@ -1867,7 +1823,7 @@ describe('LimitPool Tests', function () {
         await validateSync(0)
         await validateSync(-20)
 
-        expect((await hre.props.coverPool.pool0()).liquidity).to.eq("24951283310825598484485");
+        expect((await hre.props.limitPool.pool0()).liquidity).to.eq("24951283310825598484485");
 
         await validateSwap({
             signer: hre.props.alice,
@@ -1882,11 +1838,11 @@ describe('LimitPool Tests', function () {
 
         if (deltaMaxAfterCheck) {
             console.log('claim tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-20')).amountInDeltaMaxStashed.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-20')).amountOutDeltaMaxStashed.toString())
+            console.log('deltainmax  after:', (await hre.props.limitPool.ticks0('-20')).amountInDeltaMaxStashed.toString())
+            console.log('deltaoutmax after:', (await hre.props.limitPool.ticks0('-20')).amountOutDeltaMaxStashed.toString())
             console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-80')).amountInDeltaMaxMinus.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-80')).amountOutDeltaMaxMinus.toString())
+            console.log('deltainmax  after:', (await hre.props.limitPool.ticks0('-80')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.limitPool.ticks0('-80')).amountOutDeltaMaxMinus.toString())
         }
 
         await validateBurn({
@@ -1904,13 +1860,13 @@ describe('LimitPool Tests', function () {
             revertMessage: '', 
         });
 
-        expect((await hre.props.coverPool.pool0()).liquidity).to.eq("12475641655412799242244");
+        expect((await hre.props.limitPool.pool0()).liquidity).to.eq("12475641655412799242244");
 
         await validateSync(-40);
-        expect((await hre.props.coverPool.pool0()).liquidity).to.eq("12475641655412799242244");
+        expect((await hre.props.limitPool.pool0()).liquidity).to.eq("12475641655412799242244");
 
         await validateSync(-60);
-        expect((await hre.props.coverPool.pool0()).liquidity).to.eq("12475641655412799242244");
+        expect((await hre.props.limitPool.pool0()).liquidity).to.eq("12475641655412799242244");
 
         await validateSwap({
             signer: hre.props.alice,
@@ -1941,11 +1897,11 @@ describe('LimitPool Tests', function () {
 
         if (deltaMaxAfterCheck) {
             console.log('claim tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-20')).amountInDeltaMaxStashed.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-20')).amountOutDeltaMaxStashed.toString())
+            console.log('deltainmax  after:', (await hre.props.limitPool.ticks0('-20')).amountInDeltaMaxStashed.toString())
+            console.log('deltaoutmax after:', (await hre.props.limitPool.ticks0('-20')).amountOutDeltaMaxStashed.toString())
             console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-80')).amountInDeltaMaxMinus.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-80')).amountOutDeltaMaxMinus.toString())
+            console.log('deltainmax  after:', (await hre.props.limitPool.ticks0('-80')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.limitPool.ticks0('-80')).amountOutDeltaMaxMinus.toString())
         }
     });
 
@@ -1969,17 +1925,17 @@ describe('LimitPool Tests', function () {
         });
 
         await validateSync(0);
-        expect((await hre.props.coverPool.pool0()).liquidity).to.eq("24951283310825598484485");
+        expect((await hre.props.limitPool.pool0()).liquidity).to.eq("24951283310825598484485");
 
         await validateSync(-20);
-        expect((await hre.props.coverPool.pool0()).liquidity).to.eq("24951283310825598484485");
+        expect((await hre.props.limitPool.pool0()).liquidity).to.eq("24951283310825598484485");
 
         await validateSync(0);
-        expect((await hre.props.coverPool.pool0()).liquidity).to.eq("0");
+        expect((await hre.props.limitPool.pool0()).liquidity).to.eq("0");
         // If we claim at 0 or -20 we do get out money back
 
         await validateSync(-40);
-        expect((await hre.props.coverPool.pool0()).liquidity).to.eq("24951283310825598484485");
+        expect((await hre.props.limitPool.pool0()).liquidity).to.eq("24951283310825598484485");
 
         await validateBurn({
             signer: hre.props.bob,
@@ -2016,19 +1972,19 @@ describe('LimitPool Tests', function () {
         });
 
         await validateSync(-20);
-        expect((await hre.props.coverPool.pool0()).liquidity).to.eq(aliceLiquidityIncrease);
+        expect((await hre.props.limitPool.pool0()).liquidity).to.eq(aliceLiquidityIncrease);
 
         await validateSync(-40);
-        expect((await hre.props.coverPool.pool0()).liquidity).to.eq(aliceLiquidityIncrease);
+        expect((await hre.props.limitPool.pool0()).liquidity).to.eq(aliceLiquidityIncrease);
 
         // Stash liquidity delta on tick -60
         await validateSync(-20);
-        expect((await hre.props.coverPool.pool0()).liquidity).to.eq(0);
+        expect((await hre.props.limitPool.pool0()).liquidity).to.eq(0);
 
         await validateSync(-40);
         await validateSync(-60);
         // There is active liquidity at the end of Alice's position
-        expect((await hre.props.coverPool.pool0()).liquidity).to.eq(BN_ZERO);
+        expect((await hre.props.limitPool.pool0()).liquidity).to.eq(BN_ZERO);
 
         // Swap being performed with Alice's liquidity at the end of her position
         await validateSwap({
@@ -2125,16 +2081,16 @@ describe('LimitPool Tests', function () {
         await validateSync(0)     
         
         if (balanceCheck) {
-            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.coverPool.address)).toString())
-            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.coverPool.address)).toString())
+            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
+            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
         }
         if (deltaMaxAfterCheck) {
             console.log('claim tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-40')).amountInDeltaMaxMinus.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-40')).amountOutDeltaMaxMinus.toString())
+            console.log('deltainmax  after:', (await hre.props.limitPool.ticks0('-40')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.limitPool.ticks0('-40')).amountOutDeltaMaxMinus.toString())
             console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-60')).amountInDeltaMaxMinus.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-60')).amountOutDeltaMaxMinus.toString())
+            console.log('deltainmax  after:', (await hre.props.limitPool.ticks0('-60')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.limitPool.ticks0('-60')).amountOutDeltaMaxMinus.toString())
         }
     })
 
@@ -2191,13 +2147,13 @@ describe('LimitPool Tests', function () {
         })
 
         if (balanceCheck) {
-            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.coverPool.address)).toString())
-            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.coverPool.address)).toString())
+            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
+            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
         }
         if (deltaMaxAfterCheck) {
             console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-120')).amountInDeltaMaxMinus.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-120')).amountOutDeltaMaxMinus.toString())
+            console.log('deltainmax  after:', (await hre.props.limitPool.ticks0('-120')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.limitPool.ticks0('-120')).amountOutDeltaMaxMinus.toString())
         }
     })
 
@@ -2304,13 +2260,13 @@ describe('LimitPool Tests', function () {
         })
 
         if (balanceCheck) {
-            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.coverPool.address)).toString())
-            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.coverPool.address)).toString())
+            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
+            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
         }
         if (deltaMaxAfterCheck) {
             console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-120')).amountInDeltaMaxMinus.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-120')).amountOutDeltaMaxMinus.toString())
+            console.log('deltainmax  after:', (await hre.props.limitPool.ticks0('-120')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.limitPool.ticks0('-120')).amountOutDeltaMaxMinus.toString())
         }
     })
 
@@ -2389,13 +2345,13 @@ describe('LimitPool Tests', function () {
         })
 
         if (balanceCheck) {
-            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.coverPool.address)).toString())
-            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.coverPool.address)).toString())
+            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
+            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
         }
         if (deltaMaxAfterCheck) {
             console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-120')).amountInDeltaMaxMinus.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-120')).amountOutDeltaMaxMinus.toString())
+            console.log('deltainmax  after:', (await hre.props.limitPool.ticks0('-120')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.limitPool.ticks0('-120')).amountOutDeltaMaxMinus.toString())
         }
     })
 
@@ -2485,13 +2441,13 @@ describe('LimitPool Tests', function () {
         await validateSync(-20)
 
         if (balanceCheck) {
-            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.coverPool.address)).toString())
-            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.coverPool.address)).toString())
+            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
+            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
         }
         if (deltaMaxAfterCheck) {
             console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-60')).amountInDeltaMaxMinus.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-60')).amountOutDeltaMaxMinus.toString())
+            console.log('deltainmax  after:', (await hre.props.limitPool.ticks0('-60')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.limitPool.ticks0('-60')).amountOutDeltaMaxMinus.toString())
         }
     })
 
@@ -2562,13 +2518,13 @@ describe('LimitPool Tests', function () {
         await validateSync(-20)
 
         if (balanceCheck) {
-            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.coverPool.address)).toString())
-            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.coverPool.address)).toString())
+            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
+            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
         }
         if (deltaMaxAfterCheck) {
             console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-60')).amountInDeltaMaxMinus.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-60')).amountOutDeltaMaxMinus.toString())
+            console.log('deltainmax  after:', (await hre.props.limitPool.ticks0('-60')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.limitPool.ticks0('-60')).amountOutDeltaMaxMinus.toString())
         }
     })
 
@@ -2716,16 +2672,16 @@ describe('LimitPool Tests', function () {
         })
 
         if (balanceCheck) {
-            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.coverPool.address)).toString())
-            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.coverPool.address)).toString())
+            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
+            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
         }
         if (deltaMaxAfterCheck) {
             console.log('claim tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-60')).amountInDeltaMaxMinus.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-60')).amountOutDeltaMaxMinus.toString())
+            console.log('deltainmax  after:', (await hre.props.limitPool.ticks0('-60')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.limitPool.ticks0('-60')).amountOutDeltaMaxMinus.toString())
             console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-60')).amountInDeltaMaxMinus.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-60')).amountOutDeltaMaxMinus.toString())
+            console.log('deltainmax  after:', (await hre.props.limitPool.ticks0('-60')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.limitPool.ticks0('-60')).amountOutDeltaMaxMinus.toString())
         }
     })
 
@@ -2765,16 +2721,16 @@ describe('LimitPool Tests', function () {
         })
 
         if (balanceCheck) {
-            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.coverPool.address)).toString())
-            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.coverPool.address)).toString())
+            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
+            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
         }
         if (deltaMaxAfterCheck) {
             console.log('claim tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-60')).amountInDeltaMaxMinus.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-60')).amountOutDeltaMaxMinus.toString())
+            console.log('deltainmax  after:', (await hre.props.limitPool.ticks0('-60')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.limitPool.ticks0('-60')).amountOutDeltaMaxMinus.toString())
             console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-60')).amountInDeltaMaxMinus.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-60')).amountOutDeltaMaxMinus.toString())
+            console.log('deltainmax  after:', (await hre.props.limitPool.ticks0('-60')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.limitPool.ticks0('-60')).amountOutDeltaMaxMinus.toString())
         }        
     })
 
@@ -2852,16 +2808,16 @@ describe('LimitPool Tests', function () {
         })
 
         if (balanceCheck) {
-            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.coverPool.address)).toString())
-            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.coverPool.address)).toString())
+            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
+            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
         }
         if (deltaMaxAfterCheck) {
             console.log('claim tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-60')).amountInDeltaMaxMinus.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-60')).amountOutDeltaMaxMinus.toString())
+            console.log('deltainmax  after:', (await hre.props.limitPool.ticks0('-60')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.limitPool.ticks0('-60')).amountOutDeltaMaxMinus.toString())
             console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-60')).amountInDeltaMaxMinus.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-60')).amountOutDeltaMaxMinus.toString())
+            console.log('deltainmax  after:', (await hre.props.limitPool.ticks0('-60')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.limitPool.ticks0('-60')).amountOutDeltaMaxMinus.toString())
         } 
     })
 
@@ -2940,8 +2896,8 @@ describe('LimitPool Tests', function () {
 
         if (deltaMaxAfterCheck) {
             console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks1('40')).amountInDeltaMaxMinus.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks1('40')).amountOutDeltaMaxMinus.toString())
+            console.log('deltainmax  after:', (await hre.props.limitPool.ticks1('40')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.limitPool.ticks1('40')).amountOutDeltaMaxMinus.toString())
         }
     })
 
@@ -2990,8 +2946,8 @@ describe('LimitPool Tests', function () {
 
         if (deltaMaxAfterCheck) {
             console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks1('40')).amountInDeltaMaxMinus.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks1('40')).amountOutDeltaMaxMinus.toString())
+            console.log('deltainmax  after:', (await hre.props.limitPool.ticks1('40')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.limitPool.ticks1('40')).amountOutDeltaMaxMinus.toString())
         }
     })
 
@@ -3081,8 +3037,8 @@ describe('LimitPool Tests', function () {
 
         if (deltaMaxAfterCheck) {
             console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks1('20')).amountInDeltaMaxMinus.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks1('20')).amountOutDeltaMaxMinus.toString())
+            console.log('deltainmax  after:', (await hre.props.limitPool.ticks1('20')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.limitPool.ticks1('20')).amountOutDeltaMaxMinus.toString())
         }
     })
 
@@ -3187,8 +3143,8 @@ describe('LimitPool Tests', function () {
 
         if (deltaMaxAfterCheck) {
             console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks1('40')).amountInDeltaMaxMinus.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks1('40')).amountOutDeltaMaxMinus.toString())
+            console.log('deltainmax  after:', (await hre.props.limitPool.ticks1('40')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.limitPool.ticks1('40')).amountOutDeltaMaxMinus.toString())
         }
     })
 
@@ -3240,8 +3196,8 @@ describe('LimitPool Tests', function () {
 
         if (deltaMaxAfterCheck) {
             console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks1('60')).amountInDeltaMaxMinus.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks1('60')).amountOutDeltaMaxMinus.toString())
+            console.log('deltainmax  after:', (await hre.props.limitPool.ticks1('60')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.limitPool.ticks1('60')).amountOutDeltaMaxMinus.toString())
         }
     })
 
@@ -3286,8 +3242,8 @@ describe('LimitPool Tests', function () {
 
         if (deltaMaxAfterCheck) {
             console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks1('60')).amountInDeltaMaxMinus.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks1('60')).amountOutDeltaMaxMinus.toString())
+            console.log('deltainmax  after:', (await hre.props.limitPool.ticks1('60')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.limitPool.ticks1('60')).amountOutDeltaMaxMinus.toString())
         }
     })
 
@@ -3347,8 +3303,8 @@ describe('LimitPool Tests', function () {
 
         if (deltaMaxAfterCheck) {
             console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks1('600020')).amountInDeltaMaxMinus.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks1('600020')).amountOutDeltaMaxMinus.toString())
+            console.log('deltainmax  after:', (await hre.props.limitPool.ticks1('600020')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.limitPool.ticks1('600020')).amountOutDeltaMaxMinus.toString())
         }
     })
 
@@ -3392,11 +3348,11 @@ describe('LimitPool Tests', function () {
 
         if (deltaMaxAfterCheck) {
             console.log('claim tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks1('100')).amountInDeltaMaxMinus.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks1('100')).amountOutDeltaMaxMinus.toString())
+            console.log('deltainmax  after:', (await hre.props.limitPool.ticks1('100')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.limitPool.ticks1('100')).amountOutDeltaMaxMinus.toString())
             console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks1('120')).amountInDeltaMaxMinus.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks1('120')).amountOutDeltaMaxMinus.toString())
+            console.log('deltainmax  after:', (await hre.props.limitPool.ticks1('120')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.limitPool.ticks1('120')).amountOutDeltaMaxMinus.toString())
         }
     })
 
@@ -3441,189 +3397,7 @@ describe('LimitPool Tests', function () {
         })
 
         await validateSync(0)
-
-        if (deltaMaxAfterCheck) {
-            console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks1('120')).amountInDeltaMaxMinus.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks1('120')).amountOutDeltaMaxMinus.toString())
-        }
     })
-
-    it("pool1 - multiple tick length jumps should not cause users to lose assets 112 :: GUARDIAN AUDITS", async () => {
-        // Note: unused, way to initialize all the ticks in the range manually
-        let liquidityAmountBob = hre.ethers.utils.parseUnits("99855108194609381495771", 0);
-        getLatestTick(debugMode)
-        await validateMint({
-            signer: hre.props.bob,
-            recipient: hre.props.bob.address,
-            lower: '20',
-            upper: '40',
-            amount: tokenAmount,
-            zeroForOne: false,
-            balanceInDecrease: tokenAmount,
-            liquidityIncrease: liquidityAmountBob,
-            upperTickCleared: false,
-            lowerTickCleared: false,
-            revertMessage: '',
-        });
-
-        await validateMint({
-            signer: hre.props.bob,
-            recipient: hre.props.bob.address,
-            lower: '60',
-            upper: '80',
-            amount: tokenAmount,
-            zeroForOne: false,
-            balanceInDecrease: tokenAmount,
-            liquidityIncrease: BigNumber.from("99655607520258884066351"),
-            upperTickCleared: false,
-            lowerTickCleared: false,
-            revertMessage: '',
-        });
-
-        await validateMint({
-            signer: hre.props.bob,
-            recipient: hre.props.bob.address,
-            lower: '100',
-            upper: '120',
-            amount: tokenAmount,
-            zeroForOne: false,
-            balanceInDecrease: tokenAmount,
-            liquidityIncrease: BigNumber.from("99456505428612725961158"),
-            upperTickCleared: false,
-            lowerTickCleared: false,
-            revertMessage: '',
-        });
-
-        await validateBurn({
-            signer: hre.props.bob,
-            lower: '20',
-            claim: '20',
-            upper: '40',
-            liquidityAmount: liquidityAmountBob,
-            zeroForOne: false,
-            balanceInIncrease: BigNumber.from('0'),
-            balanceOutIncrease: BigNumber.from('99999999999999999999'),
-            lowerTickCleared: false,
-            upperTickCleared: false,
-            revertMessage: '',
-        });
-
-        await validateBurn({
-            signer: hre.props.bob,
-            lower: '60',
-            claim: '60',
-            upper: '80',
-            liquidityAmount: BigNumber.from("99655607520258884066351"),
-            zeroForOne: false,
-            balanceInIncrease: BigNumber.from('0'),
-            balanceOutIncrease: BigNumber.from('99999999999999999999'),
-            lowerTickCleared: false,
-            upperTickCleared: false,
-            revertMessage: '',
-        });
-
-        await validateBurn({
-            signer: hre.props.bob,
-            lower: '100',
-            claim: '100',
-            upper: '120',
-            liquidityAmount: BigNumber.from("99456505428612725961158"),
-            zeroForOne: false,
-            balanceInIncrease: BigNumber.from('0'),
-            balanceOutIncrease: BigNumber.from('99999999999999999999'),
-            lowerTickCleared: false,
-            upperTickCleared: false,
-            revertMessage: '',
-        });
-
-        await validateSync(-20);
-        const liquidityAmount2 = hre.ethers.utils.parseUnits('16617549983581976690927', 0);
-        liquidityAmountBob = hre.ethers.utils.parseUnits("99855108194609381495771", 0);
-
-        const aliceLiquidityAmount = BigNumber.from('0')
-        const bobLiquidityAmount = BigNumber.from('24951283310825598484485')
-
-        // console.log("--------------- Alice First mint -------------");
-
-        await validateMint({
-            signer: hre.props.alice,
-            recipient: hre.props.alice.address,
-            lower: '0',
-            upper: '120',
-            amount: tokenAmount,
-            zeroForOne: false,
-            balanceInDecrease: tokenAmount,
-            liquidityIncrease: liquidityAmount2,
-            upperTickCleared: false,
-            lowerTickCleared: false,
-            revertMessage: '',
-        })
-        if(debugMode) console.log("--------------- Sync 0 -------------");
-        await validateSync(0)
-        expect((await hre.props.coverPool.pool1()).liquidity).to.eq("16617549983581976690927");
-        if(debugMode) console.log("--------------- Sync 20 -------------");
-        await validateSync(20)
-        expect((await hre.props.coverPool.pool1()).liquidity).to.eq("16617549983581976690927");
-
-        if(debugMode) console.log("--------------- Sync 40 -------------");
-        await validateSync(40);
-        expect((await hre.props.coverPool.pool1()).liquidity).to.eq("16617549983581976690927");
-
-        if(debugMode) console.log("--------------- Alice #1 burn ---------------");
-
-        await validateBurn({
-            signer: hre.props.alice,
-            lower: '0',
-            claim: '40',
-            upper: '120',
-            liquidityAmount: BigNumber.from('0'),
-            zeroForOne: false,
-            balanceInIncrease: BigNumber.from('0'),
-            balanceOutIncrease: BigNumber.from('33266692264193520416'),
-            lowerTickCleared: true,
-            upperTickCleared: false,
-            revertMessage: '',
-        })
-
-        if(debugMode) console.log("--------------- Sync 120 -------------");
-        await validateSync(120);
-
-
-        if(debugMode) console.log("--------------- Alice #2 Burn -------------");
-
-        // When alice burns she realizes an errant loss of 50 out tokens.
-        // This is because the syncLatest to 120 only increases the amountOutDelta
-        // by an amount calculated from the tick 40 to tick 60 range, rather than the tick
-        // 40 to tick 120 range.
-
-        // The while loop for pool1 in syncLatest will only execute a single time since there
-        // are no existing ticks between tick 40 and tick 120. In the _rollover for this
-        // single execution the amountOutDelta will be constricted to the 40 to 60 range due to
-        // line 343, where the if case fails and the currentPrice is not able to be set to the accumPrice.
-
-        // The if case prevents amountDelta calculations from straddling the current pool.price.
-        // One fix however is to allow such a straddling for the amountDelta in this particular scenario.
-
-        // Another fix is to initialize the next tick before setting the nextTickToAccum when initializing the cache.
-        // This way the while loop is able to continue for a second iteration and complete the rest of the range
-        // that was previously curtailed due to the straddling.
-        // This fix has been implemented in the syncLatest function, uncomment it and you will see that alice receives
-        // all of her tokens back as expected.
-        await validateBurn({
-            signer: hre.props.alice,
-            lower: '40',
-            claim: '120',
-            upper: '120',
-            liquidityAmount: liquidityAmount2,
-            zeroForOne: false,
-            balanceInIncrease: BigNumber.from('0'),
-            balanceOutIncrease: BigNumber.from('66733307735806479582'), // Notice Alice gets her position back
-            lowerTickCleared: true,
-            upperTickCleared: true,
-            revertMessage: '',
-        })
-    });
 
     it("pool1 - multiple tick length jumps should not cause users to lose assets:: GUARDIAN AUDITS", async () => {
         // Note: unused, way to initialize all the ticks in the range manually
@@ -3653,14 +3427,14 @@ describe('LimitPool Tests', function () {
         })
         if(debugMode) console.log("--------------- Sync 0 -------------");
         await validateSync(0)
-        expect((await hre.props.coverPool.pool1()).liquidity).to.eq("16617549983581976690927");
+        expect((await hre.props.limitPool.pool1()).liquidity).to.eq("16617549983581976690927");
         if(debugMode) console.log("--------------- Sync 20 -------------");
         await validateSync(20)
-        expect((await hre.props.coverPool.pool1()).liquidity).to.eq("16617549983581976690927");
+        expect((await hre.props.limitPool.pool1()).liquidity).to.eq("16617549983581976690927");
 
         if(debugMode) console.log("--------------- Sync 40 -------------");
         await validateSync(40);
-        expect((await hre.props.coverPool.pool1()).liquidity).to.eq("16617549983581976690927");
+        expect((await hre.props.limitPool.pool1()).liquidity).to.eq("16617549983581976690927");
 
         if(debugMode) console.log("--------------- Alice #1 burn ---------------");
 
@@ -3892,59 +3666,6 @@ describe('LimitPool Tests', function () {
             lowerTickCleared: false,
             upperTickCleared: false,
             revertMessage: '',
-        });
-    });
-
-    it('pool1 - section5 of claim should not round up and cause erc20 balance drift :: GUARDIAN AUDITS', async function () {
-        const liquidityAmountAlice = BigNumber.from('49902591570441687020675')
-        await validateSync(0)
-
-        await validateMint({
-            signer: hre.props.alice,
-            recipient: hre.props.alice.address,
-            lower: '20',
-            upper: '60',
-            amount: tokenAmount,
-            zeroForOne: false,
-            balanceInDecrease: tokenAmount,
-            liquidityIncrease: liquidityAmountAlice,
-            upperTickCleared: false,
-            lowerTickCleared: true,
-            revertMessage: '',
-        })
-
-        await validateSync(20);
-        await validateSync(0);
-        await validateSync(20);
-
-        expect((await hre.props.coverPool.pool1()).liquidity).to.eq(0);
-
-        await validateBurn({
-            signer: hre.props.alice,
-            lower: '20',
-            claim: '40',
-            upper: '60',
-            liquidityAmount: BigNumber.from('1'),
-            zeroForOne: false,
-            balanceInIncrease: BigNumber.from('0'),
-            balanceOutIncrease: BigNumber.from("49975001251999693577"),
-            lowerTickCleared: true,
-            upperTickCleared: false,
-            revertMessage: "",
-        });
-
-        await validateBurn({
-            signer: hre.props.alice,
-            lower: '40',
-            claim: '40',
-            upper: '60',
-            liquidityPercent: ethers.utils.parseUnits("1", 38),
-            zeroForOne: false,
-            balanceInIncrease: BigNumber.from('0'),
-            balanceOutIncrease: BigNumber.from("50024998748000306422"),
-            lowerTickCleared: false,
-            upperTickCleared: false,
-            revertMessage: "",
         });
     });
 })

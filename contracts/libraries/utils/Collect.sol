@@ -6,23 +6,6 @@ import '../Positions.sol';
 import '../utils/SafeTransfers.sol';
 
 library Collect {
-    function mint(
-        ILimitPoolStructs.MintCache memory cache,
-        ILimitPoolStructs.CollectParams memory params
-    ) internal {
-        // store amounts for transferOut
-        uint128 amountIn;
-        uint128 amountOut;
-
-        /// zero out balances and transfer out
-        if (amountIn > 0) {
-            SafeTransfers.transferOut(params.to, params.zeroForOne ? cache.constants.token1 : cache.constants.token0, amountIn);
-        } 
-        if (amountOut > 0) {
-            SafeTransfers.transferOut(params.to, params.zeroForOne ? cache.constants.token0 : cache.constants.token1, amountOut);
-        }
-    }
-
     function burn(
         ILimitPoolStructs.BurnCache memory cache,
         mapping(address => mapping(int24 => mapping(int24 => ILimitPoolStructs.Position)))

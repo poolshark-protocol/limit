@@ -8,30 +8,34 @@ export const Q64x96 = BigNumber.from('2').pow(96)
 export const BN_ZERO = BigNumber.from('0')
 export interface Position {
     liquidity: BigNumber
-    swapEpochLast: number
+    epochLast: number
     claimPriceLast: BigNumber
     amountIn: BigNumber
     amountOut: BigNumber
 }
 
+export interface GlobalState {
+    protocolFees: ProtocolFees
+    unlocked: number
+}
+
+export interface ProtocolFees {
+    token0: BigNumber
+    token1: BigNumber
+}
+
 export interface PoolState {
-    liquidity: BigNumber
-    amountInDelta: BigNumber
     price: BigNumber
+    liquidity: BigNumber
+    liquidityGlobal: BigNumber
+    tickAtPrice: number
+    protocolFee: BigNumber
+    protocolFees: BigNumber
 }
 
 export interface Tick {
     liquidityDelta: BigNumber
-    amountInDeltaMaxStashed: BigNumber
-    amountOutDeltaMaxStashed: BigNumber
-    deltas: Deltas
-}
-
-export interface Deltas {
-    amountInDelta: BigNumber
-    amountInDeltaMax: BigNumber
-    amountOutDelta: BigNumber
-    amountOutDeltaMax: BigNumber
+    epochLast: BigNumber
 }
 
 export interface ValidateMintParams {
@@ -85,7 +89,7 @@ export interface ValidateBurnParams {
 }
 
 export async function getLatestTick(print: boolean = false): Promise<number> {
-    const latestTick = (await hre.props.coverPool.globalState()).latestTick
+    const latestTick = (await hre.props.limitPool.globalState()).latestTick
     if (print) {
         console.log('latest tick:', latestTick)
     }
@@ -93,8 +97,8 @@ export async function getLatestTick(print: boolean = false): Promise<number> {
 }
 
 export async function getLiquidity(isPool0: boolean, print: boolean = false): Promise<BigNumber> {
-    let liquidity: BigNumber = isPool0 ? (await hre.props.coverPool.pool0()).liquidity
-                                       : (await hre.props.coverPool.pool1()).liquidity;
+    let liquidity: BigNumber = isPool0 ? (await hre.props.limitPool.pool0()).liquidity
+                                       : (await hre.props.limitPool.pool1()).liquidity;
     if (print) {
         console.log('pool liquidity:', liquidity.toString())
     }
@@ -102,8 +106,8 @@ export async function getLiquidity(isPool0: boolean, print: boolean = false): Pr
 }
 
 export async function getPrice(isPool0: boolean, print: boolean = false): Promise<BigNumber> {
-    let price: BigNumber = isPool0 ? (await hre.props.coverPool.pool0()).price
-                                   : (await hre.props.coverPool.pool1()).price;
+    let price: BigNumber = isPool0 ? (await hre.props.limitPool.pool0()).price
+                                   : (await hre.props.limitPool.pool1()).price;
     if (print) {
         console.log('price:', price.toString())
     }
@@ -111,8 +115,8 @@ export async function getPrice(isPool0: boolean, print: boolean = false): Promis
 }
 
 export async function getTick(isPool0: boolean, tickIndex: number, print: boolean = false): Promise<Tick> {
-    let tick: Tick = isPool0 ? (await hre.props.coverPool.ticks0(tickIndex))
-                             : (await hre.props.coverPool.ticks1(tickIndex));
+    let tick: Tick = isPool0 ? (await hre.props.limitPool.ticks0(tickIndex))
+                             : (await hre.props.limitPool.ticks1(tickIndex));
     if (print) {
         console.log(tickIndex,'tick:', tick.toString())
     }
@@ -120,67 +124,12 @@ export async function getTick(isPool0: boolean, tickIndex: number, print: boolea
 }
 
 export async function getPositionLiquidity(isPool0: boolean, owner: string, lower: number, upper: number, print: boolean = false): Promise<BigNumber> {
-    let positionLiquidity: BigNumber = isPool0 ? (await hre.props.coverPool.positions0(owner, lower, upper)).liquidity
-                                               : (await hre.props.coverPool.positions1(owner, lower, upper)).liquidity;
+    let positionLiquidity: BigNumber = isPool0 ? (await hre.props.limitPool.positions0(owner, lower, upper)).liquidity
+                                               : (await hre.props.limitPool.positions1(owner, lower, upper)).liquidity;
     if (print) {
         console.log('position liquidity:', positionLiquidity.toString())
     }
     return positionLiquidity
-}
-
-export async function validateSync(newLatestTick: number, autoSync: boolean = true, revertMessage?: string, signer: SignerWithAddress = hre.props.alice) {
-    /// get tick node status before
-
-    const globalState = (await hre.props.coverPool.globalState())
-    const oldLatestTick: number = globalState.latestTick
-    const tickSpread: number = await hre.props.coverPool.tickSpread()
-
-    // //TODO: wait number of blocks equal to (twapMove * auctionLength)
-    if (newLatestTick != oldLatestTick && hre.network.name == 'hardhat') {
-        // mine until end of auction
-        const auctionLength: number = await hre.props.coverPool.auctionLength()
-                                        * Math.abs(newLatestTick - oldLatestTick) / tickSpread;
-        await mine(auctionLength)
-    }
-
-    let txn = await hre.props.uniswapV3PoolMock.connect(signer).setTickCumulatives(
-        BigNumber.from(newLatestTick).mul(10),
-        BigNumber.from(newLatestTick).mul(5)
-    )
-    await txn.wait();
-
-    // console.log("-- START ACCUMULATE LAST BLOCK --");
-
-    /// send a "no op" swap to trigger accumulate
-    const token1Balance = await hre.props.token1.balanceOf(signer.address)
-    await hre.props.token1.connect(signer).approve(hre.props.coverPool.address, token1Balance)
-
-    if (autoSync) {
-        if (!revertMessage || revertMessage == '') {
-            txn = await hre.props.coverPool.connect(signer).swap({
-                to: signer.address,
-                refundTo: signer.address,
-                priceLimit: BigNumber.from('4297706460'),
-                amountIn: BN_ZERO,
-                zeroForOne: true
-            })
-            await txn.wait()
-        } else {
-            await expect(
-                hre.props.coverPool.connect(signer).swap({
-                    to: signer.address,
-                    refundTo: signer.address,
-                    priceLimit: BigNumber.from('4297706460'),
-                    amountIn: BN_ZERO,
-                    zeroForOne: true
-                })
-            ).to.be.revertedWith(revertMessage)
-            return
-        }
-        await txn.wait()
-    }
-    // console.log("-- END ACCUMULATE LAST BLOCK --");
-    /// check tick status after
 }
 
 export async function validateSwap(params: ValidateSwapParams) {
@@ -200,23 +149,22 @@ export async function validateSwap(params: ValidateSwapParams) {
     if (zeroForOne) {
         balanceInBefore = await hre.props.token0.balanceOf(signer.address)
         balanceOutBefore = await hre.props.token1.balanceOf(signer.address)
-        await hre.props.token0.approve(hre.props.coverPool.address, amountIn)
+        await hre.props.token0.approve(hre.props.limitPool.address, amountIn)
     } else {
         balanceInBefore = await hre.props.token1.balanceOf(signer.address)
         balanceOutBefore = await hre.props.token0.balanceOf(signer.address)
-        await hre.props.token1.approve(hre.props.coverPool.address, amountIn)
+        await hre.props.token1.approve(hre.props.limitPool.address, amountIn)
     }
 
     const poolBefore: PoolState = zeroForOne
-        ? await hre.props.coverPool.pool1()
-        : await hre.props.coverPool.pool0()
+        ? await hre.props.limitPool.pool1()
+        : await hre.props.limitPool.pool0()
     const liquidityBefore = poolBefore.liquidity
-    const amountInDeltaBefore = poolBefore.amountInDelta
     const priceBefore = poolBefore.price
-    const latestTickBefore = (await hre.props.coverPool.globalState()).latestTick
+    const latestTickBefore = (await hre.props.limitPool.globalState()).latestTick
 
     // quote pre-swap and validate balance changes match post-swap
-    const quote = await hre.props.coverPool.quote({
+    const quote = await hre.props.limitPool.quote({
         priceLimit: priceLimit,
         amountIn: amountIn,
         zeroForOne: zeroForOne
@@ -230,7 +178,7 @@ export async function validateSwap(params: ValidateSwapParams) {
     if (revertMessage == '') {
         if (splitInto > 1) await ethers.provider.send("evm_setAutomine", [false]);
         for (let i = 0; i < splitInto; i++) {
-            let txn = await hre.props.coverPool
+            let txn = await hre.props.limitPool
                 .connect(signer)
                 .swap({
                     to: signer.address,
@@ -247,7 +195,7 @@ export async function validateSwap(params: ValidateSwapParams) {
         } 
     } else {
         await expect(
-            hre.props.coverPool
+            hre.props.limitPool
                 .connect(signer)
                 .swap({
                     to: signer.address,
@@ -260,7 +208,7 @@ export async function validateSwap(params: ValidateSwapParams) {
         return
     }
     //amountInDelta in the pool should have increased by the balance change
-    (await hre.props.coverPool.pool0()).amountInDelta.toString()
+    (await hre.props.limitPool.pool0()).amountInDelta.toString()
 
     let balanceInAfter
     let balanceOutAfter
@@ -279,12 +227,12 @@ export async function validateSwap(params: ValidateSwapParams) {
     // expect(balanceOutAfter.sub(balanceOutBefore)).to.be.equal(amountOutQuoted)
 
     const poolAfter: PoolState = zeroForOne
-        ? await hre.props.coverPool.pool1()
-        : await hre.props.coverPool.pool0()
+        ? await hre.props.limitPool.pool1()
+        : await hre.props.limitPool.pool0()
     const liquidityAfter = poolAfter.liquidity
     const amountInDeltaAfter = poolAfter.amountInDelta
     const priceAfter = poolAfter.price
-    const latestTickAfter = (await hre.props.coverPool.globalState()).latestTick
+    const latestTickAfter = (await hre.props.limitPool.globalState()).latestTick
 
     // expect(liquidityAfter).to.be.equal(finalLiquidity);
     // expect(priceAfter).to.be.equal(finalPrice);
@@ -314,30 +262,30 @@ export async function validateMint(params: ValidateMintParams) {
         balanceOutBefore = await hre.props.token1.balanceOf(params.signer.address)
         await hre.props.token0
             .connect(params.signer)
-            .approve(hre.props.coverPool.address, amountDesired)
+            .approve(hre.props.limitPool.address, amountDesired)
     } else {
         balanceInBefore = await hre.props.token1.balanceOf(params.signer.address)
         balanceOutBefore = await hre.props.token0.balanceOf(params.signer.address)
         await hre.props.token1
             .connect(params.signer)
-            .approve(hre.props.coverPool.address, amountDesired)
+            .approve(hre.props.limitPool.address, amountDesired)
     }
 
     let lowerTickBefore: Tick
     let upperTickBefore: Tick
     let positionBefore: Position
     if (zeroForOne) {
-        lowerTickBefore = await hre.props.coverPool.ticks0(lower)
-        upperTickBefore = await hre.props.coverPool.ticks0(expectedUpper ? expectedUpper : upper)
-        positionBefore  = await hre.props.coverPool.positions0(
+        lowerTickBefore = await hre.props.limitPool.ticks0(lower)
+        upperTickBefore = await hre.props.limitPool.ticks0(expectedUpper ? expectedUpper : upper)
+        positionBefore  = await hre.props.limitPool.positions0(
             recipient,
             lower,
             expectedUpper ? expectedUpper : upper
         )
     } else {
-        lowerTickBefore = await hre.props.coverPool.ticks1(expectedLower ? expectedLower : lower)
-        upperTickBefore = await hre.props.coverPool.ticks1(upper)
-        positionBefore  = await hre.props.coverPool.positions1(
+        lowerTickBefore = await hre.props.limitPool.ticks1(expectedLower ? expectedLower : lower)
+        upperTickBefore = await hre.props.limitPool.ticks1(upper)
+        positionBefore  = await hre.props.limitPool.positions1(
             recipient,
             expectedLower ? expectedLower : lower,
             upper
@@ -345,7 +293,7 @@ export async function validateMint(params: ValidateMintParams) {
     }
 
     if (revertMessage == '') {
-        const txn = await hre.props.coverPool
+        const txn = await hre.props.limitPool
             .connect(params.signer)
             .mint({
                 to: recipient,
@@ -357,7 +305,7 @@ export async function validateMint(params: ValidateMintParams) {
         await txn.wait()
     } else {
         await expect(
-            hre.props.coverPool
+            hre.props.limitPool
                 .connect(params.signer)
                 .mint({
                     to: params.signer.address,
@@ -387,17 +335,17 @@ export async function validateMint(params: ValidateMintParams) {
     let upperTickAfter: Tick
     let positionAfter: Position
     if (zeroForOne) {
-        lowerTickAfter = await hre.props.coverPool.ticks0(lower)
-        upperTickAfter = await hre.props.coverPool.ticks0(expectedUpper ? expectedUpper : upper)
-        positionAfter = await hre.props.coverPool.positions0(
+        lowerTickAfter = await hre.props.limitPool.ticks0(lower)
+        upperTickAfter = await hre.props.limitPool.ticks0(expectedUpper ? expectedUpper : upper)
+        positionAfter = await hre.props.limitPool.positions0(
             recipient,
             lower,
             expectedUpper ? expectedUpper : upper
         )
     } else {
-        lowerTickAfter = await hre.props.coverPool.ticks1(expectedLower ? expectedLower : lower)
-        upperTickAfter = await hre.props.coverPool.ticks1(upper)
-        positionAfter = await hre.props.coverPool.positions1(
+        lowerTickAfter = await hre.props.limitPool.ticks1(expectedLower ? expectedLower : lower)
+        upperTickAfter = await hre.props.limitPool.ticks1(upper)
+        positionAfter = await hre.props.limitPool.positions1(
             recipient,
             expectedLower ? expectedLower : lower,
             upper
@@ -474,13 +422,13 @@ export async function validateBurn(params: ValidateBurnParams) {
     let positionBefore: Position
     let positionSnapshot: Position
     if (zeroForOne) {
-        lowerTickBefore = await hre.props.coverPool.ticks0(lower)
-        upperTickBefore = await hre.props.coverPool.ticks0(upper)
-        positionBefore = await hre.props.coverPool.positions0(signer.address, lower, upper)
+        lowerTickBefore = await hre.props.limitPool.ticks0(lower)
+        upperTickBefore = await hre.props.limitPool.ticks0(upper)
+        positionBefore = await hre.props.limitPool.positions0(signer.address, lower, upper)
     } else {
-        lowerTickBefore = await hre.props.coverPool.ticks1(lower)
-        upperTickBefore = await hre.props.coverPool.ticks1(upper)
-        positionBefore = await hre.props.coverPool.positions1(signer.address, lower, upper)
+        lowerTickBefore = await hre.props.limitPool.ticks1(lower)
+        upperTickBefore = await hre.props.limitPool.ticks1(upper)
+        positionBefore = await hre.props.limitPool.positions1(signer.address, lower, upper)
     }
     if (liquidityAmount) {
         if (positionBefore.liquidity.gt(BN_ZERO)) {
@@ -495,7 +443,7 @@ export async function validateBurn(params: ValidateBurnParams) {
         liquidityAmount = liquidityPercent.mul(positionBefore.liquidity).div(ethers.utils.parseUnits("1",38))
     }
     if (revertMessage == '') {
-        positionSnapshot = await hre.props.coverPool.snapshot({
+        positionSnapshot = await hre.props.limitPool.snapshot({
             owner: signer.address,
             burnPercent: liquidityPercent,
             lower: lower,
@@ -503,7 +451,7 @@ export async function validateBurn(params: ValidateBurnParams) {
             upper: upper,
             zeroForOne: zeroForOne
         })
-        const burnTxn = await hre.props.coverPool
+        const burnTxn = await hre.props.limitPool
             .connect(signer)
             .burn({
                 to: signer.address,
@@ -517,7 +465,7 @@ export async function validateBurn(params: ValidateBurnParams) {
         await burnTxn.wait()
     } else {
         await expect(
-            hre.props.coverPool
+            hre.props.limitPool
                 .connect(signer)
                 .burn({
                     to: signer.address,
@@ -554,13 +502,13 @@ export async function validateBurn(params: ValidateBurnParams) {
     let positionAfter: Position
     //TODO: implement expected lower/upper?
     if (zeroForOne) {
-        lowerTickAfter = await hre.props.coverPool.ticks0(lower)
-        upperTickAfter = await hre.props.coverPool.ticks0(upper)
-        positionAfter = await hre.props.coverPool.positions0(signer.address, lower, expectedUpper ? expectedUpper : claim)
+        lowerTickAfter = await hre.props.limitPool.ticks0(lower)
+        upperTickAfter = await hre.props.limitPool.ticks0(upper)
+        positionAfter = await hre.props.limitPool.positions0(signer.address, lower, expectedUpper ? expectedUpper : claim)
     } else {
-        lowerTickAfter = await hre.props.coverPool.ticks1(lower)
-        upperTickAfter = await hre.props.coverPool.ticks1(upper)
-        positionAfter = await hre.props.coverPool.positions1(signer.address, expectedLower ? expectedLower : claim, upper)
+        lowerTickAfter = await hre.props.limitPool.ticks1(lower)
+        upperTickAfter = await hre.props.limitPool.ticks1(upper)
+        positionAfter = await hre.props.limitPool.positions1(signer.address, expectedLower ? expectedLower : claim, upper)
     }
     //dependent on zeroForOne
     if (zeroForOne) {

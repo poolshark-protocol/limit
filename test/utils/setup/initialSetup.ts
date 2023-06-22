@@ -11,14 +11,10 @@ import {
     LimitPoolFactory__factory,
     Ticks__factory,
     Positions__factory,
-    Epochs__factory,
-    Deltas__factory,
     Claims__factory,
     LimitPoolManager__factory,
     TickMap__factory,
     EpochMap__factory,
-    UniswapV3Source__factory,
-    UniswapV3FactoryMock__factory,
 } from '../../../typechain'
 
 export class InitialSetup {
@@ -75,10 +71,10 @@ export class InitialSetup {
             ['Token20B', 'TOKEN20B', this.token1Decimals]
         )
 
-        const tokenOrder = hre.props.tokenA.address.localeCompare(hre.props.tokenB.address)
+        const tokenOrder = hre.props.tokenA.address.localeCompare(hre.props.tokenB.address) < 0
         let token0Args
         let token1Args
-        if (tokenOrder < 0) {
+        if (tokenOrder) {
             hre.props.token0 = hre.props.tokenA
             hre.props.token1 = hre.props.tokenB
             token0Args = ['Token20A', 'TOKEN20A', this.token0Decimals]
@@ -109,41 +105,6 @@ export class InitialSetup {
         await this.deployAssist.deployContractWithRetry(
             network,
             // @ts-ignore
-            UniswapV3FactoryMock__factory,
-            'uniswapV3FactoryMock',
-            [
-                hre.props.token0.address,
-                hre.props.token1.address
-            ]
-        )
-        const mockPoolAddress = await hre.props.uniswapV3FactoryMock.getPool(
-            hre.props.token0.address,
-            hre.props.token1.address,
-            '500'
-        )
-
-        hre.props.uniswapV3PoolMock = await hre.ethers.getContractAt('UniswapV3PoolMock', mockPoolAddress)
-        await this.deployAssist.saveContractDeployment(
-            network,
-            'UniswapV3PoolMock',
-            'uniswapV3PoolMock',
-            hre.props.uniswapV3PoolMock,
-            [hre.props.token0.address, hre.props.token1.address, '500', '10']
-        )
-
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
-            UniswapV3Source__factory,
-            'uniswapV3Source',
-            [
-                hre.props.uniswapV3FactoryMock.address
-            ]
-        )
-
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
             TickMap__factory,
             'tickMapLib',
             []
@@ -160,33 +121,9 @@ export class InitialSetup {
         await this.deployAssist.deployContractWithRetry(
             network,
             // @ts-ignore
-            Deltas__factory,
-            'deltasLib',
-            [],
-        )
-
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
-            Epochs__factory,
-            'epochsLib',
-            [],
-            {
-                'contracts/libraries/Deltas.sol:Deltas': hre.props.deltasLib.address,
-                'contracts/libraries/TickMap.sol:TickMap': hre.props.tickMapLib.address,
-                'contracts/libraries/EpochMap.sol:EpochMap': hre.props.epochMapLib.address
-            }
-        )
-
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
             Ticks__factory,
             'ticksLib',
             [],
-            {
-                'contracts/libraries/TickMap.sol:TickMap': hre.props.tickMapLib.address
-            }
         )
 
         await this.deployAssist.deployContractWithRetry(
@@ -196,7 +133,6 @@ export class InitialSetup {
             'claimsLib',
             [],
             {
-                'contracts/libraries/Deltas.sol:Deltas': hre.props.deltasLib.address,
                 'contracts/libraries/TickMap.sol:TickMap': hre.props.tickMapLib.address,
                 'contracts/libraries/EpochMap.sol:EpochMap': hre.props.epochMapLib.address
             }
@@ -217,12 +153,8 @@ export class InitialSetup {
             network,
             // @ts-ignore
             LimitPoolManager__factory,
-            'coverPoolManager',
-            [
-                this.uniV3String,
-                hre.props.uniswapV3Source.address,
-                hre.props.uniswapV3Source.address
-            ]
+            'limitPoolManager',
+            []
         )
 
         await this.deployAssist.deployContractWithRetry(
@@ -232,7 +164,6 @@ export class InitialSetup {
             'mintCall',
             [],
             {
-                'contracts/libraries/Deltas.sol:Deltas': hre.props.deltasLib.address,
                 'contracts/libraries/TickMap.sol:TickMap': hre.props.tickMapLib.address,
                 'contracts/libraries/EpochMap.sol:EpochMap': hre.props.epochMapLib.address,
                 'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address
@@ -247,7 +178,6 @@ export class InitialSetup {
             [],
             {
                 'contracts/libraries/Claims.sol:Claims': hre.props.claimsLib.address,
-                'contracts/libraries/Deltas.sol:Deltas': hre.props.deltasLib.address,
                 'contracts/libraries/TickMap.sol:TickMap': hre.props.tickMapLib.address,
                 'contracts/libraries/EpochMap.sol:EpochMap': hre.props.epochMapLib.address,
                 'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address
@@ -274,14 +204,13 @@ export class InitialSetup {
             network,
             // @ts-ignore
             LimitPoolFactory__factory,
-            'coverPoolFactory',
+            'limitPoolFactory',
             [   
-                hre.props.coverPoolManager.address
+                hre.props.limitPoolManager.address
             ],
             {
                 'contracts/libraries/Positions.sol:Positions': hre.props.positionsLib.address,
                 'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address,
-                'contracts/libraries/Epochs.sol:Epochs': hre.props.epochsLib.address,
                 'contracts/libraries/pool/MintCall.sol:MintCall': hre.props.mintCall.address,
                 'contracts/libraries/pool/BurnCall.sol:BurnCall': hre.props.burnCall.address,
                 'contracts/libraries/pool/SwapCall.sol:SwapCall': hre.props.swapCall.address,
@@ -289,78 +218,41 @@ export class InitialSetup {
             }
         )
 
-        const setFactoryTxn = await hre.props.coverPoolManager.setFactory(
-            hre.props.coverPoolFactory.address
+        const setFactoryTxn = await hre.props.limitPoolManager.setFactory(
+            hre.props.limitPoolFactory.address
         )
         await setFactoryTxn.wait()
 
         hre.nonce += 1
 
-        // create first cover pool
-        let createPoolTxn = await hre.props.coverPoolFactory.createLimitPool(
-            this.uniV3String,
+        // create first limit pool
+        let createPoolTxn = await hre.props.limitPoolFactory.createLimitPool(
             hre.props.token0.address,
             hre.props.token1.address,
-            '500',
-            '20',
-            '5'
+            '10',
         )
         await createPoolTxn.wait()
 
         hre.nonce += 1
 
-        let coverPoolAddress = await hre.props.coverPoolFactory.getLimitPool(
-            this.uniV3String,
+        let limitPoolAddress = await hre.props.limitPoolFactory.getLimitPool(
             hre.props.token0.address,
             hre.props.token1.address,
-            '500',
-            '20',
-            '5'
+            '10'
         )
-        hre.props.coverPool = await hre.ethers.getContractAt('LimitPool', coverPoolAddress)
+        hre.props.limitPool = await hre.ethers.getContractAt('LimitPool', limitPoolAddress)
 
         await this.deployAssist.saveContractDeployment(
             network,
             'LimitPool',
-            'coverPool',
-            hre.props.coverPool,
-            [hre.props.uniswapV3PoolMock.address]
+            'limitPool',
+            hre.props.limitPool,
+            [
+                hre.props.token0.address,
+                hre.props.token1.address,
+                '10'
+            ]
         )
-
-        // create second cover pool
-        createPoolTxn = await hre.props.coverPoolFactory.createLimitPool(
-            this.uniV3String,
-            hre.props.token0.address,
-            hre.props.token1.address,
-            '500',
-            '40',
-            '10'
-        )
-        await createPoolTxn.wait()
-
-        hre.nonce += 1
-
-        coverPoolAddress = await hre.props.coverPoolFactory.getLimitPool(
-            this.uniV3String,
-            hre.props.token0.address,
-            hre.props.token1.address,
-            '500',
-            '40',
-            '10'
-        )
-        hre.props.coverPool2 = await hre.ethers.getContractAt('LimitPool', coverPoolAddress)
-
-        await this.deployAssist.saveContractDeployment(
-            network,
-            'LimitPool',
-            'coverPool2',
-            hre.props.coverPool2,
-            [hre.props.uniswapV3PoolMock.address]
-        )
-
-        //TODO: for coverPool2 we need a second mock pool with a different cardinality
-
-        await hre.props.uniswapV3PoolMock.setObservationCardinality('5', '5')
 
         return hre.nonce
     }
@@ -384,11 +276,11 @@ export class InitialSetup {
                 'readLimitPoolSetup'
             )
         ).contractAddress
-        const coverPoolAddress = (
+        const limitPoolAddress = (
             await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
                 {
                     networkName: hre.network.name,
-                    objectName: 'coverPool',
+                    objectName: 'limitPool',
                 },
                 'readLimitPoolSetup'
             )
@@ -404,11 +296,11 @@ export class InitialSetup {
             )
         ).contractAddress
 
-        const coverPoolFactoryAddress = (
+        const limitPoolFactoryAddress = (
             await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
                 {
                     networkName: hre.network.name,
-                    objectName: 'coverPoolFactory',
+                    objectName: 'limitPoolFactory',
                 },
                 'readLimitPoolSetup'
             )
@@ -416,24 +308,20 @@ export class InitialSetup {
 
         hre.props.token0 = await hre.ethers.getContractAt('Token20', token0Address)
         hre.props.token1 = await hre.ethers.getContractAt('Token20', token1Address)
-        hre.props.coverPool = await hre.ethers.getContractAt('LimitPool', coverPoolAddress)
-        hre.props.coverPoolFactory = await hre.ethers.getContractAt('LimitPoolFactory', coverPoolFactoryAddress)
-        hre.props.uniswapV3PoolMock = await hre.ethers.getContractAt('UniswapV3PoolMock', uniswapV3PoolMockAddress)
+        hre.props.limitPool = await hre.ethers.getContractAt('LimitPool', limitPoolAddress)
+        hre.props.limitPoolFactory = await hre.ethers.getContractAt('LimitPoolFactory', limitPoolFactoryAddress)
 
         return nonce
     }
 
     public async createLimitPool(): Promise<void> {
 
-        await hre.props.coverPoolFactory
+        await hre.props.limitPoolFactory
           .connect(hre.props.admin)
           .createLimitPool(
-            this.uniV3String,
             hre.props.token0.address,
             hre.props.token1.address,
-            '500',
-            '40',
-            '40'
+            '10',
         )
         hre.nonce += 1
     }

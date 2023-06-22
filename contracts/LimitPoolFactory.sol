@@ -24,7 +24,8 @@ contract LimitPoolFactory is
     function createLimitPool(
         address tokenIn,
         address tokenOut,
-        int16  tickSpacing
+        int16  tickSpacing,
+        uint160 startPrice
     ) external override returns (address pool) {
         LimitPoolParams memory params;
         // sort tokens by address
@@ -39,6 +40,7 @@ contract LimitPoolFactory is
         params.owner = owner;
         if (!ILimitPoolManager(owner).tickSpacings(tickSpacing)) revert TickSpacingNotSupported();
         params.tickSpacing = tickSpacing;
+        params.startPrice = startPrice;
 
         // launch pool and save address
         pool = address(new LimitPool(params));

@@ -48,8 +48,8 @@ contract LimitPool is
         // set other immutables
         tickSpacing    = params.tickSpacing;
 
-        // set price boundaries
-        (minPrice, maxPrice) = ConstantProduct.priceBounds(params.tickSpacing);
+        // initialize state
+        (globalState, minPrice, maxPrice) = Ticks.initialize(tickMap, pool0, pool1, globalState, params);
     }
 
     // limitSwap
@@ -67,14 +67,15 @@ contract LimitPool is
             amountOut: 0
         });
         // check if pool price in range
-        (cache.amountIn, cache.amountOut,) = swap(SwapParams({
-            to: params.to,
-            refundTo: params.refundTo,
-            priceLimit: params.zeroForOne ? ConstantProduct.getPriceAtTick(params.lower, cache.constants)
-                                          : ConstantProduct.getPriceAtTick(params.upper, cache.constants),
-            amountIn: params.amount,
-            zeroForOne: params.zeroForOne
-        }));
+        // (cache.amountIn, cache.amountOut,) = swap(SwapParams({
+        //     to: params.to,
+        //     refundTo: params.refundTo,
+        //     //TODO: priceLimit should be at average price
+        //     priceLimit: params.zeroForOne ? ConstantProduct.getPriceAtTick(params.lower, cache.constants)
+        //                                   : ConstantProduct.getPriceAtTick(params.upper, cache.constants),
+        //     amountIn: params.amount,
+        //     zeroForOne: params.zeroForOne
+        // }));
         cache = MintCall.perform(
             params,
             cache,
@@ -99,8 +100,7 @@ contract LimitPool is
             position: params.zeroForOne ? positions0[msg.sender][params.lower][params.upper]
                                         : positions1[msg.sender][params.lower][params.upper],
             constants: _immutables(),
-            pool0: pool0,
-            pool1: pool1
+            pool: params.zeroForOne ? pool0 : pool1
         });
         cache = BurnCall.perform(
             params, 
@@ -109,8 +109,11 @@ contract LimitPool is
             params.zeroForOne ? ticks0 : ticks1,
             params.zeroForOne ? positions0 : positions1
         );
-        pool0 = cache.pool0;
-        pool1 = cache.pool1;
+        if (params.zeroForOne) {
+            pool0 = cache.pool;
+        } else {
+            pool1 = cache.pool;
+        }
         globalState = cache.state;
     }
 
@@ -209,19 +212,17 @@ contract LimitPool is
     }
 
     function fees(
-        uint16 syncFee,
-        uint16 fillFee,
+        uint16 protocolFee0,
+        uint16 protocolFee1,
         bool setFees
     ) external override ownerOnly returns (
         uint128 token0Fees,
         uint128 token1Fees
     ) {
         if (setFees) {
-            globalState.syncFee = syncFee;
-            globalState.fillFee = fillFee;
+            pool0.protocolFee = protocolFee0;
+            pool1.protocolFee = protocolFee1;
         }
-        token0Fees = globalState.protocolFees.token0;
-        token1Fees = globalState.protocolFees.token1;
         address feeTo = ILimitPoolManager(owner).feeTo();
         globalState.protocolFees.token0 = 0;
         globalState.protocolFees.token1 = 0;
@@ -241,10 +242,6 @@ contract LimitPool is
     }
 
     function _prelock() private {
-        if (globalState.unlocked == 0) {
-            globalState = Ticks.initialize(tickMap, pool0, pool1, globalState, _immutables());
-        }
-        if (globalState.unlocked == 0) revert WaitUntilEnoughObservations();
         if (globalState.unlocked == 2) revert Locked();
         globalState.unlocked = 2;
     }

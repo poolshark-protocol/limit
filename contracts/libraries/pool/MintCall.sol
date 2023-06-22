@@ -54,16 +54,6 @@ library MintCall {
             ),
             cache.constants
         );
-        Collect.mint(
-            cache,
-            ILimitPoolStructs.CollectParams(
-                params.to, //address(0) goes to msg.sender
-                params.lower,
-                0, // not needed for mint collect
-                params.upper,
-                params.zeroForOne
-            )
-        );
         positions[params.to][params.lower][params.upper] = cache.position;
         return cache;
     }

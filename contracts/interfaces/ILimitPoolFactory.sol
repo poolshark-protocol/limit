@@ -6,7 +6,8 @@ abstract contract ILimitPoolFactory is LimitPoolFactoryStorage {
     function createLimitPool(
         address tokenIn,
         address tokenOut,
-        int16  tickSpacing
+        int16  tickSpacing,
+        uint160 startPrice
     ) external virtual returns (address pool);
 
     function getLimitPool(

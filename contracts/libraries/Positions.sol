@@ -31,7 +31,6 @@ library Positions {
         bool zeroForOne,
         uint128 liquidityBurned,
         uint128 tokenInClaimed,
-        uint128 tokenOutClaimed,
         uint128 tokenOutBurned
     );
 
@@ -51,8 +50,8 @@ library Positions {
             position: position,
             priceLower: ConstantProduct.getPriceAtTick(params.lower, constants),
             priceUpper: ConstantProduct.getPriceAtTick(params.upper, constants),
-            requiredStart: params.zeroForOne ? params.lower
-                                             : params.upper,
+            requiredStart: params.zeroForOne ? params.upper
+                                             : params.lower,
             liquidityMinted: 0
         });
 
@@ -75,6 +74,7 @@ library Positions {
         if (params.zeroForOne) {
             if (params.upper > cache.requiredStart) {
                 params.upper = cache.requiredStart;
+                //TODO: call getNewPrice or just check the pool price and update position accordingly
                 uint256 priceNewUpper = ConstantProduct.getPriceAtTick(params.upper, constants);
                 params.amount -= uint128(
                     ConstantProduct.getDx(cache.liquidityMinted, priceNewUpper, cache.priceUpper, false)
@@ -126,15 +126,15 @@ library Positions {
         /// initialize new position
 
         if (cache.position.liquidity == 0) {
-            cache.position.swapEpochLast = state.swapEpoch;
+            cache.position.epochLast = state.swapEpoch;
         } else {
             // safety check in case we somehow get here
             if (
                 params.zeroForOne
-                    ? EpochMap.get(TickMap.next(tickMap, params.lower, constants.tickSpacing), tickMap, constants)
-                            > cache.position.swapEpochLast
-                    : EpochMap.get(TickMap.previous(tickMap, params.upper, constants.tickSpacing), tickMap, constants)
-                            > cache.position.swapEpochLast
+                    ? EpochMap.get(params.lower, tickMap, constants)
+                            > cache.position.epochLast
+                    : EpochMap.get(params.upper, tickMap, constants)
+                            > cache.position.epochLast
             ) {
                 require (false, string.concat('UpdatePositionFirstAt(', String.from(params.lower), ', ', String.from(params.upper), ')'));
             }
@@ -200,12 +200,10 @@ library Positions {
             /// @dev - validate needed in case user passes in wrong tick
             if (
                 params.zeroForOne
-                    ? state.latestTick < params.upper ||
-                        EpochMap.get(TickMap.previous(tickMap, params.upper, constants.tickSpacing), tickMap, constants)
-                            > cache.position.swapEpochLast
-                    : state.latestTick > params.lower ||
-                        EpochMap.get(TickMap.next(tickMap, params.lower, constants.tickSpacing), tickMap, constants)
-                            > cache.position.swapEpochLast
+                    ? EpochMap.get(params.lower, tickMap, constants)
+                            > cache.position.epochLast
+                    : EpochMap.get(params.upper, tickMap, constants)
+                            > cache.position.epochLast
             ) {
                 require (false, 'WrongTickClaimedAt()');
             }
@@ -246,10 +244,10 @@ library Positions {
                     params.to,
                     params.lower,
                     params.upper,
-                    params.zeroForOne ? params.upper : params.lower,
+                    params.zeroForOne ? params.lower : params.upper,
                     params.zeroForOne,
                     params.amount,
-                    0, 0,
+                    0,
                     cache.position.amountOut
             );
         }
@@ -294,9 +292,8 @@ library Positions {
             ticks[params.zeroForOne ? params.lower : params.upper] = cache.finalTick;
         
         // update pool liquidity
-        if (state.latestTick == params.claim
-            && params.claim != (params.zeroForOne ? params.lower : params.upper)
-        ) pool.liquidity -= params.amount;
+        if (params.lower <= pool.tickAtPrice && params.upper > pool.tickAtPrice)
+            pool.liquidity -= params.amount;
         
         if (params.amount > 0) {
             if (params.claim == (params.zeroForOne ? params.lower : params.upper)) {
@@ -327,7 +324,7 @@ library Positions {
         (
             cache,
             params
-        ) = _checkpoint(state, pool, params, constants, cache);
+        ) = _checkpoint(pool, params, constants, cache);
 
         // clear out old position
         if (params.zeroForOne ? params.claim != params.upper 
@@ -343,7 +340,7 @@ library Positions {
         // force collection to the user
         // store cached position in memory
         if (cache.position.liquidity == 0) {
-            cache.position.swapEpochLast = 0;
+            cache.position.epochLast = 0;
             cache.position.claimPriceLast = 0;
         }
         params.zeroForOne
@@ -358,8 +355,7 @@ library Positions {
             params.zeroForOne,
             params.amount,
             cache.position.amountIn,
-            cache.finalDeltas.amountOutDelta,
-            cache.position.amountOut - cache.finalDeltas.amountOutDelta
+            cache.position.amountOut
         );
         // return cached position in memory and transfer out
         return (state, pool, params.claim);
@@ -408,11 +404,11 @@ library Positions {
         (
             cache,
             params
-        ) = _checkpoint(state, pool, params, constants, cache);
+        ) = _checkpoint(pool, params, constants, cache);
         
         // clear position values if empty
         if (cache.position.liquidity == 0) {
-            cache.position.swapEpochLast = 0;
+            cache.position.epochLast = 0;
             cache.position.claimPriceLast = 0;
         }    
         return cache.position;
@@ -458,9 +454,7 @@ library Positions {
             finalTick: ticks[params.zeroForOne ? params.lower : params.upper],
             earlyReturn: false,
             removeLower: true,
-            removeUpper: true,
-            deltas: ILimitPoolStructs.Deltas(0,0,0,0),
-            finalDeltas: ILimitPoolStructs.Deltas(0,0,0,0)
+            removeUpper: true
         });
 
         params.amount = _convert(cache.position.liquidity, params.amount);
@@ -485,7 +479,6 @@ library Positions {
     }
 
     function _checkpoint(
-        ILimitPoolStructs.GlobalState memory state,
         ILimitPoolStructs.PoolState memory pool,
         ILimitPoolStructs.UpdateParams memory params,
         ILimitPoolStructs.Immutables memory constants,
@@ -495,18 +488,19 @@ library Positions {
         ILimitPoolStructs.UpdateParams memory
     ) {
         // update claimPriceLast
+        //TODO: could be pool price or claim at price point
         cache.priceClaim = ConstantProduct.getPriceAtTick(params.claim, constants);
-        cache.position.claimPriceLast = (params.claim == state.latestTick)
+        cache.position.claimPriceLast = (params.claim == pool.tickAtPrice)
             ? pool.price
             : cache.priceClaim;
         /// @dev - if tick 0% filled, set CPL to latestTick
-        if (pool.price == cache.priceSpread) cache.position.claimPriceLast = cache.priceClaim;
+        if (pool.price == cache.priceClaim) cache.position.claimPriceLast = cache.priceClaim;
         /// @dev - if tick 100% filled, set CPL to next tick to unlock
-        if (pool.price == cache.priceClaim && params.claim == state.latestTick){
+        if (pool.price == cache.priceClaim && params.claim == pool.tickAtPrice) {
             cache.position.claimPriceLast = cache.priceSpread;
             // set claim tick to claim + tickSpread
-            params.claim = params.zeroForOne ? params.claim - constants.tickSpacing
-                                             : params.claim + constants.tickSpacing;
+            params.claim = params.zeroForOne ? params.claim + constants.tickSpacing
+                                             : params.claim - constants.tickSpacing;
         }
         return (cache, params);
     }

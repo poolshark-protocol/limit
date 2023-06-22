@@ -3,6 +3,7 @@ pragma solidity 0.8.13;
 
 import '../interfaces/ILimitPoolStructs.sol';
 import '../interfaces/ILimitPoolFactory.sol';
+import '../base/structs/LimitPoolFactoryStructs.sol';
 import '../interfaces/ILimitPool.sol';
 import './math/ConstantProduct.sol';
 import './Positions.sol';
@@ -21,8 +22,7 @@ library Ticks {
     event Initialize(
         int24 minTick,
         int24 maxTick,
-        uint160 pool0Price,
-        uint160 pool1Price
+        uint160 startPrice
     );
 
     event Swap(
@@ -43,31 +43,41 @@ library Ticks {
         ILimitPoolStructs.PoolState storage pool0,
         ILimitPoolStructs.PoolState storage pool1,
         ILimitPoolStructs.GlobalState memory state,
-        ILimitPoolStructs.Immutables memory constants 
-    ) external returns (ILimitPoolStructs.GlobalState memory) {
-        if (state.unlocked == 0) {
-            //TODO: check if both buy and sell side exist
+        LimitPoolFactoryStructs.LimitPoolParams memory params
+    ) external returns (
+        ILimitPoolStructs.GlobalState memory,
+        uint160,
+        uint160
+    ) {
+        // initialize state
+        state.swapEpoch = 1;
 
-            state.unlocked = 1;
-            if (state.unlocked == 1) {
-                // initialize state
-                state.swapEpoch = 1;
+        // check price bounds
+        ITickMath.PriceBounds memory bounds;
+        (bounds.min, bounds.max) = ConstantProduct.priceBounds(params.tickSpacing);
+        if (params.startPrice < bounds.min || params.startPrice >= bounds.max) require(false, 'StartPriceInvalid()');
 
-                // initialize ticks
-                TickMap.set(tickMap, ConstantProduct.minTick(constants.tickSpacing), constants.tickSpacing);
-                TickMap.set(tickMap, ConstantProduct.maxTick(constants.tickSpacing), constants.tickSpacing);
+        // initialize ticks
+        TickMap.set(tickMap, ConstantProduct.minTick(params.tickSpacing), params.tickSpacing);
+        TickMap.set(tickMap, ConstantProduct.maxTick(params.tickSpacing), params.tickSpacing);
 
-                // initialize price
-            
-                emit Initialize(
-                    ConstantProduct.minTick(constants.tickSpacing),
-                    ConstantProduct.maxTick(constants.tickSpacing),
-                    pool0.price,
-                    pool1.price
-                );
-            }
-        }
-        return state;
+        // initialize price
+        pool0.price = params.startPrice;
+        pool1.price = params.startPrice;
+        ILimitPoolStructs.Immutables memory constants;
+        constants.tickSpacing = params.tickSpacing;
+        int24 startTick = TickMath.getTickAtPrice(params.startPrice, constants);
+        pool0.tickAtPrice = startTick;
+        pool1.tickAtPrice = startTick;
+
+        // emit event
+        emit Initialize(
+            ConstantProduct.minTick(params.tickSpacing),
+            ConstantProduct.maxTick(params.tickSpacing),
+            pool0.price
+        );
+
+        return (state, bounds.min, bounds.max);
     }
 
     function validate(

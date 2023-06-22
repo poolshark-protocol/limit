@@ -30,59 +30,50 @@ library Claims {
             return cache;
         }
         // if the position has not been crossed into at all
-        else if (params.zeroForOne ? params.claim == params.upper 
-                                        && EpochMap.get(params.upper, tickMap, constants) <= cache.position.swapEpochLast
-                                     : params.claim == params.lower 
-                                        && EpochMap.get(params.lower, tickMap, constants) <= cache.position.swapEpochLast
+        else if (params.zeroForOne ? params.claim == params.lower 
+                                        && EpochMap.get(params.lower, tickMap, constants) <= cache.position.epochLast
+                                     : params.claim == params.upper 
+                                        && EpochMap.get(params.upper, tickMap, constants) <= cache.position.epochLast
         ) {
             cache.earlyReturn = true;
             return cache;
         }
         // early return if no update and amount burned is 0
-        if (
-            (
-                params.zeroForOne
-                    ? params.claim == params.upper && cache.priceUpper != pool.price
-                    : params.claim == params.lower && cache.priceLower != pool.price /// @dev - if pool price is start tick, set claimPriceLast to next tick crossed
-            ) && params.claim == state.latestTick
-        ) { if (params.amount == 0 && cache.position.claimPriceLast == pool.price) {
+        if (params.amount == 0 && cache.position.claimPriceLast == pool.price) {
                 cache.earlyReturn = true;
                 return cache;
-            } 
-        } /// @dev - nothing to update if pool price hasn't moved
+        } 
         
         // claim tick sanity checks
         else if (
             // claim tick is on a prior tick
             cache.position.claimPriceLast > 0 &&
             (params.zeroForOne
-                    ? cache.position.claimPriceLast < cache.priceClaim
-                    : cache.position.claimPriceLast > cache.priceClaim
-            ) && params.claim != state.latestTick
+                    ? cache.position.claimPriceLast > cache.priceClaim
+                    : cache.position.claimPriceLast < cache.priceClaim
+            )
         ) require (false, 'InvalidClaimTick()'); /// @dev - wrong claim tick
         if (params.claim < params.lower || params.claim > params.upper) require (false, 'InvalidClaimTick()');
 
         uint32 claimTickEpoch = EpochMap.get(params.claim, tickMap, constants);
 
         // validate claim tick
-        if (params.claim == (params.zeroForOne ? params.lower : params.upper)) {
-             if (claimTickEpoch <= cache.position.swapEpochLast)
+        if (params.claim == (params.zeroForOne ? params.upper : params.lower)) {
+             if (claimTickEpoch <= cache.position.epochLast)
                 require (false, 'WrongTickClaimedAt()');
         } else {
             // zero fill or partial fill
             uint32 claimTickNextAccumEpoch = params.zeroForOne
-                ? EpochMap.get(TickMap.previous(tickMap, params.claim, constants.tickSpacing), tickMap, constants)
-                : EpochMap.get(TickMap.next(tickMap, params.claim, constants.tickSpacing), tickMap, constants);
+                ? EpochMap.get(TickMap.next(tickMap, params.claim, constants.tickSpacing), tickMap, constants)
+                : EpochMap.get(TickMap.previous(tickMap, params.claim, constants.tickSpacing), tickMap, constants);
             ///@dev - next swapEpoch should not be greater
-            if (claimTickNextAccumEpoch > cache.position.swapEpochLast) {
-                //TODO: search for claim tick if necessary
-                //TODO: limit search to within 1 closest word
+            if (claimTickNextAccumEpoch > cache.position.epochLast) {
                 require (false, 'WrongTickClaimedAt()');
             }
         }
         if (params.claim != params.upper && params.claim != params.lower) {
-            // check swapEpochLast on claim tick
-            if (claimTickEpoch <= cache.position.swapEpochLast)
+            // check epochLast on claim tick
+            if (claimTickEpoch <= cache.position.epochLast)
                 require (false, 'WrongTickClaimedAt()');
             // prevent position overwriting at claim tick
             if (params.zeroForOne) {

@@ -320,12 +320,12 @@ library Positions {
             // update global liquidity
             state.liquidityGlobal -= params.amount;
         }
-
+console.log('position amounts 2', cache.position.amountIn, cache.position.amountOut);
         (
             cache,
             params
         ) = _checkpoint(pool, params, constants, cache);
-
+console.log('position amounts 3', cache.position.amountIn, cache.position.amountOut);
         // clear out old position
         if (params.zeroForOne ? params.claim != params.upper 
                               : params.claim != params.lower) {
@@ -395,6 +395,8 @@ library Positions {
                         : ConstantProduct.getDy(params.amount, cache.priceLower, cache.priceUpper, false)
                 );
             return cache.position;
+        } else {
+            console.log('no early return');
         }
 
         if (params.amount > 0) {
@@ -471,6 +473,9 @@ library Positions {
         );
         if (cache.earlyReturn) {
             return (cache, state);
+        } else if (cache.position.claimPriceLast == 0) {
+            cache.position.claimPriceLast = params.zeroForOne ? cache.priceLower
+                                                              : cache.priceUpper;
         }
         // get deltas from claim tick
         cache = Claims.getDeltas(cache, params);

@@ -66,6 +66,7 @@ contract LimitPool is
             amountIn: 0,
             amountOut: 0
         });
+        // getNewPrice by consuming half the input and use that priceLimit
         // check if pool price in range
         // (cache.amountIn, cache.amountOut,) = swap(SwapParams({
         //     to: params.to,
@@ -84,6 +85,7 @@ contract LimitPool is
             params.zeroForOne ? positions0 : positions1
         );
         if (params.zeroForOne) {
+            console.log('saving pool0', cache.pool.liquidity);
             pool0 = cache.pool;
         } else {
             pool1 = cache.pool;

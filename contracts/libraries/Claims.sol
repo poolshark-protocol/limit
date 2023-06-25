@@ -6,10 +6,14 @@ import '../interfaces/modules/curves/ICurveMath.sol';
 import './EpochMap.sol';
 import './TickMap.sol';
 import './utils/String.sol';
+import './utils/SafeCast.sol';
+import 'hardhat/console.sol';
 
 library Claims {
     /////////// DEBUG FLAGS ///////////
     bool constant debugDeltas = true;
+
+    using SafeCast for uint256;
 
     function validate(
         mapping(address => mapping(int24 => mapping(int24 => ILimitPoolStructs.Position)))
@@ -57,6 +61,9 @@ library Claims {
 
         uint32 claimTickEpoch = EpochMap.get(params.claim, tickMap, constants);
 
+        console.log('claim tick epoch', claimTickEpoch);
+        console.logInt(params.claim);
+
         // validate claim tick
         if (params.claim == (params.zeroForOne ? params.upper : params.lower)) {
              if (claimTickEpoch <= cache.position.epochLast)
@@ -96,6 +103,12 @@ library Claims {
     ) external pure returns (
         ILimitPoolStructs.UpdatePositionCache memory
     ) {
+        cache.position.amountIn += uint128(params.zeroForOne ? ConstantProduct.getDy(cache.position.liquidity, cache.position.claimPriceLast, cache.priceClaim, false)
+                                                             : ConstantProduct.getDx(cache.position.liquidity, cache.priceClaim, cache.position.claimPriceLast, false));
+        if (params.claim != (params.zeroForOne ? params.upper : params.lower)) {
+            cache.position.amountOut += uint128(params.zeroForOne ? ConstantProduct.getDx(cache.position.liquidity, cache.priceClaim, cache.priceUpper, false)
+                                                                  : ConstantProduct.getDy(cache.position.liquidity, cache.priceLower, cache.priceClaim, false));
+        }
         return cache;
     }
 }

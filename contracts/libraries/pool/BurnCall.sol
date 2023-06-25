@@ -32,7 +32,7 @@ library BurnCall {
             storage positions
     ) external returns (ILimitPoolStructs.BurnCache memory) {
        if (cache.position.claimPriceLast > 0
-            || params.claim != (params.zeroForOne ? params.upper : params.lower) 
+            || params.claim != (params.zeroForOne ? params.lower : params.upper) 
             || params.claim == cache.pool.tickAtPrice)
         {
             // if position has been crossed into

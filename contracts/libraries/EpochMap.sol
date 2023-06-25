@@ -10,7 +10,7 @@ library EpochMap {
         uint256 epoch,
         ILimitPoolStructs.TickMap storage tickMap,
         ILimitPoolStructs.Immutables memory constants
-    ) external {
+    ) internal {
         (
             uint256 tickIndex,
             uint256 wordIndex,
@@ -31,7 +31,7 @@ library EpochMap {
         int24 tick,
         ILimitPoolStructs.TickMap storage tickMap,
         ILimitPoolStructs.Immutables memory constants
-    ) external {
+    ) internal {
         (
             uint256 tickIndex,
             uint256 wordIndex,
@@ -50,7 +50,7 @@ library EpochMap {
         int24 tick,
         ILimitPoolStructs.TickMap storage tickMap,
         ILimitPoolStructs.Immutables memory constants
-    ) external view returns (
+    ) internal view returns (
         uint32 epoch
     ) {
         (
@@ -71,7 +71,7 @@ library EpochMap {
     function getIndices(
         int24 tick,
         ILimitPoolStructs.Immutables memory constants
-    ) public pure returns (
+    ) internal pure returns (
             uint256 tickIndex,
             uint256 wordIndex,
             uint256 blockIndex,

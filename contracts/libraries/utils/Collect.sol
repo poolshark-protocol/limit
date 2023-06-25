@@ -24,6 +24,7 @@ library Collect {
             positions[msg.sender][params.lower][params.upper].amountIn = 0;
             SafeTransfers.transferOut(params.to, params.zeroForOne ? cache.constants.token1 : cache.constants.token0, amountIn);
         } 
+        console.log('position amounts', amountIn, amountOut);
         if (amountOut > 0) {
             positions[msg.sender][params.lower][params.upper].amountOut = 0;
             SafeTransfers.transferOut(params.to, params.zeroForOne ? cache.constants.token0 : cache.constants.token1, amountOut);

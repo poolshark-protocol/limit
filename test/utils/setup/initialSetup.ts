@@ -14,7 +14,6 @@ import {
     Claims__factory,
     LimitPoolManager__factory,
     TickMap__factory,
-    EpochMap__factory,
 } from '../../../typechain'
 
 export class InitialSetup {
@@ -113,14 +112,6 @@ export class InitialSetup {
         await this.deployAssist.deployContractWithRetry(
             network,
             // @ts-ignore
-            EpochMap__factory,
-            'epochMapLib',
-            []
-        )
-
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
             Ticks__factory,
             'ticksLib',
             [],
@@ -131,11 +122,7 @@ export class InitialSetup {
             // @ts-ignore
             Claims__factory,
             'claimsLib',
-            [],
-            {
-                'contracts/libraries/TickMap.sol:TickMap': hre.props.tickMapLib.address,
-                'contracts/libraries/EpochMap.sol:EpochMap': hre.props.epochMapLib.address
-            }
+            []
         )
 
         await this.deployAssist.deployContractWithRetry(
@@ -164,8 +151,6 @@ export class InitialSetup {
             'mintCall',
             [],
             {
-                'contracts/libraries/TickMap.sol:TickMap': hre.props.tickMapLib.address,
-                'contracts/libraries/EpochMap.sol:EpochMap': hre.props.epochMapLib.address,
                 'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address
             }
         )
@@ -178,8 +163,6 @@ export class InitialSetup {
             [],
             {
                 'contracts/libraries/Claims.sol:Claims': hre.props.claimsLib.address,
-                'contracts/libraries/TickMap.sol:TickMap': hre.props.tickMapLib.address,
-                'contracts/libraries/EpochMap.sol:EpochMap': hre.props.epochMapLib.address,
                 'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address
             }
         )
@@ -230,6 +213,7 @@ export class InitialSetup {
             hre.props.token0.address,
             hre.props.token1.address,
             '10',
+            '177159557114295710296101716160'
         )
         await createPoolTxn.wait()
 
@@ -322,6 +306,7 @@ export class InitialSetup {
             hre.props.token0.address,
             hre.props.token1.address,
             '10',
+            '177159557114295710296101716160'
         )
         hre.nonce += 1
     }

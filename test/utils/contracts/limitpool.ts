@@ -27,10 +27,10 @@ export interface ProtocolFees {
 export interface PoolState {
     price: BigNumber
     liquidity: BigNumber
-    liquidityGlobal: BigNumber
-    tickAtPrice: number
-    protocolFee: BigNumber
     protocolFees: BigNumber
+    tickAtPrice: number
+    protocolFee: number
+
 }
 
 export interface Tick {
@@ -63,8 +63,8 @@ export interface ValidateSwapParams {
     zeroForOne: boolean
     amountIn: BigNumber
     priceLimit: BigNumber
-    balanceInDecrease: BigNumber
-    balanceOutIncrease: BigNumber
+    balanceInDecrease: string
+    balanceOutIncrease: string
     revertMessage: string
     syncRevertMessage?: string
     splitInto?: number
@@ -78,22 +78,14 @@ export interface ValidateBurnParams {
     liquidityAmount?: BigNumber
     liquidityPercent?: BigNumber
     zeroForOne: boolean
-    balanceInIncrease: BigNumber
-    balanceOutIncrease: BigNumber
+    balanceInIncrease: string
+    balanceOutIncrease: string
     lowerTickCleared: boolean
     upperTickCleared: boolean
     expectedLower?: string
     expectedUpper?: string
     compareSnapshot?: boolean
     revertMessage: string
-}
-
-export async function getLatestTick(print: boolean = false): Promise<number> {
-    const latestTick = (await hre.props.limitPool.globalState()).latestTick
-    if (print) {
-        console.log('latest tick:', latestTick)
-    }
-    return latestTick
 }
 
 export async function getLiquidity(isPool0: boolean, print: boolean = false): Promise<BigNumber> {
@@ -138,8 +130,10 @@ export async function validateSwap(params: ValidateSwapParams) {
     const zeroForOne = params.zeroForOne
     const amountIn = params.amountIn
     const priceLimit = params.priceLimit
-    const balanceInDecrease = params.balanceInDecrease
-    const balanceOutIncrease = params.balanceOutIncrease
+    console.log('balance in', params.balanceInDecrease)
+    const balanceInDecrease = BigNumber.from(params.balanceInDecrease)
+    console.log('balance out')
+    const balanceOutIncrease = BigNumber.from(params.balanceOutIncrease)
     const revertMessage = params.revertMessage
     const syncRevertMessage = params.syncRevertMessage
     const splitInto = params.splitInto && params.splitInto > 1 ? params.splitInto : 1
@@ -161,7 +155,6 @@ export async function validateSwap(params: ValidateSwapParams) {
         : await hre.props.limitPool.pool0()
     const liquidityBefore = poolBefore.liquidity
     const priceBefore = poolBefore.price
-    const latestTickBefore = (await hre.props.limitPool.globalState()).latestTick
 
     // quote pre-swap and validate balance changes match post-swap
     const quote = await hre.props.limitPool.quote({
@@ -207,8 +200,6 @@ export async function validateSwap(params: ValidateSwapParams) {
         ).to.be.revertedWith(revertMessage)
         return
     }
-    //amountInDelta in the pool should have increased by the balance change
-    (await hre.props.limitPool.pool0()).amountInDelta.toString()
 
     let balanceInAfter
     let balanceOutAfter
@@ -230,9 +221,7 @@ export async function validateSwap(params: ValidateSwapParams) {
         ? await hre.props.limitPool.pool1()
         : await hre.props.limitPool.pool0()
     const liquidityAfter = poolAfter.liquidity
-    const amountInDeltaAfter = poolAfter.amountInDelta
     const priceAfter = poolAfter.price
-    const latestTickAfter = (await hre.props.limitPool.globalState()).latestTick
 
     // expect(liquidityAfter).to.be.equal(finalLiquidity);
     // expect(priceAfter).to.be.equal(finalPrice);
@@ -297,6 +286,7 @@ export async function validateMint(params: ValidateMintParams) {
             .connect(params.signer)
             .mint({
                 to: recipient,
+                refundTo: recipient,
                 amount: amountDesired,
                 lower: lower,
                 upper: upper,
@@ -309,6 +299,7 @@ export async function validateMint(params: ValidateMintParams) {
                 .connect(params.signer)
                 .mint({
                     to: params.signer.address,
+                    refundTo: recipient,
                     lower: lower,
                     upper: upper,
                     amount: amountDesired,
@@ -352,23 +343,21 @@ export async function validateMint(params: ValidateMintParams) {
         )
     }
 
-    //TODO: handle lower and/or upper below TWAP
-    //TODO: does this handle negative values okay?
     if (zeroForOne) {
         //liquidity change for lower should be -liquidityAmount
         if (!upperTickCleared) {
             expect(upperTickAfter.liquidityDelta.sub(upperTickBefore.liquidityDelta)).to.be.equal(
-                liquidityIncrease
-            )
-        } else {
-            expect(upperTickAfter.liquidityDelta).to.be.equal(liquidityIncrease)
-        }
-        if (!lowerTickCleared) {
-            expect(lowerTickAfter.liquidityDelta.sub(lowerTickBefore.liquidityDelta)).to.be.equal(
                 BN_ZERO.sub(liquidityIncrease)
             )
         } else {
-            expect(lowerTickAfter.liquidityDelta).to.be.equal(BN_ZERO.sub(liquidityIncrease))
+            expect(upperTickAfter.liquidityDelta).to.be.equal(BN_ZERO.sub(liquidityIncrease))
+        }
+        if (!lowerTickCleared) {
+            expect(lowerTickAfter.liquidityDelta.sub(lowerTickBefore.liquidityDelta)).to.be.equal(
+               liquidityIncrease
+            )
+        } else {
+            expect(lowerTickAfter.liquidityDelta).to.be.equal(liquidityIncrease)
         }
     } else {
         if (!lowerTickCleared) {
@@ -398,8 +387,8 @@ export async function validateBurn(params: ValidateBurnParams) {
     let liquidityAmount = params.liquidityAmount ? params.liquidityAmount : null
     let liquidityPercent = params.liquidityPercent ? params.liquidityPercent : null
     const zeroForOne = params.zeroForOne
-    const balanceInIncrease = params.balanceInIncrease
-    const balanceOutIncrease = params.balanceOutIncrease
+    const balanceInIncrease = BigNumber.from(params.balanceInIncrease)
+    const balanceOutIncrease = BigNumber.from(params.balanceOutIncrease)
     const upperTickCleared = params.upperTickCleared
     const lowerTickCleared = params.lowerTickCleared
     const revertMessage = params.revertMessage
@@ -460,7 +449,6 @@ export async function validateBurn(params: ValidateBurnParams) {
                 upper: upper,
                 zeroForOne: zeroForOne,
                 burnPercent: liquidityPercent,
-                sync: true
             })
         await burnTxn.wait()
     } else {
@@ -474,7 +462,6 @@ export async function validateBurn(params: ValidateBurnParams) {
                     upper: upper,
                     zeroForOne: zeroForOne,
                     burnPercent: liquidityPercent,
-                    sync: true
                 })
         ).to.be.revertedWith(revertMessage)
         return

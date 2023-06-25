@@ -59,7 +59,15 @@ library Claims {
         ) require (false, 'InvalidClaimTick()'); /// @dev - wrong claim tick
         if (params.claim < params.lower || params.claim > params.upper) require (false, 'InvalidClaimTick()');
 
-        uint32 claimTickEpoch = EpochMap.get(params.claim, tickMap, constants);
+        uint32 claimTickEpoch;
+        if (params.claim != pool.tickAtPrice)
+            claimTickEpoch = EpochMap.get(params.claim, tickMap, constants);
+        else if (params.lower <= pool.tickAtPrice && pool.tickAtPrice <= params.upper) {
+            console.log('tick at price check');
+            console.logInt(pool.tickAtPrice);
+            cache.priceClaim = pool.price;
+            claimTickEpoch = pool.swapEpoch;
+        }
 
         console.log('claim tick epoch', claimTickEpoch);
         console.logInt(params.claim);

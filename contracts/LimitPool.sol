@@ -222,8 +222,8 @@ contract LimitPool is
         uint128 token1Fees
     ) {
         if (setFees) {
-            pool0.protocolFee = protocolFee0;
-            pool1.protocolFee = protocolFee1;
+            globalState.protocolFee = protocolFee0;
+            globalState.protocolFee = protocolFee1;
         }
         address feeTo = ILimitPoolManager(owner).feeTo();
         globalState.protocolFees.token0 = 0;

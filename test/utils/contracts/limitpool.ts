@@ -27,15 +27,14 @@ export interface ProtocolFees {
 export interface PoolState {
     price: BigNumber
     liquidity: BigNumber
-    protocolFees: BigNumber
+    liquidityGlobal: BigNumber
+    swapEpoch: number
     tickAtPrice: number
-    protocolFee: number
-
 }
 
 export interface Tick {
     liquidityDelta: BigNumber
-    epochLast: BigNumber
+    epochLast: number
 }
 
 export interface ValidateMintParams {
@@ -47,7 +46,7 @@ export interface ValidateMintParams {
     zeroForOne: boolean
     balanceInDecrease: BigNumber
     balanceOutIncrease?: BigNumber
-    liquidityIncrease: BigNumber
+    liquidityIncrease: string
     positionLiquidityChange?: BigNumber
     upperTickCleared: boolean
     lowerTickCleared: boolean
@@ -235,7 +234,7 @@ export async function validateMint(params: ValidateMintParams) {
     const amountDesired = params.amount
     const zeroForOne = params.zeroForOne
     const balanceInDecrease = params.balanceInDecrease
-    const liquidityIncrease = params.liquidityIncrease
+    const liquidityIncrease = BigNumber.from(params.liquidityIncrease)
     const upperTickCleared = params.upperTickCleared
     const lowerTickCleared = params.lowerTickCleared
     const revertMessage = params.revertMessage
@@ -362,17 +361,17 @@ export async function validateMint(params: ValidateMintParams) {
     } else {
         if (!lowerTickCleared) {
             expect(lowerTickAfter.liquidityDelta.sub(lowerTickBefore.liquidityDelta)).to.be.equal(
-                liquidityIncrease
-            )
-        } else {
-            expect(lowerTickAfter.liquidityDelta).to.be.equal(liquidityIncrease)
-        }
-        if (!upperTickCleared) {
-            expect(upperTickAfter.liquidityDelta.sub(upperTickBefore.liquidityDelta)).to.be.equal(
                 BN_ZERO.sub(liquidityIncrease)
             )
         } else {
-            expect(upperTickAfter.liquidityDelta).to.be.equal(BN_ZERO.sub(liquidityIncrease))
+            expect(lowerTickAfter.liquidityDelta).to.be.equal(BN_ZERO.sub(liquidityIncrease))
+        }
+        if (!upperTickCleared) {
+            expect(upperTickAfter.liquidityDelta.sub(upperTickBefore.liquidityDelta)).to.be.equal(
+                liquidityIncrease
+            )
+        } else {
+            expect(upperTickAfter.liquidityDelta).to.be.equal(liquidityIncrease)
         }
     }
     const positionLiquidityChange = params.positionLiquidityChange ? params.positionLiquidityChange : liquidityIncrease
@@ -466,6 +465,7 @@ export async function validateBurn(params: ValidateBurnParams) {
         ).to.be.revertedWith(revertMessage)
         return
     }
+    await getTick(false, -100, true)
     let balanceInAfter
     let balanceOutAfter
     if (zeroForOne) {
@@ -501,7 +501,7 @@ export async function validateBurn(params: ValidateBurnParams) {
     if (zeroForOne) {
         if (!upperTickCleared) {
             expect(upperTickAfter.liquidityDelta.sub(upperTickBefore.liquidityDelta)).to.be.equal(
-                BN_ZERO.sub(liquidityAmount)
+                liquidityAmount
             )
         } else {
             expect(upperTickAfter.liquidityDelta.sub(upperTickBefore.liquidityDelta)).to.be.equal(
@@ -510,7 +510,7 @@ export async function validateBurn(params: ValidateBurnParams) {
         }
         if (!lowerTickCleared) {
             expect(lowerTickAfter.liquidityDelta.sub(lowerTickBefore.liquidityDelta)).to.be.equal(
-                liquidityAmount
+                BN_ZERO.sub(liquidityAmount)
             )
         } else {
             expect(lowerTickAfter.liquidityDelta.sub(lowerTickBefore.liquidityDelta)).to.be.equal(
@@ -520,8 +520,9 @@ export async function validateBurn(params: ValidateBurnParams) {
     } else {
         //liquidity change for lower should be -liquidityAmount
         if (!lowerTickCleared) {
+            console.log('liquidity delta before', lowerTickBefore.liquidityDelta.toString(), lowerTickAfter.liquidityDelta.toString())
             expect(lowerTickAfter.liquidityDelta.sub(lowerTickBefore.liquidityDelta)).to.be.equal(
-                BN_ZERO.sub(liquidityAmount)
+                liquidityAmount
             )
         } else {
             expect(lowerTickAfter.liquidityDelta.sub(lowerTickBefore.liquidityDelta)).to.be.equal(
@@ -530,7 +531,7 @@ export async function validateBurn(params: ValidateBurnParams) {
         }
         if (!upperTickCleared) {
             expect(upperTickAfter.liquidityDelta.sub(upperTickBefore.liquidityDelta)).to.be.equal(
-                liquidityAmount
+                BN_ZERO.sub(liquidityAmount)
             )
         } else {
             expect(upperTickAfter.liquidityDelta.sub(upperTickBefore.liquidityDelta)).to.be.equal(

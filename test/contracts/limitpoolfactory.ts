@@ -30,61 +30,40 @@ describe('LimitPoolFactory Tests', function () {
 
     it('Should not create pool with identical token address', async function () {
         await expect(
-            hre.props.coverPoolFactory
+            hre.props.limitPoolFactory
                 .connect(hre.props.admin)
                 .createLimitPool(
-                    uniV3String,
                     '0x0000000000000000000000000000000000000000',
                     '0x0000000000000000000000000000000000000000',
-                    '500',
-                    '20',
-                    '5'
+                    '10',
+                    '396140812571321687967719751680'
                 )
         ).to.be.revertedWith('Transaction reverted: function returned an unexpected amount of data')
     })
 
-    it('Should not create pool with invalid twap source', async function () {
-        await expect(
-            hre.props.coverPoolFactory
-                .connect(hre.props.admin)
-                .createLimitPool(
-                    ethers.utils.formatBytes32String('test'),
-                    '0x0000000000000000000000000000000000000000',
-                    '0x0000000000000000000000000000000000000000',
-                    '500',
-                    '20',
-                    '5'
-                )
-        ).to.be.revertedWith('TwapSourceNotFound()')
-    })
-
     it('Should not create pool if the pair already exists', async function () {
         await expect(
-            hre.props.coverPoolFactory
+            hre.props.limitPoolFactory
                 .connect(hre.props.admin)
                 .createLimitPool(
-                    uniV3String,
                     hre.props.token1.address,
                     hre.props.token0.address,
-                    '500',
-                    '20',
-                    '5'
+                    '10',
+                    '396140812571321687967719751680'
                 )
         ).to.be.revertedWith('PoolAlreadyExists()')
     })
 
     it('Should not create pool if volatility tier does not exist', async function () {
         await expect(
-            hre.props.coverPoolFactory
+            hre.props.limitPoolFactory
                 .connect(hre.props.admin)
                 .createLimitPool(
-                    uniV3String,
                     hre.props.token1.address,
                     hre.props.token0.address,
-                    '2000',
-                    '20',
-                    '5'
+                    '10',
+                    '396140812571321687967719751680'
                 )
-        ).to.be.revertedWith('VolatilityTierNotSupported()')
+        ).to.be.revertedWith('TickSpacingNotSupported()')
     })
 })

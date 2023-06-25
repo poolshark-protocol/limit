@@ -7,17 +7,16 @@ import './modules/sources/ITwapSource.sol';
 interface ILimitPoolStructs {
     struct GlobalState {
         ProtocolFees protocolFees;
-        uint128 liquidityGlobal;
-        uint32  swapEpoch;
+        uint16 protocolFee;
         uint8   unlocked;
     }
 
     struct PoolState {
         uint160 price; /// @dev Starting price current
         uint128 liquidity; /// @dev Liquidity currently active
-        uint128 protocolFees; /// @dev Fees collected by the protocol
+        uint128 liquidityGlobal;
+        uint32  swapEpoch;
         int24 tickAtPrice;
-        uint16 protocolFee;   /// @dev Fees applied to each swap
     }
 
     struct TickMap {

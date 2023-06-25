@@ -56,11 +56,11 @@ library MintCall {
                                  params.amount
                                 );
 
-        (cache.state, cache.position) = Positions.add(
+        (cache.pool, cache.position) = Positions.add(
             cache.position,
             ticks,
             tickMap,
-            cache.state,
+            cache.pool,
             ILimitPoolStructs.AddParams(
                 params.to,
                 uint128(cache.liquidityMinted),

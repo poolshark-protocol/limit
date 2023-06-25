@@ -54,8 +54,9 @@ library Ticks {
         uint160,
         uint160
     ) {
-        // initialize state
-        state.swapEpoch = 1;
+        // initialize epoch
+        pool0.swapEpoch = 1;
+        pool1.swapEpoch = 1;
 
         // check price bounds
         ILimitPoolStructs.Immutables memory constants;
@@ -123,7 +124,7 @@ library Ticks {
             amountIn: params.amountIn
         });
         // increment swap epoch
-        cache.state.swapEpoch += 1;
+        cache.pool.swapEpoch += 1;
         // grab latest sample and store in cache for _cross
         while (cache.cross) {
             cache.crossPrice = ConstantProduct.getPriceAtTick(cache.crossTick, cache.constants);
@@ -288,24 +289,19 @@ library Ticks {
     ) {
         console.log('crossing tick');
         console.logInt(cache.crossTick);
-        console.log(cache.state.swapEpoch);
-        EpochMap.set(cache.crossTick, cache.state.swapEpoch, tickMap, cache.constants);
-        // observe most recent oracle update
+        console.log(cache.liquidity);
+        EpochMap.set(cache.crossTick, cache.pool.swapEpoch, tickMap, cache.constants);
+        int128 liquidityDelta = ticks[cache.crossTick].liquidityDelta;
+        console.logInt(liquidityDelta);
+        if (liquidityDelta > 0) cache.liquidity += uint128(ticks[cache.crossTick].liquidityDelta);
+        else cache.liquidity -= uint128(-ticks[cache.crossTick].liquidityDelta);
+        pool.tickAtPrice = cache.crossTick;
+        ticks[cache.crossTick].liquidityDelta = 0;
         if (zeroForOne) {
-            unchecked {
-                cache.liquidity -= uint128(ticks[cache.crossTick].liquidityDelta);
-            }
-            pool.tickAtPrice = cache.crossTick;
             cache.crossTick = TickMap.previous(tickMap, cache.crossTick, cache.constants.tickSpacing);
         } else {
-            unchecked {
-                cache.liquidity -= uint128(-ticks[cache.crossTick].liquidityDelta);
-            }
-            pool.tickAtPrice = cache.crossTick;
             cache.crossTick = TickMap.next(tickMap, cache.crossTick, cache.constants.tickSpacing);
         }
-        // zero out liquidity
-        ticks[cache.crossTick].liquidityDelta = 0;
         return (pool, cache);
     }
 
@@ -338,7 +334,7 @@ library Ticks {
     function insert(
         mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
         ILimitPoolStructs.TickMap storage tickMap,
-        ILimitPoolStructs.GlobalState memory state,
+        ILimitPoolStructs.PoolState memory pool,
         ILimitPoolStructs.Immutables memory constants,
         int24 lower,
         int24 upper,
@@ -347,7 +343,7 @@ library Ticks {
     ) external {
         /// @dev - validation of ticks is in Positions.validate
         if (amount > uint128(type(int128).max)) require (false, 'LiquidityOverflow()');
-        if ((uint128(type(int128).max) - state.liquidityGlobal) < amount)
+        if ((uint128(type(int128).max) - pool.liquidityGlobal) < amount)
             require (false, 'LiquidityOverflow()');
 
         // load ticks into memory to reduce reads/writes
@@ -359,9 +355,9 @@ library Ticks {
 
         // updates liquidity values
         if (isPool0) {
-                tickLower.liquidityDelta += int128(amount);
+            tickLower.liquidityDelta += int128(amount);
         } else {
-                tickLower.liquidityDelta -= int128(amount);
+            tickLower.liquidityDelta -= int128(amount);
         }
 
         TickMap.set(tickMap, upper, constants.tickSpacing);
@@ -388,12 +384,14 @@ library Ticks {
     ) external {
         {
             ILimitPoolStructs.Tick memory tickLower = ticks[lower];
+            
             if (removeLower) {
                 if (isPool0) {
-                    tickLower.liquidityDelta += int128(amount);
-                } else {
                     tickLower.liquidityDelta -= int128(amount);
+                } else {
+                    tickLower.liquidityDelta += int128(amount);
                 }
+                console.logInt(tickLower.liquidityDelta);
                 ticks[lower] = tickLower;
             }
             if (lower != ConstantProduct.minTick(constants.tickSpacing) && _empty(tickLower)) {
@@ -404,9 +402,9 @@ library Ticks {
             ILimitPoolStructs.Tick memory tickUpper = ticks[upper];
             if (removeUpper) {
                 if (isPool0) {
-                    tickUpper.liquidityDelta -= int128(amount);
-                } else {
                     tickUpper.liquidityDelta += int128(amount);
+                } else {
+                    tickUpper.liquidityDelta -= int128(amount);
                 }
                 ticks[upper] = tickUpper;
             }

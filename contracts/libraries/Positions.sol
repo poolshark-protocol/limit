@@ -104,14 +104,14 @@ library Positions {
        ILimitPoolStructs.Position memory position,
         mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
         ILimitPoolStructs.TickMap storage tickMap,
-        ILimitPoolStructs.GlobalState memory state,
+        ILimitPoolStructs.PoolState memory pool,
         ILimitPoolStructs.AddParams memory params,
         ILimitPoolStructs.Immutables memory constants
     ) internal returns (
-        ILimitPoolStructs.GlobalState memory,
+        ILimitPoolStructs.PoolState memory,
         ILimitPoolStructs.Position memory
     ) {
-        if (params.amount == 0) return (state, position);
+        if (params.amount == 0) return (pool, position);
 
         // initialize cache
         ILimitPoolStructs.PositionCache memory cache = ILimitPoolStructs.PositionCache({
@@ -126,7 +126,7 @@ library Positions {
         /// initialize new position
 
         if (cache.position.liquidity == 0) {
-            cache.position.epochLast = state.swapEpoch;
+            cache.position.epochLast = pool.swapEpoch;
         } else {
             // safety check in case we somehow get here
             if (
@@ -144,7 +144,7 @@ library Positions {
         Ticks.insert(
             ticks,
             tickMap,
-            state,
+            pool,
             constants,
             params.lower,
             params.upper,
@@ -152,8 +152,8 @@ library Positions {
             params.zeroForOne
         );
 
-        // update liquidity global
-        state.liquidityGlobal += params.amount;
+        // // update liquidity global
+        pool.liquidityGlobal += params.amount;
 
         cache.position.liquidity += uint128(params.amount);
 
@@ -162,12 +162,12 @@ library Positions {
             params.lower,
             params.upper,
             params.zeroForOne,
-            state.swapEpoch,
+            pool.swapEpoch,
             uint128(params.amountIn),
             uint128(params.amount)
         );
 
-        return (state, cache.position);
+        return (pool, cache.position);
     }
 
     function remove(
@@ -175,10 +175,10 @@ library Positions {
             storage positions,
         mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
         ILimitPoolStructs.TickMap storage tickMap,
-        ILimitPoolStructs.GlobalState memory state,
+        ILimitPoolStructs.PoolState memory pool,
         ILimitPoolStructs.RemoveParams memory params,
         ILimitPoolStructs.Immutables memory constants
-    ) internal returns (uint128, ILimitPoolStructs.GlobalState memory) {
+    ) internal returns (uint128, ILimitPoolStructs.PoolState memory) {
         // validate burn percentage
         if (params.amount > 1e38) require (false, 'InvalidBurnPercentage()');
         // initialize cache
@@ -193,7 +193,7 @@ library Positions {
         // convert percentage to liquidity amount
         params.amount = _convert(cache.position.liquidity, params.amount);
         // early return if no liquidity to remove
-        if (params.amount == 0) return (0, state);
+        if (params.amount == 0) return (0, pool);
         if (params.amount > cache.position.liquidity) {
             require (false, 'NotEnoughPositionLiquidity()');
         } else {
@@ -222,7 +222,7 @@ library Positions {
         );
 
         // update liquidity global
-        state.liquidityGlobal -= params.amount;
+        pool.liquidityGlobal -= params.amount;
 
         {
             // update max deltas
@@ -251,7 +251,7 @@ library Positions {
                     cache.position.amountOut
             );
         }
-        return (params.amount, state);
+        return (params.amount, pool);
     }
 
     function update(
@@ -285,18 +285,13 @@ library Positions {
 
         if (cache.earlyReturn)
             return (state, pool, params.claim);
-
-        // save claim tick
-        ticks[params.claim] = cache.claimTick;
-        if (params.claim != (params.zeroForOne ? params.lower : params.upper))
-            ticks[params.zeroForOne ? params.lower : params.upper] = cache.finalTick;
         
         // update pool liquidity
         if (params.lower <= pool.tickAtPrice && params.upper > pool.tickAtPrice)
             pool.liquidity -= params.amount;
         
         if (params.amount > 0) {
-            if (params.claim == (params.zeroForOne ? params.lower : params.upper)) {
+            if (params.claim == (params.zeroForOne ? params.upper : params.lower)) {
                 // only remove once if final tick of position
                 cache.removeLower = false;
                 cache.removeUpper = false;
@@ -304,12 +299,15 @@ library Positions {
                 params.zeroForOne ? cache.removeUpper = true 
                                   : cache.removeLower = true;
             }
+            console.log('removing liquidity', cache.removeLower, cache.removeUpper);
+                        console.log('tick -100 check 3');
+            console.logInt(ticks[-100].liquidityDelta);
             Ticks.remove(
                 ticks,
                 tickMap,
                 constants,
-                params.zeroForOne ? params.lower : params.claim,
-                params.zeroForOne ? params.claim : params.upper,
+                params.zeroForOne ? params.claim : params.lower,
+                params.zeroForOne ? params.upper : params.claim,
                 params.amount,
                 params.zeroForOne,
                 cache.removeLower,
@@ -318,7 +316,9 @@ library Positions {
             // update position liquidity
             cache.position.liquidity -= uint128(params.amount);
             // update global liquidity
-            state.liquidityGlobal -= params.amount;
+            pool.liquidityGlobal -= params.amount;
+                        console.log('tick -100 check 4');
+            console.logInt(ticks[-100].liquidityDelta);
         }
 console.log('position amounts 2', cache.position.amountIn, cache.position.amountOut);
         (
@@ -333,7 +333,7 @@ console.log('position amounts 3', cache.position.amountIn, cache.position.amount
             if (params.zeroForOne ? params.claim == params.lower 
                                   : params.claim == params.upper) {
                 // subtract remaining position liquidity out from global
-                state.liquidityGlobal -= cache.position.liquidity;
+                pool.liquidityGlobal -= cache.position.liquidity;
             }
             delete positions[params.owner][params.lower][params.upper];
         }
@@ -455,8 +455,8 @@ console.log('position amounts 3', cache.position.amountIn, cache.position.amount
             claimTick: ticks[params.claim],
             finalTick: ticks[params.zeroForOne ? params.lower : params.upper],
             earlyReturn: false,
-            removeLower: true,
-            removeUpper: true
+            removeLower: false,
+            removeUpper: false
         });
 
         params.amount = _convert(cache.position.liquidity, params.amount);
@@ -500,13 +500,6 @@ console.log('position amounts 3', cache.position.amountIn, cache.position.amount
             : cache.priceClaim;
         /// @dev - if tick 0% filled, set CPL to latestTick
         if (pool.price == cache.priceClaim) cache.position.claimPriceLast = cache.priceClaim;
-        /// @dev - if tick 100% filled, set CPL to next tick to unlock
-        if (pool.price == cache.priceClaim && params.claim == pool.tickAtPrice) {
-            cache.position.claimPriceLast = cache.priceSpread;
-            // set claim tick to claim + tickSpread
-            params.claim = params.zeroForOne ? params.claim + constants.tickSpacing
-                                             : params.claim - constants.tickSpacing;
-        }
         return (cache, params);
     }
 }

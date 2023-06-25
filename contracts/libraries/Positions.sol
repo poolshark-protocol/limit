@@ -327,8 +327,8 @@ console.log('position amounts 2', cache.position.amountIn, cache.position.amount
         ) = _checkpoint(pool, params, constants, cache);
 console.log('position amounts 3', cache.position.amountIn, cache.position.amountOut);
         // clear out old position
-        if (params.zeroForOne ? params.claim != params.upper 
-                              : params.claim != params.lower) {
+        if (params.zeroForOne ? params.claim != params.lower 
+                              : params.claim != params.upper) {
             /// @dev - this also clears out position end claims
             if (params.zeroForOne ? params.claim == params.lower 
                                   : params.claim == params.upper) {
@@ -344,8 +344,8 @@ console.log('position amounts 3', cache.position.amountIn, cache.position.amount
             cache.position.claimPriceLast = 0;
         }
         params.zeroForOne
-            ? positions[params.owner][params.lower][params.claim] = cache.position
-            : positions[params.owner][params.claim][params.upper] = cache.position;
+            ? positions[params.owner][params.claim][params.upper] = cache.position
+            : positions[params.owner][params.lower][params.claim] = cache.position;
         
         emit Burn(
             params.to,

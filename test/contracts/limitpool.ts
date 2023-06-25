@@ -7,6 +7,7 @@ import { mintSigners20 } from '../utils/token'
 import {
     BN_ZERO,
     PoolState,
+    getPositionLiquidity,
     getTick,
     validateBurn,
     validateMint,
@@ -109,6 +110,8 @@ describe('LimitPool Tests', function () {
             upperTickCleared: true,
             revertMessage: '',
         })
+
+        await getPositionLiquidity(true, hre.props.alice.address, 0, 100, true)
     })
 
     it('pool1 - Should mint, fully fill, and burn', async function () {
@@ -263,5 +266,153 @@ describe('LimitPool Tests', function () {
         })
 
         await getTick(false, -100, true)
+    })
+
+    it('pool0 - Should mint, partially fill, partially burn, fill remaining, and burn again 17', async function () {
+        const aliceLiquidity = '20051041647900280328782'
+        // mint should revert
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '0',
+            upper: '100',
+            amount: tokenAmountBn,
+            zeroForOne: true,
+            balanceInDecrease: tokenAmountBn,
+            liquidityIncrease: aliceLiquidity,
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
+
+        // no-op swap
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: false,
+            amountIn: tokenAmountBn.div(2),
+            priceLimit: maxPrice,
+            balanceInDecrease: '50000000000000000000',
+            balanceOutIncrease: '49875628335894665158',
+            revertMessage: '',
+        })
+
+        await getTick(false, -100, true)
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '0',
+            upper: '100',
+            claim: '49',
+            liquidityPercent: ethers.utils.parseUnits('5', 37),
+            zeroForOne: true,
+            balanceInIncrease: '49999999999999999999',
+            balanceOutIncrease: '25062185832052667420',
+            lowerTickCleared: true,
+            upperTickCleared: false,
+            revertMessage: '',
+        })
+
+        // no-op swap
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: false,
+            amountIn: tokenAmountBn.div(2),
+            priceLimit: maxPrice,
+            balanceInDecrease: '25250613481152560176',
+            balanceOutIncrease: '25062185832052667420',
+            revertMessage: '',
+        })
+
+        await getTick(false, -100, true)
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '49',
+            upper: '100',
+            claim: '100',
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: true,
+            balanceInIncrease: '25250613481152560175',
+            balanceOutIncrease: '0',
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: '',
+        })
+    })
+
+    it('pool1 - Should mint, partially fill, partially burn, fill remaining, and burn again 17', async function () {
+        const aliceLiquidity = '20051041647900280328782'
+        // mint should revert
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '-100',
+            upper: '0',
+            amount: tokenAmountBn,
+            zeroForOne: false,
+            balanceInDecrease: tokenAmountBn,
+            liquidityIncrease: aliceLiquidity,
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
+
+        // no-op swap
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: true,
+            amountIn: tokenAmountBn.div(2),
+            priceLimit: minPrice,
+            balanceInDecrease: '50000000000000000000',
+            balanceOutIncrease: '49875628335894665158',
+            revertMessage: '',
+        })
+
+        await getTick(false, -100, true)
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-100',
+            upper: '0',
+            claim: '-50',
+            liquidityPercent: ethers.utils.parseUnits('5', 37),
+            zeroForOne: false,
+            balanceInIncrease: '49999999999999999999',
+            balanceOutIncrease: '25062185832052667420',
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: '',
+        })
+
+        // no-op swap
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: true,
+            amountIn: tokenAmountBn.div(2),
+            priceLimit: minPrice,
+            balanceInDecrease: '25250613481152560176',
+            balanceOutIncrease: '25062185832052667420',
+            revertMessage: '',
+        })
+
+        await getTick(false, -100, true)
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-100',
+            upper: '-50',
+            claim: '-100',
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: false,
+            balanceInIncrease: '25250613481152560175',
+            balanceOutIncrease: '0',
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: '',
+        })
     })
 })

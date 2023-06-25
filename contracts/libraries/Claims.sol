@@ -114,8 +114,8 @@ library Claims {
         cache.position.amountIn += uint128(params.zeroForOne ? ConstantProduct.getDy(cache.position.liquidity, cache.position.claimPriceLast, cache.priceClaim, false)
                                                              : ConstantProduct.getDx(cache.position.liquidity, cache.priceClaim, cache.position.claimPriceLast, false));
         if (params.claim != (params.zeroForOne ? params.upper : params.lower)) {
-            cache.position.amountOut += uint128(params.zeroForOne ? ConstantProduct.getDx(cache.position.liquidity, cache.priceClaim, cache.priceUpper, false)
-                                                                  : ConstantProduct.getDy(cache.position.liquidity, cache.priceLower, cache.priceClaim, false));
+            cache.position.amountOut += uint128(params.zeroForOne ? ConstantProduct.getDx(params.amount, cache.priceClaim, cache.priceUpper, false)
+                                                                  : ConstantProduct.getDy(params.amount, cache.priceLower, cache.priceClaim, false));
         }
         return cache;
     }

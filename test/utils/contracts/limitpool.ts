@@ -430,6 +430,7 @@ export async function validateBurn(params: ValidateBurnParams) {
     } else {
         liquidityAmount = liquidityPercent.mul(positionBefore.liquidity).div(ethers.utils.parseUnits("1",38))
     }
+    console.log('burn percent', liquidityPercent.div(ethers.utils.parseUnits('1', 36)).toString())
     if (revertMessage == '') {
         positionSnapshot = await hre.props.limitPool.snapshot({
             owner: signer.address,
@@ -465,7 +466,7 @@ export async function validateBurn(params: ValidateBurnParams) {
         ).to.be.revertedWith(revertMessage)
         return
     }
-    await getTick(false, -100, true)
+    // await getTick(false, -100, true)
     let balanceInAfter
     let balanceOutAfter
     if (zeroForOne) {
@@ -491,11 +492,11 @@ export async function validateBurn(params: ValidateBurnParams) {
     if (zeroForOne) {
         lowerTickAfter = await hre.props.limitPool.ticks0(lower)
         upperTickAfter = await hre.props.limitPool.ticks0(upper)
-        positionAfter = await hre.props.limitPool.positions0(signer.address, lower, expectedUpper ? expectedUpper : claim)
+        positionAfter = await hre.props.limitPool.positions0(signer.address, expectedLower ? expectedLower : claim, upper)
     } else {
         lowerTickAfter = await hre.props.limitPool.ticks1(lower)
         upperTickAfter = await hre.props.limitPool.ticks1(upper)
-        positionAfter = await hre.props.limitPool.positions1(signer.address, expectedLower ? expectedLower : claim, upper)
+        positionAfter = await hre.props.limitPool.positions1(signer.address, lower, expectedUpper ? expectedUpper : claim)
     }
     //dependent on zeroForOne
     if (zeroForOne) {

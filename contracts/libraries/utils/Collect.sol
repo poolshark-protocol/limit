@@ -13,7 +13,7 @@ library Collect {
         ILimitPoolStructs.CollectParams memory params
         
     ) internal {
-        params.zeroForOne ? params.upper = params.claim : params.lower = params.claim;
+        params.zeroForOne ? params.lower = params.claim : params.upper = params.claim;
 
         // store amounts for transferOut
         uint128 amountIn  = positions[msg.sender][params.lower][params.upper].amountIn;

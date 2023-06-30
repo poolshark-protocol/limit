@@ -27,8 +27,8 @@ interface ILimitPoolStructs {
     }
 
     struct Tick {
+        uint160 priceAt;
         int128 liquidityDelta;
-        uint32 epochLast;
     }
 
     struct Position {

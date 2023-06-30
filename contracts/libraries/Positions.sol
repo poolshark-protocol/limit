@@ -146,6 +146,7 @@ library Positions {
             tickMap,
             pool,
             constants,
+            cache,
             params.lower,
             params.upper,
             uint128(params.amount),
@@ -299,9 +300,6 @@ library Positions {
                 params.zeroForOne ? cache.removeUpper = true 
                                   : cache.removeLower = true;
             }
-            console.log('removing liquidity', cache.removeLower, cache.removeUpper);
-                        console.log('tick -100 check 3');
-            console.logInt(ticks[-100].liquidityDelta);
             Ticks.remove(
                 ticks,
                 tickMap,
@@ -317,15 +315,11 @@ library Positions {
             cache.position.liquidity -= uint128(params.amount);
             // update global liquidity
             pool.liquidityGlobal -= params.amount;
-                        console.log('tick -100 check 4');
-            console.logInt(ticks[-100].liquidityDelta);
         }
-console.log('position amounts 2', cache.position.amountIn, cache.position.amountOut);
         (
             cache,
             params
         ) = _checkpoint(pool, params, constants, cache);
-console.log('position amounts 3', cache.position.amountIn, cache.position.amountOut);
         // clear out old position
         if (params.zeroForOne ? params.claim != params.lower 
                               : params.claim != params.upper) {
@@ -395,8 +389,6 @@ console.log('position amounts 3', cache.position.amountIn, cache.position.amount
                         : ConstantProduct.getDy(params.amount, cache.priceLower, cache.priceUpper, false)
                 );
             return cache.position;
-        } else {
-            console.log('no early return');
         }
 
         if (params.amount > 0) {

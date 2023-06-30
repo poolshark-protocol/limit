@@ -34,21 +34,6 @@ library MintCall {
             cache.state,
             cache.constants
         );
-        if (params.zeroForOne) {
-            uint160 priceLower = TickMath.getPriceAtTick(params.lower, cache.constants);
-            if (priceLower < cache.pool.price) {
-                cache.pool.price = priceLower;
-                cache.pool.tickAtPrice = params.lower;
-                cache.pool.liquidity = uint128(cache.liquidityMinted);
-            }
-        } else {
-            uint160 priceUpper = TickMath.getPriceAtTick(params.upper, cache.constants);
-            if (priceUpper > cache.pool.price) {
-                cache.pool.price = priceUpper;
-                cache.pool.tickAtPrice = params.upper;
-                cache.pool.liquidity = uint128(cache.liquidityMinted);
-            }
-        }
 
         // params.amount must be > 0 here
         SafeTransfers.transferIn(params.zeroForOne ? cache.constants.token0 
@@ -71,6 +56,37 @@ library MintCall {
             ),
             cache.constants
         );
+        if (params.zeroForOne) {
+            uint160 priceLower = TickMath.getPriceAtTick(params.lower, cache.constants);
+            if (priceLower < cache.pool.price) {
+                if (cache.pool.liquidity > 0) {
+                    Ticks.insertSingle(ticks, tickMap, cache.pool, cache.constants);
+                }
+                cache.pool.price = priceLower;
+                cache.pool.tickAtPrice = params.lower;
+                cache.pool.liquidity = uint128(cache.liquidityMinted);
+            }
+        } else {
+            uint160 priceUpper = TickMath.getPriceAtTick(params.upper, cache.constants);
+            console.log('ticks -100 check:');
+            console.logInt(ticks[-100].liquidityDelta);
+            if (priceUpper > cache.pool.price) {
+                if (cache.pool.liquidity > 0) {
+                    console.log('changing liquidity');
+                    Ticks.insertSingle(ticks, tickMap, cache.pool, cache.constants);
+                } else {
+                    console.log('not changing liquidity');
+                }
+                cache.pool.price = priceUpper;
+                cache.pool.tickAtPrice = params.upper;
+                cache.pool.liquidity = uint128(cache.liquidityMinted);
+            }
+            if (priceUpper == cache.pool.price){
+                console.log('we should clear out liquidity');
+            } else {
+                console.log('we should not clear out liquidity');
+            }
+        }
         console.log('pool0', cache.pool.liquidity, params.zeroForOne);
         positions[params.to][params.lower][params.upper] = cache.position;
         return cache;

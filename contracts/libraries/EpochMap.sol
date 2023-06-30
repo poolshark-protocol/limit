@@ -3,6 +3,7 @@ pragma solidity ^0.8.13;
 
 import './math/ConstantProduct.sol';
 import '../interfaces/ILimitPoolStructs.sol';
+import 'hardhat/console.sol';
 
 library EpochMap {
     function set(
@@ -71,7 +72,7 @@ library EpochMap {
     function getIndices(
         int24 tick,
         ILimitPoolStructs.Immutables memory constants
-    ) internal pure returns (
+    ) internal view returns (
             uint256 tickIndex,
             uint256 wordIndex,
             uint256 blockIndex,
@@ -81,12 +82,18 @@ library EpochMap {
         unchecked {
             if (tick > ConstantProduct.maxTick(constants.tickSpacing)) require (false, 'TickIndexOverflow()');
             if (tick < ConstantProduct.minTick(constants.tickSpacing)) require (false, 'TickIndexUnderflow()');
-            if (tick % constants.tickSpacing != 0) require (false, 'TickIndexInvalid()');
-            tickIndex = uint256(int256((tick - ConstantProduct.minTick(constants.tickSpacing))) / constants.tickSpacing);
+            if (tick % (constants.tickSpacing / 2) != 0) {
+                console.log('tick outside spacing');
+                console.logInt(tick);
+                require (false, 'TickIndexInvalid()');
+            } 
+            tickIndex = uint256(int256((_round(tick, constants.tickSpacing / 2) 
+                                        - _round(TickMath.MIN_TICK, constants.tickSpacing / 2)) 
+                                        / (constants.tickSpacing / 2)));
             wordIndex = tickIndex >> 3;        // 2^3 epochs per word
             blockIndex = tickIndex >> 11;      // 2^8 words per block
             volumeIndex = tickIndex >> 19;     // 2^8 blocks per volume
-            if (blockIndex > 1023) require (false, 'BlockIndexOverflow()');
+            if (blockIndex > 2046) require (false, 'BlockIndexOverflow()');
         }
     }
 
@@ -97,8 +104,18 @@ library EpochMap {
         int24 tick
     ) {
         unchecked {
-            if (tickIndex > uint24(ConstantProduct.maxTick(constants.tickSpacing) * 2)) require (false, 'TickIndexOverflow()');
-            tick = int24(int256(tickIndex) * int256(constants.tickSpacing) + ConstantProduct.maxTick(constants.tickSpacing));
+            if (tickIndex > uint24(_round(TickMath.MAX_TICK, constants.tickSpacing) * 2) * 2) 
+                require(false, 'TickIndexOverflow()');
+            tick = int24(int256(tickIndex) * (constants.tickSpacing / 2) + _round(TickMath.MIN_TICK, constants.tickSpacing / 2));
         }
+    }
+
+    function _round(
+        int24 tick,
+        int24 tickSpacing
+    ) internal pure returns (
+        int24 roundedTick
+    ) {
+        return tick / tickSpacing * tickSpacing;
     }
 }

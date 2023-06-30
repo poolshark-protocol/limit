@@ -225,7 +225,7 @@ export class InitialSetup {
             '10'
         )
         hre.props.limitPool = await hre.ethers.getContractAt('LimitPool', limitPoolAddress)
-        console.log('limit pool address', limitPoolAddress)
+
         await this.deployAssist.saveContractDeployment(
             network,
             'LimitPool',

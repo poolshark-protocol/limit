@@ -63,7 +63,7 @@ library TickMap {
     ) {
         unchecked {
             // rounds up to ensure relative position
-            if (tick % tickSpacing != 0) tick += tickSpacing;
+            if (tick % (tickSpacing / 2) != 0) tick += tickSpacing;
             (
               uint256 tickIndex,
               uint256 wordIndex,
@@ -134,8 +134,10 @@ library TickMap {
         unchecked {
             if (tick > TickMath.MAX_TICK) require(false, ' TickIndexOverflow()');
             if (tick < TickMath.MIN_TICK) require(false, 'TickIndexUnderflow()');
-            if (tick % tickSpacing != 0) tick = _round(tick, tickSpacing);
-            tickIndex = uint256(int256((tick - _round(TickMath.MIN_TICK, tickSpacing)) / tickSpacing));
+            if (tick % (tickSpacing / 2) != 0) tick = _round(tick, tickSpacing / 2);
+            tickIndex = uint256(int256((_round(tick, tickSpacing / 2) 
+                                        - _round(TickMath.MIN_TICK, tickSpacing / 2)) 
+                                        / (tickSpacing / 2)));
             wordIndex = tickIndex >> 8;   // 2^8 ticks per word
             blockIndex = tickIndex >> 16; // 2^8 words per block
             if (blockIndex > 255) require(false, 'BlockIndexOverflow()');
@@ -174,9 +176,9 @@ library TickMap {
         int24 tick
     ) {
         unchecked {
-            if (tickIndex > uint24(_round(TickMath.MAX_TICK, tickSpacing) * 2)) 
+            if (tickIndex > uint24(_round(TickMath.MAX_TICK, tickSpacing) * 2) * 2) 
                 require(false, 'TickIndexOverflow()');
-            tick = int24(int256(tickIndex) * tickSpacing + _round(TickMath.MIN_TICK, tickSpacing));
+            tick = int24(int256(tickIndex) * (tickSpacing / 2) + _round(TickMath.MIN_TICK, tickSpacing / 2));
         }
     }
 

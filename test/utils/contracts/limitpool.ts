@@ -33,8 +33,8 @@ export interface PoolState {
 }
 
 export interface Tick {
+    priceAt: BigNumber
     liquidityDelta: BigNumber
-    epochLast: number
 }
 
 export interface ValidateMintParams {
@@ -91,16 +91,18 @@ export async function getLiquidity(isPool0: boolean, print: boolean = false): Pr
     let liquidity: BigNumber = isPool0 ? (await hre.props.limitPool.pool0()).liquidity
                                        : (await hre.props.limitPool.pool1()).liquidity;
     if (print) {
-        console.log('pool liquidity:', liquidity.toString())
+        console.log(isPool0 ? 'pool0' : 'pool1', 'liquidity:', liquidity.toString())
     }
     return liquidity
 }
 
 export async function getPrice(isPool0: boolean, print: boolean = false): Promise<BigNumber> {
-    let price: BigNumber = isPool0 ? (await hre.props.limitPool.pool0()).price
-                                   : (await hre.props.limitPool.pool1()).price;
+    let pool: PoolState = isPool0 ? (await hre.props.limitPool.pool0())
+                                   : (await hre.props.limitPool.pool1());
+    let price: BigNumber = pool.price
+    let tickAtPrice: number = pool.tickAtPrice
     if (print) {
-        console.log('price:', price.toString())
+        console.log('price:', price.toString(), tickAtPrice)
     }
     return price
 }
@@ -129,9 +131,7 @@ export async function validateSwap(params: ValidateSwapParams) {
     const zeroForOne = params.zeroForOne
     const amountIn = params.amountIn
     const priceLimit = params.priceLimit
-    console.log('balance in', params.balanceInDecrease)
     const balanceInDecrease = BigNumber.from(params.balanceInDecrease)
-    console.log('balance out')
     const balanceOutIncrease = BigNumber.from(params.balanceOutIncrease)
     const revertMessage = params.revertMessage
     const syncRevertMessage = params.syncRevertMessage
@@ -356,7 +356,7 @@ export async function validateMint(params: ValidateMintParams) {
                liquidityIncrease
             )
         } else {
-            expect(lowerTickAfter.liquidityDelta).to.be.equal(liquidityIncrease)
+            expect(lowerTickAfter.liquidityDelta.sub(lowerTickBefore.liquidityDelta)).to.be.equal(BN_ZERO)
         }
     } else {
         if (!lowerTickCleared) {
@@ -371,7 +371,7 @@ export async function validateMint(params: ValidateMintParams) {
                 liquidityIncrease
             )
         } else {
-            expect(upperTickAfter.liquidityDelta).to.be.equal(liquidityIncrease)
+            expect(upperTickAfter.liquidityDelta.sub(upperTickBefore.liquidityDelta)).to.be.equal(BN_ZERO)
         }
     }
     const positionLiquidityChange = params.positionLiquidityChange ? params.positionLiquidityChange : liquidityIncrease

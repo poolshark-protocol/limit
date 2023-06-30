@@ -72,6 +72,8 @@ library Claims {
         console.log('claim tick epoch', claimTickEpoch);
         console.logInt(params.claim);
 
+        //TODO: if params.amount == 0 don't check the next tick
+
         // validate claim tick
         if (params.claim == (params.zeroForOne ? params.upper : params.lower)) {
              if (claimTickEpoch <= cache.position.epochLast)

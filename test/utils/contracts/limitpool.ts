@@ -47,7 +47,7 @@ export interface ValidateMintParams {
     balanceInDecrease: BigNumber
     balanceOutIncrease?: BigNumber
     liquidityIncrease: string
-    positionLiquidityChange?: BigNumber
+    positionLiquidityChange?: string
     upperTickCleared: boolean
     lowerTickCleared: boolean
     revertMessage: string
@@ -307,7 +307,8 @@ export async function validateMint(params: ValidateMintParams) {
         ).to.be.revertedWith(revertMessage)
         return
     }
-
+    await getTick(true, 100, true)
+    await getTick(true, 105, true)
     let balanceInAfter
     let balanceOutAfter
     if (zeroForOne) {
@@ -374,7 +375,7 @@ export async function validateMint(params: ValidateMintParams) {
             expect(upperTickAfter.liquidityDelta.sub(upperTickBefore.liquidityDelta)).to.be.equal(BN_ZERO)
         }
     }
-    const positionLiquidityChange = params.positionLiquidityChange ? params.positionLiquidityChange : liquidityIncrease
+    const positionLiquidityChange = params.positionLiquidityChange ? BigNumber.from(params.positionLiquidityChange) : liquidityIncrease
     expect(positionAfter.liquidity.sub(positionBefore.liquidity)).to.be.equal(positionLiquidityChange)
 }
 

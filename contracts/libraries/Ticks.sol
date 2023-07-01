@@ -387,24 +387,27 @@ library Ticks {
         // round to mid point -> 101 - 109 => 105
         // round down if less than -> 
         int24 tickToSave = pool.tickAtPrice;
+        uint160 roundedPrice = TickMath.getPriceAtTick(TickMap._round(tickToSave, constants.tickSpacing), constants);
         if (tickToSave % (constants.tickSpacing / 2) != 0 ||
-            pool.price != TickMath.getPriceAtTick(TickMap._round(tickToSave, constants.tickSpacing), constants)) {
+            pool.price != roundedPrice) {
             tickToSave = TickMap._round(pool.tickAtPrice, constants.tickSpacing);
             if (tickToSave >= 0) tickToSave += constants.tickSpacing / 2;
             else tickToSave -= constants.tickSpacing / 2;
+            roundedPrice = TickMath.getPriceAtTick(TickMap._round(tickToSave, constants.tickSpacing), constants);
         }
         console.log('tick to save check');
         console.logInt(tickToSave);
         console.log(pool.price);
-        console.log(TickMath.getPriceAtTick(TickMap._round(tickToSave, constants.tickSpacing), constants));
+        console.log(roundedPrice);
         // update tick to save
-        if(pool.price != TickMath.getPriceAtTick(TickMap._round(tickToSave, constants.tickSpacing), constants)) {
-            ILimitPoolStructs.Tick memory tick = ticks[tickToSave];
-            TickMap.set(tickMap, tickToSave, constants.tickSpacing);
+        ILimitPoolStructs.Tick memory tick = ticks[tickToSave];
+        TickMap.set(tickMap, tickToSave, constants.tickSpacing);
+        EpochMap.set(tickToSave, pool.swapEpoch, tickMap, constants);
+        tick.liquidityDelta += int128(pool.liquidity);
+        if(pool.price != roundedPrice) {
             tick.priceAt = pool.price;
-            tick.liquidityDelta += int128(pool.liquidity);
-            ticks[tickToSave] = tick;
         }
+        ticks[tickToSave] = tick;
 
     }
 

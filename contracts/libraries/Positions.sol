@@ -199,14 +199,28 @@ library Positions {
             require (false, 'NotEnoughPositionLiquidity()');
         } else {
             /// @dev - validate needed in case user passes in wrong tick
-            if (
-                params.zeroForOne
-                    ? EpochMap.get(params.lower, tickMap, constants)
-                            > cache.position.epochLast
-                    : EpochMap.get(params.upper, tickMap, constants)
-                            > cache.position.epochLast
-            ) {
-                require (false, 'WrongTickClaimedAt()');
+            if (params.zeroForOne) {
+                if (EpochMap.get(params.lower, tickMap, constants)
+                            > cache.position.epochLast) {
+                    int24 nextTick = TickMap.next(tickMap, params.lower, constants.tickSpacing);
+                    if (pool.price > cache.priceLower ||
+                        EpochMap.get(nextTick, tickMap, constants)
+                            > cache.position.epochLast) {
+                        require (false, 'WrongTickClaimedAt()');            
+                    }
+                }
+                // if pool price is further along
+                // OR next tick has a greater epoch
+            } else {
+                if (EpochMap.get(params.upper, tickMap, constants)
+                            > cache.position.epochLast) {
+                    int24 previousTick = TickMap.previous(tickMap, params.lower, constants.tickSpacing);
+                    if (pool.price < cache.priceUpper ||
+                        EpochMap.get(previousTick, tickMap, constants)
+                            > cache.position.epochLast) {
+                        require (false, 'WrongTickClaimedAt()');            
+                    }
+                }
             }
         }
 

@@ -531,7 +531,8 @@ describe('LimitPool Tests', function () {
     })
 
     //TODO: claiming should check pool.price epoch and check next tick epoch after that
-
+    // price lower check true 79625275426524748796330556128 177159557114295710296101716160
+    //price lower check false 79625275426524748796330556128 79625275426524748796330556128
     it('pool1 - Should mint, undercut, swap, and burn x2 11', async function () {
         await getPrice(false, true)
         const aliceLiquidity = '20051041647900280328782'
@@ -964,10 +965,12 @@ describe('LimitPool Tests', function () {
         })
     })
 
-    it.skip('pool0 - Should mint, undercut, swap, and burn x2 17', async function () {
+    it('pool0 - Should undercut, undercut again, and burn x2 17', async function () {
         await getPrice(false, true)
         const aliceLiquidity = '20051041647900280328782'
         const bobLiquidity = '20151542874862585449132'
+        // aliceLiquidity - bobLiquidity
+        const aliceMinusBobLiquidity = '-100501226962305120350'
         // mint position
         await validateMint({
             signer: hre.props.bob,
@@ -982,25 +985,8 @@ describe('LimitPool Tests', function () {
             lowerTickCleared: true,
             revertMessage: '',
         })
-        await validateSwap({
-            signer: hre.props.alice,
-            recipient: hre.props.alice.address,
-            zeroForOne: false,
-            amountIn: BigNumber.from(1),
-            priceLimit: maxPrice,
-            balanceInDecrease: '1',
-            balanceOutIncrease: '0',
-            revertMessage: '',
-        })
-
-        expect(await getPrice(true, true)).to.be.equal(BigNumber.from('79625275426524748796334487745'))
-        // swap tiny
-        // price should be at -100 tick
-        // undercut
-        await getTick(false, -100, true)
-        await getTick(false, -105, true)
         console.log('BEFORE MINT 2')
-        await getPrice(false, true)
+        await getPrice(true, true)
         await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
@@ -1009,13 +995,50 @@ describe('LimitPool Tests', function () {
             amount: tokenAmountBn,
             zeroForOne: true,
             balanceInDecrease: tokenAmountBn,
-            liquidityIncrease: aliceLiquidity,
+            liquidityIncrease: aliceMinusBobLiquidity,
+            positionLiquidityChange: aliceLiquidity,
             upperTickCleared: false,
             lowerTickCleared: true,
             revertMessage: '',
         })
-        await getTick(true, 100, true)
-        await getTick(true, 105, true)
+        //price: 79625275426524748796330556128 100
+        //price: 79625275426524748796330556128 100
+// price: 177159557114295710296101716160 16095
+// pool0 20151542874862585449132 true
+// saving pool0 20151542874862585449132
+// 100 tick: 0,0
+// 105 tick: 0,0
+// BEFORE MINT 2
+// price: 79625275426524748796330556128 100
+// changing liquidity
+// tick to save check
+// 100
+// 79625275426524748796330556128
+// 79625275426524748796330556128
+// pool0 20051041647900280328782 true
+// saving pool0 20051041647900280328782
+// 100 tick: 0,100501226962305120350
+// 105 tick: 0,0
+
+// price: 215353707227994575755767921544 20000
+// pool0 0 true
+// saving pool0 0
+// 100 tick: 0,0
+// 105 tick: 79625275426524748796334487745,0
+// BEFORE MINT 2
+// price: 79625275426524748796330556128 100
+// pool0 20051041647900280328782 true
+// saving pool0 20051041647900280328782
+// 100 tick: 0,-20051041647900280328782
+// 105 tick: 79625275426524748796334487745,0
+// BEFORE BURN 1
+// burn percent 100
+// calling deltas
+// early return 1 19 18 18
+// -40202584522762865777914
+// position amounts 0 99999999999999999999
+// 100 tick: 0,-40202584522762865777914
+// 105 tick: 79625275426524748796334487745,0
         // bob should be able to claim something here
         console.log('BEFORE BURN 1')
         // close both positions
@@ -1034,22 +1057,16 @@ describe('LimitPool Tests', function () {
         })
         await getTick(true, 100, true)
         await getTick(true, 105, true)
-        // if (true) {
-        //     console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
-        //     console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
-        // }
-
-        // await getPrice(true, true)
-        // console.log('BEFORE BURN 2')
+        //TODO: burn alice's position and check all epochs are correct
         // await validateBurn({
         //     signer: hre.props.alice,
         //     lower: '0',
-        //     claim: '0',
         //     upper: '100',
+        //     claim: '5',
         //     liquidityPercent: ethers.utils.parseUnits('1', 38),
         //     zeroForOne: true,
         //     balanceInIncrease: '0',
-        //     balanceOutIncrease: '75774286667592796925',
+        //     balanceOutIncrease: '99999999999999999999',
         //     lowerTickCleared: false,
         //     upperTickCleared: false,
         //     revertMessage: '',

@@ -96,9 +96,9 @@ library Claims {
                 ? EpochMap.get(TickMap.next(tickMap, params.claim, constants.tickSpacing), tickMap, constants)
                 : EpochMap.get(TickMap.previous(tickMap, params.claim, constants.tickSpacing), tickMap, constants);
             ///@dev - next swapEpoch should not be greater
+            console.log('next tick epoch', EpochMap.get(TickMap.next(tickMap, params.claim, constants.tickSpacing), tickMap, constants));
+            console.logInt(TickMap.next(tickMap, params.claim, constants.tickSpacing));
             if (claimTickNextAccumEpoch > cache.position.epochLast) {
-                console.log('next tick', cache.pool.swapEpoch);
-                console.logInt(TickMap.next(tickMap, params.claim, constants.tickSpacing));
                 require (false, 'WrongTickClaimedAt()');
             }
         }

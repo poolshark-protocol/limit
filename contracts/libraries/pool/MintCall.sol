@@ -58,43 +58,37 @@ library MintCall {
         );
         if (params.zeroForOne) {
             uint160 priceLower = TickMath.getPriceAtTick(params.lower, cache.constants);
-            console.log('price lower check', priceLower < cache.pool.price, priceLower, cache.pool.price);
             if (priceLower < cache.pool.price) {
-                cache.pool.swapEpoch += 1;
+                
                 if (cache.pool.liquidity > 0) {
-                    console.log('changing liquidity');
                     Ticks.insertSingle(ticks, tickMap, cache.pool, cache.constants);
                 }
                 cache.pool.price = priceLower;
                 cache.pool.tickAtPrice = params.lower;
                 cache.pool.liquidity = uint128(cache.liquidityMinted);
                 // set epoch on start tick to signify position being crossed into
+                cache.pool.swapEpoch += 1;
                 EpochMap.set(params.lower, cache.pool.swapEpoch, tickMap, cache.constants);
             } else if (priceLower == cache.pool.price) {
                 cache.pool.liquidity += uint128(cache.liquidityMinted);
             }
         } else {
             uint160 priceUpper = TickMath.getPriceAtTick(params.upper, cache.constants);
-            console.log('ticks -100 check:');
-            console.logInt(ticks[-100].liquidityDelta);
             if (priceUpper > cache.pool.price) {
-                cache.pool.swapEpoch += 1;
                 if (cache.pool.liquidity > 0) {
-                    console.log('changing liquidity');
+                    console.log('generating liquidity', cache.pool.liquidity);
                     Ticks.insertSingle(ticks, tickMap, cache.pool, cache.constants);
-                } else {
-                    console.log('not changing liquidity');
                 }
                 cache.pool.price = priceUpper;
                 cache.pool.tickAtPrice = params.upper;
                 cache.pool.liquidity = uint128(cache.liquidityMinted);
                 // set epoch on start tick to signify position being crossed into
+                cache.pool.swapEpoch += 1;
                 EpochMap.set(params.upper, cache.pool.swapEpoch, tickMap, cache.constants);
             } else if (priceUpper == cache.pool.price) {
                 cache.pool.liquidity += uint128(cache.liquidityMinted);
             }
         }
-        console.log('pool0', cache.pool.liquidity, params.zeroForOne);
         positions[params.to][params.lower][params.upper] = cache.position;
         return cache;
     }

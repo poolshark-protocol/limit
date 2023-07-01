@@ -208,6 +208,9 @@ library Positions {
                             > cache.position.epochLast) {
                         require (false, 'WrongTickClaimedAt()');            
                     }
+                    if (pool.price == cache.priceLower) {
+                        pool.liquidity -= params.amount;
+                    }
                 }
                 // if pool price is further along
                 // OR next tick has a greater epoch
@@ -219,6 +222,10 @@ library Positions {
                         EpochMap.get(previousTick, tickMap, constants)
                             > cache.position.epochLast) {
                         require (false, 'WrongTickClaimedAt()');            
+                    }
+                    if (pool.price == cache.priceUpper) {
+                        console.log('removing liquidity', pool.liquidity, params.amount);
+                        pool.liquidity -= params.amount;
                     }
                 }
             }
@@ -302,7 +309,9 @@ library Positions {
             return (state, pool, params.claim);
         
         // update pool liquidity
-        if (params.lower <= pool.tickAtPrice && params.upper > pool.tickAtPrice)
+        console.log('tick at price check', uint24(pool.tickAtPrice), params.lower <= pool.tickAtPrice, params.upper > pool.tickAtPrice);
+        if (params.zeroForOne ? (cache.priceLower <= pool.price && cache.priceUpper > pool.price)
+                              : (cache.priceLower < pool.price && cache.priceUpper >= pool.price))
             pool.liquidity -= params.amount;
         
         if (params.amount > 0) {

@@ -307,8 +307,7 @@ export async function validateMint(params: ValidateMintParams) {
         ).to.be.revertedWith(revertMessage)
         return
     }
-    await getTick(true, 100, true)
-    await getTick(true, 105, true)
+
     let balanceInAfter
     let balanceOutAfter
     if (zeroForOne) {

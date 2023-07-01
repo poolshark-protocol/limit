@@ -65,6 +65,9 @@ library MintCall {
                 cache.pool.price = priceLower;
                 cache.pool.tickAtPrice = params.lower;
                 cache.pool.liquidity = uint128(cache.liquidityMinted);
+                // set epoch on start tick to signify position being crossed into
+                cache.pool.swapEpoch += 1;
+                EpochMap.set(params.lower, cache.pool.swapEpoch, tickMap, cache.constants);
             }
         } else {
             uint160 priceUpper = TickMath.getPriceAtTick(params.upper, cache.constants);
@@ -80,6 +83,9 @@ library MintCall {
                 cache.pool.price = priceUpper;
                 cache.pool.tickAtPrice = params.upper;
                 cache.pool.liquidity = uint128(cache.liquidityMinted);
+                // set epoch on start tick to signify position being crossed into
+                cache.pool.swapEpoch += 1;
+                EpochMap.set(params.upper, cache.pool.swapEpoch, tickMap, cache.constants);
             }
             if (priceUpper == cache.pool.price){
                 console.log('we should clear out liquidity');

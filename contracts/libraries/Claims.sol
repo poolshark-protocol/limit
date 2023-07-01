@@ -39,11 +39,13 @@ library Claims {
                                      : params.claim == params.upper 
                                         && EpochMap.get(params.upper, tickMap, constants) <= cache.position.epochLast
         ) {
+            console.log('early return 1', pool.swapEpoch, EpochMap.get(params.lower, tickMap, constants), cache.position.epochLast);
             cache.earlyReturn = true;
             return cache;
         }
         // early return if no update and amount burned is 0
         if (params.amount == 0 && cache.position.claimPriceLast == pool.price) {
+            console.log('early return 2');
                 cache.earlyReturn = true;
                 return cache;
         } 

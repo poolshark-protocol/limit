@@ -885,4 +885,174 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
     })
+
+    it('pool0 - Should undercut and burn 16', async function () {
+        await getPrice(false, true)
+        const aliceLiquidity = '20051041647900280328782'
+        const bobLiquidity = '20151542874862585449132'
+        // mint position
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: '100',
+            upper: '200',
+            amount: tokenAmountBn,
+            zeroForOne: true,
+            balanceInDecrease: tokenAmountBn,
+            liquidityIncrease: bobLiquidity,
+            upperTickCleared: false,
+            lowerTickCleared: true,
+            revertMessage: '',
+        })
+
+        await getTick(true, 100, true)
+        await getTick(true, 105, true)
+        // bob should be able to claim something here
+        console.log('BEFORE BURN 1')
+        // close both positions
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: '100',
+            upper: '200',
+            claim: '100',
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: true,
+            balanceInIncrease: '0',
+            balanceOutIncrease: '99999999999999999999',
+            lowerTickCleared: true,
+            upperTickCleared: false,
+            revertMessage: '',
+        })
+    })
+
+    it('pool1 - Should undercut and burn 16', async function () {
+        await getPrice(false, true)
+        const aliceLiquidity = '20051041647900280328782'
+        const bobLiquidity = '754380626357928274821'
+        // mint position
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: '19000',
+            upper: '20000',
+            amount: tokenAmountBn,
+            zeroForOne: false,
+            balanceInDecrease: tokenAmountBn,
+            liquidityIncrease: bobLiquidity,
+            upperTickCleared: true,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
+
+        await getTick(true, 100, true)
+        await getTick(true, 105, true)
+        // bob should be able to claim something here
+        console.log('BEFORE BURN 1')
+        // close both positions
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: '19000',
+            upper: '20000',
+            claim: '20000',
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: false,
+            balanceInIncrease: '0',
+            balanceOutIncrease: '99999999999999999999',
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: '',
+        })
+    })
+
+    it.skip('pool0 - Should mint, undercut, swap, and burn x2 17', async function () {
+        await getPrice(false, true)
+        const aliceLiquidity = '20051041647900280328782'
+        const bobLiquidity = '20151542874862585449132'
+        // mint position
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: '100',
+            upper: '200',
+            amount: tokenAmountBn,
+            zeroForOne: true,
+            balanceInDecrease: tokenAmountBn,
+            liquidityIncrease: bobLiquidity,
+            upperTickCleared: false,
+            lowerTickCleared: true,
+            revertMessage: '',
+        })
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: false,
+            amountIn: BigNumber.from(1),
+            priceLimit: maxPrice,
+            balanceInDecrease: '1',
+            balanceOutIncrease: '0',
+            revertMessage: '',
+        })
+
+        expect(await getPrice(true, true)).to.be.equal(BigNumber.from('79625275426524748796334487745'))
+        // swap tiny
+        // price should be at -100 tick
+        // undercut
+        await getTick(false, -100, true)
+        await getTick(false, -105, true)
+        console.log('BEFORE MINT 2')
+        await getPrice(false, true)
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '0',
+            upper: '100',
+            amount: tokenAmountBn,
+            zeroForOne: true,
+            balanceInDecrease: tokenAmountBn,
+            liquidityIncrease: aliceLiquidity,
+            upperTickCleared: false,
+            lowerTickCleared: true,
+            revertMessage: '',
+        })
+        await getTick(true, 100, true)
+        await getTick(true, 105, true)
+        // bob should be able to claim something here
+        console.log('BEFORE BURN 1')
+        // close both positions
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: '100',
+            upper: '200',
+            claim: '100',
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: true,
+            balanceInIncrease: '0',
+            balanceOutIncrease: '99999999999999999999',
+            lowerTickCleared: false,
+            upperTickCleared: false,
+            revertMessage: '',
+        })
+        await getTick(true, 100, true)
+        await getTick(true, 105, true)
+        // if (true) {
+        //     console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
+        //     console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
+        // }
+
+        // await getPrice(true, true)
+        // console.log('BEFORE BURN 2')
+        // await validateBurn({
+        //     signer: hre.props.alice,
+        //     lower: '0',
+        //     claim: '0',
+        //     upper: '100',
+        //     liquidityPercent: ethers.utils.parseUnits('1', 38),
+        //     zeroForOne: true,
+        //     balanceInIncrease: '0',
+        //     balanceOutIncrease: '75774286667592796925',
+        //     lowerTickCleared: false,
+        //     upperTickCleared: false,
+        //     revertMessage: '',
+        // })
+    })
 })

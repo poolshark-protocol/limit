@@ -450,7 +450,7 @@ library Positions {
             removeLower: false,
             removeUpper: false
         });
-
+        console.log('calling deltas');
         params.amount = _convert(cache.position.liquidity, params.amount);
 
         // check claim is valid
@@ -485,13 +485,7 @@ library Positions {
         ILimitPoolStructs.UpdateParams memory
     ) {
         // update claimPriceLast
-        //TODO: could be pool price or claim at price point
-        cache.priceClaim = ConstantProduct.getPriceAtTick(params.claim, constants);
-        cache.position.claimPriceLast = (params.claim == pool.tickAtPrice)
-            ? pool.price
-            : cache.priceClaim;
-        /// @dev - if tick 0% filled, set CPL to latestTick
-        if (pool.price == cache.priceClaim) cache.position.claimPriceLast = cache.priceClaim;
+        cache.position.claimPriceLast = cache.priceClaim;
         return (cache, params);
     }
 }

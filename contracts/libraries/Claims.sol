@@ -28,7 +28,7 @@ library Claims {
         ILimitPoolStructs.UpdatePositionCache memory
     ) {
         // validate position liquidity
-        if (params.amount > cache.position.liquidity) require (false, 'NotEnoughPositionLiquidity()');
+        if (params.amount > cache.position.liquidity) require (false, 'NotEnoughPsitionLiquidity()');
         if (cache.position.liquidity == 0) {
             cache.earlyReturn = true;
             return cache;
@@ -59,15 +59,25 @@ library Claims {
         ) require (false, 'InvalidClaimTick()'); /// @dev - wrong claim tick
         if (params.claim < params.lower || params.claim > params.upper) require (false, 'InvalidClaimTick()');
 
-        uint32 claimTickEpoch;
-        if (params.claim != pool.tickAtPrice)
-            claimTickEpoch = EpochMap.get(params.claim, tickMap, constants);
-        else if (params.lower <= pool.tickAtPrice && pool.tickAtPrice <= params.upper) {
-            console.log('tick at price check');
-            console.logInt(pool.tickAtPrice);
-            cache.priceClaim = pool.price;
-            claimTickEpoch = pool.swapEpoch;
+        uint32 claimTickEpoch = EpochMap.get(params.claim, tickMap, constants);
+        console.log('claim tick check');
+        console.logInt(pool.tickAtPrice);
+        console.log(pool.swapEpoch);
+        console.logInt(params.lower);
+        console.log(params.lower <= pool.tickAtPrice && 
+            pool.tickAtPrice < params.upper &&
+            (params.zeroForOne ? pool.tickAtPrice > params.claim
+                              : pool.tickAtPrice < params.claim));
+        if (
+            params.lower <= pool.tickAtPrice && 
+            pool.tickAtPrice < params.upper &&
+            (params.zeroForOne ? pool.tickAtPrice >= params.claim
+                               : pool.tickAtPrice <= params.claim)) {
+                console.log('using pool price for claim');
+                claimTickEpoch = pool.swapEpoch;
+                cache.priceClaim = pool.price;
         }
+        
 
         console.log('claim tick epoch', claimTickEpoch);
         console.logInt(params.claim);

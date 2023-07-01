@@ -70,7 +70,7 @@ describe('LimitPool Tests', function () {
         await mintSigners20(hre.props.token1, tokenAmountBn.mul(10), [hre.props.alice, hre.props.bob])
     })
 
-    it('pool0 - Should mint, fully fill, and burn 12', async function () {
+    it('pool0 - Should mint, fully fill, and burn 11', async function () {
         const aliceLiquidity = '20051041647900280328782'
         // mint should revert
         await validateMint({
@@ -116,7 +116,7 @@ describe('LimitPool Tests', function () {
         await getPositionLiquidity(true, hre.props.alice.address, 0, 100, true)
     })
 
-    it('pool1 - Should mint, fully fill, and burn 12', async function () {
+    it('pool1 - Should mint, fully fill, and burn 11', async function () {
         const aliceLiquidity = '20051041647900280328782'
         // mint should revert
         await validateMint({
@@ -174,7 +174,7 @@ describe('LimitPool Tests', function () {
         })
     })
 
-    it('pool0 - Should mint, partially fill, and burn 12', async function () {
+    it('pool0 - Should mint, partially fill, and burn 11', async function () {
         const aliceLiquidity = '20051041647900280328782'
         // mint should revert
         await validateMint({
@@ -209,7 +209,7 @@ describe('LimitPool Tests', function () {
             signer: hre.props.alice,
             lower: '0',
             upper: '100',
-            claim: '49',
+            claim: '45',
             liquidityAmount: liquidityAmount,
             zeroForOne: true,
             balanceInIncrease: '49999999999999999999',
@@ -222,7 +222,7 @@ describe('LimitPool Tests', function () {
         await getTick(false, -100, true)
     })
 
-    it('pool1 - Should mint, partially fill, and burn 12', async function () {
+    it('pool1 - Should mint, partially fill, and burn 11', async function () {
         const aliceLiquidity = '20051041647900280328782'
         // mint should revert
         await validateMint({
@@ -270,7 +270,7 @@ describe('LimitPool Tests', function () {
         await getTick(false, -100, true)
     })
 
-    it('pool0 - Should mint, partially fill, partially burn, fill remaining, and burn again 12', async function () {
+    it('pool0 - Should mint, partially fill, partially burn, fill remaining, and burn again 11', async function () {
         const aliceLiquidity = '20051041647900280328782'
         // mint should revert
         await validateMint({
@@ -300,12 +300,13 @@ describe('LimitPool Tests', function () {
         })
 
         await getTick(false, -100, true)
+        await getPositionLiquidity(true, hre.props.alice.address, 0, 100, true)
 
         await validateBurn({
             signer: hre.props.alice,
             lower: '0',
             upper: '100',
-            claim: '49',
+            claim: '45',
             liquidityPercent: ethers.utils.parseUnits('5', 37),
             zeroForOne: true,
             balanceInIncrease: '49999999999999999999',
@@ -331,7 +332,7 @@ describe('LimitPool Tests', function () {
 
         await validateBurn({
             signer: hre.props.alice,
-            lower: '49',
+            lower: '45',
             upper: '100',
             claim: '100',
             liquidityPercent: ethers.utils.parseUnits('1', 38),
@@ -346,7 +347,7 @@ describe('LimitPool Tests', function () {
         await getTick(false, -100, true)
     })
 
-    it('pool1 - Should mint, partially fill, partially burn, fill remaining, and burn again 12', async function () {
+    it('pool1 - Should mint, partially fill, partially burn, fill remaining, and burn again 11', async function () {
         const aliceLiquidity = '20051041647900280328782'
         // mint should revert
         await validateMint({
@@ -422,7 +423,7 @@ describe('LimitPool Tests', function () {
         await getTick(false, -100, true)
     })
 
-    it('pool0 - Should mint, undercut, swap, and burn x2 13', async function () {
+    it('pool0 - Should mint, undercut, swap, and burn x2 11', async function () {
         await getPrice(false, true)
         const aliceLiquidity = '20051041647900280328782'
         const bobLiquidity = '20151542874862585449132'
@@ -517,7 +518,7 @@ describe('LimitPool Tests', function () {
         await validateBurn({
             signer: hre.props.bob,
             lower: '100',
-            claim: '124',
+            claim: '120',
             upper: '200',
             liquidityPercent: ethers.utils.parseUnits('1', 38),
             zeroForOne: true,
@@ -531,7 +532,7 @@ describe('LimitPool Tests', function () {
 
     //TODO: claiming should check pool.price epoch and check next tick epoch after that
 
-    it('pool1 - Should mint, undercut, swap, and burn x2 12', async function () {
+    it('pool1 - Should mint, undercut, swap, and burn x2 11', async function () {
         await getPrice(false, true)
         const aliceLiquidity = '20051041647900280328782'
         const bobLiquidity = '20151542874862585449132'
@@ -644,7 +645,7 @@ describe('LimitPool Tests', function () {
         })
     })
 
-    it('pool0 - Should mint, undercut, burn undercut swap, and burn 15x', async function () {
+    it('pool0 - Should mint, undercut, burn undercut swap, and burn 11', async function () {
         await getPrice(false, true)
         const aliceLiquidity = '20051041647900280328782'
         const bobLiquidity = '20151542874862585449132'
@@ -761,7 +762,7 @@ describe('LimitPool Tests', function () {
         })
     })
 
-    it('pool1 - Should mint, undercut, burn undercut, swap, and burn 15', async function () {
+    it('pool1 - Should mint, undercut, burn undercut, swap, and burn 11', async function () {
         await getPrice(false, true)
         const aliceLiquidity = '20051041647900280328782'
         const bobLiquidity = '20151542874862585449132'

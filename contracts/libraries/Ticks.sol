@@ -397,8 +397,6 @@ library Ticks {
         console.logInt(tickToSave);
         console.log(pool.price);
         console.log(TickMath.getPriceAtTick(TickMap._round(tickToSave, constants.tickSpacing), constants));
-// 78833030112140176575858962080
-// 78833030112140176575862854579
         // update tick to save
         if(pool.price != TickMath.getPriceAtTick(TickMap._round(tickToSave, constants.tickSpacing), constants)) {
             ILimitPoolStructs.Tick memory tick = ticks[tickToSave];

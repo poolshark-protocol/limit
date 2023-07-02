@@ -1099,4 +1099,72 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
     })
+
+    it.skip('pool0 - Should mint, partial mint on other side, and burn x2', async function () {
+        await getPrice(false, true)
+        const aliceLiquidity = '682595230910166351423'
+        const bobLiquidity = '717590842920215903832'
+        // aliceLiquidity - bobLiquidity
+        const aliceMinusBobLiquidity = '-34995612010049552409'
+        // mint position
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: '100', // epoch 2
+            upper: '200',
+            amount: tokenAmountBn,
+            zeroForOne: true,
+            balanceInDecrease: tokenAmountBn,
+            liquidityIncrease: bobLiquidity,
+            upperTickCleared: false,
+            lowerTickCleared: true,
+            revertMessage: '',
+        })
+        await getTick(false, 21000)
+        console.log('BEFORE MINT 2')
+        await getPrice(true, true)
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '21000', // epoch 3
+            upper: '22000', // epoch 3?
+            amount: tokenAmountBn,
+            zeroForOne: false,
+            balanceInDecrease: tokenAmountBn,
+            liquidityIncrease: aliceMinusBobLiquidity,
+            positionLiquidityChange: aliceLiquidity,
+            upperTickCleared: true,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
+        await getTick(false, 21000, true)
+        // close both positions
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: '20000',
+            upper: '21000',
+            claim: '21000',
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: false,
+            balanceInIncrease: '0',
+            balanceOutIncrease: '99999999999999999999',
+            lowerTickCleared: false,
+            upperTickCleared: false,
+            revertMessage: '',
+        })
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '21000',
+            upper: '22000',
+            claim: '22000',
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: false,
+            balanceInIncrease: '0',
+            balanceOutIncrease: '99999999999999999999',
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: '',
+        })
+    })
 })

@@ -8,10 +8,14 @@ import './math/OverflowMath.sol';
 import '../interfaces/modules/curves/ICurveMath.sol';
 import './Claims.sol';
 import './EpochMap.sol';
+import './utils/SafeCast.sol';
+import './pool/SwapCall.sol';
 
 /// @notice Position management library for ranged liquidity.
 library Positions {
     uint256 internal constant Q96 = 0x1000000000000000000000000;
+
+    using SafeCast for uint256;
 
     event Mint(
         address indexed to,
@@ -35,21 +39,22 @@ library Positions {
     );
 
     function resize(
-        ILimitPoolStructs.Position memory position,
         ILimitPoolStructs.MintParams memory params,
-        ILimitPoolStructs.GlobalState memory state,
-        ILimitPoolStructs.Immutables memory constants
-    ) internal pure returns (
+        ILimitPoolStructs.MintCache memory cache,
+        ILimitPoolStructs.TickMap storage tickMap,
+        mapping(int24 => ILimitPoolStructs.Tick) storage swapTicks
+    ) internal returns (
         ILimitPoolStructs.MintParams memory,
+        ILimitPoolStructs.PoolState memory,
         uint256
     )
     {
-        ConstantProduct.checkTicks(params.lower, params.upper, constants.tickSpacing);
+        ConstantProduct.checkTicks(params.lower, params.upper, cache.constants.tickSpacing);
 
-        ILimitPoolStructs.PositionCache memory cache = ILimitPoolStructs.PositionCache({
-            position: position,
-            priceLower: ConstantProduct.getPriceAtTick(params.lower, constants),
-            priceUpper: ConstantProduct.getPriceAtTick(params.upper, constants),
+        ILimitPoolStructs.PositionCache memory localCache = ILimitPoolStructs.PositionCache({
+            position: cache.position,
+            priceLower: ConstantProduct.getPriceAtTick(params.lower, cache.constants),
+            priceUpper: ConstantProduct.getPriceAtTick(params.upper, cache.constants),
             requiredStart: params.zeroForOne ? params.upper
                                              : params.lower,
             liquidityMinted: 0
@@ -60,35 +65,60 @@ library Positions {
 
         // calculate L constant
         cache.liquidityMinted = ConstantProduct.getLiquidityForAmounts(
-            cache.priceLower,
-            cache.priceUpper,
-            params.zeroForOne ? cache.priceLower : cache.priceUpper,
+            localCache.priceLower,
+            localCache.priceUpper,
+            params.zeroForOne ? localCache.priceLower : localCache.priceUpper,
             params.zeroForOne ? 0 : uint256(params.amount),
             params.zeroForOne ? uint256(params.amount) : 0
         );
+
+        // cache.priceAverage = params.zeroForOne ? ConstantProduct.getNewPrice(localCache.priceLower, cache.liquidityMinted, params.amount / 2, false)
+        //                                        : ConstantProduct.getNewPrice(localCache.priceUpper, cache.liquidityMinted, params.amount / 2, true);
+
+        // ILimitPoolStructs.SwapCache memory swapCache;
+        // swapCache.pool = cache.swapPool;
+        // swapCache.state = cache.state;
+        // swapCache.constants = cache.constants;
+        
+        // swapCache = SwapCall.perform(
+        //     ILimitPoolStructs.SwapParams({
+        //         to: params.to,
+        //         refundTo: params.refundTo,
+        //         priceLimit: cache.priceAverage.toUint160(),
+        //         amountIn: params.amount,
+        //         zeroForOne: params.zeroForOne
+        //     }),
+        //     swapCache,
+        //     tickMap,
+        //     swapTicks
+        // );
+        // cache.swapPool = swapCache.pool;
+
+        //resize the position based on how much was swapped
+
 
         // trim position if undercutting way below market price
         // execute market swap if liquidity available
 
         // handle partial mints
         if (params.zeroForOne) {
-            if (params.upper > cache.requiredStart) {
-                params.upper = cache.requiredStart;
+            if (params.upper > localCache.requiredStart) {
+                params.upper = localCache.requiredStart;
                 //TODO: call getNewPrice or just check the pool price and update position accordingly
-                uint256 priceNewUpper = ConstantProduct.getPriceAtTick(params.upper, constants);
+                uint256 priceNewUpper = ConstantProduct.getPriceAtTick(params.upper, cache.constants);
                 params.amount -= uint128(
-                    ConstantProduct.getDx(cache.liquidityMinted, priceNewUpper, cache.priceUpper, false)
+                    ConstantProduct.getDx(cache.liquidityMinted, priceNewUpper, localCache.priceUpper, false)
                 );
-                cache.priceUpper = uint160(priceNewUpper);
+                localCache.priceUpper = uint160(priceNewUpper);
             }
         } else {
-            if (params.lower < cache.requiredStart) {
-                params.lower = cache.requiredStart;
-                uint256 priceNewLower = ConstantProduct.getPriceAtTick(params.lower, constants);
+            if (params.lower < localCache.requiredStart) {
+                params.lower = localCache.requiredStart;
+                uint256 priceNewLower = ConstantProduct.getPriceAtTick(params.lower, cache.constants);
                 params.amount -= uint128(
-                    ConstantProduct.getDy(cache.liquidityMinted, cache.priceLower, priceNewLower, false)
+                    ConstantProduct.getDy(cache.liquidityMinted, localCache.priceLower, priceNewLower, false)
                 );
-                cache.priceLower = uint160(priceNewLower);
+                localCache.priceLower = uint160(priceNewLower);
             }
         }
         // check for liquidity overflow
@@ -96,6 +126,7 @@ library Positions {
  
         return (
             params,
+            cache.swapPool,
             cache.liquidityMinted
         );
     }

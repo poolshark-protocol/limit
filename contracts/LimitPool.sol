@@ -63,32 +63,28 @@ contract LimitPool is
             constants: _immutables(),
             liquidityMinted: 0,
             pool: params.zeroForOne ? pool0 : pool1,
+            swapPool: params.zeroForOne ? pool1 : pool0,
+            priceAverage: 0,
             amountIn: 0,
             amountOut: 0
         });
         // getNewPrice by consuming half the input and use that priceLimit
         // check if pool price in range
-        // (cache.amountIn, cache.amountOut,) = swap(SwapParams({
-        //     to: params.to,
-        //     refundTo: params.refundTo,
-        //     //TODO: priceLimit should be at average price
-        //     priceLimit: params.zeroForOne ? ConstantProduct.getPriceAtTick(params.lower, cache.constants)
-        //                                   : ConstantProduct.getPriceAtTick(params.upper, cache.constants),
-        //     amountIn: params.amount,
-        //     zeroForOne: params.zeroForOne
-        // }));
         cache = MintCall.perform(
             params,
             cache,
             tickMap,
             params.zeroForOne ? ticks0 : ticks1,
+            params.zeroForOne ? ticks1 : ticks0,
             params.zeroForOne ? positions0 : positions1
         );
         if (params.zeroForOne) {
             console.log('saving pool0', cache.pool.liquidity);
             pool0 = cache.pool;
+            pool1 = cache.swapPool;
         } else {
             pool1 = cache.pool;
+            pool0 = cache.swapPool;
         }
         globalState = cache.state;
     }
@@ -132,7 +128,7 @@ contract LimitPool is
         cache.state = globalState;
         cache.constants = _immutables();
 
-        cache.pool = SwapCall.perform(
+        cache = SwapCall.perform(
             params,
             cache,
             tickMap,

@@ -147,11 +147,20 @@ export class InitialSetup {
         await this.deployAssist.deployContractWithRetry(
             network,
             // @ts-ignore
+            SwapCall__factory,
+            'swapCall',
+            []
+        )
+
+        await this.deployAssist.deployContractWithRetry(
+            network,
+            // @ts-ignore
             MintCall__factory,
             'mintCall',
             [],
             {
-                'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address
+                'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address,
+                'contracts/libraries/pool/SwapCall.sol:SwapCall': hre.props.swapCall.address,
             }
         )
 
@@ -165,14 +174,6 @@ export class InitialSetup {
                 'contracts/libraries/Claims.sol:Claims': hre.props.claimsLib.address,
                 'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address
             }
-        )
-
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
-            SwapCall__factory,
-            'swapCall',
-            []
         )
 
         await this.deployAssist.deployContractWithRetry(

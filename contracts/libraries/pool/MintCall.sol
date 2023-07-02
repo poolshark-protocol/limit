@@ -24,15 +24,16 @@ library MintCall {
         ILimitPoolStructs.MintCache memory cache,
         ILimitPoolStructs.TickMap storage tickMap,
         mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
+        mapping(int24 => ILimitPoolStructs.Tick) storage swapTicks,
         mapping(address => mapping(int24 => mapping(int24 => ILimitPoolStructs.Position)))
             storage positions
     ) external returns (ILimitPoolStructs.MintCache memory) {
         // resize position if necessary
-        (params, cache.liquidityMinted) = Positions.resize(
-            cache.position,
-            params, 
-            cache.state,
-            cache.constants
+        (params, cache.swapPool, cache.liquidityMinted) = Positions.resize(
+            params,
+            cache,
+            tickMap,
+            swapTicks
         );
 
         // params.amount must be > 0 here

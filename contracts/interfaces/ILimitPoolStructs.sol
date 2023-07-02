@@ -142,7 +142,9 @@ interface ILimitPoolStructs {
         Position position;
         Immutables constants;
         PoolState pool;
+        PoolState swapPool;
         uint256 liquidityMinted;
+        uint256 priceAverage;
         int256 amountIn;
         uint256 amountOut;
     }

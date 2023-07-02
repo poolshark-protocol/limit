@@ -29,7 +29,9 @@ library SwapCall {
         ILimitPoolStructs.SwapCache memory cache,
         ILimitPoolStructs.TickMap storage tickMap,
         mapping(int24 => ILimitPoolStructs.Tick) storage ticks
-    ) external returns (ILimitPoolStructs.PoolState memory) {
+    ) external returns (
+        ILimitPoolStructs.SwapCache memory
+    ) {
         SafeTransfers.transferIn(params.zeroForOne ? cache.constants.token0 : cache.constants.token1, params.amountIn);
         (cache.pool, cache) = Ticks.swap(
             ticks,
@@ -51,6 +53,6 @@ library SwapCall {
             }
             SafeTransfers.transferOut(params.to, cache.constants.token0, cache.output);
         }
-        return cache.pool;
+        return cache;
     }
 }

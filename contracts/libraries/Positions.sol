@@ -43,7 +43,7 @@ library Positions {
         ILimitPoolStructs.MintCache memory cache,
         ILimitPoolStructs.TickMap storage tickMap,
         mapping(int24 => ILimitPoolStructs.Tick) storage swapTicks
-    ) internal returns (
+    ) internal pure returns (
         ILimitPoolStructs.MintParams memory,
         ILimitPoolStructs.PoolState memory,
         uint256
@@ -72,13 +72,13 @@ library Positions {
             params.zeroForOne ? uint256(params.amount) : 0
         );
 
-        // cache.priceAverage = params.zeroForOne ? ConstantProduct.getNewPrice(localCache.priceLower, cache.liquidityMinted, params.amount / 2, false)
-        //                                        : ConstantProduct.getNewPrice(localCache.priceUpper, cache.liquidityMinted, params.amount / 2, true);
+        cache.priceAverage = params.zeroForOne ? ConstantProduct.getNewPrice(localCache.priceLower, cache.liquidityMinted, params.amount / 2, false)
+                                               : ConstantProduct.getNewPrice(localCache.priceUpper, cache.liquidityMinted, params.amount / 2, true);
 
-        // ILimitPoolStructs.SwapCache memory swapCache;
-        // swapCache.pool = cache.swapPool;
-        // swapCache.state = cache.state;
-        // swapCache.constants = cache.constants;
+        ILimitPoolStructs.SwapCache memory swapCache;
+        swapCache.pool = cache.swapPool;
+        swapCache.state = cache.state;
+        swapCache.constants = cache.constants;
         
         // swapCache = SwapCall.perform(
         //     ILimitPoolStructs.SwapParams({

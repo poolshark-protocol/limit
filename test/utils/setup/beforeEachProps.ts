@@ -9,7 +9,7 @@ import {
     Claims,
     LimitPoolManager,
     TickMap,
-    EpochMap,
+    PoolRouter,
 } from '../../../typechain'
 import { InitialSetup } from './initialSetup'
 import { MintCall } from '../../../typechain'
@@ -22,8 +22,8 @@ export interface BeforeEachProps {
     limitPool2: LimitPool
     limitPoolManager: LimitPoolManager
     limitPoolFactory: LimitPoolFactory
+    poolRouter: PoolRouter
     tickMapLib: TickMap
-    epochMapLib: EpochMap
     ticksLib: Ticks
     claimsLib: Claims
     positionsLib: Positions
@@ -68,8 +68,8 @@ export class GetBeforeEach {
         let limitPool2: LimitPool
         let limitPoolManager: LimitPoolManager
         let limitPoolFactory: LimitPoolFactory
+        let poolRouter: PoolRouter
         let tickMapLib: TickMap
-        let epochMapLib: EpochMap
         let ticksLib: Ticks
         let claimsLib: Claims
         let positionsLib: Positions
@@ -92,8 +92,8 @@ export class GetBeforeEach {
             limitPool2,
             limitPoolManager,
             limitPoolFactory,
+            poolRouter,
             tickMapLib,
-            epochMapLib,
             ticksLib,
             claimsLib,
             positionsLib,

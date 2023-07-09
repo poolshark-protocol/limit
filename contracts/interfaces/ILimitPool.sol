@@ -15,9 +15,8 @@ interface ILimitPool is ILimitPoolStructs {
     function swap(
         SwapParams memory params
     ) external returns (
-        int256 inAmount,
-        uint256 outAmount,
-        uint256 priceAfter
+        int256 amount0,
+        int256 amount1
     );
 
     function quote(

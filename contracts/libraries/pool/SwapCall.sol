@@ -2,6 +2,8 @@
 pragma solidity ^0.8.13;
 
 import '../../interfaces/ILimitPoolStructs.sol';
+import '../../interfaces/callbacks/IPoolsharkSwapCallback.sol';
+import '../../interfaces/IERC20Minimal.sol';
 import '../Positions.sol';
 import '../utils/Collect.sol';
 import '../utils/SafeTransfers.sol';
@@ -28,11 +30,12 @@ library SwapCall {
         ILimitPoolStructs.SwapParams memory params,
         ILimitPoolStructs.SwapCache memory cache,
         ILimitPoolStructs.TickMap storage tickMap,
+        ILimitPoolStructs.PoolState storage poolState,
         mapping(int24 => ILimitPoolStructs.Tick) storage ticks
     ) external returns (
-        ILimitPoolStructs.SwapCache memory
+        int256,
+        int256
     ) {
-        SafeTransfers.transferIn(params.zeroForOne ? cache.constants.token0 : cache.constants.token1, params.amountIn);
         (cache.pool, cache) = Ticks.swap(
             ticks,
             tickMap,
@@ -40,19 +43,69 @@ library SwapCall {
             cache,
             cache.pool
         );
+        save(cache.pool, poolState);
         console.log('price after', cache.pool.price);
-        if (params.zeroForOne) {
-            if (cache.input > 0) {
-                SafeTransfers.transferOut(params.to, cache.constants.token0, cache.input);
-            }
-            SafeTransfers.transferOut(params.to, cache.constants.token1, cache.output);
-        } else {
-            console.log('cache amounts', cache.input, cache.output);
-            if (cache.input > 0) {
-                SafeTransfers.transferOut(params.to, cache.constants.token1, cache.input);
-            }
-            SafeTransfers.transferOut(params.to, cache.constants.token0, cache.output);
-        }
-        return cache;
+        // transfer output amount
+        SafeTransfers.transferOut(
+            params.to, 
+            params.zeroForOne ? cache.constants.token1
+                              : cache.constants.token0,
+            cache.output
+        );
+
+        //TODO: skip if calling through mint function
+        // check balance and execute callback
+        uint256 balanceStart = balance(params, cache);
+        IPoolsharkSwapCallback(msg.sender).poolsharkSwapCallback(
+            params.zeroForOne ? -int256(cache.input) : int256(cache.output),
+            params.zeroForOne ? int256(cache.output) : -int256(cache.input),
+            params.callbackData
+        );
+
+        // check balance requirements after callback
+        if (balance(params, cache) < balanceStart + cache.input)
+            require(false, 'SwapInputAmountTooLow()');
+
+        return (
+            params.zeroForOne ? 
+                (
+                    -int256(cache.input),
+                     int256(cache.output)
+                )
+              : (
+                     int256(cache.output),
+                    -int256(cache.input)
+                )
+        );
+    }
+
+    function save(
+        ILimitPoolStructs.PoolState memory pool,
+        ILimitPoolStructs.PoolState storage poolState
+    ) internal {
+        poolState.price = pool.price;
+        poolState.liquidity = pool.liquidity;
+        poolState.liquidityGlobal = pool.liquidityGlobal;
+        poolState.swapEpoch = pool.swapEpoch;
+        poolState.tickAtPrice = pool.tickAtPrice;
+    }
+
+    function balance(
+        ILimitPoolStructs.SwapParams memory params,
+        ILimitPoolStructs.SwapCache memory cache
+    ) private view returns (uint256) {
+        (
+            bool success,
+            bytes memory data
+        ) = (params.zeroForOne ? cache.constants.token0
+                               : cache.constants.token1)
+                               .staticcall(
+                                    abi.encodeWithSelector(
+                                        IERC20Minimal.balanceOf.selector,
+                                        address(this)
+                                    )
+                                );
+        require(success && data.length >= 32);
+        return abi.decode(data, (uint256));
     }
 }

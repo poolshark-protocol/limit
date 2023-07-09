@@ -119,9 +119,9 @@ library Ticks {
             crossTick: params.zeroForOne ? TickMap.previous(tickMap, pool.tickAtPrice, cache.constants.tickSpacing) 
                                          : TickMap.next(tickMap, pool.tickAtPrice, cache.constants.tickSpacing),
             crossPrice: 0,
-            input: params.amountIn,
+            input: params.amount,
             output: 0,
-            amountIn: params.amountIn
+            amountIn: params.amount
         });
         // increment swap epoch
         cache.pool.swapEpoch += 1;
@@ -151,7 +151,7 @@ library Ticks {
         emit Swap(
             params.to,
             params.zeroForOne,
-            params.amountIn - cache.input,
+            params.amount - cache.input,
             cache.output, /// @dev - subgraph will do math to compute fee amount
             pool.price,
             pool.liquidity,
@@ -181,9 +181,9 @@ library Ticks {
             crossTick: params.zeroForOne ? TickMap.previous(tickMap, pool.tickAtPrice, cache.constants.tickSpacing) 
                                          : TickMap.next(tickMap, pool.tickAtPrice, cache.constants.tickSpacing),
             crossPrice: 0,
-            input: params.amountIn,
+            input: params.amount,
             output: 0,
-            amountIn: params.amountIn
+            amountIn: params.amount
         });
         while (cache.cross) {
             cache.crossPrice = ConstantProduct.getPriceAtTick(cache.crossTick, cache.constants);

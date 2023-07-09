@@ -14,13 +14,12 @@ import {
     Claims__factory,
     LimitPoolManager__factory,
     TickMap__factory,
+    PoolRouter__factory
 } from '../../../typechain'
 
 export class InitialSetup {
     private token0Decimals = 18
     private token1Decimals = 18
-    private uniV3String = ethers.utils.formatBytes32String('UNI-V3')
-    private constantProductString =  ethers.utils.formatBytes32String('CONSTANT-PRODUCT')
     private deployAssist: DeployAssist
     private contractDeploymentsJson: ContractDeploymentsJson
     private contractDeploymentsKeys: ContractDeploymentsKeys
@@ -200,6 +199,16 @@ export class InitialSetup {
                 'contracts/libraries/pool/SwapCall.sol:SwapCall': hre.props.swapCall.address,
                 'contracts/libraries/pool/QuoteCall.sol:QuoteCall': hre.props.quoteCall.address
             }
+        )
+
+        await this.deployAssist.deployContractWithRetry(
+            network,
+            // @ts-ignore
+            PoolRouter__factory,
+            'poolRouter',
+            [
+              hre.props.limitPoolFactory.address
+            ]
         )
 
         const setFactoryTxn = await hre.props.limitPoolManager.setFactory(

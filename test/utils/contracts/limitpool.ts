@@ -142,11 +142,11 @@ export async function validateSwap(params: ValidateSwapParams) {
     if (zeroForOne) {
         balanceInBefore = await hre.props.token0.balanceOf(signer.address)
         balanceOutBefore = await hre.props.token1.balanceOf(signer.address)
-        await hre.props.token0.approve(hre.props.limitPool.address, amountIn)
+        await hre.props.token0.approve(hre.props.poolRouter.address, amountIn)
     } else {
         balanceInBefore = await hre.props.token1.balanceOf(signer.address)
         balanceOutBefore = await hre.props.token0.balanceOf(signer.address)
-        await hre.props.token1.approve(hre.props.limitPool.address, amountIn)
+        await hre.props.token1.approve(hre.props.poolRouter.address, amountIn)
     }
 
     const poolBefore: PoolState = zeroForOne
@@ -158,8 +158,9 @@ export async function validateSwap(params: ValidateSwapParams) {
     // quote pre-swap and validate balance changes match post-swap
     const quote = await hre.props.limitPool.quote({
         priceLimit: priceLimit,
-        amountIn: amountIn,
-        zeroForOne: zeroForOne
+        amount: amountIn,
+        zeroForOne: zeroForOne,
+        exactIn: true
     })
 
     const amountInQuoted = quote[0]
@@ -170,15 +171,18 @@ export async function validateSwap(params: ValidateSwapParams) {
     if (revertMessage == '') {
         if (splitInto > 1) await ethers.provider.send("evm_setAutomine", [false]);
         for (let i = 0; i < splitInto; i++) {
-            let txn = await hre.props.limitPool
-                .connect(signer)
-                .swap({
-                    to: signer.address,
-                    refundTo: signer.address,
-                    priceLimit: priceLimit,
-                    amountIn: amountIn.div(splitInto),
-                    zeroForOne: zeroForOne
-                })
+            let txn = await hre.props.poolRouter
+            .connect(signer)
+            .multiCall(
+            [hre.props.limitPool.address],  
+            [{
+              to: signer.address,
+              zeroForOne: zeroForOne,
+              amount: amountIn,
+              priceLimit: priceLimit,
+              exactIn: true,
+              callbackData: ethers.utils.formatBytes32String('')
+            }])
             if (splitInto == 1) await txn.wait()
         }
         if (splitInto > 1){
@@ -187,15 +191,18 @@ export async function validateSwap(params: ValidateSwapParams) {
         } 
     } else {
         await expect(
-            hre.props.limitPool
-                .connect(signer)
-                .swap({
-                    to: signer.address,
-                    refundTo: signer.address,
-                    priceLimit: priceLimit,
-                    amountIn: amountIn,
-                    zeroForOne: zeroForOne
-                })
+            hre.props.poolRouter
+            .connect(signer)
+            .multiCall(
+            [hre.props.limitPool.address],  
+            [{
+              to: signer.address,
+              zeroForOne: zeroForOne,
+              amount: amountIn,
+              priceLimit: priceLimit,
+              exactIn: true,
+              callbackData: ethers.utils.formatBytes32String('')
+            }])
         ).to.be.revertedWith(revertMessage)
         return
     }

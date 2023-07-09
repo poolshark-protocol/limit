@@ -71,15 +71,17 @@ interface ILimitPoolStructs {
 
     struct SwapParams {
         address to;
-        address refundTo;
         uint160 priceLimit;
-        uint128 amountIn;
+        uint128  amount;
+        bool exactIn;
         bool zeroForOne;
+        bytes callbackData;
     }
 
     struct QuoteParams {
         uint160 priceLimit;
-        uint128 amountIn;
+        uint128 amount;
+        bool exactIn;
         bool zeroForOne;
     }
 

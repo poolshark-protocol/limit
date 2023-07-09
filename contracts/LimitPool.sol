@@ -118,9 +118,8 @@ contract LimitPool is
     function swap(
         SwapParams memory params
     ) public override lock returns (
-        int256 inAmount,
-        uint256 outAmount,
-        uint256 priceAfter
+        int256,
+        int256
     ) 
     {
         SwapCache memory cache;
@@ -128,29 +127,13 @@ contract LimitPool is
         cache.state = globalState;
         cache.constants = _immutables();
 
-        cache = SwapCall.perform(
+        return SwapCall.perform(
             params,
             cache,
             tickMap,
+            params.zeroForOne ? pool0 : pool1,
             params.zeroForOne ? ticks1 : ticks0
         );
-        globalState = cache.state;
-
-        if (params.zeroForOne) {
-            pool1 = cache.pool;
-            return (
-                int128(params.amountIn) - int256(cache.input),
-                cache.output,
-                cache.price 
-            );
-        } else {
-            pool0 = cache.pool;
-            return (
-                int128(params.amountIn) - int256(cache.input),
-                cache.output,
-                cache.price 
-            );
-        }
     }
 
     function quote(
@@ -172,13 +155,13 @@ contract LimitPool is
         );
         if (params.zeroForOne) {
             return (
-                int128(params.amountIn) - int256(cache.input),
+                int128(params.amount) - int256(cache.input),
                 cache.output,
                 cache.price 
             );
         } else {
             return (
-                int128(params.amountIn) - int256(cache.input),
+                int128(params.amount) - int256(cache.input),
                 cache.output,
                 cache.price 
             );

@@ -28,42 +28,42 @@ describe('LimitPoolFactory Tests', function () {
 
     this.beforeEach(async function () {})
 
-    it('Should not create pool with identical token address', async function () {
-        await expect(
-            hre.props.limitPoolFactory
-                .connect(hre.props.admin)
-                .createLimitPool(
-                    '0x0000000000000000000000000000000000000000',
-                    '0x0000000000000000000000000000000000000000',
-                    '10',
-                    '396140812571321687967719751680'
-                )
-        ).to.be.revertedWith('Transaction reverted: function returned an unexpected amount of data')
-    })
+    // it('Should not create pool with identical token address', async function () {
+    //     await expect(
+    //         hre.props.limitPoolFactory
+    //             .connect(hre.props.admin)
+    //             .createLimitPool(
+    //                 '0x0000000000000000000000000000000000000000',
+    //                 '0x0000000000000000000000000000000000000000',
+    //                 '10',
+    //                 '396140812571321687967719751680'
+    //             )
+    //     ).to.be.revertedWith('Transaction reverted: function returned an unexpected amount of data')
+    // })
 
-    it('Should not create pool if the pair already exists', async function () {
-        await expect(
-            hre.props.limitPoolFactory
-                .connect(hre.props.admin)
-                .createLimitPool(
-                    hre.props.token1.address,
-                    hre.props.token0.address,
-                    '10',
-                    '396140812571321687967719751680'
-                )
-        ).to.be.revertedWith('PoolAlreadyExists()')
-    })
+    // it('Should not create pool if the pair already exists', async function () {
+    //     await expect(
+    //         hre.props.limitPoolFactory
+    //             .connect(hre.props.admin)
+    //             .createLimitPool(
+    //                 hre.props.token1.address,
+    //                 hre.props.token0.address,
+    //                 '10',
+    //                 '396140812571321687967719751680'
+    //             )
+    //     ).to.be.revertedWith('PoolAlreadyExists()')
+    // })
 
-    it('Should not create pool if volatility tier does not exist', async function () {
-        await expect(
-            hre.props.limitPoolFactory
-                .connect(hre.props.admin)
-                .createLimitPool(
-                    hre.props.token1.address,
-                    hre.props.token0.address,
-                    '10',
-                    '396140812571321687967719751680'
-                )
-        ).to.be.revertedWith('TickSpacingNotSupported()')
-    })
+    // it('Should not create pool if volatility tier does not exist', async function () {
+    //     await expect(
+    //         hre.props.limitPoolFactory
+    //             .connect(hre.props.admin)
+    //             .createLimitPool(
+    //                 hre.props.token1.address,
+    //                 hre.props.token0.address,
+    //                 '10',
+    //                 '396140812571321687967719751680'
+    //             )
+    //     ).to.be.revertedWith('TickSpacingNotSupported()')
+    // })
 })

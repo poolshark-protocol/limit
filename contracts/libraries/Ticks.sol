@@ -119,9 +119,10 @@ library Ticks {
             crossTick: params.zeroForOne ? TickMap.previous(tickMap, pool.tickAtPrice, cache.constants.tickSpacing) 
                                          : TickMap.next(tickMap, pool.tickAtPrice, cache.constants.tickSpacing),
             crossPrice: 0,
-            input: params.amount,
+            input:  0,
             output: 0,
-            amountIn: params.amount
+            exactIn: params.exactIn,
+            amountLeft: params.amount
         });
         // increment swap epoch
         cache.pool.swapEpoch += 1;
@@ -132,6 +133,8 @@ library Ticks {
                                   : ticks[cache.crossTick].priceAt;
             (pool, cache) = _quoteSingle(params.zeroForOne, params.priceLimit, pool, cache);
             if (cache.cross) {
+                console.log('crossing tick');
+                console.logInt(cache.crossTick);
                 (pool, cache) = _cross(
                     ticks,
                     tickMap,
@@ -143,15 +146,17 @@ library Ticks {
         }
         pool.price = cache.price.toUint160();
         pool.liquidity = cache.liquidity.toUint128();
+
         if (cache.price != cache.crossPrice) {
             pool.tickAtPrice = ConstantProduct.getTickAtPrice(pool.price, cache.constants);
         } else {
             pool.tickAtPrice = cache.crossTick;
         }
+        console.log('setting tick at price', cache.price, cache.crossPrice, uint24(pool.tickAtPrice));
         emit Swap(
             params.to,
             params.zeroForOne,
-            params.amount - cache.input,
+            cache.input,
             cache.output, /// @dev - subgraph will do math to compute fee amount
             pool.price,
             pool.liquidity,
@@ -181,9 +186,10 @@ library Ticks {
             crossTick: params.zeroForOne ? TickMap.previous(tickMap, pool.tickAtPrice, cache.constants.tickSpacing) 
                                          : TickMap.next(tickMap, pool.tickAtPrice, cache.constants.tickSpacing),
             crossPrice: 0,
-            input: params.amount,
+            input:  0,
             output: 0,
-            amountIn: params.amount
+            exactIn: params.exactIn,
+            amountLeft: params.amount
         });
         while (cache.cross) {
             cache.crossPrice = ConstantProduct.getPriceAtTick(cache.crossTick, cache.constants);
@@ -212,8 +218,11 @@ library Ticks {
         ILimitPoolStructs.PoolState memory,
         ILimitPoolStructs.SwapCache memory
     ) {
-        if (zeroForOne ? priceLimit >= cache.price
-                       : priceLimit <= cache.price)
+        if ((zeroForOne ? priceLimit >= cache.price
+                        : priceLimit <= cache.price) ||
+            cache.price == cache.constants.bounds.min ||
+            cache.price == cache.constants.bounds.max ||
+            cache.amountLeft == 0)
         {
             cache.cross = false;
             return (pool, cache);
@@ -226,24 +235,39 @@ library Ticks {
             if (nextPrice < priceLimit) {
                 nextPrice = priceLimit;
             }
-            uint256 maxDx = DyDxMath.getDx(cache.liquidity, nextPrice, cache.price, true);
-            console.log('max dx check', maxDx);
-            if (cache.input <= maxDx) {
+            uint256 amountMax = cache.exactIn ? DyDxMath.getDx(cache.liquidity, nextPrice, cache.price, true)
+                                              : DyDxMath.getDy(cache.liquidity, nextPrice, cache.price, false);
+            if (cache.amountLeft <= amountMax) {
                 // We can swap within the current range.
                 uint256 liquidityPadded = uint256(cache.liquidity) << 96;
                 // calculate price after swap
-                uint256 newPrice = OverflowMath.mulDivRoundingUp(
-                    liquidityPadded,
-                    cache.price,
-                    liquidityPadded + uint256(cache.price) * uint256(cache.input)
-                );
-                amountOut = DyDxMath.getDy(cache.liquidity, newPrice, uint256(cache.price), false);
-                cache.input = 0;
+                uint256 newPrice;
+                if (cache.exactIn) {
+                    newPrice = OverflowMath.mulDivRoundingUp(
+                        liquidityPadded,
+                        cache.price,
+                        liquidityPadded + uint256(cache.price) * uint256(cache.amountLeft)
+                    );
+                    amountOut = DyDxMath.getDy(cache.liquidity, newPrice, uint256(cache.price), false);
+                    cache.input += cache.amountLeft;
+                } else {
+                    newPrice = cache.price - 
+                        OverflowMath.divRoundingUp(cache.amountLeft << 96, cache.liquidity);
+                    amountOut = cache.amountLeft;
+                    cache.input += DyDxMath.getDx(cache.liquidity, newPrice, uint256(cache.price), true);
+                }
+                cache.amountLeft = 0;
                 cache.cross = false;
                 cache.price = uint160(newPrice);
-            } else { 
-                amountOut = DyDxMath.getDy(cache.liquidity, nextPrice, cache.price, false);
-                cache.input -= maxDx;
+            } else {
+                if (cache.exactIn) {
+                    amountOut = DyDxMath.getDy(cache.liquidity, nextPrice, cache.price, false);
+                    cache.input += amountMax;
+                } else {
+                    amountOut = amountMax;
+                    cache.input += DyDxMath.getDx(cache.liquidity, nextPrice, cache.price, true);
+                }
+                cache.amountLeft -= amountMax;
                 if (nextPrice == cache.crossPrice
                         && nextPrice != cache.price) { cache.cross = true; }
                 else cache.cross = false;
@@ -254,21 +278,37 @@ library Ticks {
             if (nextPrice > priceLimit) {
                 nextPrice = priceLimit;
             }
-            uint256 maxDy = DyDxMath.getDy(cache.liquidity, uint256(cache.price), nextPrice, true);
-            if (cache.input <= maxDy) {
-                // We can swap within the current range.
-                // Calculate new price after swap: ΔP = Δy/L.
-                uint256 newPrice = cache.price +
-                    OverflowMath.mulDiv(cache.input, Q96, cache.liquidity);
-                // Calculate output of swap
-                amountOut = DyDxMath.getDx(cache.liquidity, cache.price, newPrice, false);
-                cache.input = 0;
+            uint256 amountMax = cache.exactIn ? DyDxMath.getDy(cache.liquidity, uint256(cache.price), nextPrice, true)
+                                              : DyDxMath.getDx(cache.liquidity, uint256(cache.price), nextPrice, false);
+            if (cache.amountLeft <= amountMax) {
+                uint256 newPrice;
+                if (cache.exactIn) {
+                    newPrice = cache.price +
+                        OverflowMath.mulDiv(cache.amountLeft, Q96, cache.liquidity);
+                    amountOut = DyDxMath.getDx(cache.liquidity, cache.price, newPrice, false);
+                    cache.input += cache.amountLeft;
+                } else {
+                    uint256 liquidityPadded = uint256(cache.liquidity) << 96;
+                    newPrice = OverflowMath.mulDivRoundingUp(
+                        liquidityPadded, 
+                        cache.price,
+                        liquidityPadded - uint256(cache.price) * cache.amountLeft
+                    );
+                    amountOut = cache.amountLeft;
+                    cache.input += DyDxMath.getDy(cache.liquidity, cache.price, newPrice, true);
+                }
+                cache.amountLeft = 0;
                 cache.cross = false;
                 cache.price = uint160(newPrice);
             } else {
-                // Swap & cross the tick.
-                amountOut = DyDxMath.getDx(cache.liquidity, cache.price, nextPrice, false);
-                cache.input -= maxDy;
+                if (cache.exactIn) {
+                    amountOut = DyDxMath.getDx(cache.liquidity, cache.price, nextPrice, false);
+                    cache.input += amountMax;
+                } else {
+                    amountOut = amountMax;
+                    cache.input += DyDxMath.getDy(cache.liquidity, cache.price, nextPrice, true);
+                }
+                cache.amountLeft -= amountMax;
                 if (nextPrice == cache.crossPrice 
                     && nextPrice != cache.price) { cache.cross = true; }
                 else cache.cross = false;
@@ -279,7 +319,42 @@ library Ticks {
         return (pool, cache);
     }
 
-    //maybe call ticks on msg.sender to get tick
+    function _unlock(
+        ILimitPoolStructs.MintCache memory cache,
+        mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
+        ILimitPoolStructs.TickMap storage tickMap,
+        bool zeroForOne
+    ) internal returns (
+        ILimitPoolStructs.MintCache memory
+    )    
+    {
+        if (cache.pool.liquidity > 0) return cache;
+        if (zeroForOne) {
+            cache.pool.tickAtPrice = TickMap.next(tickMap, cache.pool.tickAtPrice, cache.constants.tickSpacing);
+            if (cache.pool.tickAtPrice < ConstantProduct.maxTick(cache.constants.tickSpacing)) {
+                EpochMap.set(cache.pool.tickAtPrice, cache.pool.swapEpoch, tickMap, cache.constants);
+            }
+        } else {
+            cache.pool.tickAtPrice = TickMap.previous(tickMap, cache.pool.tickAtPrice, cache.constants.tickSpacing);
+            if (cache.pool.tickAtPrice > ConstantProduct.minTick(cache.constants.tickSpacing)) {
+                EpochMap.set(cache.pool.tickAtPrice, cache.pool.swapEpoch, tickMap, cache.constants);
+            }
+        }
+        /// @dev - this should always be positive if liquidity is 0
+        cache.pool.liquidity += uint128(ticks[cache.pool.tickAtPrice].liquidityDelta);
+        ticks[cache.pool.tickAtPrice].liquidityDelta = 0;
+        if (cache.pool.tickAtPrice % cache.constants.tickSpacing == 0){
+            cache.pool.price = ConstantProduct.getPriceAtTick(cache.pool.tickAtPrice, cache.constants);
+        } else {
+            uint160 priceAt = ticks[cache.pool.tickAtPrice].priceAt;
+            if (priceAt > 0) {
+                cache.pool.price = priceAt;
+                cache.pool.tickAtPrice = ConstantProduct.getTickAtPrice(priceAt, cache.constants);
+            }
+        }
+        return cache;
+    }
+
     function _cross(
         mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
         ILimitPoolStructs.TickMap storage tickMap,
@@ -290,18 +365,16 @@ library Ticks {
         ILimitPoolStructs.PoolState memory,
         ILimitPoolStructs.SwapCache memory
     ) {
-        console.log('crossing tick');
-        console.logInt(cache.crossTick);
-        console.log(cache.liquidity);
         EpochMap.set(cache.crossTick, cache.pool.swapEpoch, tickMap, cache.constants);
         int128 liquidityDelta = ticks[cache.crossTick].liquidityDelta;
         console.logInt(liquidityDelta);
-        if (liquidityDelta > 0) cache.liquidity += uint128(ticks[cache.crossTick].liquidityDelta);
-        else cache.liquidity -= uint128(-ticks[cache.crossTick].liquidityDelta);
+        if (liquidityDelta > 0) cache.liquidity += uint128(liquidityDelta);
+        else cache.liquidity -= uint128(-liquidityDelta);
         pool.tickAtPrice = cache.crossTick;
         ticks[cache.crossTick].liquidityDelta = 0;
         // check if empty on hybrid pool
-        TickMap.unset(tickMap, cache.crossTick, cache.constants.tickSpacing);
+        //TODO: more clever iterate than next/previous
+        // TickMap.unset(tickMap, cache.crossTick, cache.constants.tickSpacing);
         if (zeroForOne) {
             cache.crossTick = TickMap.previous(tickMap, cache.crossTick, cache.constants.tickSpacing);
         } else {
@@ -320,17 +393,12 @@ library Ticks {
         ILimitPoolStructs.PoolState memory,
         ILimitPoolStructs.SwapCache memory
     ) {
+        int128 liquidityDelta = ticks[cache.crossTick].liquidityDelta;
+        if (liquidityDelta > 0) cache.liquidity += uint128(ticks[cache.crossTick].liquidityDelta);
+        else cache.liquidity -= uint128(-ticks[cache.crossTick].liquidityDelta);
         if (zeroForOne) {
-            unchecked {
-                cache.liquidity -= uint128(ticks[cache.crossTick].liquidityDelta);
-            }
-            pool.tickAtPrice = cache.crossTick;
             cache.crossTick = TickMap.previous(tickMap, cache.crossTick, cache.constants.tickSpacing);
         } else {
-            unchecked {
-                cache.liquidity += uint128(ticks[cache.crossTick].liquidityDelta);
-            }
-            pool.tickAtPrice = cache.crossTick;
             cache.crossTick = TickMap.next(tickMap, cache.crossTick, cache.constants.tickSpacing);
         }
         return (pool, cache);
@@ -353,11 +421,13 @@ library Ticks {
             require (false, 'LiquidityOverflow()');
 
         // check if adding liquidity necessary
-        if (isPool0 ? cache.priceLower > pool.price : true) {
+        if (isPool0 ? cache.priceLower > pool.price
+                    : true) {
             // sets bit in map
             TickMap.set(tickMap, lower, constants.tickSpacing);
             ILimitPoolStructs.Tick memory tickLower = ticks[lower];
             if (isPool0) {
+                console.log('adding to lower pool0', cache.priceLower, pool.price, constants.bounds.min);
                 tickLower.liquidityDelta += int128(amount);
             } else {
                 tickLower.liquidityDelta -= int128(amount);

@@ -36,7 +36,6 @@ library BurnCall {
             || params.claim == cache.pool.tickAtPrice)
         {
             // if position has been crossed into
-            console.log('tick -100 check start');
             console.logInt(ticks[-100].liquidityDelta);
             (
                 cache.state,
@@ -59,8 +58,6 @@ library BurnCall {
                 ),
                 cache.constants
             );
-            console.log('tick -100 check end');
-            console.logInt(ticks[-100].liquidityDelta);
         } else {
             // if position hasn't been crossed into
             (, cache.pool) = Positions.remove(

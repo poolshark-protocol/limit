@@ -81,7 +81,7 @@ library Claims {
         }
         
 
-        console.log('claim tick epoch', claimTickEpoch);
+        console.log('claim tick epoch', claimTickEpoch, cache.position.epochLast);
         console.logInt(params.claim);
 
         //TODO: if params.amount == 0 don't check the next tick

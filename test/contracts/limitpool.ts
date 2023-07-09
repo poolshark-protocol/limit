@@ -10,7 +10,9 @@ import {
     getLiquidity,
     getPositionLiquidity,
     getPrice,
+    getSwapEpoch,
     getTick,
+    getTickAtPrice,
     validateBurn,
     validateMint,
     validateSwap
@@ -70,7 +72,7 @@ describe('LimitPool Tests', function () {
         await mintSigners20(hre.props.token1, tokenAmountBn.mul(10), [hre.props.alice, hre.props.bob])
     })
 
-    it('pool0 - Should mint, fully fill, and burn 11', async function () {
+    it('pool0 - Should mint, fully fill, and burn 12', async function () {
         const aliceLiquidity = '20051041647900280328782'
         // mint should revert
         await validateMint({
@@ -116,7 +118,7 @@ describe('LimitPool Tests', function () {
         await getPositionLiquidity(true, hre.props.alice.address, 0, 100, true)
     })
 
-    it('pool1 - Should mint, fully fill, and burn 11', async function () {
+    it('pool1 - Should mint, fully fill, and burn 12', async function () {
         const aliceLiquidity = '20051041647900280328782'
         // mint should revert
         await validateMint({
@@ -128,11 +130,12 @@ describe('LimitPool Tests', function () {
             zeroForOne: false,
             balanceInDecrease: tokenAmountBn,
             liquidityIncrease: aliceLiquidity,
-            upperTickCleared: false,
+            upperTickCleared: true,
             lowerTickCleared: false,
             revertMessage: '',
         })
-
+        await getLiquidity(false, true)
+        await getSwapEpoch(false, true)
         // no-op swap
         await validateSwap({
             signer: hre.props.alice,
@@ -144,6 +147,8 @@ describe('LimitPool Tests', function () {
             balanceOutIncrease: '99999999999999999999',
             revertMessage: '',
         })
+
+        getTick(false, 0, true)
 
         await validateBurn({
             signer: hre.props.alice,
@@ -174,7 +179,7 @@ describe('LimitPool Tests', function () {
         })
     })
 
-    it('pool0 - Should mint, partially fill, and burn 11', async function () {
+    it('pool0 - Should mint, partially fill, and burn 12', async function () {
         const aliceLiquidity = '20051041647900280328782'
         // mint should revert
         await validateMint({
@@ -191,7 +196,6 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
 
-        // no-op swap
         await validateSwap({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
@@ -203,7 +207,7 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
 
-        await getTick(false, -100, true)
+        await getTickAtPrice(false, true)
 
         await validateBurn({
             signer: hre.props.alice,
@@ -222,7 +226,7 @@ describe('LimitPool Tests', function () {
         await getTick(false, -100, true)
     })
 
-    it('pool1 - Should mint, partially fill, and burn 11', async function () {
+    it('pool1 - Should mint, partially fill, and burn 12', async function () {
         const aliceLiquidity = '20051041647900280328782'
         // mint should revert
         await validateMint({
@@ -270,7 +274,7 @@ describe('LimitPool Tests', function () {
         await getTick(false, -100, true)
     })
 
-    it('pool0 - Should mint, partially fill, partially burn, fill remaining, and burn again 11', async function () {
+    it('pool0 - Should mint, partially fill, partially burn, fill remaining, and burn again 12', async function () {
         const aliceLiquidity = '20051041647900280328782'
         // mint should revert
         await validateMint({
@@ -347,7 +351,7 @@ describe('LimitPool Tests', function () {
         await getTick(false, -100, true)
     })
 
-    it('pool1 - Should mint, partially fill, partially burn, fill remaining, and burn again 11', async function () {
+    it('pool1 - Should mint, partially fill, partially burn, fill remaining, and burn again 12', async function () {
         const aliceLiquidity = '20051041647900280328782'
         // mint should revert
         await validateMint({
@@ -423,7 +427,7 @@ describe('LimitPool Tests', function () {
         await getTick(false, -100, true)
     })
 
-    it('pool0 - Should mint, undercut, swap, and burn x2 11', async function () {
+    it('pool0 - Should mint, undercut, swap, and burn x2 12', async function () {
         await getPrice(false, true)
         const aliceLiquidity = '20051041647900280328782'
         const bobLiquidity = '20151542874862585449132'

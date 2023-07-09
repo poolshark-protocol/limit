@@ -107,6 +107,24 @@ export async function getPrice(isPool0: boolean, print: boolean = false): Promis
     return price
 }
 
+export async function getSwapEpoch(isPool0: boolean, print: boolean = false): Promise<number> {
+    let swapEpoch: number = isPool0 ? (await hre.props.limitPool.pool0()).swapEpoch
+                                       : (await hre.props.limitPool.pool1()).swapEpoch
+    if (print) {
+        console.log(isPool0 ? 'pool0' : 'pool1','swap epoch:', swapEpoch)
+    }
+    return swapEpoch
+}
+
+export async function getTickAtPrice(isPool0: boolean, print: boolean = false): Promise<number> {
+    let tickAtPrice: number = isPool0 ? (await hre.props.limitPool.pool0()).tickAtPrice
+                                       : (await hre.props.limitPool.pool1()).tickAtPrice
+    if (print) {
+        console.log(isPool0 ? 'pool0' : 'pool1','tick at price:', tickAtPrice)
+    }
+    return tickAtPrice
+}
+
 export async function getTick(isPool0: boolean, tickIndex: number, print: boolean = false): Promise<Tick> {
     let tick: Tick = isPool0 ? (await hre.props.limitPool.ticks0(tickIndex))
                              : (await hre.props.limitPool.ticks1(tickIndex));

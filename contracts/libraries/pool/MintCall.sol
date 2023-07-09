@@ -4,7 +4,6 @@ pragma solidity ^0.8.13;
 import '../../interfaces/ILimitPoolStructs.sol';
 import '../Positions.sol';
 import '../utils/Collect.sol';
-import 'hardhat/console.sol';
 
 library MintCall {
     event Mint(
@@ -35,13 +34,15 @@ library MintCall {
             tickMap,
             swapTicks
         );
-
+        //TODO: need to save to storage before mint callback
         // params.amount must be > 0 here
         SafeTransfers.transferIn(params.zeroForOne ? cache.constants.token0 
                                                    : cache.constants.token1,
                                  params.amount
                                 );
-
+        if (cache.pool.liquidity == 0) {
+            cache = Ticks._unlock(cache, ticks, tickMap, params.zeroForOne);
+        } 
         (cache.pool, cache.position) = Positions.add(
             cache.position,
             ticks,
@@ -60,7 +61,6 @@ library MintCall {
         if (params.zeroForOne) {
             uint160 priceLower = TickMath.getPriceAtTick(params.lower, cache.constants);
             if (priceLower < cache.pool.price) {
-                
                 if (cache.pool.liquidity > 0) {
                     Ticks.insertSingle(ticks, tickMap, cache.pool, cache.constants);
                 }
@@ -77,7 +77,6 @@ library MintCall {
             uint160 priceUpper = TickMath.getPriceAtTick(params.upper, cache.constants);
             if (priceUpper > cache.pool.price) {
                 if (cache.pool.liquidity > 0) {
-                    console.log('generating liquidity', cache.pool.liquidity);
                     Ticks.insertSingle(ticks, tickMap, cache.pool, cache.constants);
                 }
                 cache.pool.price = priceUpper;

@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.13;
-import 'hardhat/console.sol';
 
 /// @title Safe casting methods
 /// @notice Contains methods for safely casting between types
@@ -9,7 +8,6 @@ library SafeCast {
     /// @param y The uint256 to be downcasted
     /// @return z The downcasted integer, now type uint128
     function toUint128(uint256 y) internal view returns (uint128 z) {
-        console.log('uint128 check', uint128(y), y);
         require((z = uint128(y)) == y);
     }
 

@@ -7,7 +7,6 @@ import '../../interfaces/IERC20Minimal.sol';
 import '../Positions.sol';
 import '../utils/Collect.sol';
 import '../utils/SafeTransfers.sol';
-import 'hardhat/console.sol';
 
 library SwapCall {
     event SwapPool0(
@@ -44,7 +43,6 @@ library SwapCall {
             cache.pool
         );
         save(cache.pool, poolState);
-        console.log('price after', cache.pool.price);
         // transfer output amount
         SafeTransfers.transferOut(
             params.to, 

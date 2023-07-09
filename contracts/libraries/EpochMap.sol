@@ -3,7 +3,6 @@ pragma solidity ^0.8.13;
 
 import './math/ConstantProduct.sol';
 import '../interfaces/ILimitPoolStructs.sol';
-import 'hardhat/console.sol';
 
 library EpochMap {
     function set(
@@ -83,8 +82,6 @@ library EpochMap {
             if (tick > ConstantProduct.maxTick(constants.tickSpacing)) require (false, 'TickIndexOverflow()');
             if (tick < ConstantProduct.minTick(constants.tickSpacing)) require (false, 'TickIndexUnderflow()');
             if (tick % (constants.tickSpacing / 2) != 0) {
-                console.log('tick outside spacing');
-                console.logInt(tick);
                 require (false, 'TickIndexInvalid()');
             } 
             tickIndex = uint256(int256((_round(tick, constants.tickSpacing / 2) 

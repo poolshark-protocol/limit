@@ -164,11 +164,12 @@ interface ILimitPoolStructs {
         PoolState pool;
         uint256 price;
         uint256 liquidity;
-        uint256 amountIn;
+        uint256 amountLeft;
         uint256 input;
         uint256 output;
         uint160 crossPrice;
         int24 crossTick;
+        bool exactIn;
         bool cross;
     }
 

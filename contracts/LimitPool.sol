@@ -49,7 +49,11 @@ contract LimitPool is
         tickSpacing    = params.tickSpacing;
 
         // initialize state
-        (globalState, minPrice, maxPrice) = Ticks.initialize(tickMap, pool0, pool1, globalState, params);
+        (
+            globalState,
+            minPrice,
+            maxPrice
+        ) = Ticks.initialize(tickMap, pool0, pool1, globalState, params);
     }
 
     // limitSwap
@@ -131,7 +135,7 @@ contract LimitPool is
             params,
             cache,
             tickMap,
-            params.zeroForOne ? pool0 : pool1,
+            params.zeroForOne ? pool1 : pool0,
             params.zeroForOne ? ticks1 : ticks0
         );
     }

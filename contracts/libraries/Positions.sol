@@ -230,6 +230,7 @@ library Positions {
             require (false, 'NotEnoughPositionLiquidity()');
         } else {
             /// @dev - validate needed in case user passes in wrong tick
+            console.log('epoch check', EpochMap.get(params.upper, tickMap, constants), cache.position.epochLast);
             if (params.zeroForOne) {
                 if (EpochMap.get(params.lower, tickMap, constants)
                             > cache.position.epochLast) {
@@ -248,7 +249,9 @@ library Positions {
             } else {
                 if (EpochMap.get(params.upper, tickMap, constants)
                             > cache.position.epochLast) {
-                    int24 previousTick = TickMap.previous(tickMap, params.lower, constants.tickSpacing);
+                    int24 previousTick = TickMap.previous(tickMap, params.upper, constants.tickSpacing);
+                    console.log('epoch check 2', EpochMap.get(previousTick, tickMap, constants), cache.position.epochLast);
+                    console.logInt(previousTick);
                     if (pool.price < cache.priceUpper ||
                         EpochMap.get(previousTick, tickMap, constants)
                             > cache.position.epochLast) {
@@ -322,6 +325,7 @@ library Positions {
             int24
         )
     {
+        console.log('tick at price start', uint24(pool.tickAtPrice));
         ILimitPoolStructs.UpdatePositionCache memory cache;
         (
             cache,
@@ -421,6 +425,7 @@ library Positions {
     ) external view returns (
         ILimitPoolStructs.Position memory
     ) {
+        console.log('pool tick at price start', uint24(pool.tickAtPrice));
         ILimitPoolStructs.UpdatePositionCache memory cache;
         (
             cache,

@@ -152,7 +152,7 @@ library Ticks {
         } else {
             pool.tickAtPrice = cache.crossTick;
         }
-        console.log('setting tick at price', cache.price, cache.crossPrice, uint24(pool.tickAtPrice));
+        console.log('setting tick at price', pool.price, cache.crossPrice, uint24(pool.tickAtPrice));
         emit Swap(
             params.to,
             params.zeroForOne,
@@ -302,11 +302,13 @@ library Ticks {
                 cache.price = uint160(newPrice);
             } else {
                 if (cache.exactIn) {
-                    amountOut = DyDxMath.getDx(cache.liquidity, cache.price, nextPrice, false);
+                    console.log('about to revert', uint24(cache.pool.tickAtPrice), cache.price, nextPrice);
+                    //TODO: handle removal of ticks
+                    amountOut = ConstantProduct.getDx(cache.liquidity, cache.price, nextPrice, false);
                     cache.input += amountMax;
                 } else {
                     amountOut = amountMax;
-                    cache.input += DyDxMath.getDy(cache.liquidity, cache.price, nextPrice, true);
+                    cache.input += ConstantProduct.getDy(cache.liquidity, cache.price, nextPrice, true);
                 }
                 cache.amountLeft -= amountMax;
                 if (nextPrice == cache.crossPrice 
@@ -478,7 +480,6 @@ library Ticks {
             tick.priceAt = pool.price;
         }
         ticks[tickToSave] = tick;
-
     }
 
     function remove(

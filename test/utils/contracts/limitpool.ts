@@ -332,7 +332,7 @@ export async function validateMint(params: ValidateMintParams) {
         ).to.be.revertedWith(revertMessage)
         return
     }
-
+    console.log('tick 100 liquidity delta', await getTick(false, 100, true))
     let balanceInAfter
     let balanceOutAfter
     if (zeroForOne) {
@@ -370,6 +370,7 @@ export async function validateMint(params: ValidateMintParams) {
     if (zeroForOne) {
         //liquidity change for lower should be -liquidityAmount
         if (!upperTickCleared) {
+            console.log('liquidity delta upper check', upperTickAfter.liquidityDelta.toString(), upperTickBefore.liquidityDelta.toString(), liquidityIncrease.toString())
             expect(upperTickAfter.liquidityDelta.sub(upperTickBefore.liquidityDelta)).to.be.equal(
                 BN_ZERO.sub(liquidityIncrease)
             )

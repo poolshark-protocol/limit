@@ -37,6 +37,7 @@ library ConstantProduct {
         bool roundUp
     ) internal pure returns (uint256 dy) {
         unchecked {
+            if (liquidity == 0) return 0;
             if (roundUp) {
                 dy = OverflowMath.mulDivRoundingUp(liquidity, priceUpper - priceLower, Q96);
             } else {
@@ -52,6 +53,7 @@ library ConstantProduct {
         bool roundUp
     ) internal pure returns (uint256 dx) {
         unchecked {
+            if (liquidity == 0) return 0;
             if (roundUp) {
                 dx = OverflowMath.divRoundingUp(OverflowMath.mulDivRoundingUp(liquidity << 96, priceUpper - priceLower, priceUpper), priceLower);
             } else {

@@ -43,7 +43,7 @@ library Positions {
         ILimitPoolStructs.MintCache memory cache,
         ILimitPoolStructs.TickMap storage tickMap,
         mapping(int24 => ILimitPoolStructs.Tick) storage swapTicks
-    ) internal pure returns (
+    ) internal returns (
         ILimitPoolStructs.MintParams memory,
         ILimitPoolStructs.PoolState memory,
         uint256
@@ -80,21 +80,27 @@ library Positions {
         swapCache.state = cache.state;
         swapCache.constants = cache.constants;
         
-        // swapCache = SwapCall.perform(
-        //     ILimitPoolStructs.SwapParams({
-        //         to: params.to,
-        //         refundTo: params.refundTo,
-        //         priceLimit: cache.priceAverage.toUint160(),
-        //         amountIn: params.amount,
-        //         zeroForOne: params.zeroForOne
-        //     }),
-        //     swapCache,
-        //     tickMap,
-        //     swapTicks
-        // );
-        // cache.swapPool = swapCache.pool;
-
+        (cache.swapPool, swapCache) = Ticks.swap(
+            swapTicks,
+            tickMap,
+            ILimitPoolStructs.SwapParams({
+                to: params.to,
+                priceLimit: cache.priceAverage.toUint160(),
+                amount: params.amount,
+                exactIn: true,
+                zeroForOne: !params.zeroForOne,
+                callbackData: abi.encodePacked(bytes1(0x0))
+            }),
+            swapCache,
+            cache.swapPool
+        );
+        // price check 78833030112140176575862854579 4295558252 0
+        // price check 78833030112140176575862854579 79821856311190148390635948861 0
+        cache.swapPool = swapCache.pool;
+        //177159557114295710296101716160
+        //177159557114295710296101716160
         //resize the position based on how much was swapped
+        console.log('pool price after swap', cache.pool.price);
 
 
         // trim position if undercutting way below market price

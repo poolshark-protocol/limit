@@ -427,7 +427,7 @@ describe('LimitPool Tests', function () {
         await getTick(false, -100, true)
     })
 
-    it('pool0 - Should mint, undercut, swap, and burn x2 12', async function () {
+    it('pool0 - Should mint, undercut, swap, and burn x2 19', async function () {
         await getPrice(false, true)
         const aliceLiquidity = '20051041647900280328782'
         const bobLiquidity = '20151542874862585449132'
@@ -537,7 +537,7 @@ describe('LimitPool Tests', function () {
     //TODO: claiming should check pool.price epoch and check next tick epoch after that
     // price lower check true 79625275426524748796330556128 177159557114295710296101716160
     //price lower check false 79625275426524748796330556128 79625275426524748796330556128
-    it('pool1 - Should mint, undercut, swap, and burn x2 11', async function () {
+    it('pool1 - Should mint, undercut, swap, and burn x2 19', async function () {
         await getPrice(false, true)
         const aliceLiquidity = '20051041647900280328782'
         const bobLiquidity = '20151542874862585449132'
@@ -551,7 +551,7 @@ describe('LimitPool Tests', function () {
             zeroForOne: false,
             balanceInDecrease: tokenAmountBn,
             liquidityIncrease: bobLiquidity,
-            upperTickCleared: true,
+            upperTickCleared: false,
             lowerTickCleared: false,
             revertMessage: '',
         })
@@ -650,7 +650,7 @@ describe('LimitPool Tests', function () {
         })
     })
 
-    it('pool0 - Should mint, undercut, burn undercut swap, and burn 11', async function () {
+    it('pool0 - Should mint, undercut, burn undercut swap, and burn 19', async function () {
         await getPrice(false, true)
         const aliceLiquidity = '20051041647900280328782'
         const bobLiquidity = '20151542874862585449132'
@@ -665,7 +665,7 @@ describe('LimitPool Tests', function () {
             balanceInDecrease: tokenAmountBn,
             liquidityIncrease: bobLiquidity,
             upperTickCleared: false,
-            lowerTickCleared: true,
+            lowerTickCleared: false,
             revertMessage: '',
         })
         await validateSwap({
@@ -767,7 +767,7 @@ describe('LimitPool Tests', function () {
         })
     })
 
-    it('pool1 - Should mint, undercut, burn undercut, swap, and burn 11', async function () {
+    it('pool1 - Should mint, undercut, burn undercut, swap, and burn 18', async function () {
         await getPrice(false, true)
         const aliceLiquidity = '20051041647900280328782'
         const bobLiquidity = '20151542874862585449132'
@@ -781,7 +781,7 @@ describe('LimitPool Tests', function () {
             zeroForOne: false,
             balanceInDecrease: tokenAmountBn,
             liquidityIncrease: bobLiquidity,
-            upperTickCleared: true,
+            upperTickCleared: false,
             lowerTickCleared: false,
             revertMessage: '',
         })
@@ -906,7 +906,7 @@ describe('LimitPool Tests', function () {
             balanceInDecrease: tokenAmountBn,
             liquidityIncrease: bobLiquidity,
             upperTickCleared: false,
-            lowerTickCleared: true,
+            lowerTickCleared: false,
             revertMessage: '',
         })
 
@@ -924,7 +924,7 @@ describe('LimitPool Tests', function () {
             zeroForOne: true,
             balanceInIncrease: '0',
             balanceOutIncrease: '99999999999999999999',
-            lowerTickCleared: true,
+            lowerTickCleared: false,
             upperTickCleared: false,
             revertMessage: '',
         })
@@ -969,7 +969,7 @@ describe('LimitPool Tests', function () {
         })
     })
 
-    it('pool0 - Should undercut, undercut again, and burn x2 17', async function () {
+    it('pool0 - Should undercut, undercut again, and burn 19', async function () {
         await getPrice(false, true)
         const aliceLiquidity = '20051041647900280328782'
         const bobLiquidity = '20151542874862585449132'
@@ -986,7 +986,7 @@ describe('LimitPool Tests', function () {
             balanceInDecrease: tokenAmountBn,
             liquidityIncrease: bobLiquidity,
             upperTickCleared: false,
-            lowerTickCleared: true,
+            lowerTickCleared: false,
             revertMessage: '',
         })
         console.log('BEFORE MINT 2')
@@ -1001,7 +1001,7 @@ describe('LimitPool Tests', function () {
             balanceInDecrease: tokenAmountBn,
             liquidityIncrease: aliceMinusBobLiquidity,
             positionLiquidityChange: aliceLiquidity,
-            upperTickCleared: false,
+            upperTickCleared: true,
             lowerTickCleared: true,
             revertMessage: '',
         })
@@ -1036,7 +1036,7 @@ describe('LimitPool Tests', function () {
         })
     })
 
-    it('pool1 - Should undercut, undercut again, and burn x2 18', async function () {
+    it('pool1 - Should undercut, undercut again, and burn x2 17', async function () {
         await getPrice(false, true)
         const aliceLiquidity = '682595230910166351423'
         const bobLiquidity = '717590842920215903832'

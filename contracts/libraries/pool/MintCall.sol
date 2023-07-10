@@ -28,6 +28,8 @@ library MintCall {
             storage positions
     ) external returns (ILimitPoolStructs.MintCache memory) {
         // resize position if necessary
+        console.log('ticks 100 check 1:');
+        console.logInt(ticks[100].liquidityDelta);
         (params, cache.swapPool, cache.liquidityMinted) = Positions.resize(
             params,
             cache,
@@ -40,9 +42,13 @@ library MintCall {
                                                    : cache.constants.token1,
                                  params.amount
                                 );
+        console.log('ticks 100 check 2:');
+        console.logInt(ticks[100].liquidityDelta);
         if (cache.pool.liquidity == 0) {
             cache = Ticks._unlock(cache, ticks, tickMap, params.zeroForOne);
-        } 
+        }
+        console.log('ticks 100 check 3:');
+        console.logInt(ticks[100].liquidityDelta);
         (cache.pool, cache.position) = Positions.add(
             cache.position,
             ticks,
@@ -58,6 +64,8 @@ library MintCall {
             ),
             cache.constants
         );
+        console.log('ticks 100 check 4:');
+        console.logInt(ticks[100].liquidityDelta);
         if (params.zeroForOne) {
             uint160 priceLower = TickMath.getPriceAtTick(params.lower, cache.constants);
             if (priceLower < cache.pool.price) {
@@ -75,6 +83,7 @@ library MintCall {
             }
         } else {
             uint160 priceUpper = TickMath.getPriceAtTick(params.upper, cache.constants);
+            console.log('price check', priceUpper, cache.pool.price, cache.pool.liquidity);
             if (priceUpper > cache.pool.price) {
                 if (cache.pool.liquidity > 0) {
                     Ticks.insertSingle(ticks, tickMap, cache.pool, cache.constants);
@@ -89,6 +98,8 @@ library MintCall {
                 cache.pool.liquidity += uint128(cache.liquidityMinted);
             }
         }
+        console.log('ticks 100 check 5:');
+        console.logInt(ticks[100].liquidityDelta);
         positions[params.to][params.lower][params.upper] = cache.position;
         return cache;
     }

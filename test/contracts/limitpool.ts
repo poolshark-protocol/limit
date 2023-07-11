@@ -115,7 +115,7 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
 
-        await getPositionLiquidity(true, hre.props.alice.address, 0, 100, true)
+        if (debugMode) await getPositionLiquidity(true, hre.props.alice.address, 0, 100, debugMode)
     })
 
     it('pool1 - Should mint, fully fill, and burn 12', async function () {
@@ -134,8 +134,8 @@ describe('LimitPool Tests', function () {
             lowerTickCleared: false,
             revertMessage: '',
         })
-        await getLiquidity(false, true)
-        await getSwapEpoch(false, true)
+        if (debugMode) await getLiquidity(false, true)
+        if (debugMode) await getSwapEpoch(false, true)
         // no-op swap
         await validateSwap({
             signer: hre.props.alice,
@@ -148,7 +148,7 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
 
-        getTick(false, 0, true)
+        if (debugMode) getTick(false, 0, true)
 
         await validateBurn({
             signer: hre.props.alice,
@@ -207,7 +207,7 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
 
-        await getTickAtPrice(false, true)
+        if (debugMode) await getTickAtPrice(false, true)
 
         await validateBurn({
             signer: hre.props.alice,
@@ -223,7 +223,7 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
 
-        await getTick(false, -100, true)
+        if (debugMode) await getTick(false, -100, true)
     })
 
     it('pool1 - Should mint, partially fill, and burn 12', async function () {
@@ -255,7 +255,7 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
 
-        await getTick(false, -100, true)
+        if (debugMode) await getTick(false, -100, true)
 
         await validateBurn({
             signer: hre.props.alice,
@@ -271,7 +271,7 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
 
-        await getTick(false, -100, true)
+        if (debugMode) await getTick(false, -100, true)
     })
 
     it('pool0 - Should mint, partially fill, partially burn, fill remaining, and burn again 12', async function () {
@@ -303,8 +303,8 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
 
-        await getTick(false, -100, true)
-        await getPositionLiquidity(true, hre.props.alice.address, 0, 100, true)
+        if (debugMode) await getTick(false, -100, true)
+        if (debugMode) await getPositionLiquidity(true, hre.props.alice.address, 0, 100, true)
 
         await validateBurn({
             signer: hre.props.alice,
@@ -332,7 +332,7 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
 
-        await getTick(false, -100, true)
+        if (debugMode) await getTick(false, -100, true)
 
         await validateBurn({
             signer: hre.props.alice,
@@ -348,7 +348,7 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
         
-        await getTick(false, -100, true)
+        if (debugMode) await getTick(false, -100, true)
     })
 
     it('pool1 - Should mint, partially fill, partially burn, fill remaining, and burn again 12', async function () {
@@ -380,7 +380,7 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
 
-        await getTick(false, -100, true)
+        if (debugMode) await getTick(false, -100, true)
 
         await validateBurn({
             signer: hre.props.alice,
@@ -408,7 +408,7 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
 
-        await getTick(false, -100, true)
+        if (debugMode) await getTick(false, -100, true)
 
         await validateBurn({
             signer: hre.props.alice,
@@ -423,12 +423,12 @@ describe('LimitPool Tests', function () {
             upperTickCleared: true,
             revertMessage: '',
         })
-        await getTick(false, -50, true)
-        await getTick(false, -100, true)
+        if (debugMode) await getTick(false, -50, true)
+        if (debugMode) await getTick(false, -100, true)
     })
 
     it('pool0 - Should mint, undercut, swap, and burn x2 19', async function () {
-        await getPrice(false, true)
+        if (debugMode) await getPrice(false, true)
         const aliceLiquidity = '20051041647900280328782'
         const bobLiquidity = '20151542874862585449132'
         // mint position
@@ -460,10 +460,10 @@ describe('LimitPool Tests', function () {
         // swap tiny
         // price should be at -100 tick
         // undercut
-        await getTick(false, -100, true)
-        await getTick(false, -105, true)
-        console.log('BEFORE MINT 2')
-        await getPrice(false, true)
+        if (debugMode) await getTick(false, -100, true)
+        if (debugMode) await getTick(false, -105, true)
+        if (debugMode) console.log('BEFORE MINT 2')
+        if (debugMode) await getPrice(false, true)
         await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
@@ -492,8 +492,8 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
 
-        await getTick(false, -105, true)
-        await getPrice(false, true)
+        if (debugMode) await getTick(false, -105, true)
+        if (debugMode) await getPrice(false, true)
 
         // bob should be able to claim something here
 
@@ -512,12 +512,12 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
 
-        if (true) {
+        if (balanceCheck) {
             console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
             console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
         }
 
-        await getPrice(true, true)
+        if (debugMode) await getPrice(true, true)
 
         await validateBurn({
             signer: hre.props.bob,
@@ -538,7 +538,7 @@ describe('LimitPool Tests', function () {
     // price lower check true 79625275426524748796330556128 177159557114295710296101716160
     //price lower check false 79625275426524748796330556128 79625275426524748796330556128
     it('pool1 - Should mint, undercut, swap, and burn x2 19', async function () {
-        await getPrice(false, true)
+        if (debugMode) await getPrice(false, true)
         const aliceLiquidity = '20051041647900280328782'
         const bobLiquidity = '20151542874862585449132'
         // mint position
@@ -555,7 +555,7 @@ describe('LimitPool Tests', function () {
             lowerTickCleared: false,
             revertMessage: '',
         })
-        await getPrice(false, true)
+        if (debugMode) await getPrice(false, true)
         await validateSwap({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
@@ -566,16 +566,16 @@ describe('LimitPool Tests', function () {
             balanceOutIncrease: '0',
             revertMessage: '',
         })
-        await getPrice(false, true)
+        if (debugMode) await getPrice(false, true)
 
-        expect(await getPrice(false, true)).to.be.equal(BigNumber.from('78833030112140176575858962080'))
+        expect(await getPrice(false, debugMode)).to.be.equal(BigNumber.from('78833030112140176575858962080'))
         // swap tiny
         // price should be at -100 tick
         // undercut
-        await getTick(false, -100, true)
-        await getTick(false, -105, true)
-        console.log('BEFORE MINT 2')
-        await getPrice(false, true)
+        if (debugMode) await getTick(false, -100, true)
+        if (debugMode) await getTick(false, -105, true)
+        if (debugMode) console.log('BEFORE MINT 2')
+        if (debugMode) await getPrice(false, true)
         await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
@@ -590,11 +590,11 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
         // // price should be at 1.00
-        console.log('BEFORE SWAP')
-        await getTick(false, -100, true)
-        await getTick(false, -105, true)
-        await getPrice(false, true)
-        await getLiquidity(false, true)
+        if (debugMode) console.log('BEFORE SWAP')
+        if (debugMode) await getTick(false, -100, true)
+        if (debugMode) await getTick(false, -105, true)
+        if (debugMode) await getPrice(false, true)
+        if (debugMode) await getLiquidity(false, true)
 
         // swap 125
         // alice fully filled
@@ -610,8 +610,8 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
 
-        await getTick(false, -105, true)
-        await getPrice(false, true)
+        if (debugMode) await getTick(false, -105, true)
+        if (debugMode) await getPrice(false, true)
 
         // bob should be able to claim something here
 
@@ -630,7 +630,7 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
 
-        if (true) {
+        if (balanceCheck) {
             console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
             console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
         }
@@ -651,7 +651,7 @@ describe('LimitPool Tests', function () {
     })
 
     it('pool0 - Should mint, undercut, burn undercut swap, and burn 19', async function () {
-        await getPrice(false, true)
+        if (debugMode) await getPrice(false, true)
         const aliceLiquidity = '20051041647900280328782'
         const bobLiquidity = '20151542874862585449132'
         // mint position
@@ -679,12 +679,12 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
 
-        expect(await getPrice(true, true)).to.be.equal(BigNumber.from('79625275426524748796334487745'))
+        expect(await getPrice(true, debugMode)).to.be.equal(BigNumber.from('79625275426524748796334487745'))
         // swap tiny
         // price should be at -100 tick
         // undercut
-        console.log('BEFORE MINT 2')
-        await getPrice(true, true)
+        if (debugMode) console.log('BEFORE MINT 2')
+        if (debugMode) await getPrice(true, true)
         await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
@@ -698,8 +698,8 @@ describe('LimitPool Tests', function () {
             lowerTickCleared: true,
             revertMessage: '',
         })
-        console.log('AFTER MINT 2')
-        await getPrice(true, true)
+        if (debugMode) console.log('AFTER MINT 2')
+        if (debugMode) await getPrice(true, true)
         // swap 125
         // alice fully filled
         // bob partially filled
@@ -715,7 +715,7 @@ describe('LimitPool Tests', function () {
         })
 
         // await getTick(false, -105, true)
-        await getPrice(true, true)
+        if (debugMode) await getPrice(true, true)
 
         // bob should be able to claim something here
 
@@ -734,7 +734,7 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
 
-        if (true) {
+        if (balanceCheck) {
             console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
             console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
         }
@@ -750,7 +750,7 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
 
-        await getPrice(true, true)
+        if (debugMode) await getPrice(true, true)
 
         await validateBurn({
             signer: hre.props.bob,
@@ -768,7 +768,7 @@ describe('LimitPool Tests', function () {
     })
 
     it('pool1 - Should mint, undercut, burn undercut, swap, and burn 18', async function () {
-        await getPrice(false, true)
+        if (debugMode) await getPrice(false, true)
         const aliceLiquidity = '20051041647900280328782'
         const bobLiquidity = '20151542874862585449132'
         // mint position
@@ -785,7 +785,7 @@ describe('LimitPool Tests', function () {
             lowerTickCleared: false,
             revertMessage: '',
         })
-        await getPrice(false, true)
+        if (debugMode) await getPrice(false, true)
         await validateSwap({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
@@ -796,16 +796,16 @@ describe('LimitPool Tests', function () {
             balanceOutIncrease: '0',
             revertMessage: '',
         })
-        await getPrice(false, true)
+        if (debugMode) await getPrice(false, true)
 
-        expect(await getPrice(false, true)).to.be.equal(BigNumber.from('78833030112140176575858962080'))
+        expect(await getPrice(false, debugMode)).to.be.equal(BigNumber.from('78833030112140176575858962080'))
         // swap tiny
         // price should be at -100 tick
         // undercut
-        await getTick(false, -100, true)
-        await getTick(false, -105, true)
-        console.log('BEFORE MINT 2')
-        await getPrice(false, true)
+        if (debugMode) await getTick(false, -100, true)
+        if (debugMode) await getTick(false, -105, true)
+        if (debugMode) console.log('BEFORE MINT 2')
+        if (debugMode) await getPrice(false, true)
         await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
@@ -820,11 +820,11 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
         // // price should be at 1.00
-        console.log('BEFORE SWAP')
-        await getTick(false, -100, true)
-        await getTick(false, -105, true)
-        await getPrice(false, true)
-        await getLiquidity(false, true)
+        if (debugMode) console.log('BEFORE SWAP')
+        if (debugMode) await getTick(false, -100, true)
+        if (debugMode) await getTick(false, -105, true)
+        if (debugMode) await getPrice(false, true)
+        if (debugMode) await getLiquidity(false, true)
 
         // swap 125
         // alice fully filled
@@ -840,8 +840,8 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
 
-        await getTick(false, -105, true)
-        await getPrice(false, true)
+        if (debugMode) await getTick(false, -105, true)
+        if (debugMode) await getPrice(false, true)
 
         // bob should be able to claim something here
 
@@ -860,7 +860,7 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
 
-        if (true) {
+        if (balanceCheck) {
             console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
             console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
         }
@@ -892,7 +892,7 @@ describe('LimitPool Tests', function () {
     })
 
     it('pool0 - Should undercut and burn 16', async function () {
-        await getPrice(false, true)
+        if (debugMode) await getPrice(false, true)
         const aliceLiquidity = '20051041647900280328782'
         const bobLiquidity = '20151542874862585449132'
         // mint position
@@ -910,10 +910,10 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
 
-        await getTick(true, 100, true)
-        await getTick(true, 105, true)
+        if (debugMode) await getTick(true, 100, true)
+        if (debugMode) await getTick(true, 105, true)
         // bob should be able to claim something here
-        console.log('BEFORE BURN 1')
+        if (debugMode) console.log('BEFORE BURN 1')
         // close both positions
         await validateBurn({
             signer: hre.props.bob,
@@ -931,7 +931,7 @@ describe('LimitPool Tests', function () {
     })
 
     it('pool1 - Should undercut and burn 18', async function () {
-        await getPrice(false, true)
+        if (debugMode) await getPrice(false, true)
         const aliceLiquidity = '20051041647900280328782'
         const bobLiquidity = '754380626357928274821'
         // mint position
@@ -949,10 +949,10 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
 
-        await getTick(true, 100, true)
-        await getTick(true, 105, true)
+        if (debugMode) await getTick(true, 100, true)
+        if (debugMode) await getTick(true, 105, true)
         // bob should be able to claim something here
-        console.log('BEFORE BURN 1')
+        if (debugMode) console.log('BEFORE BURN 1')
         // close both positions
         await validateBurn({
             signer: hre.props.bob,
@@ -970,7 +970,7 @@ describe('LimitPool Tests', function () {
     })
 
     it('pool0 - Should undercut, undercut again, and burn 19', async function () {
-        await getPrice(false, true)
+        if (debugMode) await getPrice(false, true)
         const aliceLiquidity = '20051041647900280328782'
         const bobLiquidity = '20151542874862585449132'
         // aliceLiquidity - bobLiquidity
@@ -989,8 +989,8 @@ describe('LimitPool Tests', function () {
             lowerTickCleared: true,
             revertMessage: '',
         })
-        console.log('BEFORE MINT 2')
-        await getPrice(true, true)
+        if (debugMode) console.log('BEFORE MINT 2')
+        if (debugMode) await getPrice(true, true)
         await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
@@ -1037,7 +1037,7 @@ describe('LimitPool Tests', function () {
     })
 
     it('pool1 - Should undercut, undercut again, and burn x2 17', async function () {
-        await getPrice(false, true)
+        if (debugMode) await getPrice(false, true)
         const aliceLiquidity = '682595230910166351423'
         const bobLiquidity = '717590842920215903832'
         // aliceLiquidity - bobLiquidity
@@ -1056,9 +1056,9 @@ describe('LimitPool Tests', function () {
             lowerTickCleared: false,
             revertMessage: '',
         })
-        await getTick(false, 21000)
-        console.log('BEFORE MINT 2')
-        await getPrice(true, true)
+        if (debugMode) await getTick(false, 21000)
+        if (debugMode) console.log('BEFORE MINT 2')
+        if (debugMode) await getPrice(true, true)
         await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
@@ -1073,7 +1073,7 @@ describe('LimitPool Tests', function () {
             lowerTickCleared: false,
             revertMessage: '',
         })
-        await getTick(false, 21000, true)
+        if (debugMode) await getTick(false, 21000, true)
         // close both positions
         await validateBurn({
             signer: hre.props.bob,
@@ -1105,7 +1105,7 @@ describe('LimitPool Tests', function () {
     })
 
     it('pool0 - Should mint, partial mint on other side, and burn x2 21', async function () {
-        await getPrice(false, true)
+        if (debugMode) await getPrice(false, true)
         const aliceLiquidity = '19601226326594684349779'
         const bobLiquidity = '20151542874862585449132'
         // mint position
@@ -1122,9 +1122,9 @@ describe('LimitPool Tests', function () {
             lowerTickCleared: true,
             revertMessage: '',
         })
-        await getTick(false, 21000)
-        console.log('BEFORE MINT 2')
-        await getPrice(true, true)
+        if (debugMode) await getTick(false, 21000)
+        if (debugMode) console.log('BEFORE MINT 2')
+        if (debugMode) await getPrice(true, true)
         await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
@@ -1141,9 +1141,9 @@ describe('LimitPool Tests', function () {
             expectedUpper: '150',
             revertMessage: '',
         })
-        await getPrice(true, true)
+        if (debugMode) await getPrice(true, true)
 
-        await getTick(false, 21000, true)
+        if (debugMode) await getTick(false, 21000, true)
         // close both positions
         //amountOut should be
         //49861732254639926627
@@ -1196,7 +1196,7 @@ describe('LimitPool Tests', function () {
     })
 
     it('pool1 - Should mint, partial mint on other side, and burn x2 22', async function () {
-        await getPrice(false, true)
+        if (debugMode) await getPrice(false, true)
         const aliceLiquidity = '16525718019010484759604'
         const bobLiquidity = '19851540375107355238395'
         // mint position
@@ -1214,9 +1214,9 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
         //TODO: test undercut on top of undercut
-        await getTick(false, 21000)
-        console.log('BEFORE MINT 2')
-        await getPrice(true, true)
+        if (debugMode) await getTick(false, 21000)
+        if (debugMode) console.log('BEFORE MINT 2')
+        if (debugMode) await getPrice(true, true)
         await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
@@ -1234,9 +1234,9 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
         // return
-        await getPrice(true, true)
+        if (debugMode) await getPrice(true, true)
 
-        await getTick(false, 21000, true)
+        if (debugMode) await getTick(false, 21000, true)
         // close both positions
         //amountOut should be
         //49861732254639926627
@@ -1269,7 +1269,7 @@ describe('LimitPool Tests', function () {
             upperTickCleared: true,
             revertMessage: '',
         })
-        getPrice(true, true)
+        if (debugMode) getPrice(true, true)
 
         await validateBurn({
             signer: hre.props.alice,

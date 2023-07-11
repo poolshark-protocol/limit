@@ -303,8 +303,6 @@ export async function validateMint(params: ValidateMintParams) {
             lower,
             expectedUpper ? expectedUpper : upper
         )
-        console.log('position at',             lower,
-        expectedUpper ? expectedUpper : upper)
     }
 
     if (revertMessage == '') {
@@ -334,8 +332,6 @@ export async function validateMint(params: ValidateMintParams) {
         ).to.be.revertedWith(revertMessage)
         return
     }
-    console.log('tick 100 liquidity delta', await getTick(false, 150, true))
-    console.log('position after', )
     let balanceInAfter
     let balanceOutAfter
     if (zeroForOne) {
@@ -373,7 +369,6 @@ export async function validateMint(params: ValidateMintParams) {
     if (zeroForOne) {
         //liquidity change for lower should be -liquidityAmount
         if (!upperTickCleared) {
-            console.log('liquidity delta upper check', upperTickAfter.liquidityDelta.toString(), upperTickBefore.liquidityDelta.toString(), liquidityIncrease.toString())
             expect(upperTickAfter.liquidityDelta.sub(upperTickBefore.liquidityDelta)).to.be.equal(
                 BN_ZERO.sub(liquidityIncrease)
             )
@@ -459,7 +454,6 @@ export async function validateBurn(params: ValidateBurnParams) {
     } else {
         liquidityAmount = liquidityPercent.mul(positionBefore.liquidity).div(ethers.utils.parseUnits("1",38))
     }
-    console.log('burn percent', liquidityPercent.div(ethers.utils.parseUnits('1', 36)).toString())
     if (revertMessage == '') {
         positionSnapshot = await hre.props.limitPool.snapshot({
             owner: signer.address,
@@ -550,7 +544,6 @@ export async function validateBurn(params: ValidateBurnParams) {
     } else {
         //liquidity change for lower should be -liquidityAmount
         if (!lowerTickCleared) {
-            console.log('liquidity delta before', lowerTickBefore.liquidityDelta.toString(), lowerTickAfter.liquidityDelta.toString())
             expect(lowerTickAfter.liquidityDelta.sub(lowerTickBefore.liquidityDelta)).to.be.equal(
                 liquidityAmount
             )

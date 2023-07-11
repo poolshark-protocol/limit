@@ -7,7 +7,6 @@ import './EpochMap.sol';
 import './TickMap.sol';
 import './utils/String.sol';
 import './utils/SafeCast.sol';
-import 'hardhat/console.sol';
 
 library Claims {
     /////////// DEBUG FLAGS ///////////
@@ -39,13 +38,11 @@ library Claims {
                                      : params.claim == params.upper 
                                         && EpochMap.get(params.upper, tickMap, constants) <= cache.position.epochLast
         ) {
-            console.log('early return 1', pool.swapEpoch, EpochMap.get(params.lower, tickMap, constants), cache.position.epochLast);
             cache.earlyReturn = true;
             return cache;
         }
         // early return if no update and amount burned is 0
         if (params.amount == 0 && cache.position.claimPriceLast == pool.price) {
-            console.log('early return 2');
                 cache.earlyReturn = true;
                 return cache;
         } 
@@ -62,27 +59,14 @@ library Claims {
         if (params.claim < params.lower || params.claim > params.upper) require (false, 'InvalidClaimTick()');
 
         uint32 claimTickEpoch = EpochMap.get(params.claim, tickMap, constants);
-        console.log('claim tick check');
-        console.logInt(pool.tickAtPrice);
-        console.log(pool.swapEpoch);
-        console.logInt(params.lower);
-        console.log(params.lower <= pool.tickAtPrice && 
-            pool.tickAtPrice < params.upper &&
-            (params.zeroForOne ? pool.tickAtPrice > params.claim
-                              : pool.tickAtPrice < params.claim));
         if (
             params.lower <= pool.tickAtPrice && 
             pool.tickAtPrice < params.upper &&
             (params.zeroForOne ? pool.tickAtPrice >= params.claim
                                : pool.tickAtPrice <= params.claim)) {
-                console.log('using pool price for claim');
                 claimTickEpoch = pool.swapEpoch;
                 cache.priceClaim = pool.price;
         }
-        
-
-        console.log('claim tick epoch', claimTickEpoch, cache.position.epochLast);
-        console.logInt(params.claim);
 
         //TODO: if params.amount == 0 don't check the next tick
 
@@ -96,8 +80,6 @@ library Claims {
                 ? EpochMap.get(TickMap.next(tickMap, params.claim, constants.tickSpacing), tickMap, constants)
                 : EpochMap.get(TickMap.previous(tickMap, params.claim, constants.tickSpacing), tickMap, constants);
             ///@dev - next swapEpoch should not be greater
-            console.log('next tick epoch', EpochMap.get(TickMap.next(tickMap, params.claim, constants.tickSpacing), tickMap, constants));
-            console.logInt(TickMap.next(tickMap, params.claim, constants.tickSpacing));
             if (claimTickNextAccumEpoch > cache.position.epochLast) {
                 require (false, 'WrongTickClaimedAt()');
             }

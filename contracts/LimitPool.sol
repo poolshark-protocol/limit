@@ -89,14 +89,6 @@ contract LimitPool is
             params.zeroForOne ? ticks1 : ticks0,
             params.zeroForOne ? positions0 : positions1
         );
-        if (params.zeroForOne) {
-            console.log('saving pool0', cache.pool.liquidity);
-            pool0 = cache.pool;
-            pool1 = cache.swapPool;
-        } else {
-            pool1 = cache.pool;
-            pool0 = cache.swapPool;
-        }
         globalState = cache.state;
     }
 

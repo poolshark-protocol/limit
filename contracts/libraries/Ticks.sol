@@ -11,7 +11,6 @@ import './math/OverflowMath.sol';
 import './TickMap.sol';
 import './EpochMap.sol';
 import './utils/SafeCast.sol';
-import 'hardhat/console.sol';
 
 /// @notice Tick management library
 library Ticks {
@@ -133,8 +132,6 @@ library Ticks {
                                   : ticks[cache.crossTick].priceAt;
             (pool, cache) = _quoteSingle(params.zeroForOne, params.priceLimit, pool, cache);
             if (cache.cross) {
-                console.log('crossing tick');
-                console.logInt(cache.crossTick);
                 (pool, cache) = _cross(
                     ticks,
                     tickMap,
@@ -152,7 +149,7 @@ library Ticks {
         } else {
             pool.tickAtPrice = cache.crossTick;
         }
-        console.log('setting tick at price', pool.price, cache.crossPrice, uint24(pool.tickAtPrice));
+
         emit Swap(
             params.to,
             params.zeroForOne,
@@ -302,7 +299,6 @@ library Ticks {
                 cache.price = uint160(newPrice);
             } else {
                 if (cache.exactIn) {
-                    console.log('about to revert', uint24(cache.pool.tickAtPrice), cache.price, nextPrice);
                     //TODO: handle removal of ticks
                     amountOut = ConstantProduct.getDx(cache.liquidity, cache.price, nextPrice, false);
                     cache.input += amountMax;
@@ -369,7 +365,6 @@ library Ticks {
     ) {
         EpochMap.set(cache.crossTick, cache.pool.swapEpoch, tickMap, cache.constants);
         int128 liquidityDelta = ticks[cache.crossTick].liquidityDelta;
-        console.logInt(liquidityDelta);
         if (liquidityDelta > 0) cache.liquidity += uint128(liquidityDelta);
         else cache.liquidity -= uint128(-liquidityDelta);
         pool.tickAtPrice = cache.crossTick;
@@ -429,7 +424,6 @@ library Ticks {
             TickMap.set(tickMap, lower, constants.tickSpacing);
             ILimitPoolStructs.Tick memory tickLower = ticks[lower];
             if (isPool0) {
-                console.log('adding to lower pool0', cache.priceLower, pool.price, constants.bounds.min);
                 tickLower.liquidityDelta += int128(amount);
             } else {
                 tickLower.liquidityDelta -= int128(amount);
@@ -467,10 +461,7 @@ library Ticks {
             else tickToSave -= constants.tickSpacing / 2;
             roundedPrice = TickMath.getPriceAtTick(TickMap._round(tickToSave, constants.tickSpacing), constants);
         }
-        console.log('tick to save check');
-        console.logInt(tickToSave);
-        console.log(pool.price);
-        console.log(roundedPrice);
+
         // update tick to save
         ILimitPoolStructs.Tick memory tick = ticks[tickToSave];
         TickMap.set(tickMap, tickToSave, constants.tickSpacing);
@@ -502,7 +493,6 @@ library Ticks {
                 } else {
                     tickLower.liquidityDelta += int128(amount);
                 }
-                console.logInt(tickLower.liquidityDelta);
                 ticks[lower] = tickLower;
             }
             if (lower != ConstantProduct.minTick(constants.tickSpacing) && _empty(tickLower)) {

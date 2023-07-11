@@ -20,7 +20,7 @@ library Collect {
         uint128 amountIn  = positions[msg.sender][params.lower][params.upper].amountIn;
         uint128 amountOut = positions[msg.sender][params.lower][params.upper].amountOut;
 
-        console.log('position amounts', amountIn, amountOut);
+        // console.log('position amounts', amountIn, amountOut);
 
         /// zero out balances and transfer out
         if (amountIn > 0) {

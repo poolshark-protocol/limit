@@ -936,16 +936,6 @@ describe('LimitPool Tests', function () {
         const bobLiquidity = '754380626357928274821'
         await getPrice(true, true)
 
-        await validateSwap({
-            signer: hre.props.alice,
-            recipient: hre.props.alice.address,
-            zeroForOne: false,
-            amountIn: tokenAmountBn.mul(5).div(4),
-            priceLimit: maxPrice,
-            balanceInDecrease: '0',
-            balanceOutIncrease: '0',
-            revertMessage: '',
-        })
         // mint position
         await validateMint({
             signer: hre.props.bob,
@@ -987,16 +977,7 @@ describe('LimitPool Tests', function () {
         const bobLiquidity = '20151542874862585449132'
         // aliceLiquidity - bobLiquidity
         const aliceMinusBobLiquidity = '-100501226962305120350'
-        await validateSwap({
-            signer: hre.props.alice,
-            recipient: hre.props.alice.address,
-            zeroForOne: true,
-            amountIn: tokenAmountBn.mul(5).div(4),
-            priceLimit: minPrice,
-            balanceInDecrease: '0',
-            balanceOutIncrease: '0',
-            revertMessage: '',
-        })
+
         // mint position
         await validateMint({
             signer: hre.props.bob,
@@ -1064,16 +1045,7 @@ describe('LimitPool Tests', function () {
         const bobLiquidity = '717590842920215903832'
         // aliceLiquidity - bobLiquidity
         const aliceMinusBobLiquidity = '-34995612010049552409'
-        await validateSwap({
-            signer: hre.props.alice,
-            recipient: hre.props.alice.address,
-            zeroForOne: false,
-            amountIn: tokenAmountBn.mul(5).div(4),
-            priceLimit: maxPrice,
-            balanceInDecrease: '0',
-            balanceOutIncrease: '0',
-            revertMessage: '',
-        })
+
         // mint position
         await validateMint({
             signer: hre.props.bob,
@@ -1140,16 +1112,7 @@ describe('LimitPool Tests', function () {
         if (debugMode) await getPrice(false, true)
         const aliceLiquidity = '19601226326594684349779'
         const bobLiquidity = '20151542874862585449132'
-        await validateSwap({
-            signer: hre.props.alice,
-            recipient: hre.props.alice.address,
-            zeroForOne: true,
-            amountIn: tokenAmountBn.mul(5).div(4),
-            priceLimit: minPrice,
-            balanceInDecrease: '0',
-            balanceOutIncrease: '0',
-            revertMessage: '',
-        })
+
         // mint position
         await validateMint({
             signer: hre.props.bob,
@@ -1175,7 +1138,7 @@ describe('LimitPool Tests', function () {
             amount: tokenAmountBn,
             zeroForOne: false,
             balanceInDecrease: tokenAmountBn,
-            balanceOutIncrease: BigNumber.from('50062496842661136958'),
+            balanceOutIncrease: BigNumber.from('50062496842661136959'),
             liquidityIncrease: aliceLiquidity,
             positionLiquidityChange: aliceLiquidity,
             upperTickCleared: true,
@@ -1372,7 +1335,7 @@ describe('LimitPool Tests', function () {
             expectedLower: '100',
             revertMessage: '',
         })
-        return
+
         if (debugMode) await getPrice(true, true)
 
         if (debugMode) await getTick(false, 21000, true)

@@ -58,7 +58,7 @@ library MintCall {
         if (cache.pool.liquidity == 0) {
             (cache, cache.pool) = Ticks._unlock(cache, cache.pool, ticks, tickMap, params.zeroForOne);
         }
-        if (params.amount > 0) {
+        if (params.amount > 0 && params.lower < params.upper) {
             (cache.pool, cache.position) = Positions.add(
                 cache.position,
                 ticks,

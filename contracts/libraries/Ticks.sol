@@ -373,7 +373,7 @@ library Ticks {
         ticks[cache.crossTick].liquidityDelta = 0;
         // check if empty on hybrid pool
         //TODO: more clever iterate than next/previous
-        // TickMap.unset(tickMap, cache.crossTick, cache.constants.tickSpacing);
+        TickMap.unset(tickMap, cache.crossTick, cache.constants.tickSpacing);
         if (zeroForOne) {
             cache.crossTick = TickMap.previous(tickMap, cache.crossTick, cache.constants.tickSpacing);
         } else {

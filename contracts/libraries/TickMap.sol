@@ -276,4 +276,15 @@ library TickMap {
     ) {
         return tick / tickSpacing * tickSpacing;
     }
+
+    function roundUp(
+        int24 tick,
+        int24 tickSpacing,
+        bool zeroForOne
+    ) internal pure returns (
+        int24 roundedTick
+    ) {
+        return tick / tickSpacing * tickSpacing +
+                (zeroForOne ? -tickSpacing : tickSpacing);
+    }
 }

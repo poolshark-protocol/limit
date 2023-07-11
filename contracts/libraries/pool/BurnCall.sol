@@ -59,6 +59,7 @@ library BurnCall {
                 cache.constants
             );
         } else {
+            console.log('removing position');
             // if position hasn't been crossed into
             (, cache.pool) = Positions.remove(
                 positions,

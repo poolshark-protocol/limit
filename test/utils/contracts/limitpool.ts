@@ -129,7 +129,7 @@ export async function getTick(isPool0: boolean, tickIndex: number, print: boolea
     let tick: Tick = isPool0 ? (await hre.props.limitPool.ticks0(tickIndex))
                              : (await hre.props.limitPool.ticks1(tickIndex));
     if (print) {
-        console.log(tickIndex,'tick:', tick.toString())
+        console.log(tickIndex,'tick:', tick.liquidityDelta.toString(), tick.priceAt.toString())
     }
     return tick
 }
@@ -292,17 +292,19 @@ export async function validateMint(params: ValidateMintParams) {
         upperTickBefore = await hre.props.limitPool.ticks0(expectedUpper ? expectedUpper : upper)
         positionBefore  = await hre.props.limitPool.positions0(
             recipient,
-            lower,
-            expectedUpper ? expectedUpper : upper
+            expectedLower ? expectedLower : lower,
+            upper
         )
     } else {
         lowerTickBefore = await hre.props.limitPool.ticks1(expectedLower ? expectedLower : lower)
         upperTickBefore = await hre.props.limitPool.ticks1(upper)
         positionBefore  = await hre.props.limitPool.positions1(
             recipient,
-            expectedLower ? expectedLower : lower,
-            upper
+            lower,
+            expectedUpper ? expectedUpper : upper
         )
+        console.log('position at',             lower,
+        expectedUpper ? expectedUpper : upper)
     }
 
     if (revertMessage == '') {
@@ -332,7 +334,8 @@ export async function validateMint(params: ValidateMintParams) {
         ).to.be.revertedWith(revertMessage)
         return
     }
-    console.log('tick 100 liquidity delta', await getTick(false, 100, true))
+    console.log('tick 100 liquidity delta', await getTick(false, 150, true))
+    console.log('position after', )
     let balanceInAfter
     let balanceOutAfter
     if (zeroForOne) {
@@ -354,16 +357,16 @@ export async function validateMint(params: ValidateMintParams) {
         upperTickAfter = await hre.props.limitPool.ticks0(expectedUpper ? expectedUpper : upper)
         positionAfter = await hre.props.limitPool.positions0(
             recipient,
-            lower,
-            expectedUpper ? expectedUpper : upper
+            expectedLower ? expectedLower : lower,
+            upper
         )
     } else {
         lowerTickAfter = await hre.props.limitPool.ticks1(expectedLower ? expectedLower : lower)
         upperTickAfter = await hre.props.limitPool.ticks1(upper)
         positionAfter = await hre.props.limitPool.positions1(
             recipient,
-            expectedLower ? expectedLower : lower,
-            upper
+            lower,
+            expectedUpper ? expectedUpper : upper
         )
     }
 

@@ -60,24 +60,31 @@ contract LimitPool is
     function mint(
         MintParams memory params
     ) external override lock {
-        MintCache memory cache = MintCache({
-            state: globalState,
-            position: params.zeroForOne ? positions0[params.to][params.lower][params.upper]
-                                        : positions1[params.to][params.lower][params.upper],
-            constants: _immutables(),
-            liquidityMinted: 0,
-            pool: params.zeroForOne ? pool0 : pool1,
-            swapPool: params.zeroForOne ? pool1 : pool0,
-            priceAverage: 0,
-            amountIn: 0,
-            amountOut: 0
-        });
+        MintCache memory cache;
+        {
+            SwapCache memory swapCache;
+            cache = MintCache({
+                state: globalState,
+                position: params.zeroForOne ? positions0[params.to][params.lower][params.upper]
+                                            : positions1[params.to][params.lower][params.upper],
+                constants: _immutables(),
+                liquidityMinted: 0,
+                pool: params.zeroForOne ? pool0 : pool1,
+                swapPool: params.zeroForOne ? pool1 : pool0,
+                swapCache: swapCache,
+                priceAverage: 0,
+                amountIn: 0,
+                amountOut: 0
+            });
+        }
         // getNewPrice by consuming half the input and use that priceLimit
         // check if pool price in range
         cache = MintCall.perform(
             params,
             cache,
             tickMap,
+            params.zeroForOne ? pool0 : pool1,
+            params.zeroForOne ? pool1 : pool0,
             params.zeroForOne ? ticks0 : ticks1,
             params.zeroForOne ? ticks1 : ticks0,
             params.zeroForOne ? positions0 : positions1

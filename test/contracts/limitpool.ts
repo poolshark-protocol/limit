@@ -551,7 +551,7 @@ describe('LimitPool Tests', function () {
             zeroForOne: false,
             balanceInDecrease: tokenAmountBn,
             liquidityIncrease: bobLiquidity,
-            upperTickCleared: false,
+            upperTickCleared: true,
             lowerTickCleared: false,
             revertMessage: '',
         })
@@ -665,7 +665,7 @@ describe('LimitPool Tests', function () {
             balanceInDecrease: tokenAmountBn,
             liquidityIncrease: bobLiquidity,
             upperTickCleared: false,
-            lowerTickCleared: false,
+            lowerTickCleared: true,
             revertMessage: '',
         })
         await validateSwap({
@@ -781,7 +781,7 @@ describe('LimitPool Tests', function () {
             zeroForOne: false,
             balanceInDecrease: tokenAmountBn,
             liquidityIncrease: bobLiquidity,
-            upperTickCleared: false,
+            upperTickCleared: true,
             lowerTickCleared: false,
             revertMessage: '',
         })
@@ -906,7 +906,7 @@ describe('LimitPool Tests', function () {
             balanceInDecrease: tokenAmountBn,
             liquidityIncrease: bobLiquidity,
             upperTickCleared: false,
-            lowerTickCleared: false,
+            lowerTickCleared: true,
             revertMessage: '',
         })
 
@@ -924,7 +924,7 @@ describe('LimitPool Tests', function () {
             zeroForOne: true,
             balanceInIncrease: '0',
             balanceOutIncrease: '99999999999999999999',
-            lowerTickCleared: false,
+            lowerTickCleared: true,
             upperTickCleared: false,
             revertMessage: '',
         })
@@ -986,7 +986,7 @@ describe('LimitPool Tests', function () {
             balanceInDecrease: tokenAmountBn,
             liquidityIncrease: bobLiquidity,
             upperTickCleared: false,
-            lowerTickCleared: false,
+            lowerTickCleared: true,
             revertMessage: '',
         })
         console.log('BEFORE MINT 2')
@@ -1104,12 +1104,10 @@ describe('LimitPool Tests', function () {
         })
     })
 
-    it.skip('pool0 - Should mint, partial mint on other side, and burn x2', async function () {
+    it('pool0 - Should mint, partial mint on other side, and burn x2 21', async function () {
         await getPrice(false, true)
-        const aliceLiquidity = '682595230910166351423'
-        const bobLiquidity = '717590842920215903832'
-        // aliceLiquidity - bobLiquidity
-        const aliceMinusBobLiquidity = '-34995612010049552409'
+        const aliceLiquidity = '19931349858421683510471'
+        const bobLiquidity = '20151542874862585449132'
         // mint position
         await validateMint({
             signer: hre.props.bob,
@@ -1130,45 +1128,57 @@ describe('LimitPool Tests', function () {
         await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
-            lower: '21000', // epoch 3
-            upper: '22000', // epoch 3?
+            lower: '100', // epoch 3
+            upper: '200', // epoch 3?
             amount: tokenAmountBn,
             zeroForOne: false,
             balanceInDecrease: tokenAmountBn,
-            liquidityIncrease: aliceMinusBobLiquidity,
+            balanceOutIncrease: BigNumber.from('49244384833402108660'),
+            liquidityIncrease: aliceLiquidity,
             positionLiquidityChange: aliceLiquidity,
             upperTickCleared: true,
             lowerTickCleared: false,
+            expectedUpper: '150',
             revertMessage: '',
         })
+        await getPrice(true, true)
+
         await getTick(false, 21000, true)
         // close both positions
+        //amountOut should be
+        //49861732254639926627
+        //TODO: claim tick at 145 does not complain about epoch on 150
+        //TODO: claim tick at 150 is not reverted
         await validateBurn({
             signer: hre.props.bob,
-            lower: '20000',
-            upper: '21000',
-            claim: '21000',
+            lower: '100',
+            upper: '200',
+            claim: '145',
             liquidityPercent: ethers.utils.parseUnits('1', 38),
-            zeroForOne: false,
-            balanceInIncrease: '0',
-            balanceOutIncrease: '99999999999999999999',
-            lowerTickCleared: false,
+            zeroForOne: true,
+            balanceInIncrease: '49861732254639926626',
+            balanceOutIncrease: '50755615166597891338',
+            lowerTickCleared: true,
             upperTickCleared: false,
             revertMessage: '',
         })
 
         await validateBurn({
             signer: hre.props.alice,
-            lower: '21000',
-            upper: '22000',
-            claim: '22000',
+            lower: '100',
+            upper: '150',
+            claim: '150',
             liquidityPercent: ethers.utils.parseUnits('1', 38),
             zeroForOne: false,
             balanceInIncrease: '0',
-            balanceOutIncrease: '99999999999999999999',
+            balanceOutIncrease: '50138267745360073372',
             lowerTickCleared: false,
             upperTickCleared: true,
             revertMessage: '',
         })
+        if (true) {
+            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
+            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
+        }
     })
 })

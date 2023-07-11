@@ -45,8 +45,7 @@ library Positions {
         mapping(int24 => ILimitPoolStructs.Tick) storage swapTicks
     ) internal returns (
         ILimitPoolStructs.MintParams memory,
-        ILimitPoolStructs.PoolState memory,
-        uint256
+        ILimitPoolStructs.MintCache memory
     )
     {
         ConstantProduct.checkTicks(params.lower, params.upper, cache.constants.tickSpacing);
@@ -72,6 +71,8 @@ library Positions {
             params.zeroForOne ? uint256(params.amount) : 0
         );
 
+        console.log('original liquidity minted', cache.liquidityMinted);
+
         cache.priceAverage = params.zeroForOne ? ConstantProduct.getNewPrice(localCache.priceLower, cache.liquidityMinted, params.amount / 2, false)
                                                : ConstantProduct.getNewPrice(localCache.priceUpper, cache.liquidityMinted, params.amount / 2, true);
 
@@ -80,6 +81,7 @@ library Positions {
         swapCache.state = cache.state;
         swapCache.constants = cache.constants;
         
+        //TODO: don't call swap if already beyond priceLimit
         (cache.swapPool, swapCache) = Ticks.swap(
             swapTicks,
             tickMap,
@@ -88,52 +90,56 @@ library Positions {
                 priceLimit: cache.priceAverage.toUint160(),
                 amount: params.amount,
                 exactIn: true,
-                zeroForOne: !params.zeroForOne,
+                zeroForOne: params.zeroForOne,
                 callbackData: abi.encodePacked(bytes1(0x0))
             }),
             swapCache,
             cache.swapPool
         );
-        // price check 78833030112140176575862854579 4295558252 0
-        // price check 78833030112140176575862854579 79821856311190148390635948861 0
-        cache.swapPool = swapCache.pool;
-        //177159557114295710296101716160
-        //177159557114295710296101716160
+
+        params.amount -= uint128(swapCache.input);
+
+        // move start tick based on amount filled in swap
+
         //resize the position based on how much was swapped
-        console.log('pool price after swap', cache.pool.price);
+        console.log('pool price after swap', cache.swapPool.price, params.amount, cache.priceAverage);
 
+        //TODO: trim position if undercutting way below market price
 
-        // trim position if undercutting way below market price
-        // execute market swap if liquidity available
-
-        // handle partial mints
-        if (params.zeroForOne) {
-            if (params.upper > localCache.requiredStart) {
-                params.upper = localCache.requiredStart;
-                //TODO: call getNewPrice or just check the pool price and update position accordingly
-                uint256 priceNewUpper = ConstantProduct.getPriceAtTick(params.upper, cache.constants);
-                params.amount -= uint128(
-                    ConstantProduct.getDx(cache.liquidityMinted, priceNewUpper, localCache.priceUpper, false)
-                );
-                localCache.priceUpper = uint160(priceNewUpper);
+        if (params.amount > 0 && swapCache.input > 0) {
+            if (params.zeroForOne) {
+                uint160 newPrice = ConstantProduct.getNewPrice(localCache.priceLower, cache.liquidityMinted, swapCache.input, false).toUint160();
+                int24 newLower = ConstantProduct.getTickAtPrice(newPrice, cache.constants);
+                params.lower = TickMap.roundUp(newLower, cache.constants.tickSpacing, true);
+                localCache.priceLower = ConstantProduct.getPriceAtTick(params.lower, cache.constants);
+            } else {
+                uint160 newPrice = ConstantProduct.getNewPrice(localCache.priceUpper, cache.liquidityMinted, swapCache.input, true).toUint160();
+                int24 newUpper = ConstantProduct.getTickAtPrice(newPrice, cache.constants);
+                params.upper = TickMap.roundUp(newUpper, cache.constants.tickSpacing, false);
+                localCache.priceUpper = ConstantProduct.getPriceAtTick(params.upper, cache.constants);
+                console.log('new upper', uint24(params.upper));
+                console.log('new price', newPrice);
+                console.log('new tick', uint24(ConstantProduct.getTickAtPrice(newPrice, cache.constants)));
             }
-        } else {
-            if (params.lower < localCache.requiredStart) {
-                params.lower = localCache.requiredStart;
-                uint256 priceNewLower = ConstantProduct.getPriceAtTick(params.lower, cache.constants);
-                params.amount -= uint128(
-                    ConstantProduct.getDy(cache.liquidityMinted, localCache.priceLower, priceNewLower, false)
-                );
-                localCache.priceLower = uint160(priceNewLower);
-            }
+            cache.liquidityMinted = ConstantProduct.getLiquidityForAmounts(
+                localCache.priceLower,
+                localCache.priceUpper,
+                params.zeroForOne ? localCache.priceLower : localCache.priceUpper,
+                params.zeroForOne ? 0 : uint256(params.amount),
+                params.zeroForOne ? uint256(params.amount) : 0
+            );
         }
+
+        console.log('resized liquidity minted', cache.liquidityMinted);
+
+        cache.swapCache = swapCache;
+
         // check for liquidity overflow
         if (cache.liquidityMinted > uint128(type(int128).max)) require (false, 'LiquidityOverflow()');
  
         return (
             params,
-            cache.swapPool,
-            cache.liquidityMinted
+            cache
         );
     }
 
@@ -515,7 +521,7 @@ library Positions {
             removeLower: false,
             removeUpper: false
         });
-        console.log('calling deltas');
+        console.log('calling deltas', EpochMap.get(params.claim, tickMap, constants));
         params.amount = _convert(cache.position.liquidity, params.amount);
 
         // check claim is valid
@@ -534,7 +540,7 @@ library Positions {
             cache.position.claimPriceLast = params.zeroForOne ? cache.priceLower
                                                               : cache.priceUpper;
         }
-        // get deltas from claim tick
+        // calculate position deltas
         cache = Claims.getDeltas(cache, params);
 
         return (cache, state);

@@ -105,7 +105,7 @@ library Claims {
         if (params.claim != params.upper && params.claim != params.lower) {
             // check epochLast on claim tick
             if (claimTickEpoch <= cache.position.epochLast)
-                require (false, 'WrongTickClaimdAt()');
+                require (false, 'WrongTickClaimedAt()');
             // prevent position overwriting at claim tick
             if (params.zeroForOne) {
                 if (positions[params.owner][params.lower][params.claim].liquidity > 0) {

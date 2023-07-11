@@ -285,6 +285,6 @@ library TickMap {
         int24 roundedTick
     ) {
         return tick / tickSpacing * tickSpacing +
-                (zeroForOne ? -tickSpacing : tickSpacing);
+                (zeroForOne ? int24(0) : tickSpacing);
     }
 }

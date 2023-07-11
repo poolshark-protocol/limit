@@ -73,63 +73,79 @@ library Positions {
 
         console.log('original liquidity minted', cache.liquidityMinted);
 
-        cache.priceAverage = params.zeroForOne ? ConstantProduct.getNewPrice(localCache.priceLower, cache.liquidityMinted, params.amount / 2, false)
-                                               : ConstantProduct.getNewPrice(localCache.priceUpper, cache.liquidityMinted, params.amount / 2, true);
+        {
+            cache.priceLimit = params.zeroForOne ? ConstantProduct.getNewPrice(localCache.priceLower, cache.liquidityMinted, params.amount / 2, false)
+                                                 : ConstantProduct.getNewPrice(localCache.priceUpper, cache.liquidityMinted, params.amount / 2, true);
+            // get tick at price
+            int24 tickAtPrice = ConstantProduct.getTickAtPrice(cache.priceLimit.toUint160(), cache.constants);
+            console.log('tick at price check 3', uint24(tickAtPrice), uint16(cache.constants.tickSpacing));
+            // round to nearest tick spacing
+            if (tickAtPrice % cache.constants.tickSpacing != 0) {
+                tickAtPrice = TickMap.roundUp(tickAtPrice, cache.constants.tickSpacing, params.zeroForOne);
+                console.log('tick at price check 2', uint24(tickAtPrice));
+            }
+            cache.priceLimit = ConstantProduct.getPriceAtTick(tickAtPrice, cache.constants);
+        }
 
         ILimitPoolStructs.SwapCache memory swapCache;
         swapCache.pool = cache.swapPool;
         swapCache.state = cache.state;
         swapCache.constants = cache.constants;
-        
-        //TODO: don't call swap if already beyond priceLimit
-        (cache.swapPool, swapCache) = Ticks.swap(
-            swapTicks,
-            tickMap,
-            ILimitPoolStructs.SwapParams({
-                to: params.to,
-                priceLimit: cache.priceAverage.toUint160(),
-                amount: params.amount,
-                exactIn: true,
-                zeroForOne: params.zeroForOne,
-                callbackData: abi.encodePacked(bytes1(0x0))
-            }),
-            swapCache,
-            cache.swapPool
-        );
-
-        params.amount -= uint128(swapCache.input);
-
-        // move start tick based on amount filled in swap
-
-        //resize the position based on how much was swapped
-        console.log('pool price after swap', cache.swapPool.price, params.amount, cache.priceAverage);
-
-        //TODO: trim position if undercutting way below market price
-
-        if (params.amount > 0 && swapCache.input > 0) {
-            if (params.zeroForOne) {
-                uint160 newPrice = ConstantProduct.getNewPrice(localCache.priceLower, cache.liquidityMinted, swapCache.input, false).toUint160();
-                int24 newLower = ConstantProduct.getTickAtPrice(newPrice, cache.constants);
-                params.lower = TickMap.roundUp(newLower, cache.constants.tickSpacing, true);
-                localCache.priceLower = ConstantProduct.getPriceAtTick(params.lower, cache.constants);
-            } else {
-                uint160 newPrice = ConstantProduct.getNewPrice(localCache.priceUpper, cache.liquidityMinted, swapCache.input, true).toUint160();
-                int24 newUpper = ConstantProduct.getTickAtPrice(newPrice, cache.constants);
-                params.upper = TickMap.roundUp(newUpper, cache.constants.tickSpacing, false);
-                localCache.priceUpper = ConstantProduct.getPriceAtTick(params.upper, cache.constants);
-                console.log('new upper', uint24(params.upper));
-                console.log('new price', newPrice);
-                console.log('new tick', uint24(ConstantProduct.getTickAtPrice(newPrice, cache.constants)));
-            }
-            cache.liquidityMinted = ConstantProduct.getLiquidityForAmounts(
-                localCache.priceLower,
-                localCache.priceUpper,
-                params.zeroForOne ? localCache.priceLower : localCache.priceUpper,
-                params.zeroForOne ? 0 : uint256(params.amount),
-                params.zeroForOne ? uint256(params.amount) : 0
+        console.log('pool price check', cache.swapPool.price <= cache.priceLimit);
+        if (params.zeroForOne ? cache.swapPool.price > cache.priceLimit
+                              : cache.swapPool.price < cache.priceLimit) {
+            (cache.swapPool, swapCache) = Ticks.swap(
+                swapTicks,
+                tickMap,
+                ILimitPoolStructs.SwapParams({
+                    to: params.to,
+                    priceLimit: cache.priceLimit.toUint160(),
+                    amount: params.amount,
+                    exactIn: true,
+                    zeroForOne: params.zeroForOne,
+                    callbackData: abi.encodePacked(bytes1(0x0))
+                }),
+                swapCache,
+                cache.swapPool
             );
-        }
 
+            params.amount -= uint128(swapCache.input);
+
+            // move start tick based on amount filled in swap
+
+            //resize the position based on how much was swapped
+            console.log('pool price after swap', cache.swapPool.price, params.amount, cache.priceLimit);
+
+            //TODO: trim position if undercutting way below market price
+
+            if (params.amount > 0 && swapCache.input > 0) {
+                if (params.zeroForOne) {
+                    uint160 newPrice = ConstantProduct.getNewPrice(localCache.priceLower, cache.liquidityMinted, swapCache.input, false).toUint160();
+                    int24 newLower = ConstantProduct.getTickAtPrice(newPrice, cache.constants);
+                    params.lower = TickMap.roundUp(newLower, cache.constants.tickSpacing, true);
+                    localCache.priceLower = ConstantProduct.getPriceAtTick(params.lower, cache.constants);
+                    console.log('new lower', uint24(params.lower));
+                    console.log('new price', newPrice);
+                    console.log('new tick', uint24(ConstantProduct.getTickAtPrice(newPrice, cache.constants)));
+                } else {
+                    uint160 newPrice = ConstantProduct.getNewPrice(localCache.priceUpper, cache.liquidityMinted, swapCache.input, true).toUint160();
+                    int24 newUpper = ConstantProduct.getTickAtPrice(newPrice, cache.constants);
+                    params.upper = TickMap.roundUp(newUpper, cache.constants.tickSpacing, false);
+                    localCache.priceUpper = ConstantProduct.getPriceAtTick(params.upper, cache.constants);
+                    console.log('new upper', uint24(params.upper));
+                    console.log('new price', newPrice);
+                    console.log('new tick', uint24(ConstantProduct.getTickAtPrice(newPrice, cache.constants)));
+                }
+                cache.liquidityMinted = ConstantProduct.getLiquidityForAmounts(
+                    localCache.priceLower,
+                    localCache.priceUpper,
+                    params.zeroForOne ? localCache.priceLower : localCache.priceUpper,
+                    params.zeroForOne ? 0 : uint256(params.amount),
+                    params.zeroForOne ? uint256(params.amount) : 0
+                );
+                cache.pool.swapEpoch += 1;
+            }
+        }
         console.log('resized liquidity minted', cache.liquidityMinted);
 
         cache.swapCache = swapCache;

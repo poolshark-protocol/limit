@@ -71,6 +71,7 @@ library MintCall {
                 cache.constants
             );
             if (params.zeroForOne) {
+                console.log('epoch check');
                 uint160 priceLower = TickMath.getPriceAtTick(params.lower, cache.constants);
                 if (priceLower < cache.pool.price) {
                     if (cache.pool.liquidity > 0) {
@@ -81,6 +82,7 @@ library MintCall {
                     cache.pool.liquidity = uint128(cache.liquidityMinted);
                     // set epoch on start tick to signify position being crossed into
                     cache.pool.swapEpoch += 1;
+                    console.log('epoch set for start tick', uint24(params.lower), uint24(params.upper));
                     EpochMap.set(params.lower, cache.pool.swapEpoch, tickMap, cache.constants);
                 } else if (priceLower == cache.pool.price) {
                     cache.pool.liquidity += uint128(cache.liquidityMinted);

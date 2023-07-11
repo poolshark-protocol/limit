@@ -72,7 +72,7 @@ contract LimitPool is
                 pool: params.zeroForOne ? pool0 : pool1,
                 swapPool: params.zeroForOne ? pool1 : pool0,
                 swapCache: swapCache,
-                priceAverage: 0,
+                priceLimit: 0,
                 amountIn: 0,
                 amountOut: 0
             });

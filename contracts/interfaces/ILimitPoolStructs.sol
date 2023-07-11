@@ -147,7 +147,7 @@ interface ILimitPoolStructs {
         PoolState swapPool;
         SwapCache swapCache;
         uint256 liquidityMinted;
-        uint256 priceAverage;
+        uint256 priceLimit;
         int256 amountIn;
         uint256 amountOut;
     }

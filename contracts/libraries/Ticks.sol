@@ -319,38 +319,40 @@ library Ticks {
 
     function _unlock(
         ILimitPoolStructs.MintCache memory cache,
+        ILimitPoolStructs.PoolState memory pool,
         mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
         ILimitPoolStructs.TickMap storage tickMap,
         bool zeroForOne
     ) internal returns (
-        ILimitPoolStructs.MintCache memory
+        ILimitPoolStructs.MintCache memory,
+        ILimitPoolStructs.PoolState memory
     )    
     {
-        if (cache.pool.liquidity > 0) return cache;
+        if (pool.liquidity > 0) return (cache, pool);
         if (zeroForOne) {
-            cache.pool.tickAtPrice = TickMap.next(tickMap, cache.pool.tickAtPrice, cache.constants.tickSpacing);
-            if (cache.pool.tickAtPrice < ConstantProduct.maxTick(cache.constants.tickSpacing)) {
-                EpochMap.set(cache.pool.tickAtPrice, cache.pool.swapEpoch, tickMap, cache.constants);
+            pool.tickAtPrice = TickMap.next(tickMap, pool.tickAtPrice, cache.constants.tickSpacing);
+            if (pool.tickAtPrice < ConstantProduct.maxTick(cache.constants.tickSpacing)) {
+                EpochMap.set(pool.tickAtPrice, pool.swapEpoch, tickMap, cache.constants);
             }
         } else {
-            cache.pool.tickAtPrice = TickMap.previous(tickMap, cache.pool.tickAtPrice, cache.constants.tickSpacing);
-            if (cache.pool.tickAtPrice > ConstantProduct.minTick(cache.constants.tickSpacing)) {
-                EpochMap.set(cache.pool.tickAtPrice, cache.pool.swapEpoch, tickMap, cache.constants);
+            pool.tickAtPrice = TickMap.previous(tickMap, pool.tickAtPrice, cache.constants.tickSpacing);
+            if (pool.tickAtPrice > ConstantProduct.minTick(cache.constants.tickSpacing)) {
+                EpochMap.set(pool.tickAtPrice, pool.swapEpoch, tickMap, cache.constants);
             }
         }
         /// @dev - this should always be positive if liquidity is 0
-        cache.pool.liquidity += uint128(ticks[cache.pool.tickAtPrice].liquidityDelta);
-        ticks[cache.pool.tickAtPrice].liquidityDelta = 0;
-        if (cache.pool.tickAtPrice % cache.constants.tickSpacing == 0){
-            cache.pool.price = ConstantProduct.getPriceAtTick(cache.pool.tickAtPrice, cache.constants);
+        pool.liquidity += uint128(ticks[pool.tickAtPrice].liquidityDelta);
+        ticks[pool.tickAtPrice].liquidityDelta = 0;
+        if (pool.tickAtPrice % cache.constants.tickSpacing == 0){
+            pool.price = ConstantProduct.getPriceAtTick(pool.tickAtPrice, cache.constants);
         } else {
-            uint160 priceAt = ticks[cache.pool.tickAtPrice].priceAt;
+            uint160 priceAt = ticks[pool.tickAtPrice].priceAt;
             if (priceAt > 0) {
-                cache.pool.price = priceAt;
-                cache.pool.tickAtPrice = ConstantProduct.getTickAtPrice(priceAt, cache.constants);
+                pool.price = priceAt;
+                pool.tickAtPrice = ConstantProduct.getTickAtPrice(priceAt, cache.constants);
             }
         }
-        return cache;
+        return (cache, pool);
     }
 
     function _cross(

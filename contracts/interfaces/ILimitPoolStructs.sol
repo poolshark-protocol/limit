@@ -150,6 +150,7 @@ interface ILimitPoolStructs {
         uint256 priceLimit;
         int256 amountIn;
         uint256 amountOut;
+        int24 tickLimit;
     }
 
     struct BurnCache {

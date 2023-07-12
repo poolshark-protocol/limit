@@ -62,14 +62,25 @@ library Claims {
         if (params.claim < params.lower || params.claim > params.upper) require (false, 'InvalidClaimTick()');
 
         uint32 claimTickEpoch = EpochMap.get(params.claim, tickMap, constants);
-        if (
-            params.lower <= pool.tickAtPrice && 
-            pool.tickAtPrice < params.upper &&
-            (params.zeroForOne ? pool.tickAtPrice >= params.claim
-                               : pool.tickAtPrice <= params.claim)) {
-                console.log('using pool price');
+
+        if (params.zeroForOne){
+            if (pool.price >= cache.priceClaim) {
+                if (pool.price <= cache.priceUpper) {
+                    cache.priceClaim = pool.price;
+                } else {
+                    cache.priceClaim = cache.priceUpper;
+                }
                 claimTickEpoch = pool.swapEpoch;
-                cache.priceClaim = pool.price;
+            }
+        } else {
+            if (pool.price <= cache.priceClaim) {
+                if (pool.price >= cache.priceLower) {
+                    cache.priceClaim = pool.price;
+                } else {
+                    cache.priceClaim = cache.priceLower;
+                }
+                claimTickEpoch = pool.swapEpoch;
+            }
         }
 
         //TODO: if params.amount == 0 don't check the next tick
@@ -82,11 +93,14 @@ library Claims {
             int24 claimTickNext = params.zeroForOne
                 ? TickMap.next(tickMap, params.claim, constants.tickSpacing)
                 : TickMap.previous(tickMap, params.claim, constants.tickSpacing);
+            // if we cleared the final tick of their position, this is the wrong claim tick
             if (params.zeroForOne ? claimTickNext > params.upper
                                   : claimTickNext < params.lower) {
                 require (false, 'WrongTickClaimedAt()');
             }
             // zero fill or partial fill
+            /// @dev - if the next tick was crossed after position creation, the claim tick is incorrect
+            /// @dev - we can cycle to find the right claim tick for the user
             uint32 claimTickNextAccumEpoch = EpochMap.get(claimTickNext, tickMap, constants);
             ///@dev - next swapEpoch should not be greater
             if (claimTickNextAccumEpoch > cache.position.epochLast) {

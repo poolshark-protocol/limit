@@ -123,7 +123,8 @@ library Positions {
                                : localCache.priceUpper > cache.swapPool.price)
         ) {
             console.log('swap check');
-            console.log(swapCache.input, swapCache.output, uint24(swapCache.pool.tickAtPrice));
+            console.log(swapCache.input, swapCache.output);
+            console.log(swapCache.price, uint24(swapCache.pool.tickAtPrice));
             if (params.zeroForOne) {
                 if (params.amount > 0 && swapCache.input > 0) {
                     uint160 newPrice = ConstantProduct.getNewPrice(localCache.priceLower, cache.liquidityMinted, swapCache.input, false).toUint160();
@@ -145,13 +146,17 @@ library Positions {
                 }
                 localCache.priceUpper = ConstantProduct.getPriceAtTick(params.upper, cache.constants);
             }
-            cache.liquidityMinted = ConstantProduct.getLiquidityForAmounts(
-                localCache.priceLower,
-                localCache.priceUpper,
-                params.zeroForOne ? localCache.priceLower : localCache.priceUpper,
-                params.zeroForOne ? 0 : uint256(params.amount),
-                params.zeroForOne ? uint256(params.amount) : 0
-            );
+            if (params.amount > 0)
+                cache.liquidityMinted = ConstantProduct.getLiquidityForAmounts(
+                    localCache.priceLower,
+                    localCache.priceUpper,
+                    params.zeroForOne ? localCache.priceLower : localCache.priceUpper,
+                    params.zeroForOne ? 0 : uint256(params.amount),
+                    params.zeroForOne ? uint256(params.amount) : 0
+                );
+            else
+                cache.liquidityMinted = 0;
+            console.log('liquidity minted', cache.liquidityMinted);
             cache.pool.swapEpoch += 1;
         }
         if (params.lower == 0) console.log('tick 100 epoch check', EpochMap.get(100, tickMap, cache.constants));

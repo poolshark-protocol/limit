@@ -261,7 +261,7 @@ describe('LimitPool Tests', function () {
             signer: hre.props.alice,
             lower: '-100',
             upper: '0',
-            claim: '-50',
+            claim: '-45',
             liquidityAmount: liquidityAmount,
             zeroForOne: false,
             balanceInIncrease: '49999999999999999999',
@@ -386,7 +386,7 @@ describe('LimitPool Tests', function () {
             signer: hre.props.alice,
             lower: '-100',
             upper: '0',
-            claim: '-50',
+            claim: '-45',
             liquidityPercent: ethers.utils.parseUnits('5', 37),
             zeroForOne: false,
             balanceInIncrease: '49999999999999999999',
@@ -414,6 +414,19 @@ describe('LimitPool Tests', function () {
             signer: hre.props.alice,
             lower: '-100',
             upper: '-50',
+            claim: '-100',
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: false,
+            balanceInIncrease: '25250613481152560175',
+            balanceOutIncrease: '0',
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: 'NotEnoughPositionLiquidity()',
+        })
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-100',
+            upper: '-45',
             claim: '-100',
             liquidityPercent: ethers.utils.parseUnits('1', 38),
             zeroForOne: false,
@@ -639,6 +652,20 @@ describe('LimitPool Tests', function () {
             signer: hre.props.bob,
             lower: '-200',
             claim: '-125',
+            upper: '-100',
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: false,
+            balanceInIncrease: '24498773037694879649',
+            balanceOutIncrease: '75774286667592796925',
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: 'WrongTickClaimedAt()',
+        })
+
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: '-200',
+            claim: '-120',
             upper: '-100',
             liquidityPercent: ethers.utils.parseUnits('1', 38),
             zeroForOne: false,
@@ -1396,6 +1423,112 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
         if (balanceCheck) {
+            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
+            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
+        }
+    }) //       2nd
+    // position: 2   
+    // range 20 -> 40
+    // range 10 -> 30
+    // 20
+    // 20
+    // 30 => 
+    // 10           20   21            30       
+    // |                    
+    // |---------- 5      7    ----------- 1000 
+
+    it('pool1 - Should mint, partial mint on other side and trim position, and burn x2 22', async function () {
+        if (debugMode) await getPrice(false, true)
+        const aliceLiquidity = '10100959554167425445954'
+        const bobLiquidity = '20151542874862585449132'
+        // mint position
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: '100', // epoch 2
+            upper: '200',
+            amount: tokenAmountBn,
+            zeroForOne: true,
+            balanceInDecrease: tokenAmountBn,
+            liquidityIncrease: bobLiquidity,
+            upperTickCleared: false,
+            lowerTickCleared: true,
+            revertMessage: '',
+        })
+        //TODO: test undercut on top of undercut
+        //swaps from 100 to 200
+        if (debugMode) await getTick(false, 21000)
+        if (true) console.log('BEFORE MINT 2')
+        if (debugMode) await getPrice(true, true)
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '100', // epoch 3
+            upper: '300', // epoch 3?
+            amount: tokenAmountBn,
+            zeroForOne: false,
+            balanceInDecrease: tokenAmountBn,
+            balanceOutIncrease: BigNumber.from('98518582560149315133'),
+            liquidityIncrease: '0',
+            upperTickCleared: true,
+            lowerTickCleared: true,
+            expectedLower: '200',
+            revertMessage: '',
+        })
+        // return
+        if (debugMode) await getPrice(true, true)
+        if (true) console.log('BEFORE BURN 1')
+        if (debugMode) await getTick(false, 21000, true)
+        // close both positions
+        //amountOut should be
+        //49861732254639926627
+        //TODO: claim tick at 145 does not complain about epoch on 150
+        //TODO: claim tick at 150 is not reverted
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: '100',
+            upper: '200',
+            claim: '205',
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: true,
+            balanceInIncrease: '49861732254639926626',
+            balanceOutIncrease: '50755615166597891338',
+            lowerTickCleared: true,
+            upperTickCleared: false,
+            revertMessage: 'InvalidClaimTick()',
+        })
+        if (true) console.log('BEFORE BURN 2')
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: '100',
+            upper: '200',
+            claim: '185',
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: true,
+            balanceInIncrease: '99999999999999999999',
+            balanceOutIncrease: '1481417439850684866',
+            lowerTickCleared: true,
+            upperTickCleared: false,
+            revertMessage: '',
+        })
+        if (debugMode) getPrice(true, true)
+        if (true) console.log('BEFORE BURN 3')
+        await getTick(true, 150, true)
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '200',
+            upper: '300',
+            claim: '150',
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: true,
+            balanceInIncrease: '0',
+            balanceOutIncrease: '99999999999999999999',
+            lowerTickCleared: true,
+            upperTickCleared: false,
+            revertMessage: 'NotEnoughPositionLiquidity()',
+        })
+        
+        if (true) {
             console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
             console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
         }

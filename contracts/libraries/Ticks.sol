@@ -476,7 +476,10 @@ library Ticks {
         EpochMap.set(tickToSave, pool.swapEpoch, tickMap, constants);
         tick.liquidityDelta += int128(pool.liquidity);
         if(pool.price != roundedPrice) {
-            tick.priceAt = pool.price;
+            console.log('saving mid tick', tickToSave > 0 ? uint24(tickToSave) : uint24(-tickToSave));
+            if (tick.priceAt == 0)
+                tick.priceAt = pool.price;
+            console.log('saving pool price', pool.price);
         }
         ticks[tickToSave] = tick;
     }

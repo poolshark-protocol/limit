@@ -368,11 +368,13 @@ library Ticks {
     ) {
         EpochMap.set(cache.crossTick, cache.pool.swapEpoch, tickMap, cache.constants);
         int128 liquidityDelta = ticks[cache.crossTick].liquidityDelta;
-        console.log('crossing before', uint24(cache.crossTick), cache.liquidity);
+
         if (liquidityDelta > 0) cache.liquidity += uint128(liquidityDelta);
         else cache.liquidity -= uint128(-liquidityDelta);
         pool.tickAtPrice = cache.crossTick;
-        ticks[cache.crossTick].liquidityDelta = 0;
+
+        // zero out liquidityDelta and priceAt
+        ticks[cache.crossTick] = ILimitPoolStructs.Tick(0, 0);
         console.log('crossing tick', uint24(cache.crossTick), cache.liquidity);
         TickMap.unset(tickMap, cache.crossTick, cache.constants.tickSpacing);
         if (zeroForOne) {

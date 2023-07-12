@@ -71,6 +71,11 @@ library Claims {
                     cache.priceClaim = cache.priceUpper;
                 }
                 claimTickEpoch = pool.swapEpoch;
+            } else if (params.claim % constants.tickSpacing == constants.tickSpacing / 2) {
+                if (cache.claimTick.priceAt == 0) {
+                    require (false, 'WrongTickClaimedAt()');
+                }
+                cache.priceClaim = cache.claimTick.priceAt;
             }
         } else {
             if (pool.price <= cache.priceClaim) {
@@ -80,6 +85,11 @@ library Claims {
                     cache.priceClaim = cache.priceLower;
                 }
                 claimTickEpoch = pool.swapEpoch;
+            } else if (params.claim % constants.tickSpacing == constants.tickSpacing / 2) {
+                if (cache.claimTick.priceAt == 0) {
+                    require (false, 'WrongTickClaimedAt()');
+                }
+                cache.priceClaim = cache.claimTick.priceAt;
             }
         }
 

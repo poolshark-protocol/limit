@@ -11,6 +11,7 @@ import './math/OverflowMath.sol';
 import './TickMap.sol';
 import './EpochMap.sol';
 import './utils/SafeCast.sol';
+import 'hardhat/console.sol';
 
 /// @notice Tick management library
 library Ticks {
@@ -367,18 +368,21 @@ library Ticks {
     ) {
         EpochMap.set(cache.crossTick, cache.pool.swapEpoch, tickMap, cache.constants);
         int128 liquidityDelta = ticks[cache.crossTick].liquidityDelta;
+        console.log('crossing before', uint24(cache.crossTick), cache.liquidity);
         if (liquidityDelta > 0) cache.liquidity += uint128(liquidityDelta);
         else cache.liquidity -= uint128(-liquidityDelta);
         pool.tickAtPrice = cache.crossTick;
         ticks[cache.crossTick].liquidityDelta = 0;
-        // check if empty on hybrid pool
-        //TODO: more clever iterate than next/previous
+        console.log('crossing tick', uint24(cache.crossTick), cache.liquidity);
         TickMap.unset(tickMap, cache.crossTick, cache.constants.tickSpacing);
         if (zeroForOne) {
             cache.crossTick = TickMap.previous(tickMap, cache.crossTick, cache.constants.tickSpacing);
         } else {
             cache.crossTick = TickMap.next(tickMap, cache.crossTick, cache.constants.tickSpacing);
         }
+        console.log('next tick to cross');
+        console.logInt(cache.crossTick);
+        console.logInt(ticks[20000].liquidityDelta);
         return (pool, cache);
     }
 

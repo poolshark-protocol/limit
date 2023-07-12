@@ -7,6 +7,7 @@ import './EpochMap.sol';
 import './TickMap.sol';
 import './utils/String.sol';
 import './utils/SafeCast.sol';
+import 'hardhat/console.sol';
 
 library Claims {
     /////////// DEBUG FLAGS ///////////
@@ -38,11 +39,13 @@ library Claims {
                                      : params.claim == params.upper 
                                         && EpochMap.get(params.upper, tickMap, constants) <= cache.position.epochLast
         ) {
+            console.log('early return 1', EpochMap.get(params.lower, tickMap, constants), cache.position.epochLast);
             cache.earlyReturn = true;
             return cache;
         }
         // early return if no update and amount burned is 0
         if (params.amount == 0 && cache.position.claimPriceLast == pool.price) {
+            console.log('early return 2');
                 cache.earlyReturn = true;
                 return cache;
         } 
@@ -64,6 +67,7 @@ library Claims {
             pool.tickAtPrice < params.upper &&
             (params.zeroForOne ? pool.tickAtPrice >= params.claim
                                : pool.tickAtPrice <= params.claim)) {
+                console.log('using pool price');
                 claimTickEpoch = pool.swapEpoch;
                 cache.priceClaim = pool.price;
         }
@@ -75,10 +79,15 @@ library Claims {
              if (claimTickEpoch <= cache.position.epochLast)
                 require (false, 'WrongTickClaimedAt()');
         } else {
+            int24 claimTickNext = params.zeroForOne
+                ? TickMap.next(tickMap, params.claim, constants.tickSpacing)
+                : TickMap.previous(tickMap, params.claim, constants.tickSpacing);
+            if (params.zeroForOne ? claimTickNext > params.upper
+                                  : claimTickNext < params.lower) {
+                require (false, 'WrongTickClaimedAt()');
+            }
             // zero fill or partial fill
-            uint32 claimTickNextAccumEpoch = params.zeroForOne
-                ? EpochMap.get(TickMap.next(tickMap, params.claim, constants.tickSpacing), tickMap, constants)
-                : EpochMap.get(TickMap.previous(tickMap, params.claim, constants.tickSpacing), tickMap, constants);
+            uint32 claimTickNextAccumEpoch = EpochMap.get(claimTickNext, tickMap, constants);
             ///@dev - next swapEpoch should not be greater
             if (claimTickNextAccumEpoch > cache.position.epochLast) {
                 require (false, 'WrongTickClaimedAt()');
@@ -106,7 +115,7 @@ library Claims {
     function getDeltas(
         ILimitPoolStructs.UpdatePositionCache memory cache,
         ILimitPoolStructs.UpdateParams memory params
-    ) external pure returns (
+    ) external view returns (
         ILimitPoolStructs.UpdatePositionCache memory
     ) {
         cache.position.amountIn += uint128(params.zeroForOne ? ConstantProduct.getDy(cache.position.liquidity, cache.position.claimPriceLast, cache.priceClaim, false)
@@ -115,6 +124,7 @@ library Claims {
             cache.position.amountOut += uint128(params.zeroForOne ? ConstantProduct.getDx(params.amount, cache.priceClaim, cache.priceUpper, false)
                                                                   : ConstantProduct.getDy(params.amount, cache.priceLower, cache.priceClaim, false));
         }
+        console.log('position amounts', cache.position.amountIn, cache.position.amountOut, uint24(params.claim));
         return cache;
     }
 }

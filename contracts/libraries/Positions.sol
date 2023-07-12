@@ -90,6 +90,12 @@ library Positions {
         swapCache.state = cache.state;
         swapCache.constants = cache.constants;
 
+        // sync up pool epochs for position epoch stamping
+        if (cache.pool.swapEpoch < cache.swapPool.swapEpoch)
+            cache.pool.swapEpoch = cache.swapPool.swapEpoch;
+        else if (cache.swapPool.swapEpoch < cache.pool.swapEpoch)
+            cache.swapPool.swapEpoch = cache.pool.swapEpoch;
+
         if (params.zeroForOne ? cache.swapPool.price > cache.priceLimit
                               : cache.swapPool.price < cache.priceLimit) {
             
@@ -107,9 +113,6 @@ library Positions {
                 swapCache,
                 cache.swapPool
             );
-            // sync up pool epochs for position epoch stamping
-            if (cache.swapPool.swapEpoch > cache.pool.swapEpoch)
-                cache.pool.swapEpoch = cache.swapPool.swapEpoch;
 
             params.amount -= uint128(swapCache.input);
         }
@@ -119,8 +122,8 @@ library Positions {
             (params.zeroForOne ? localCache.priceLower < cache.swapPool.price
                                : localCache.priceUpper > cache.swapPool.price)
         ) {
-            console.log('boolean check', (params.zeroForOne ? localCache.priceLower < cache.swapPool.price
-                               : localCache.priceUpper > cache.swapPool.price));
+            console.log('swap check');
+            console.log(swapCache.input, swapCache.output, uint24(swapCache.pool.tickAtPrice));
             if (params.zeroForOne) {
                 if (params.amount > 0 && swapCache.input > 0) {
                     uint160 newPrice = ConstantProduct.getNewPrice(localCache.priceLower, cache.liquidityMinted, swapCache.input, false).toUint160();
@@ -151,7 +154,7 @@ library Positions {
             );
             cache.pool.swapEpoch += 1;
         }
-
+        if (params.lower == 0) console.log('tick 100 epoch check', EpochMap.get(100, tickMap, cache.constants));
         cache.swapCache = swapCache;
 
         // check for liquidity overflow
@@ -190,6 +193,7 @@ library Positions {
         /// initialize new position
 
         if (cache.position.liquidity == 0) {
+            if (params.lower == 100) console.log('setting position epoch', pool.swapEpoch);
             cache.position.epochLast = pool.swapEpoch;
         } else {
             // safety check in case we somehow get here
@@ -385,6 +389,20 @@ library Positions {
                 params.zeroForOne ? cache.removeUpper = true 
                                   : cache.removeLower = true;
             }
+            if (params.zeroForOne) {
+                if (params.claim == params.lower && 
+                    cache.pool.price < cache.priceLower
+                ) {
+                    cache.removeLower = true;
+                }
+            } else {
+                if (params.claim == params.upper &&
+                    cache.pool.price > cache.priceUpper
+                ) {
+                    cache.removeUpper = true;
+                }
+            }
+            console.log('remove check', cache.removeLower, cache.removeUpper);
             Ticks.remove(
                 ticks,
                 tickMap,

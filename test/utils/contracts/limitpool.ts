@@ -489,6 +489,11 @@ export async function validateBurn(params: ValidateBurnParams) {
         ).to.be.revertedWith(revertMessage)
         return
     }
+    const debugMode = true
+    if (debugMode) await getTick(false, 20000, true)
+    if (debugMode) await getTick(false, 21000, true)
+    if (debugMode) await getTick(false, 22000, true)
+    if (debugMode) await getLiquidity(false, true)
     // await getTick(false, -100, true)
     let balanceInAfter
     let balanceOutAfter

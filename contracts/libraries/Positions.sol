@@ -83,7 +83,7 @@ library Positions {
             }
             cache.priceLimit = ConstantProduct.getPriceAtTick(cache.tickLimit, cache.constants);
         }
-        console.log('price limit set', uint24(cache.tickLimit), cache.priceLimit, params.amount / 2);
+        console.log('price limit set', uint24(-cache.tickLimit), cache.priceLimit, params.amount / 2);
 
         ILimitPoolStructs.SwapCache memory swapCache;
         swapCache.pool = cache.swapPool;

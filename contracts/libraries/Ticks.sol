@@ -503,8 +503,9 @@ library Ticks {
                     // set pool liquidity back to previous full tick
                     if (locals.amountFilled <= locals.amountToCross) {
                         if (params.lower != locals.previousFullTick) {
-                           ticks[locals.previousFullTick].liquidityDelta += int128(pool.liquidity);
-                           TickMap.set(tickMap, locals.previousFullTick, constants.tickSpacing);
+                            ticks[locals.previousFullTick].liquidityDelta += int128(pool.liquidity);
+                            if (!TickMap.set(tickMap, locals.previousFullTick, constants.tickSpacing))
+                                EpochMap.set(locals.previousFullTick, pool.swapEpoch, tickMap, constants);
                            // zero out liquidity as this will not be used yet
                            pool.liquidity = 0;
                         }
@@ -549,7 +550,8 @@ library Ticks {
                         // if lower is previousFullTick modify liquidityDelta
                         if (params.upper != locals.previousFullTick) {
                            ticks[locals.previousFullTick].liquidityDelta += int128(pool.liquidity);
-                           TickMap.set(tickMap, locals.previousFullTick, constants.tickSpacing);
+                            if (!TickMap.set(tickMap, locals.previousFullTick, constants.tickSpacing))
+                                EpochMap.set(locals.previousFullTick, pool.swapEpoch, tickMap, constants);
                            // zero out liquidity as this will not be used yet
                            pool.liquidity = 0;
                         }

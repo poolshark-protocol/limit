@@ -358,13 +358,14 @@ library Positions {
         ILimitPoolStructs.UpdateParams memory params,
         ILimitPoolStructs.Immutables memory constants
     ) internal returns (
-            ILimitPoolStructs.GlobalState memory,
-            ILimitPoolStructs.PoolState memory,
-            int24
-        )
+        ILimitPoolStructs.GlobalState memory,
+        ILimitPoolStructs.PoolState memory,
+        int24
+    )
     {
         ILimitPoolStructs.UpdatePositionCache memory cache;
         (
+            params,
             cache,
             state
         ) = _deltas(
@@ -477,6 +478,7 @@ library Positions {
     ) {
         ILimitPoolStructs.UpdatePositionCache memory cache;
         (
+            params,
             cache,
             state
         ) = _deltas(
@@ -538,6 +540,7 @@ library Positions {
         ILimitPoolStructs.UpdateParams memory params,
         ILimitPoolStructs.Immutables memory constants
     ) internal view returns (
+        ILimitPoolStructs.UpdateParams memory,
         ILimitPoolStructs.UpdatePositionCache memory,
         ILimitPoolStructs.GlobalState memory
     ) {
@@ -562,8 +565,9 @@ library Positions {
         params.amount = _convert(cache.position.liquidity, params.amount);
 
         // check claim is valid
-        cache = Claims.validate(
+        (params, cache) = Claims.validate(
             positions,
+            ticks,
             tickMap,
             state,
             cache.pool,
@@ -572,7 +576,7 @@ library Positions {
             constants
         );
         if (cache.earlyReturn) {
-            return (cache, state);
+            return (params, cache, state);
         } else if (cache.position.claimPriceLast == 0) {
             cache.position.claimPriceLast = params.zeroForOne ? cache.priceLower
                                                               : cache.priceUpper;
@@ -580,7 +584,7 @@ library Positions {
         // calculate position deltas
         cache = Claims.getDeltas(cache, params);
 
-        return (cache, state);
+        return (params, cache, state);
     }
 
     function _checkpoint(
@@ -588,12 +592,14 @@ library Positions {
         ILimitPoolStructs.UpdateParams memory params,
         ILimitPoolStructs.Immutables memory constants,
         ILimitPoolStructs.UpdatePositionCache memory cache
-    ) internal pure returns (
+    ) internal view returns (
         ILimitPoolStructs.UpdatePositionCache memory,
         ILimitPoolStructs.UpdateParams memory
     ) {
         // update claimPriceLast
+        console.log('updating cPL', cache.position.claimPriceLast, cache.priceClaim);
         cache.position.claimPriceLast = cache.priceClaim;
+        console.log('updating cPL', cache.position.claimPriceLast, cache.priceClaim);
         return (cache, params);
     }
 }

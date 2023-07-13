@@ -18,6 +18,7 @@ library Claims {
     function validate(
         mapping(address => mapping(int24 => mapping(int24 => ILimitPoolStructs.Position)))
             storage positions,
+        mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
         ILimitPoolStructs.TickMap storage tickMap,
         ILimitPoolStructs.GlobalState memory state,
         ILimitPoolStructs.PoolState memory pool,
@@ -25,40 +26,33 @@ library Claims {
         ILimitPoolStructs.UpdatePositionCache memory cache,
         ILimitPoolStructs.Immutables memory constants
     ) external view returns (
+        ILimitPoolStructs.UpdateParams memory,
         ILimitPoolStructs.UpdatePositionCache memory
     ) {
         // validate position liquidity
         if (params.amount > cache.position.liquidity) require (false, 'NotEnoughPsitionLiquidity()');
         if (cache.position.liquidity == 0) {
             cache.earlyReturn = true;
-            return cache;
+            return (params, cache);
         }
         // if the position has not been crossed into at all
-        else if (params.zeroForOne ? params.claim == params.lower 
-                                        && EpochMap.get(params.lower, tickMap, constants) <= cache.position.epochLast
-                                     : params.claim == params.upper 
-                                        && EpochMap.get(params.upper, tickMap, constants) <= cache.position.epochLast
+        else if (cache.position.claimPriceLast == 0 &&
+                 params.zeroForOne ? params.claim == params.lower &&
+                                        EpochMap.get(params.lower, tickMap, constants) <= cache.position.epochLast
+                                   : params.claim == params.upper &&
+                                        EpochMap.get(params.upper, tickMap, constants) <= cache.position.epochLast
         ) {
             console.log('early return 1', EpochMap.get(params.lower, tickMap, constants), cache.position.epochLast);
             cache.earlyReturn = true;
-            return cache;
+            return (params, cache);
         }
         // early return if no update and amount burned is 0
         if (params.amount == 0 && cache.position.claimPriceLast == pool.price) {
             console.log('early return 2');
                 cache.earlyReturn = true;
-                return cache;
+                return (params, cache);
         } 
         
-        // claim tick sanity checks
-        else if (
-            // claim tick is on a prior tick
-            cache.position.claimPriceLast > 0 &&
-            (params.zeroForOne
-                    ? cache.position.claimPriceLast > cache.priceClaim
-                    : cache.position.claimPriceLast < cache.priceClaim
-            )
-        ) require (false, 'InvalidClaimTick()'); /// @dev - wrong claim tick
         if (params.claim < params.lower || params.claim > params.upper) require (false, 'InvalidClaimTick()');
 
         uint32 claimTickEpoch = EpochMap.get(params.claim, tickMap, constants);
@@ -67,8 +61,12 @@ library Claims {
             if (pool.price >= cache.priceClaim) {
                 if (pool.price <= cache.priceUpper) {
                     cache.priceClaim = pool.price;
+                    params.claim = TickMap.roundUp(pool.tickAtPrice, constants.tickSpacing, true);
+                    claimTickEpoch = pool.swapEpoch;
                 } else {
                     cache.priceClaim = cache.priceUpper;
+                    params.claim = params.upper;
+                    cache.claimTick = ticks[params.upper];
                 }
                 claimTickEpoch = pool.swapEpoch;
             } else if (params.claim % constants.tickSpacing == constants.tickSpacing / 2) {
@@ -81,8 +79,19 @@ library Claims {
             if (pool.price <= cache.priceClaim) {
                 if (pool.price >= cache.priceLower) {
                     cache.priceClaim = pool.price;
+                    params.claim = TickMap.roundUp(pool.tickAtPrice, constants.tickSpacing, true);
+                    // handles tickAtPrice not being crossed yet
+                    if (params.claim % constants.tickSpacing == 0 &&
+                        pool.price > ConstantProduct.getPriceAtTick(pool.tickAtPrice, constants)){
+                        console.log('match on condition');
+                        params.claim += constants.tickSpacing;
+                    }
+                    console.log('price past claim', uint24(-params.claim), uint24(-pool.tickAtPrice));
+                    claimTickEpoch = pool.swapEpoch;
                 } else {
                     cache.priceClaim = cache.priceLower;
+                    params.claim = params.lower;
+                    cache.claimTick = ticks[params.upper];
                 }
                 claimTickEpoch = pool.swapEpoch;
             } else if (params.claim % constants.tickSpacing == constants.tickSpacing / 2) {
@@ -92,7 +101,6 @@ library Claims {
                 cache.priceClaim = cache.claimTick.priceAt;
             }
         }
-
         //TODO: if params.amount == 0 don't check the next tick
 
         // validate claim tick
@@ -133,7 +141,16 @@ library Claims {
             }
             /// @dev - user cannot add liquidity if auction is active; checked for in Positions.validate()
         }
-        return cache;
+        // sanity check cPL against priceClaim
+        if (
+            // claim tick is on a prior tick
+            cache.position.claimPriceLast > 0 &&
+            (params.zeroForOne
+                    ? cache.position.claimPriceLast > cache.priceClaim
+                    : cache.position.claimPriceLast < cache.priceClaim
+            )
+        ) require (false, 'InvaliClaimTick()'); /// @dev - wrong claim tick
+        return (params, cache);
     }
 
     function getDeltas(

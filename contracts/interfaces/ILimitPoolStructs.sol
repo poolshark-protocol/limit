@@ -198,4 +198,11 @@ interface ILimitPoolStructs {
         bool removeLower;
         bool removeUpper;
     }
+
+    struct InsertSingleLocals {
+        int24 nextFullTick;
+        uint256 priceAtNext;
+        uint256 amountFilled;
+        uint256 amountToCross;
+    }
 }

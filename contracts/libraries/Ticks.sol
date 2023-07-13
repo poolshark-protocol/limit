@@ -343,7 +343,9 @@ library Ticks {
         }
         /// @dev - this should always be positive if liquidity is 0
         pool.liquidity += uint128(ticks[pool.tickAtPrice].liquidityDelta);
-        ticks[pool.tickAtPrice].liquidityDelta = 0;
+        ticks[pool.tickAtPrice] = ILimitPoolStructs.Tick(0,0);
+
+        /// @dev can we delete the tick here?
         if (pool.tickAtPrice % cache.constants.tickSpacing == 0){
             pool.price = ConstantProduct.getPriceAtTick(pool.tickAtPrice, cache.constants);
         } else {
@@ -452,11 +454,13 @@ library Ticks {
     }
 
     function insertSingle(
+        ILimitPoolStructs.MintParams memory params,
         mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
         ILimitPoolStructs.TickMap storage tickMap,
         ILimitPoolStructs.PoolState memory pool,
         ILimitPoolStructs.Immutables memory constants
     ) external {
+        console.log('undercutting price');
         // load ticks into memory to reduce reads/writes
         // round to mid point -> 101 - 109 => 105
         // round down if less than -> 
@@ -472,13 +476,82 @@ library Ticks {
 
         // update tick to save
         ILimitPoolStructs.Tick memory tick = ticks[tickToSave];
-        TickMap.set(tickMap, tickToSave, constants.tickSpacing);
-        EpochMap.set(tickToSave, pool.swapEpoch, tickMap, constants);
-        tick.liquidityDelta += int128(pool.liquidity);
+        if (tick.priceAt == 0) {
+            TickMap.set(tickMap, tickToSave, constants.tickSpacing);
+            EpochMap.set(tickToSave, pool.swapEpoch, tickMap, constants);
+            tick.liquidityDelta += int128(pool.liquidity);
+        }
         if(pool.price != roundedPrice) {
-            console.log('saving mid tick', tickToSave > 0 ? uint24(tickToSave) : uint24(-tickToSave));
-            if (tick.priceAt == 0)
+            console.log('saving mid tick', tickToSave > 0 ? uint24(tickToSave) : uint24(-tickToSave), uint24(pool.tickAtPrice), tick.priceAt);
+            if (tick.priceAt == 0) {
                 tick.priceAt = pool.price;
+            }
+            else {
+                console.log('priceAt non zero');
+                ILimitPoolStructs.InsertSingleLocals memory locals;
+                if (params.zeroForOne) {
+                    // 0 -> 1 positions price moves up so nextFullTick is greater
+                    locals.nextFullTick = tickToSave + constants.tickSpacing / 2;
+                    locals.priceAtNext = TickMath.getPriceAtTick(locals.nextFullTick, constants);
+                    locals.amountFilled = ConstantProduct.getDx(pool.liquidity, roundedPrice, pool.price, false);
+                    locals.amountToCross = ConstantProduct.getDx(uint128(tick.liquidityDelta), tick.priceAt, locals.priceAtNext, true);
+                    if (locals.amountFilled < locals.amountToCross) {
+                        // move priceAt
+                        tick.priceAt = ConstantProduct.getNewPrice(tick.priceAt, uint128(tick.liquidityDelta), locals.amountFilled, false).toUint160();
+                    } else {
+                        // migrate liquidity to next full tick
+                        ticks[locals.nextFullTick].liquidityDelta += int128(ticks[tickToSave].liquidityDelta);
+                        // set tick in map
+                        TickMap.set(tickMap, locals.nextFullTick, constants.tickSpacing);
+                        // migrate epoch from the current half tick
+                        uint32 epochToSave = EpochMap.get(tickToSave, tickMap, constants);
+                        EpochMap.set(locals.nextFullTick, epochToSave, tickMap, constants);
+                    }
+                    if (locals.amountFilled > locals.amountToCross) {
+                        // if there is leftover give to current fill
+                        ticks[tickToSave].liquidityDelta = int128(pool.liquidity);
+                        ticks[tickToSave].priceAt = ConstantProduct.getNewPrice(roundedPrice, pool.liquidity, locals.amountFilled - locals.amountToCross, false).toUint160();
+                        EpochMap.set(tickToSave, pool.swapEpoch, tickMap, constants);
+                    } else if (locals.amountFilled == locals.amountToCross) {
+                        // zero out tick
+                        ticks[tickToSave] = ILimitPoolStructs.Tick(0,0);
+                        // unset in tick map
+                        TickMap.unset(tickMap, tickToSave, constants.tickSpacing);
+                    }
+                } else {
+                    // 1 -> 0 price moves down so we need the next full tick greater than tickToSave
+                    roundedPrice = TickMath.getPriceAtTick(tickToSave + constants.tickSpacing / 2, constants);
+                    // 0 -> 1 positions price moves up so nextFullTick is lesser
+                    locals.nextFullTick = tickToSave - constants.tickSpacing / 2;
+                    locals.priceAtNext = TickMath.getPriceAtTick(locals.nextFullTick, constants);
+                    locals.amountFilled = ConstantProduct.getDy(pool.liquidity, pool.price, roundedPrice, false);
+                    locals.amountToCross = ConstantProduct.getDy(uint128(tick.liquidityDelta), locals.priceAtNext, tick.priceAt, true);
+                    if (locals.amountFilled < locals.amountToCross) {
+                        // move priceAt
+                        tick.priceAt = ConstantProduct.getNewPrice(tick.priceAt, uint128(tick.liquidityDelta), locals.amountFilled, true).toUint160();
+                    } else {
+                        // migrate liquidity to next full tick
+                        /// @dev - we may have to flip signage when merging logic w/ range
+                        ticks[locals.nextFullTick].liquidityDelta += int128(ticks[tickToSave].liquidityDelta);
+                        // set tick in map
+                        TickMap.set(tickMap, locals.nextFullTick, constants.tickSpacing);
+                        // migrate epoch from the current half tick
+                        uint32 epochToSave = EpochMap.get(tickToSave, tickMap, constants);
+                        EpochMap.set(locals.nextFullTick, epochToSave, tickMap, constants);
+                    }
+                    if (locals.amountFilled > locals.amountToCross) {
+                        // if there is leftover give to current fill
+                        ticks[tickToSave].liquidityDelta = int128(pool.liquidity);
+                        ticks[tickToSave].priceAt = ConstantProduct.getNewPrice(roundedPrice, pool.liquidity, locals.amountFilled - locals.amountToCross, true).toUint160();
+                        EpochMap.set(tickToSave, pool.swapEpoch, tickMap, constants);
+                    } else if (locals.amountFilled == locals.amountToCross) {
+                        // zero out tick
+                        ticks[tickToSave] = ILimitPoolStructs.Tick(0,0);
+                        // unset in tick map
+                        TickMap.unset(tickMap, tickToSave, constants.tickSpacing);
+                    }
+                }
+            }
             console.log('saving pool price', pool.price);
         }
         ticks[tickToSave] = tick;

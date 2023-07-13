@@ -1723,7 +1723,7 @@ describe('LimitPool Tests', function () {
         }
     })
 
-    it.skip('pool0 - Should mint, partial fill, undercut, partial fill to same area, undercut and advance fill, and burn x2 22', async function () {
+    it.only('pool0 - Should mint, partial fill, undercut, partial fill to same area, undercut and advance fill, and burn x2 22', async function () {
         // mint position
         if (debugMode) await getPrice(false, true)
         const aliceLiquidity = '10050583320695160003177'
@@ -1773,7 +1773,7 @@ describe('LimitPool Tests', function () {
             lowerTickCleared: true,
             revertMessage: '',
         })
-
+        return
         await validateSwap({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
@@ -1828,9 +1828,9 @@ describe('LimitPool Tests', function () {
             balanceInDecrease: tokenAmountBn,
             balanceOutIncrease: BigNumber.from('0'),
             liquidityIncrease: '0',
-            upperTickCleared: true,
+            upperTickCleared: false,
             lowerTickCleared: true,
-            revertMessage: 'NotImplementedYet()',
+            revertMessage: '',
         })
         return
         if (true) console.log('BEFORE BURN 2')

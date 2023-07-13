@@ -200,6 +200,7 @@ interface ILimitPoolStructs {
     }
 
     struct InsertSingleLocals {
+        int24 previousFullTick;
         int24 nextFullTick;
         uint256 priceAtNext;
         uint256 amountFilled;

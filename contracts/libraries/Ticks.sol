@@ -488,6 +488,7 @@ library Ticks {
             console.log('saving mid tick', tickToSave > 0 ? uint24(tickToSave) : uint24(-tickToSave), uint24(pool.tickAtPrice), tick.priceAt);
             if (tick.priceAt == 0) {
                 tick.priceAt = pool.price;
+                pool.liquidity = 0;
             }
             else {
                 console.log('priceAt non zero');

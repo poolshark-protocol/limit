@@ -1817,7 +1817,7 @@ describe('LimitPool Tests', function () {
             expectedLower: '200',
             revertMessage: 'UpdatePositionFirstAt(0, 200)',
         })
-
+        console.log('BEFORE BURN 3')
         getPrice(true, true)
         await validateBurn({
             signer: hre.props.alice,
@@ -1833,22 +1833,9 @@ describe('LimitPool Tests', function () {
             expectedLower: '120',
             revertMessage: '',
         })
-        return
+
         console.log('BEFORE BURN 3')
-        await validateBurn({
-            signer: hre.props.alice,
-            lower: '100', 
-            upper: '200', 
-            claim: '100',
-            liquidityPercent: ethers.utils.parseUnits('1', 38),
-            zeroForOne: true,
-            balanceInIncrease: '0',
-            balanceOutIncrease: '49875006509960322427',
-            lowerTickCleared: true,
-            upperTickCleared: true,
-            revertMessage: '',
-        })
-        return
+
         //TODO: make sure active pool liquidity is removed on burn removal
         await getTick(true, 120, true)
         await getLiquidity(true, true)
@@ -1869,6 +1856,7 @@ describe('LimitPool Tests', function () {
             lowerTickCleared: true,
             revertMessage: '',
         })
+
         await getPrice(true, true)
         await getTick(true, 120, true)
 
@@ -1884,10 +1872,29 @@ describe('LimitPool Tests', function () {
             balanceOutIncrease: '0',
             lowerTickCleared: true,
             upperTickCleared: true,
+            revertMessage: 'NotEnoughPositionLiquidity()',
+        })
+        if (true) {
+            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
+            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
+        }
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '120', 
+            upper: '200', 
+            claim: '120',
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: true,
+            balanceInIncrease: '0',
+            balanceOutIncrease: '37390919380583845583',
+            lowerTickCleared: false,
+            upperTickCleared: false,
             revertMessage: '',
-            //this should give wrong tick claimed at
         })
         return
+        //amountClaimed stored on pool and zeroed out when tick is crossed
+        //OR undercut happens
+        //
         if (debugMode) getPrice(true, true)
         if (true) console.log('BEFORE BURN 3')
         await getTick(true, 150, true)

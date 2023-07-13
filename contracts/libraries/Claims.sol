@@ -142,14 +142,14 @@ library Claims {
             /// @dev - user cannot add liquidity if auction is active; checked for in Positions.validate()
         }
         // sanity check cPL against priceClaim
-        if (
-            // claim tick is on a prior tick
-            cache.position.claimPriceLast > 0 &&
-            (params.zeroForOne
-                    ? cache.position.claimPriceLast > cache.priceClaim
-                    : cache.position.claimPriceLast < cache.priceClaim
-            )
-        ) require (false, 'InvaliClaimTick()'); /// @dev - wrong claim tick
+        // if (
+        //     // claim tick is on a prior tick
+        //     cache.position.claimPriceLast > 0 &&
+        //     (params.zeroForOne
+        //             ? cache.position.claimPriceLast > cache.priceClaim
+        //             : cache.position.claimPriceLast < cache.priceClaim
+        //     )
+        // ) require (false, 'InvaliClaimTick()'); /// @dev - wrong claim tick
         return (params, cache);
     }
 
@@ -159,11 +159,26 @@ library Claims {
     ) external view returns (
         ILimitPoolStructs.UpdatePositionCache memory
     ) {
-        cache.position.amountIn += uint128(params.zeroForOne ? ConstantProduct.getDy(cache.position.liquidity, cache.position.claimPriceLast, cache.priceClaim, false)
-                                                             : ConstantProduct.getDx(cache.position.liquidity, cache.priceClaim, cache.position.claimPriceLast, false));
+        // set claimPriceLast if zero
+        if (cache.position.claimPriceLast == 0) {
+            cache.position.claimPriceLast = params.zeroForOne ? cache.priceLower
+                                                              : cache.priceUpper;
+        }
+        // if tick hasn't been set back calculate amountIn
+        if (params.zeroForOne ? cache.position.claimPriceLast < cache.priceClaim
+                              : cache.position.claimPriceLast > cache.priceClaim)
+            cache.position.amountIn += uint128(params.zeroForOne ? ConstantProduct.getDy(cache.position.liquidity, cache.position.claimPriceLast, cache.priceClaim, false)
+                                                                 : ConstantProduct.getDx(cache.position.liquidity, cache.priceClaim, cache.position.claimPriceLast, false));
+        // use priceClaim if tick hasn't been set back
+        // else use claimPriceLast to calculate amountOut
         if (params.claim != (params.zeroForOne ? params.upper : params.lower)) {
-            cache.position.amountOut += uint128(params.zeroForOne ? ConstantProduct.getDx(params.amount, cache.priceClaim, cache.priceUpper, false)
-                                                                  : ConstantProduct.getDy(params.amount, cache.priceLower, cache.priceClaim, false));
+            if (params.zeroForOne ? cache.position.claimPriceLast < cache.priceClaim
+                                  : cache.position.claimPriceLast > cache.priceClaim)
+                cache.position.amountOut += uint128(params.zeroForOne ? ConstantProduct.getDx(params.amount, cache.priceClaim, cache.priceUpper, false)
+                                                                      : ConstantProduct.getDy(params.amount, cache.priceLower, cache.priceClaim, false));
+            else
+                cache.position.amountOut += uint128(params.zeroForOne ? ConstantProduct.getDx(params.amount, cache.position.claimPriceLast, cache.priceUpper, false)
+                                                                      : ConstantProduct.getDy(params.amount, cache.priceLower, cache.position.claimPriceLast, false));
         }
         console.log('position amounts', cache.position.amountIn, cache.position.amountOut, uint24(params.claim));
         return cache;

@@ -577,9 +577,6 @@ library Positions {
         );
         if (cache.earlyReturn) {
             return (params, cache, state);
-        } else if (cache.position.claimPriceLast == 0) {
-            cache.position.claimPriceLast = params.zeroForOne ? cache.priceLower
-                                                              : cache.priceUpper;
         }
         // calculate position deltas
         cache = Claims.getDeltas(cache, params);

@@ -15,6 +15,7 @@ interface ILimitPoolStructs {
         uint160 price; /// @dev Starting price current
         uint128 liquidity; /// @dev Liquidity currently active
         uint128 liquidityGlobal;
+        uint128 amountClaimed;
         uint32  swapEpoch;
         int24 tickAtPrice;
     }

@@ -73,8 +73,8 @@ library Positions {
         );
 
         {
-            cache.priceLimit = params.zeroForOne ? ConstantProduct.getNewPrice(localCache.priceUpper, cache.liquidityMinted, params.amount / 2, true)
-                                                 : ConstantProduct.getNewPrice(localCache.priceLower, cache.liquidityMinted, params.amount / 2, false);
+            cache.priceLimit = params.zeroForOne ? ConstantProduct.getNewPrice(localCache.priceUpper, cache.liquidityMinted, params.amount / 2, true, true)
+                                                 : ConstantProduct.getNewPrice(localCache.priceLower, cache.liquidityMinted, params.amount / 2, false, true);
             // get tick at price
             cache.tickLimit = ConstantProduct.getTickAtPrice(cache.priceLimit.toUint160(), cache.constants);
             // round to nearest tick spacing
@@ -127,7 +127,7 @@ library Positions {
             console.log(swapCache.price, uint24(swapCache.pool.tickAtPrice));
             if (params.zeroForOne) {
                 if (params.amount > 0 && swapCache.input > 0) {
-                    uint160 newPrice = ConstantProduct.getNewPrice(localCache.priceLower, cache.liquidityMinted, swapCache.input, false).toUint160();
+                    uint160 newPrice = ConstantProduct.getNewPrice(localCache.priceLower, cache.liquidityMinted, swapCache.input, false, true).toUint160();
                     int24 newLower = ConstantProduct.getTickAtPrice(newPrice, cache.constants);
                     params.lower = TickMap.roundUp(newLower, cache.constants.tickSpacing, true);
                 }
@@ -137,7 +137,7 @@ library Positions {
                 }
                 localCache.priceLower = ConstantProduct.getPriceAtTick(params.lower, cache.constants);
             } else {
-                uint160 newPrice = ConstantProduct.getNewPrice(localCache.priceUpper, cache.liquidityMinted, swapCache.input, true).toUint160();
+                uint160 newPrice = ConstantProduct.getNewPrice(localCache.priceUpper, cache.liquidityMinted, swapCache.input, true, true).toUint160();
                 int24 newUpper = ConstantProduct.getTickAtPrice(newPrice, cache.constants);
                 params.upper = TickMap.roundUp(newUpper, cache.constants.tickSpacing, false);
                 if (params.upper > cache.tickLimit) {
@@ -400,13 +400,17 @@ library Positions {
                     cache.pool.price < cache.priceLower
                 ) {
                     cache.removeLower = true;
-                }
+                } else if (params.claim % constants.tickSpacing != 0 && 
+                    cache.pool.price < cache.priceClaim)
+                    cache.removeLower = true;
             } else {
                 if (params.claim == params.upper &&
                     cache.pool.price > cache.priceUpper
-                ) {
+                )
                     cache.removeUpper = true;
-                }
+                else if (params.claim % constants.tickSpacing != 0 &&
+                            cache.pool.price > cache.priceClaim)
+                    cache.removeUpper = true;
             }
             console.log('remove check', cache.removeLower, cache.removeUpper);
             Ticks.remove(
@@ -579,7 +583,7 @@ library Positions {
             return (params, cache, state);
         }
         // calculate position deltas
-        cache = Claims.getDeltas(cache, params);
+        cache = Claims.getDeltas(ticks, cache, params, constants);
 
         return (params, cache, state);
     }

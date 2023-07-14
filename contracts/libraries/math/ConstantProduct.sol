@@ -105,20 +105,35 @@ library ConstantProduct {
     function getNewPrice(
         uint256 price,
         uint256 liquidity,
-        uint256 input,
-        bool zeroForOne
+        uint256 amount,
+        bool zeroForOne,
+        bool exactIn
     ) internal pure returns (
         uint256 newPrice
     ) {
-        if (zeroForOne) {
-            uint256 liquidityPadded = liquidity << 96;
-            newPrice = OverflowMath.mulDivRoundingUp(
-                            liquidityPadded,
-                            price,
-                            liquidityPadded + price * input
-                       );
+        if (exactIn) {
+            if (zeroForOne) {
+                uint256 liquidityPadded = liquidity << 96;
+                newPrice = OverflowMath.mulDivRoundingUp(
+                                liquidityPadded,
+                                price,
+                                liquidityPadded + price * amount
+                        );
+            } else {
+                newPrice = price + OverflowMath.mulDiv(amount, Q96, liquidity);
+            }
         } else {
-            newPrice = price + OverflowMath.mulDiv(input, Q96, liquidity);
+            if (zeroForOne) {
+                newPrice = price - 
+                        OverflowMath.divRoundingUp(amount << 96, liquidity);
+            } else {
+                uint256 liquidityPadded = uint256(liquidity) << 96;
+                newPrice = OverflowMath.mulDivRoundingUp(
+                        liquidityPadded, 
+                        price,
+                        liquidityPadded - uint256(price) * amount
+                );
+            }
         }
     }
 

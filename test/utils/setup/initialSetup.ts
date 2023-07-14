@@ -11,7 +11,6 @@ import {
     LimitPoolFactory__factory,
     Ticks__factory,
     Positions__factory,
-    Claims__factory,
     LimitPoolManager__factory,
     TickMap__factory,
     PoolRouter__factory
@@ -119,20 +118,9 @@ export class InitialSetup {
         await this.deployAssist.deployContractWithRetry(
             network,
             // @ts-ignore
-            Claims__factory,
-            'claimsLib',
-            []
-        )
-
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
             Positions__factory,
             'positionsLib',
             [],
-            {
-                'contracts/libraries/Claims.sol:Claims': hre.props.claimsLib.address
-            }
         )
 
         await this.deployAssist.deployContractWithRetry(
@@ -168,11 +156,7 @@ export class InitialSetup {
             // @ts-ignore
             BurnCall__factory,
             'burnCall',
-            [],
-            {
-                'contracts/libraries/Claims.sol:Claims': hre.props.claimsLib.address,
-                'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address
-            }
+            []
         )
 
         await this.deployAssist.deployContractWithRetry(

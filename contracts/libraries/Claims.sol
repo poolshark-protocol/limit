@@ -25,7 +25,7 @@ library Claims {
         ILimitPoolStructs.UpdateParams memory params,
         ILimitPoolStructs.UpdatePositionCache memory cache,
         ILimitPoolStructs.Immutables memory constants
-    ) external view returns (
+    ) internal view returns (
         ILimitPoolStructs.UpdateParams memory,
         ILimitPoolStructs.UpdatePositionCache memory
     ) {
@@ -154,11 +154,14 @@ library Claims {
     }
 
     function getDeltas(
+        mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
         ILimitPoolStructs.UpdatePositionCache memory cache,
-        ILimitPoolStructs.UpdateParams memory params
-    ) external view returns (
+        ILimitPoolStructs.UpdateParams memory params,
+        ILimitPoolStructs.Immutables memory constants
+    ) internal view returns (
         ILimitPoolStructs.UpdatePositionCache memory
     ) {
+        // if half tick priceAt > 0 add amountOut to amountOutClaimed
         // set claimPriceLast if zero
         if (cache.position.claimPriceLast == 0) {
             cache.position.claimPriceLast = params.zeroForOne ? cache.priceLower
@@ -166,9 +169,55 @@ library Claims {
         }
         // if tick hasn't been set back calculate amountIn
         if (params.zeroForOne ? cache.position.claimPriceLast < cache.priceClaim
-                              : cache.position.claimPriceLast > cache.priceClaim)
-            cache.position.amountIn += uint128(params.zeroForOne ? ConstantProduct.getDy(cache.position.liquidity, cache.position.claimPriceLast, cache.priceClaim, false)
-                                                                 : ConstantProduct.getDx(cache.position.liquidity, cache.priceClaim, cache.position.claimPriceLast, false));
+                              : cache.position.claimPriceLast > cache.priceClaim) {
+            uint128 amountIn = uint128(params.zeroForOne ? ConstantProduct.getDy(cache.position.liquidity, cache.position.claimPriceLast, cache.priceClaim, false)
+                                                         : ConstantProduct.getDx(cache.position.liquidity, cache.priceClaim, cache.position.claimPriceLast, false));
+
+
+            if (cache.pool.price == cache.priceClaim &&
+                params.claim % constants.tickSpacing == 0 &&
+                params.claim != (params.zeroForOne ? params.upper : params.lower)) {
+                // get nearest mid tick and measure delta in between nearest full tick and claim price
+                int24 nearestMidTick = params.claim + (params.zeroForOne ? constants.tickSpacing / 2 : -constants.tickSpacing / 2);
+                console.log('claiming fill', params.amount, uint24(params.claim), uint24(nearestMidTick));
+                if (ticks[nearestMidTick].priceAt > 0) {
+                     // calculate price at the closest start tick
+                    uint160 startPrice = TickMath.getPriceAtTick(params.claim, constants);
+                    // use claimPriceLast if that is past startPrice
+                    if (params.zeroForOne ? cache.position.claimPriceLast > startPrice
+                                            : cache.position.claimPriceLast < startPrice)
+                        startPrice = cache.position.claimPriceLast;
+                    // calculate amount which should be ignored in amountInClaimed calculation
+                    uint128 amountInClaimed = uint128(params.zeroForOne ? ConstantProduct.getDy(cache.position.liquidity - params.amount, startPrice, cache.priceClaim, false)
+                                                                        : ConstantProduct.getDx(cache.position.liquidity - params.amount, cache.priceClaim, startPrice, false));
+                    cache.pool.amountInClaimed += amountInClaimed;
+                    console.log('pool amount in claimed', cache.pool.amountInClaimed);
+                }
+            }
+            // if the user is burning their position
+            cache.position.amountIn += amountIn;
+        }
+        // clear amountInClaimed on removal
+        if (params.amount > 0 &&
+                params.claim % constants.tickSpacing == 0 &&
+                params.claim != (params.zeroForOne ? params.upper : params.lower)) {
+                // calculate price at the closest start tick
+                uint160 startPrice = TickMath.getPriceAtTick(params.claim, constants);
+                // get nearest mid tick and measure delta in between nearest full tick and claim price
+                int24 nearestMidTick = params.claim + (params.zeroForOne ? constants.tickSpacing / 2 : -constants.tickSpacing / 2);
+                console.log('claiming fill', params.amount, uint24(params.claim), uint24(nearestMidTick));
+                if (ticks[nearestMidTick].priceAt > 0 &&
+                    (params.zeroForOne ? cache.position.claimPriceLast > startPrice
+                                       : cache.position.claimPriceLast < startPrice)) {
+                    uint128 amountInBurned = uint128(params.zeroForOne ? ConstantProduct.getDy(params.amount, startPrice, cache.position.claimPriceLast, false)
+                                                                       : ConstantProduct.getDx(params.amount, cache.position.claimPriceLast, startPrice, false));
+                    if (amountInBurned < cache.pool.amountInClaimed)
+                        cache.pool.amountInClaimed -= amountInBurned;
+                    else
+                        cache.pool.amountInClaimed = 0;
+                console.log('pool amount in claim burned', cache.pool.amountInClaimed);
+                }
+        }
         // use priceClaim if tick hasn't been set back
         // else use claimPriceLast to calculate amountOut
         if (params.claim != (params.zeroForOne ? params.upper : params.lower)) {

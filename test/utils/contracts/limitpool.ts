@@ -434,12 +434,12 @@ export async function validateBurn(params: ValidateBurnParams) {
     let positionBefore: Position
     let positionSnapshot: Position
     if (zeroForOne) {
-        lowerTickBefore = await hre.props.limitPool.ticks0(lower)
+        lowerTickBefore = await hre.props.limitPool.ticks0(expectedLower ?? lower)
         upperTickBefore = await hre.props.limitPool.ticks0(upper)
         positionBefore = await hre.props.limitPool.positions0(signer.address, lower, upper)
     } else {
         lowerTickBefore = await hre.props.limitPool.ticks1(lower)
-        upperTickBefore = await hre.props.limitPool.ticks1(upper)
+        upperTickBefore = await hre.props.limitPool.ticks1(expectedUpper ?? upper)
         positionBefore = await hre.props.limitPool.positions1(signer.address, lower, upper)
     }
     if (liquidityAmount) {
@@ -489,12 +489,7 @@ export async function validateBurn(params: ValidateBurnParams) {
         ).to.be.revertedWith(revertMessage)
         return
     }
-    const debugMode = true
-    if (debugMode) await getTick(false, 20000, true)
-    if (debugMode) await getTick(false, 21000, true)
-    if (debugMode) await getTick(false, 22000, true)
-    if (debugMode) await getLiquidity(false, true)
-    // await getTick(false, -100, true)
+
     let balanceInAfter
     let balanceOutAfter
     if (zeroForOne) {
@@ -518,12 +513,12 @@ export async function validateBurn(params: ValidateBurnParams) {
     let positionAfter: Position
     //TODO: implement expected lower/upper?
     if (zeroForOne) {
-        lowerTickAfter = await hre.props.limitPool.ticks0(lower)
+        lowerTickAfter = await hre.props.limitPool.ticks0(expectedLower ?? lower)
         upperTickAfter = await hre.props.limitPool.ticks0(upper)
         positionAfter = await hre.props.limitPool.positions0(signer.address, expectedLower ? expectedLower : claim, upper)
     } else {
         lowerTickAfter = await hre.props.limitPool.ticks1(lower)
-        upperTickAfter = await hre.props.limitPool.ticks1(upper)
+        upperTickAfter = await hre.props.limitPool.ticks1(expectedUpper ?? upper)
         positionAfter = await hre.props.limitPool.positions1(signer.address, lower, expectedUpper ? expectedUpper : claim)
     }
     //dependent on zeroForOne

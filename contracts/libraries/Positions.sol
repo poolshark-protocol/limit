@@ -10,7 +10,6 @@ import './Claims.sol';
 import './EpochMap.sol';
 import './utils/SafeCast.sol';
 import './pool/SwapCall.sol';
-import 'hardhat/console.sol';
 
 /// @notice Position management library for ranged liquidity.
 library Positions {
@@ -83,7 +82,6 @@ library Positions {
             }
             cache.priceLimit = ConstantProduct.getPriceAtTick(cache.tickLimit, cache.constants);
         }
-        console.log('price limit set', uint24(-cache.tickLimit), cache.priceLimit, params.amount / 2);
 
         ILimitPoolStructs.SwapCache memory swapCache;
         swapCache.pool = cache.swapPool;
@@ -117,14 +115,10 @@ library Positions {
             params.amount -= uint128(swapCache.input);
         }
         // move start tick based on amount filled in swap
-        //TODO: trim position if undercutting way below market price
         if ((params.amount > 0 && swapCache.input > 0) ||
             (params.zeroForOne ? localCache.priceLower < cache.swapPool.price
                                : localCache.priceUpper > cache.swapPool.price)
         ) {
-            console.log('swap check');
-            console.log(swapCache.input, swapCache.output);
-            console.log(swapCache.price, uint24(swapCache.pool.tickAtPrice));
             if (params.zeroForOne) {
                 if (params.amount > 0 && swapCache.input > 0) {
                     uint160 newPrice = ConstantProduct.getNewPrice(localCache.priceLower, cache.liquidityMinted, swapCache.input, false, true).toUint160();
@@ -132,7 +126,6 @@ library Positions {
                     params.lower = TickMap.roundUp(newLower, cache.constants.tickSpacing, true);
                 }
                 if (params.lower < cache.tickLimit) {
-                    console.log('cutting lower', uint24(cache.tickLimit));
                     params.lower = cache.tickLimit;
                 }
                 localCache.priceLower = ConstantProduct.getPriceAtTick(params.lower, cache.constants);
@@ -141,7 +134,6 @@ library Positions {
                 int24 newUpper = ConstantProduct.getTickAtPrice(newPrice, cache.constants);
                 params.upper = TickMap.roundUp(newUpper, cache.constants.tickSpacing, false);
                 if (params.upper > cache.tickLimit) {
-                    console.log('cutting upper', uint24(cache.tickLimit));
                     params.upper = cache.tickLimit;
                 }
                 localCache.priceUpper = ConstantProduct.getPriceAtTick(params.upper, cache.constants);
@@ -156,15 +148,11 @@ library Positions {
                 );
             else
                 cache.liquidityMinted = 0;
-            console.log('liquidity minted', cache.liquidityMinted);
             cache.pool.swapEpoch += 1;
         }
-        if (params.lower == 0) console.log('tick 100 epoch check', EpochMap.get(100, tickMap, cache.constants));
         cache.swapCache = swapCache;
 
-        // check for liquidity overflow
-        //TODO: based on liquidityGlobal
-        if (cache.liquidityMinted > uint128(type(int128).max)) require (false, 'LiquidityOverflow()');
+        if (cache.liquidityMinted > (uint128(type(int128).max) - cache.pool.liquidityGlobal)) require (false, 'LiquidityOverflow()');
  
         return (
             params,
@@ -198,7 +186,6 @@ library Positions {
         /// initialize new position
 
         if (cache.position.liquidity == 0) {
-            if (params.lower == 100) console.log('setting position epoch', pool.swapEpoch);
             cache.position.epochLast = pool.swapEpoch;
         } else {
             // safety check in case we somehow get here
@@ -412,7 +399,6 @@ library Positions {
                             cache.pool.price > cache.priceClaim)
                     cache.removeUpper = true;
             }
-            console.log('remove check', cache.removeLower, cache.removeUpper);
             Ticks.remove(
                 ticks,
                 tickMap,
@@ -429,10 +415,6 @@ library Positions {
             // update global liquidity
             pool.liquidityGlobal -= params.amount;
         }
-        (
-            cache,
-            params
-        ) = _checkpoint(pool, params, constants, cache);
         // clear out old position
         if (params.zeroForOne ? params.claim != params.lower 
                               : params.claim != params.upper) {
@@ -508,11 +490,6 @@ library Positions {
         if (params.amount > 0) {
             cache.position.liquidity -= uint128(params.amount);
         }
-        // checkpoint claimPriceLast
-        (
-            cache,
-            params
-        ) = _checkpoint(pool, params, constants, cache);
         
         // clear position values if empty
         if (cache.position.liquidity == 0) {
@@ -573,7 +550,6 @@ library Positions {
             positions,
             ticks,
             tickMap,
-            state,
             cache.pool,
             params,
             cache,
@@ -586,21 +562,5 @@ library Positions {
         cache = Claims.getDeltas(ticks, cache, params, constants);
 
         return (params, cache, state);
-    }
-
-    function _checkpoint(
-        ILimitPoolStructs.PoolState memory pool,
-        ILimitPoolStructs.UpdateParams memory params,
-        ILimitPoolStructs.Immutables memory constants,
-        ILimitPoolStructs.UpdatePositionCache memory cache
-    ) internal view returns (
-        ILimitPoolStructs.UpdatePositionCache memory,
-        ILimitPoolStructs.UpdateParams memory
-    ) {
-        // update claimPriceLast
-        console.log('updating cPL', cache.position.claimPriceLast, cache.priceClaim);
-        cache.position.claimPriceLast = cache.priceClaim;
-        console.log('updating cPL', cache.position.claimPriceLast, cache.priceClaim);
-        return (cache, params);
     }
 }

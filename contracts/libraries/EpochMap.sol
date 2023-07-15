@@ -71,7 +71,7 @@ library EpochMap {
     function getIndices(
         int24 tick,
         ILimitPoolStructs.Immutables memory constants
-    ) internal view returns (
+    ) internal pure returns (
             uint256 tickIndex,
             uint256 wordIndex,
             uint256 blockIndex,

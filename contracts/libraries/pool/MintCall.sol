@@ -6,16 +6,15 @@ import '../Positions.sol';
 import '../utils/Collect.sol';
 
 library MintCall {
-    event Mint(
+    event MintLimit(
         address indexed to,
         int24 lower,
         int24 upper,
         bool zeroForOne,
         uint32 epochLast,
         uint128 amountIn,
-        uint128 liquidityMinted,
-        uint128 amountInDeltaMaxMinted,
-        uint128 amountOutDeltaMaxMinted
+        uint128 amountFilled,
+        uint128 liquidityMinted
     );
 
     function perform(
@@ -110,6 +109,17 @@ library MintCall {
             }
             save(cache.pool, pool);
             positions[params.to][params.lower][params.upper] = cache.position;
+
+            emit MintLimit(
+                params.to,
+                params.lower,
+                params.upper,
+                params.zeroForOne,
+                cache.position.epochLast,
+                uint128(params.amount + cache.swapCache.input),
+                uint128(cache.swapCache.output),
+                uint128(cache.liquidityMinted)
+            );
         }
         return cache;
     }

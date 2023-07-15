@@ -17,16 +17,6 @@ library Positions {
 
     using SafeCast for uint256;
 
-    event Mint(
-        address indexed to,
-        int24 lower,
-        int24 upper,
-        bool zeroForOne,
-        uint32 epochLast,
-        uint128 amountIn,
-        uint128 liquidityMinted
-    );
-
     event Burn(
         address indexed to,
         int24 lower,
@@ -54,8 +44,6 @@ library Positions {
             position: ILimitPoolStructs.Position(0,0,0,0,0),
             priceLower: ConstantProduct.getPriceAtTick(params.lower, cache.constants),
             priceUpper: ConstantProduct.getPriceAtTick(params.upper, cache.constants),
-            requiredStart: params.zeroForOne ? params.upper
-                                             : params.lower,
             liquidityMinted: 0
         });
 
@@ -178,8 +166,6 @@ library Positions {
             position: position,
             priceLower: ConstantProduct.getPriceAtTick(params.lower, constants),
             priceUpper: ConstantProduct.getPriceAtTick(params.upper, constants),
-            requiredStart: params.zeroForOne ? params.lower
-                                             : params.upper,
             liquidityMinted: 0
         });
         /// call if claim != lower and liquidity being added
@@ -198,6 +184,7 @@ library Positions {
             ) {
                 require (false, string.concat('UpdatePositionFirstAt(', String.from(params.lower), ', ', String.from(params.upper), ')'));
             }
+            /// @auditor maybe this shouldn't be a revert but rather just not mint the position?
         }
         
         // add liquidity to ticks
@@ -218,16 +205,6 @@ library Positions {
 
         cache.position.liquidity += uint128(params.amount);
 
-        emit Mint(
-            params.to,
-            params.lower,
-            params.upper,
-            params.zeroForOne,
-            pool.swapEpoch,
-            uint128(params.amountIn),
-            uint128(params.amount)
-        );
-
         return (pool, cache.position);
     }
 
@@ -245,8 +222,6 @@ library Positions {
         // initialize cache
         ILimitPoolStructs.PositionCache memory cache = ILimitPoolStructs.PositionCache({
             position: positions[params.owner][params.lower][params.upper],
-            requiredStart: params.zeroForOne ? params.lower
-                                             : params.upper,
             priceLower: ConstantProduct.getPriceAtTick(params.lower, constants),
             priceUpper: ConstantProduct.getPriceAtTick(params.upper, constants),
             liquidityMinted: 0

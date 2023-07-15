@@ -335,6 +335,7 @@ library Ticks {
                 EpochMap.set(pool.tickAtPrice, pool.swapEpoch, tickMap, cache.constants);
             }
         } else {
+            /// @dev - roundedUp true since liquidity could be equal to the current pool tickAtPrice
             pool.tickAtPrice = TickMap.previous(tickMap, pool.tickAtPrice, cache.constants.tickSpacing, true);
             if (pool.tickAtPrice > ConstantProduct.minTick(cache.constants.tickSpacing)) {
                 EpochMap.set(pool.tickAtPrice, pool.swapEpoch, tickMap, cache.constants);
@@ -419,7 +420,6 @@ library Ticks {
         bool isPool0
     ) external {
         /// @dev - validation of ticks is in Positions.validate
-        if (amount > uint128(type(int128).max)) require (false, 'LiquidityOverflow()');
         if (amount > (uint128(type(int128).max) - pool.liquidityGlobal) )
             require (false, 'LiquidityOverflow()');
 

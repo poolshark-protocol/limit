@@ -20,6 +20,8 @@ library Collect {
         uint128 amountIn  = positions[msg.sender][params.lower][params.upper].amountIn;
         uint128 amountOut = positions[msg.sender][params.lower][params.upper].amountOut;
 
+        console.log('cPL check 2', uint24(-params.claim), positions[msg.sender][params.lower][params.upper].claimPriceLast);
+
         // console.log('position amounts', amountIn, amountOut);
 
         /// zero out balances and transfer out

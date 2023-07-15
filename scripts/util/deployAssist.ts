@@ -38,7 +38,7 @@ export class DeployAssist {
     ): Promise<Contract> {
         let contract: Contract
 
-        // console.log('contract:', objectName)
+        console.log('contract:', objectName)
 
         contract = await this.deployContract(
             network,

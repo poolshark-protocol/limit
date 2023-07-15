@@ -5,6 +5,7 @@ import '../../interfaces/ILimitPoolStructs.sol';
 import '../../interfaces/callbacks/IPoolsharkSwapCallback.sol';
 import '../../interfaces/IERC20Minimal.sol';
 import '../Positions.sol';
+import '../Ticks.sol';
 import '../utils/Collect.sol';
 import '../utils/SafeTransfers.sol';
 

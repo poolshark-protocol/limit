@@ -78,15 +78,15 @@ library MintCall {
                 uint160 priceLower = TickMath.getPriceAtTick(params.lower, cache.constants);
                 if (priceLower < cache.pool.price) {
                     if (cache.pool.liquidity > 0) {
-                        Ticks.insertSingle(params, ticks, tickMap, cache.pool, cache.constants);
+                        cache.pool = Ticks.insertSingle(params, ticks, tickMap, cache.pool, cache.constants);
                     }
                     cache.pool.price = priceLower;
                     cache.pool.tickAtPrice = params.lower;
-                    cache.pool.liquidity = uint128(cache.liquidityMinted);
+                    cache.pool.liquidity += uint128(cache.liquidityMinted);
                     // set epoch on start tick to signify position being crossed into
                     cache.pool.swapEpoch += 1;
                     cache.position.claimPriceLast = TickMath.getPriceAtTick(params.lower, cache.constants);
-                    if (params.lower == 100) console.log('setting start tick epoch', cache.pool.swapEpoch);
+                    if (params.lower == 100) console.log('liquidity mint delta check', cache.liquidityMinted, uint128(ticks[params.upper].liquidityDelta));
                     EpochMap.set(params.lower, cache.pool.swapEpoch, tickMap, cache.constants);
                 } else if (priceLower == cache.pool.price) {
                     cache.pool.liquidity += uint128(cache.liquidityMinted);
@@ -95,11 +95,11 @@ library MintCall {
                 uint160 priceUpper = TickMath.getPriceAtTick(params.upper, cache.constants);
                 if (priceUpper > cache.pool.price) {
                     if (cache.pool.liquidity > 0) {
-                        Ticks.insertSingle(params, ticks, tickMap, cache.pool, cache.constants);
+                        cache.pool = Ticks.insertSingle(params, ticks, tickMap, cache.pool, cache.constants);
                     }
                     cache.pool.price = priceUpper;
                     cache.pool.tickAtPrice = params.upper;
-                    cache.pool.liquidity = uint128(cache.liquidityMinted);
+                    cache.pool.liquidity += uint128(cache.liquidityMinted);
                     // set epoch on start tick to signify position being crossed into
                     cache.pool.swapEpoch += 1;
                     cache.position.claimPriceLast = TickMath.getPriceAtTick(params.upper, cache.constants);

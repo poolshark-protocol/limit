@@ -34,6 +34,7 @@ library BurnCall {
     ) external returns (ILimitPoolStructs.BurnCache memory) {
        if (cache.position.claimPriceLast > 0
             || params.claim != (params.zeroForOne ? params.lower : params.upper))
+        // or position has been crossed into
         {
             console.log('position update');
             // if position has been crossed into
@@ -77,6 +78,7 @@ library BurnCall {
                 cache.constants
             );
         }
+        console.log('cache position last price', cache.position.claimPriceLast, cache.pool.price);
         Collect.burn(
             cache,
             positions,

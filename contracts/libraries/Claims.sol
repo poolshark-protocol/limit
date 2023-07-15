@@ -35,14 +35,15 @@ library Claims {
             cache.earlyReturn = true;
             return (params, cache);
         }
+
         // if the position has not been crossed into at all
         else if (cache.position.claimPriceLast == 0 &&
-                 params.zeroForOne ? params.claim == params.lower &&
-                                        EpochMap.get(params.lower, tickMap, constants) <= cache.position.epochLast
-                                   : params.claim == params.upper &&
-                                        EpochMap.get(params.upper, tickMap, constants) <= cache.position.epochLast
+                 (params.zeroForOne ? (params.claim == params.lower &&
+                                        EpochMap.get(params.lower, tickMap, constants) <= cache.position.epochLast)
+                                   : (params.claim == params.upper &&
+                                        EpochMap.get(params.upper, tickMap, constants) <= cache.position.epochLast))
         ) {
-            console.log('early return 1', EpochMap.get(params.lower, tickMap, constants), cache.position.epochLast);
+            console.log('early return 1', EpochMap.get(params.lower, tickMap, constants), cache.position.epochLast, uint24(-params.upper));
             cache.earlyReturn = true;
             return (params, cache);
         }
@@ -69,13 +70,14 @@ library Claims {
                     cache.claimTick = ticks[params.upper];
                 }
                 claimTickEpoch = pool.swapEpoch;
-            } else if (params.claim % constants.tickSpacing == constants.tickSpacing / 2) {
+            } else if (params.claim % constants.tickSpacing != 0) {
                 if (cache.claimTick.priceAt == 0) {
                     require (false, 'WrongTickClaimedAt()');
                 }
                 cache.priceClaim = cache.claimTick.priceAt;
             }
         } else {
+            console.log('not zero for one', uint24(-params.claim), uint24(-params.claim % constants.tickSpacing));
             if (pool.price <= cache.priceClaim) {
                 if (pool.price >= cache.priceLower) {
                     cache.priceClaim = pool.price;
@@ -94,10 +96,11 @@ library Claims {
                     cache.claimTick = ticks[params.upper];
                 }
                 claimTickEpoch = pool.swapEpoch;
-            } else if (params.claim % constants.tickSpacing == constants.tickSpacing / 2) {
+            } else if (params.claim % constants.tickSpacing != 0) {
                 if (cache.claimTick.priceAt == 0) {
                     require (false, 'WrongTickClaimedAt()');
                 }
+                console.log('using price at for claim price');
                 cache.priceClaim = cache.claimTick.priceAt;
             }
         }
@@ -222,14 +225,17 @@ library Claims {
         // else use claimPriceLast to calculate amountOut
         if (params.claim != (params.zeroForOne ? params.upper : params.lower)) {
             if (params.zeroForOne ? cache.position.claimPriceLast < cache.priceClaim
-                                  : cache.position.claimPriceLast > cache.priceClaim)
-                cache.position.amountOut += uint128(params.zeroForOne ? ConstantProduct.getDx(params.amount, cache.priceClaim, cache.priceUpper, false)
+                                  : cache.position.claimPriceLast > cache.priceClaim) {
+                                    console.log('position amounts 1st option');
+  cache.position.amountOut += uint128(params.zeroForOne ? ConstantProduct.getDx(params.amount, cache.priceClaim, cache.priceUpper, false)
                                                                       : ConstantProduct.getDy(params.amount, cache.priceLower, cache.priceClaim, false));
+                                  }
+              
             else
                 cache.position.amountOut += uint128(params.zeroForOne ? ConstantProduct.getDx(params.amount, cache.position.claimPriceLast, cache.priceUpper, false)
                                                                       : ConstantProduct.getDy(params.amount, cache.priceLower, cache.position.claimPriceLast, false));
         }
-        console.log('position amounts', cache.position.amountIn, cache.position.amountOut, uint24(params.claim));
+        console.log('position amounts', cache.position.amountIn, cache.position.amountOut, ticks[params.claim].priceAt);
         return cache;
     }
 }

@@ -4,7 +4,6 @@ pragma solidity ^0.8.13;
 import './math/ConstantProduct.sol';
 import '../interfaces/ILimitPool.sol';
 import '../interfaces/ILimitPoolStructs.sol';
-import 'hardhat/console.sol';
 
 library TickMap {
 
@@ -293,7 +292,7 @@ library TickMap {
         int24 tick,
         int24 tickSpacing,
         bool zeroForOne
-    ) internal view returns (
+    ) internal pure returns (
         int24 roundedTick
     ) {
         roundedTick = tick / tickSpacing * tickSpacing;
@@ -302,6 +301,5 @@ library TickMap {
             roundedTick -= tickSpacing;
         else if (!zeroForOne && roundedTick > 0)
             roundedTick += tickSpacing;
-        console.log('rounding tick', uint24(-(-49 * 10 / 10)), uint24(-tick), uint24(-roundedTick));
     }
 }

@@ -7,11 +7,8 @@ import './EpochMap.sol';
 import './TickMap.sol';
 import './utils/String.sol';
 import './utils/SafeCast.sol';
-import 'hardhat/console.sol';
 
 library Claims {
-    /////////// DEBUG FLAGS ///////////
-    bool constant debugDeltas = true;
 
     using SafeCast for uint256;
 
@@ -20,7 +17,6 @@ library Claims {
             storage positions,
         mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
         ILimitPoolStructs.TickMap storage tickMap,
-        ILimitPoolStructs.GlobalState memory state,
         ILimitPoolStructs.PoolState memory pool,
         ILimitPoolStructs.UpdateParams memory params,
         ILimitPoolStructs.UpdatePositionCache memory cache,
@@ -40,18 +36,16 @@ library Claims {
         else if (cache.position.claimPriceLast == 0 &&
                  (params.zeroForOne ? (params.claim == params.lower &&
                                         EpochMap.get(params.lower, tickMap, constants) <= cache.position.epochLast)
-                                   : (params.claim == params.upper &&
+                                    : (params.claim == params.upper &&
                                         EpochMap.get(params.upper, tickMap, constants) <= cache.position.epochLast))
         ) {
-            console.log('early return 1', EpochMap.get(params.lower, tickMap, constants), cache.position.epochLast, uint24(-params.upper));
             cache.earlyReturn = true;
             return (params, cache);
         }
         // early return if no update and amount burned is 0
         if (params.amount == 0 && cache.position.claimPriceLast == pool.price) {
-            console.log('early return 2');
-                cache.earlyReturn = true;
-                return (params, cache);
+            cache.earlyReturn = true;
+            return (params, cache);
         } 
         
         if (params.claim < params.lower || params.claim > params.upper) require (false, 'InvalidClaimTick()');
@@ -77,7 +71,6 @@ library Claims {
                 cache.priceClaim = cache.claimTick.priceAt;
             }
         } else {
-            console.log('not zero for one', uint24(-params.claim), uint24(-params.claim % constants.tickSpacing));
             if (pool.price <= cache.priceClaim) {
                 if (pool.price >= cache.priceLower) {
                     cache.priceClaim = pool.price;
@@ -85,10 +78,8 @@ library Claims {
                     // handles tickAtPrice not being crossed yet
                     if (params.claim % constants.tickSpacing == 0 &&
                         pool.price > ConstantProduct.getPriceAtTick(pool.tickAtPrice, constants)){
-                        console.log('match on condition');
                         params.claim += constants.tickSpacing;
                     }
-                    console.log('price past claim', uint24(-params.claim), uint24(-pool.tickAtPrice));
                     claimTickEpoch = pool.swapEpoch;
                 } else {
                     cache.priceClaim = cache.priceLower;
@@ -100,17 +91,16 @@ library Claims {
                 if (cache.claimTick.priceAt == 0) {
                     require (false, 'WrongTickClaimedAt()');
                 }
-                console.log('using price at for claim price');
                 cache.priceClaim = cache.claimTick.priceAt;
             }
         }
-        //TODO: if params.amount == 0 don't check the next tick
 
         // validate claim tick
         if (params.claim == (params.zeroForOne ? params.upper : params.lower)) {
              if (claimTickEpoch <= cache.position.epochLast)
                 require (false, 'WrongTickClaimedAt()');
-        } else {
+        } else if (params.amount > 0) {
+            /// @dev - partway claim is valid as long as liquidity is not being removed
             int24 claimTickNext = params.zeroForOne
                 ? TickMap.next(tickMap, params.claim, constants.tickSpacing)
                 : TickMap.previous(tickMap, params.claim, constants.tickSpacing);
@@ -144,15 +134,6 @@ library Claims {
             }
             /// @dev - user cannot add liquidity if auction is active; checked for in Positions.validate()
         }
-        // sanity check cPL against priceClaim
-        // if (
-        //     // claim tick is on a prior tick
-        //     cache.position.claimPriceLast > 0 &&
-        //     (params.zeroForOne
-        //             ? cache.position.claimPriceLast > cache.priceClaim
-        //             : cache.position.claimPriceLast < cache.priceClaim
-        //     )
-        // ) require (false, 'InvaliClaimTick()'); /// @dev - wrong claim tick
         return (params, cache);
     }
 
@@ -182,7 +163,6 @@ library Claims {
                 params.claim != (params.zeroForOne ? params.upper : params.lower)) {
                 // get nearest mid tick and measure delta in between nearest full tick and claim price
                 int24 nearestMidTick = params.claim + (params.zeroForOne ? constants.tickSpacing / 2 : -constants.tickSpacing / 2);
-                console.log('claiming fill', params.amount, uint24(params.claim), uint24(nearestMidTick));
                 if (ticks[nearestMidTick].priceAt > 0) {
                      // calculate price at the closest start tick
                     uint160 startPrice = TickMath.getPriceAtTick(params.claim, constants);
@@ -194,7 +174,6 @@ library Claims {
                     uint128 amountInClaimed = uint128(params.zeroForOne ? ConstantProduct.getDy(cache.position.liquidity - params.amount, startPrice, cache.priceClaim, false)
                                                                         : ConstantProduct.getDx(cache.position.liquidity - params.amount, cache.priceClaim, startPrice, false));
                     cache.pool.amountInClaimed += amountInClaimed;
-                    console.log('pool amount in claimed', cache.pool.amountInClaimed);
                 }
             }
             // if the user is burning their position
@@ -208,7 +187,6 @@ library Claims {
                 uint160 startPrice = TickMath.getPriceAtTick(params.claim, constants);
                 // get nearest mid tick and measure delta in between nearest full tick and claim price
                 int24 nearestMidTick = params.claim + (params.zeroForOne ? constants.tickSpacing / 2 : -constants.tickSpacing / 2);
-                console.log('claiming fill', params.amount, uint24(params.claim), uint24(nearestMidTick));
                 if (ticks[nearestMidTick].priceAt > 0 &&
                     (params.zeroForOne ? cache.position.claimPriceLast > startPrice
                                        : cache.position.claimPriceLast < startPrice)) {
@@ -218,7 +196,6 @@ library Claims {
                         cache.pool.amountInClaimed -= amountInBurned;
                     else
                         cache.pool.amountInClaimed = 0;
-                console.log('pool amount in claim burned', cache.pool.amountInClaimed);
                 }
         }
         // use priceClaim if tick hasn't been set back
@@ -226,16 +203,15 @@ library Claims {
         if (params.claim != (params.zeroForOne ? params.upper : params.lower)) {
             if (params.zeroForOne ? cache.position.claimPriceLast < cache.priceClaim
                                   : cache.position.claimPriceLast > cache.priceClaim) {
-                                    console.log('position amounts 1st option');
-  cache.position.amountOut += uint128(params.zeroForOne ? ConstantProduct.getDx(params.amount, cache.priceClaim, cache.priceUpper, false)
+                cache.position.amountOut += uint128(params.zeroForOne ? ConstantProduct.getDx(params.amount, cache.priceClaim, cache.priceUpper, false)
                                                                       : ConstantProduct.getDy(params.amount, cache.priceLower, cache.priceClaim, false));
-                                  }
-              
+                cache.position.claimPriceLast = cache.priceClaim;
+            } 
             else
                 cache.position.amountOut += uint128(params.zeroForOne ? ConstantProduct.getDx(params.amount, cache.position.claimPriceLast, cache.priceUpper, false)
                                                                       : ConstantProduct.getDy(params.amount, cache.priceLower, cache.position.claimPriceLast, false));
+
         }
-        console.log('position amounts', cache.position.amountIn, cache.position.amountOut, ticks[params.claim].priceAt);
         return cache;
     }
 }

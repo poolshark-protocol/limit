@@ -4,7 +4,6 @@ pragma solidity ^0.8.13;
 import '../../interfaces/ILimitPoolStructs.sol';
 import '../Positions.sol';
 import '../utils/Collect.sol';
-import 'hardhat/console.sol';
 
 library BurnCall {
     event Burn(
@@ -36,7 +35,6 @@ library BurnCall {
             || params.claim != (params.zeroForOne ? params.lower : params.upper))
         // or position has been crossed into
         {
-            console.log('position update');
             // if position has been crossed into
             (
                 cache.state,
@@ -60,7 +58,6 @@ library BurnCall {
                 cache.constants
             );
         } else {
-            console.log('position remove');
             // if position hasn't been crossed into
             (, cache.pool) = Positions.remove(
                 positions,
@@ -78,7 +75,6 @@ library BurnCall {
                 cache.constants
             );
         }
-        console.log('cache position last price', cache.position.claimPriceLast, cache.pool.price);
         Collect.burn(
             cache,
             positions,

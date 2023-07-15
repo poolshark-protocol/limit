@@ -4,7 +4,6 @@ pragma solidity ^0.8.13;
 import '../../interfaces/ILimitPoolStructs.sol';
 import '../Positions.sol';
 import '../utils/SafeTransfers.sol';
-import 'hardhat/console.sol';
 
 library Collect {
     function burn(
@@ -19,8 +18,6 @@ library Collect {
         // store amounts for transferOut
         uint128 amountIn  = positions[msg.sender][params.lower][params.upper].amountIn;
         uint128 amountOut = positions[msg.sender][params.lower][params.upper].amountOut;
-
-        console.log('cPL check 2', uint24(-params.claim), positions[msg.sender][params.lower][params.upper].claimPriceLast);
 
         // console.log('position amounts', amountIn, amountOut);
 

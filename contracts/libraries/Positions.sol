@@ -51,7 +51,7 @@ library Positions {
         ConstantProduct.checkTicks(params.lower, params.upper, cache.constants.tickSpacing);
 
         ILimitPoolStructs.PositionCache memory localCache = ILimitPoolStructs.PositionCache({
-            position: cache.position,
+            position: ILimitPoolStructs.Position(0,0,0,0,0),
             priceLower: ConstantProduct.getPriceAtTick(params.lower, cache.constants),
             priceUpper: ConstantProduct.getPriceAtTick(params.upper, cache.constants),
             requiredStart: params.zeroForOne ? params.upper
@@ -94,9 +94,10 @@ library Positions {
         else if (cache.swapPool.swapEpoch < cache.pool.swapEpoch)
             cache.swapPool.swapEpoch = cache.pool.swapEpoch;
 
-        if (params.zeroForOne ? cache.swapPool.price > cache.priceLimit
-                              : cache.swapPool.price < cache.priceLimit) {
-            
+        // only swap if priceLimit is beyond current pool price
+        if (params.zeroForOne ? cache.priceLimit < cache.swapPool.price
+                              : cache.priceLimit > cache.swapPool.price) {
+            // swap and save the pool state
             (cache.swapPool, swapCache) = Ticks.swap(
                 swapTicks,
                 tickMap,
@@ -111,7 +112,6 @@ library Positions {
                 swapCache,
                 cache.swapPool
             );
-
             params.amount -= uint128(swapCache.input);
         }
         // move start tick based on amount filled in swap
@@ -277,7 +277,7 @@ library Positions {
             } else {
                 if (EpochMap.get(params.upper, tickMap, constants)
                             > cache.position.epochLast) {
-                    int24 previousTick = TickMap.previous(tickMap, params.upper, constants.tickSpacing);
+                    int24 previousTick = TickMap.previous(tickMap, params.upper, constants.tickSpacing, false);
                     if (pool.price < cache.priceUpper ||
                         EpochMap.get(previousTick, tickMap, constants)
                             > cache.position.epochLast) {

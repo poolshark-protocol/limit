@@ -32,7 +32,7 @@ library MintCall {
         // bump swapPool in case user is trying to undercut
         // this avoids trimming positions unnecessarily
         if (cache.swapPool.liquidity == 0) {
-            (cache, cache.swapPool) = Ticks._unlock(cache, cache.swapPool, swapTicks, tickMap, !params.zeroForOne);
+            (cache, cache.swapPool) = Ticks.unlock(cache, cache.swapPool, swapTicks, tickMap, !params.zeroForOne);
         }
         // resize position if necessary
         (params, cache) = Positions.resize(
@@ -42,6 +42,7 @@ library MintCall {
             swapTicks
         );
         save(cache.swapPool, swapPool);
+        cache.position = positions[params.to][params.lower][params.upper];
         SafeTransfers.transferIn(
                                  params.zeroForOne ? cache.constants.token0 
                                                    : cache.constants.token1,
@@ -56,7 +57,7 @@ library MintCall {
             );
         // bump to the next tick if there is no liquidity
         if (cache.pool.liquidity == 0) {
-            (cache, cache.pool) = Ticks._unlock(cache, cache.pool, ticks, tickMap, params.zeroForOne);
+            (cache, cache.pool) = Ticks.unlock(cache, cache.pool, ticks, tickMap, params.zeroForOne);
         }
         if (params.amount > 0 && params.lower < params.upper) {
             (cache.pool, cache.position) = Positions.add(

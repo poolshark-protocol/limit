@@ -65,8 +65,7 @@ contract LimitPool is
             SwapCache memory swapCache;
             cache = MintCache({
                 state: globalState,
-                position: params.zeroForOne ? positions0[params.to][params.lower][params.upper]
-                                            : positions1[params.to][params.lower][params.upper],
+                position: Position(0,0,0,0,0),
                 constants: _immutables(),
                 liquidityMinted: 0,
                 pool: params.zeroForOne ? pool0 : pool1,

@@ -413,7 +413,7 @@ library Ticks {
         ILimitPoolStructs.TickMap storage tickMap,
         ILimitPoolStructs.PoolState memory pool,
         ILimitPoolStructs.Immutables memory constants,
-        ILimitPoolStructs.PositionCache memory cache,
+        ILimitPoolStructs.MintCache memory cache,
         int24 lower,
         int24 upper,
         uint128 amount,

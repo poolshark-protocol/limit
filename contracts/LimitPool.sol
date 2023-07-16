@@ -71,6 +71,8 @@ contract LimitPool is
                 pool: params.zeroForOne ? pool0 : pool1,
                 swapPool: params.zeroForOne ? pool1 : pool0,
                 swapCache: swapCache,
+                priceLower: 0,
+                priceUpper: 0,
                 priceLimit: 0,
                 tickLimit: 0,
                 amountIn: 0,

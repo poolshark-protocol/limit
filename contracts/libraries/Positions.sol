@@ -17,7 +17,7 @@ library Positions {
 
     using SafeCast for uint256;
 
-    event Burn(
+    event BurnLimit(
         address indexed to,
         int24 lower,
         int24 upper,
@@ -40,28 +40,24 @@ library Positions {
     {
         ConstantProduct.checkTicks(params.lower, params.upper, cache.constants.tickSpacing);
 
-        ILimitPoolStructs.PositionCache memory localCache = ILimitPoolStructs.PositionCache({
-            position: ILimitPoolStructs.Position(0,0,0,0,0),
-            priceLower: ConstantProduct.getPriceAtTick(params.lower, cache.constants),
-            priceUpper: ConstantProduct.getPriceAtTick(params.upper, cache.constants),
-            liquidityMinted: 0
-        });
+        cache.priceLower = ConstantProduct.getPriceAtTick(params.lower, cache.constants);
+        cache.priceUpper = ConstantProduct.getPriceAtTick(params.upper, cache.constants);
 
         // cannot mint empty position
         if (params.amount == 0) require (false, 'PositionAmountZero()');
 
         // calculate L constant
         cache.liquidityMinted = ConstantProduct.getLiquidityForAmounts(
-            localCache.priceLower,
-            localCache.priceUpper,
-            params.zeroForOne ? localCache.priceLower : localCache.priceUpper,
+            cache.priceLower,
+            cache.priceUpper,
+            params.zeroForOne ? cache.priceLower : cache.priceUpper,
             params.zeroForOne ? 0 : uint256(params.amount),
             params.zeroForOne ? uint256(params.amount) : 0
         );
 
         {
-            cache.priceLimit = params.zeroForOne ? ConstantProduct.getNewPrice(localCache.priceUpper, cache.liquidityMinted, params.amount / 2, true, true)
-                                                 : ConstantProduct.getNewPrice(localCache.priceLower, cache.liquidityMinted, params.amount / 2, false, true);
+            cache.priceLimit = params.zeroForOne ? ConstantProduct.getNewPrice(cache.priceUpper, cache.liquidityMinted, params.amount / 2, true, true)
+                                                 : ConstantProduct.getNewPrice(cache.priceLower, cache.liquidityMinted, params.amount / 2, false, true);
             // get tick at price
             cache.tickLimit = ConstantProduct.getTickAtPrice(cache.priceLimit.toUint160(), cache.constants);
             // round to nearest tick spacing
@@ -104,33 +100,33 @@ library Positions {
         }
         // move start tick based on amount filled in swap
         if ((params.amount > 0 && swapCache.input > 0) ||
-            (params.zeroForOne ? localCache.priceLower < cache.swapPool.price
-                               : localCache.priceUpper > cache.swapPool.price)
+            (params.zeroForOne ? cache.priceLower < cache.swapPool.price
+                               : cache.priceUpper > cache.swapPool.price)
         ) {
             if (params.zeroForOne) {
                 if (params.amount > 0 && swapCache.input > 0) {
-                    uint160 newPrice = ConstantProduct.getNewPrice(localCache.priceLower, cache.liquidityMinted, swapCache.input, false, true).toUint160();
+                    uint160 newPrice = ConstantProduct.getNewPrice(cache.priceLower, cache.liquidityMinted, swapCache.input, false, true).toUint160();
                     int24 newLower = ConstantProduct.getTickAtPrice(newPrice, cache.constants);
                     params.lower = TickMap.roundUp(newLower, cache.constants.tickSpacing, true);
                 }
                 if (params.lower < cache.tickLimit) {
                     params.lower = cache.tickLimit;
                 }
-                localCache.priceLower = ConstantProduct.getPriceAtTick(params.lower, cache.constants);
+                cache.priceLower = ConstantProduct.getPriceAtTick(params.lower, cache.constants);
             } else {
-                uint160 newPrice = ConstantProduct.getNewPrice(localCache.priceUpper, cache.liquidityMinted, swapCache.input, true, true).toUint160();
+                uint160 newPrice = ConstantProduct.getNewPrice(cache.priceUpper, cache.liquidityMinted, swapCache.input, true, true).toUint160();
                 int24 newUpper = ConstantProduct.getTickAtPrice(newPrice, cache.constants);
                 params.upper = TickMap.roundUp(newUpper, cache.constants.tickSpacing, false);
                 if (params.upper > cache.tickLimit) {
                     params.upper = cache.tickLimit;
                 }
-                localCache.priceUpper = ConstantProduct.getPriceAtTick(params.upper, cache.constants);
+                cache.priceUpper = ConstantProduct.getPriceAtTick(params.upper, cache.constants);
             }
             if (params.amount > 0)
                 cache.liquidityMinted = ConstantProduct.getLiquidityForAmounts(
-                    localCache.priceLower,
-                    localCache.priceUpper,
-                    params.zeroForOne ? localCache.priceLower : localCache.priceUpper,
+                    cache.priceLower,
+                    cache.priceUpper,
+                    params.zeroForOne ? cache.priceLower : cache.priceUpper,
                     params.zeroForOne ? 0 : uint256(params.amount),
                     params.zeroForOne ? uint256(params.amount) : 0
                 );
@@ -149,7 +145,7 @@ library Positions {
     }
 
     function add(
-       ILimitPoolStructs.Position memory position,
+        ILimitPoolStructs.MintCache memory cache,
         mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
         ILimitPoolStructs.TickMap storage tickMap,
         ILimitPoolStructs.PoolState memory pool,
@@ -159,17 +155,7 @@ library Positions {
         ILimitPoolStructs.PoolState memory,
         ILimitPoolStructs.Position memory
     ) {
-        if (params.amount == 0) return (pool, position);
-
-        // initialize cache
-        ILimitPoolStructs.PositionCache memory cache = ILimitPoolStructs.PositionCache({
-            position: position,
-            priceLower: ConstantProduct.getPriceAtTick(params.lower, constants),
-            priceUpper: ConstantProduct.getPriceAtTick(params.upper, constants),
-            liquidityMinted: 0
-        });
-        /// call if claim != lower and liquidity being added
-        /// initialize new position
+        if (params.amount == 0) return (pool, cache.position);
 
         if (cache.position.liquidity == 0) {
             cache.position.epochLast = pool.swapEpoch;
@@ -296,7 +282,7 @@ library Positions {
         positions[params.owner][params.lower][params.upper] = cache.position;
 
         if (params.amount > 0) {
-            emit Burn(
+            emit BurnLimit(
                     params.to,
                     params.lower,
                     params.upper,
@@ -411,7 +397,7 @@ library Positions {
             ? positions[params.owner][params.claim][params.upper] = cache.position
             : positions[params.owner][params.lower][params.claim] = cache.position;
         
-        emit Burn(
+        emit BurnLimit(
             params.to,
             params.lower,
             params.upper,

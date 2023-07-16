@@ -60,7 +60,7 @@ library MintCall {
         }
         if (params.amount > 0 && params.lower < params.upper) {
             (cache.pool, cache.position) = Positions.add(
-                cache.position,
+                cache,
                 ticks,
                 tickMap,
                 cache.pool,

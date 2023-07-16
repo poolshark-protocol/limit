@@ -151,6 +151,8 @@ interface ILimitPoolStructs {
         uint256 priceLimit;
         int256 amountIn;
         uint256 amountOut;
+        uint256 priceLower;
+        uint256 priceUpper;
         int24 tickLimit;
     }
 

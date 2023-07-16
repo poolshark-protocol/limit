@@ -4,6 +4,7 @@ pragma solidity ^0.8.13;
 import './math/ConstantProduct.sol';
 import '../interfaces/ILimitPool.sol';
 import '../interfaces/ILimitPoolStructs.sol';
+import 'hardhat/console.sol';
 
 library TickMap {
 
@@ -57,13 +58,18 @@ library TickMap {
     function previous(
         ILimitPoolStructs.TickMap storage tickMap,
         int24 tick,
-        int16 tickSpacing
+        int16 tickSpacing,
+        bool roundedUp
     ) internal view returns (
         int24 previousTick
     ) {
         unchecked {
+            console.log('tick previous check', uint24((-5) % 5));
             // rounds up to ensure relative position
-            if (tick % (tickSpacing / 2) != 0) tick += tickSpacing;
+            if ((tick % (tickSpacing / 2) != 0 || roundedUp)
+                 && tick < round(TickMath.MAX_TICK, tickSpacing)) tick += tickSpacing / 2;
+            // rounds up to ensure relative position
+            // if (tick % (tickSpacing / 2) != 0) tick += tickSpacing;
             (
               uint256 tickIndex,
               uint256 wordIndex,
@@ -134,9 +140,9 @@ library TickMap {
         unchecked {
             if (tick > TickMath.MAX_TICK) require(false, ' TickIndexOverflow()');
             if (tick < TickMath.MIN_TICK) require(false, 'TickIndexUnderflow()');
-            if (tick % (tickSpacing / 2) != 0) tick = _round(tick, tickSpacing / 2);
-            tickIndex = uint256(int256((_round(tick, tickSpacing / 2) 
-                                        - _round(TickMath.MIN_TICK, tickSpacing / 2)) 
+            if (tick % (tickSpacing / 2) != 0) tick = round(tick, tickSpacing / 2);
+            tickIndex = uint256(int256((round(tick, tickSpacing / 2) 
+                                        - round(TickMath.MIN_TICK, tickSpacing / 2)) 
                                         / (tickSpacing / 2)));
             wordIndex = tickIndex >> 8;   // 2^8 ticks per word
             blockIndex = tickIndex >> 16; // 2^8 words per block
@@ -176,9 +182,9 @@ library TickMap {
         int24 tick
     ) {
         unchecked {
-            if (tickIndex > uint24(_round(TickMath.MAX_TICK, tickSpacing) * 2) * 2) 
+            if (tickIndex > uint24(round(TickMath.MAX_TICK, tickSpacing) * 2) * 2) 
                 require(false, 'TickIndexOverflow()');
-            tick = int24(int256(tickIndex) * (tickSpacing / 2) + _round(TickMath.MIN_TICK, tickSpacing / 2));
+            tick = int24(int256(tickIndex) * (tickSpacing / 2) + round(TickMath.MIN_TICK, tickSpacing / 2));
         }
     }
 
@@ -268,24 +274,13 @@ library TickMap {
         }
     }
 
-    function _round(
+    function round(
         int24 tick,
         int24 tickSpacing
     ) internal pure returns (
         int24 roundedTick
     ) {
         return tick / tickSpacing * tickSpacing;
-    }
-
-    function _roundHalf(
-        int24 tick,
-        int24 tickSpacing
-    ) internal pure returns (
-        int24 roundedTick
-    ) {
-        roundedTick = tick / tickSpacing * tickSpacing;
-        if (roundedTick >= 0) roundedTick += tickSpacing / 2;
-        else roundedTick -= tickSpacing / 2;
     }
 
     function roundUp(

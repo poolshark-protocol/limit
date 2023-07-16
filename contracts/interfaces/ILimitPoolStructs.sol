@@ -151,6 +151,8 @@ interface ILimitPoolStructs {
         uint256 priceLimit;
         int256 amountIn;
         uint256 amountOut;
+        uint256 priceLower;
+        uint256 priceUpper;
         int24 tickLimit;
     }
 
@@ -181,7 +183,6 @@ interface ILimitPoolStructs {
         uint160 priceLower;
         uint160 priceUpper;
         uint256 liquidityMinted;
-        int24 requiredStart;
     }
 
     struct UpdatePositionCache {

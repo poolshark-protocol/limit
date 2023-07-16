@@ -6,16 +6,15 @@ import '../Positions.sol';
 import '../utils/Collect.sol';
 
 library MintCall {
-    event Mint(
+    event MintLimit(
         address indexed to,
         int24 lower,
         int24 upper,
         bool zeroForOne,
         uint32 epochLast,
         uint128 amountIn,
-        uint128 liquidityMinted,
-        uint128 amountInDeltaMaxMinted,
-        uint128 amountOutDeltaMaxMinted
+        uint128 amountFilled,
+        uint128 liquidityMinted
     );
 
     function perform(
@@ -32,7 +31,7 @@ library MintCall {
         // bump swapPool in case user is trying to undercut
         // this avoids trimming positions unnecessarily
         if (cache.swapPool.liquidity == 0) {
-            (cache, cache.swapPool) = Ticks._unlock(cache, cache.swapPool, swapTicks, tickMap, !params.zeroForOne);
+            (cache, cache.swapPool) = Ticks.unlock(cache, cache.swapPool, swapTicks, tickMap, !params.zeroForOne);
         }
         // resize position if necessary
         (params, cache) = Positions.resize(
@@ -42,6 +41,7 @@ library MintCall {
             swapTicks
         );
         save(cache.swapPool, swapPool);
+        cache.position = positions[params.to][params.lower][params.upper];
         SafeTransfers.transferIn(
                                  params.zeroForOne ? cache.constants.token0 
                                                    : cache.constants.token1,
@@ -56,11 +56,11 @@ library MintCall {
             );
         // bump to the next tick if there is no liquidity
         if (cache.pool.liquidity == 0) {
-            (cache, cache.pool) = Ticks._unlock(cache, cache.pool, ticks, tickMap, params.zeroForOne);
+            (cache, cache.pool) = Ticks.unlock(cache, cache.pool, ticks, tickMap, params.zeroForOne);
         }
         if (params.amount > 0 && params.lower < params.upper) {
             (cache.pool, cache.position) = Positions.add(
-                cache.position,
+                cache,
                 ticks,
                 tickMap,
                 cache.pool,
@@ -109,6 +109,17 @@ library MintCall {
             }
             save(cache.pool, pool);
             positions[params.to][params.lower][params.upper] = cache.position;
+
+            emit MintLimit(
+                params.to,
+                params.lower,
+                params.upper,
+                params.zeroForOne,
+                cache.position.epochLast,
+                uint128(params.amount + cache.swapCache.input),
+                uint128(cache.swapCache.output),
+                uint128(cache.liquidityMinted)
+            );
         }
         return cache;
     }

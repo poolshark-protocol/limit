@@ -115,7 +115,7 @@ library Ticks {
             price: pool.price,
             liquidity: pool.liquidity,
             cross: true,
-            crossTick: params.zeroForOne ? TickMap.previous(tickMap, pool.tickAtPrice, cache.constants.tickSpacing) 
+            crossTick: params.zeroForOne ? TickMap.previous(tickMap, pool.tickAtPrice, cache.constants.tickSpacing, true) 
                                          : TickMap.next(tickMap, pool.tickAtPrice, cache.constants.tickSpacing),
             crossPrice: 0,
             input:  0,
@@ -180,7 +180,7 @@ library Ticks {
             price: pool.price,
             liquidity: pool.liquidity,
             cross: true,
-            crossTick: params.zeroForOne ? TickMap.previous(tickMap, pool.tickAtPrice, cache.constants.tickSpacing) 
+            crossTick: params.zeroForOne ? TickMap.previous(tickMap, pool.tickAtPrice, cache.constants.tickSpacing, true) 
                                          : TickMap.next(tickMap, pool.tickAtPrice, cache.constants.tickSpacing),
             crossPrice: 0,
             input:  0,
@@ -317,7 +317,7 @@ library Ticks {
         return (pool, cache);
     }
 
-    function _unlock(
+    function unlock(
         ILimitPoolStructs.MintCache memory cache,
         ILimitPoolStructs.PoolState memory pool,
         mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
@@ -335,7 +335,8 @@ library Ticks {
                 EpochMap.set(pool.tickAtPrice, pool.swapEpoch, tickMap, cache.constants);
             }
         } else {
-            pool.tickAtPrice = TickMap.previous(tickMap, pool.tickAtPrice, cache.constants.tickSpacing);
+            /// @dev - roundedUp true since liquidity could be equal to the current pool tickAtPrice
+            pool.tickAtPrice = TickMap.previous(tickMap, pool.tickAtPrice, cache.constants.tickSpacing, true);
             if (pool.tickAtPrice > ConstantProduct.minTick(cache.constants.tickSpacing)) {
                 EpochMap.set(pool.tickAtPrice, pool.swapEpoch, tickMap, cache.constants);
             }
@@ -379,7 +380,7 @@ library Ticks {
         ticks[cache.crossTick] = ILimitPoolStructs.Tick(0, 0);
         TickMap.unset(tickMap, cache.crossTick, cache.constants.tickSpacing);
         if (zeroForOne) {
-            cache.crossTick = TickMap.previous(tickMap, cache.crossTick, cache.constants.tickSpacing);
+            cache.crossTick = TickMap.previous(tickMap, cache.crossTick, cache.constants.tickSpacing, false);
         } else {
             cache.crossTick = TickMap.next(tickMap, cache.crossTick, cache.constants.tickSpacing);
         }
@@ -400,7 +401,7 @@ library Ticks {
         if (liquidityDelta > 0) cache.liquidity += uint128(ticks[cache.crossTick].liquidityDelta);
         else cache.liquidity -= uint128(-ticks[cache.crossTick].liquidityDelta);
         if (zeroForOne) {
-            cache.crossTick = TickMap.previous(tickMap, cache.crossTick, cache.constants.tickSpacing);
+            cache.crossTick = TickMap.previous(tickMap, cache.crossTick, cache.constants.tickSpacing, false);
         } else {
             cache.crossTick = TickMap.next(tickMap, cache.crossTick, cache.constants.tickSpacing);
         }
@@ -412,14 +413,13 @@ library Ticks {
         ILimitPoolStructs.TickMap storage tickMap,
         ILimitPoolStructs.PoolState memory pool,
         ILimitPoolStructs.Immutables memory constants,
-        ILimitPoolStructs.PositionCache memory cache,
+        ILimitPoolStructs.MintCache memory cache,
         int24 lower,
         int24 upper,
         uint128 amount,
         bool isPool0
     ) external {
         /// @dev - validation of ticks is in Positions.validate
-        if (amount > uint128(type(int128).max)) require (false, 'LiquidityOverflow()');
         if (amount > (uint128(type(int128).max) - pool.liquidityGlobal) )
             require (false, 'LiquidityOverflow()');
 
@@ -462,13 +462,13 @@ library Ticks {
         // round to mid point -> 101 - 109 => 105
         // round down if less than -> 
         int24 tickToSave = pool.tickAtPrice;
-        uint160 roundedPrice = TickMath.getPriceAtTick(TickMap._round(tickToSave, constants.tickSpacing), constants);
+        uint160 roundedPrice = TickMath.getPriceAtTick(TickMap.round(tickToSave, constants.tickSpacing), constants);
         if (tickToSave % (constants.tickSpacing / 2) != 0 ||
             pool.price != roundedPrice) {
-            tickToSave = TickMap._round(pool.tickAtPrice, constants.tickSpacing);
+            tickToSave = TickMap.round(pool.tickAtPrice, constants.tickSpacing);
             if (tickToSave >= 0) tickToSave += constants.tickSpacing / 2;
             else tickToSave -= constants.tickSpacing / 2;
-            roundedPrice = TickMath.getPriceAtTick(TickMap._round(tickToSave, constants.tickSpacing), constants);
+            roundedPrice = TickMath.getPriceAtTick(TickMap.round(tickToSave, constants.tickSpacing), constants);
         }
 
         // update tick to save

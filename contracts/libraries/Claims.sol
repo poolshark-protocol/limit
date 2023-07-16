@@ -103,7 +103,7 @@ library Claims {
             /// @dev - partway claim is valid as long as liquidity is not being removed
             int24 claimTickNext = params.zeroForOne
                 ? TickMap.next(tickMap, params.claim, constants.tickSpacing)
-                : TickMap.previous(tickMap, params.claim, constants.tickSpacing);
+                : TickMap.previous(tickMap, params.claim, constants.tickSpacing, false);
             // if we cleared the final tick of their position, this is the wrong claim tick
             if (params.zeroForOne ? claimTickNext > params.upper
                                   : claimTickNext < params.lower) {

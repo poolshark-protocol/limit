@@ -96,6 +96,7 @@ library Positions {
                 swapCache,
                 cache.swapPool
             );
+            // subtract from remaining input amount
             params.amount -= uint128(swapCache.input);
         }
         // move start tick based on amount filled in swap
@@ -110,6 +111,8 @@ library Positions {
                     params.lower = TickMap.roundUp(newLower, cache.constants.tickSpacing, true);
                 }
                 if (params.lower < cache.tickLimit) {
+                    // if rounding goes past limit trim position
+                    /// @dev - if swap didn't go to limit user would be 100% filled
                     params.lower = cache.tickLimit;
                 }
                 cache.priceLower = ConstantProduct.getPriceAtTick(params.lower, cache.constants);
@@ -117,7 +120,10 @@ library Positions {
                 uint160 newPrice = ConstantProduct.getNewPrice(cache.priceUpper, cache.liquidityMinted, swapCache.input, true, true).toUint160();
                 int24 newUpper = ConstantProduct.getTickAtPrice(newPrice, cache.constants);
                 params.upper = TickMap.roundUp(newUpper, cache.constants.tickSpacing, false);
+                
                 if (params.upper > cache.tickLimit) {
+                    // if rounding goes past limit trim position
+                    /// @dev - if swap didn't go to limit user would be 100% filled
                     params.upper = cache.tickLimit;
                 }
                 cache.priceUpper = ConstantProduct.getPriceAtTick(params.upper, cache.constants);
@@ -131,12 +137,12 @@ library Positions {
                     params.zeroForOne ? uint256(params.amount) : 0
                 );
             else
+                /// @auditor unnecessary since params.amount is 0
                 cache.liquidityMinted = 0;
             cache.pool.swapEpoch += 1;
         }
+        // save swapCache
         cache.swapCache = swapCache;
-
-        if (cache.liquidityMinted > (uint128(type(int128).max) - cache.pool.liquidityGlobal)) require (false, 'LiquidityOverflow()');
  
         return (
             params,

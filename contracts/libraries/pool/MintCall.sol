@@ -40,13 +40,17 @@ library MintCall {
             tickMap,
             swapTicks
         );
+        // save state for safe reentrancy
         save(cache.swapPool, swapPool);
+        // load position given params
         cache.position = positions[params.to][params.lower][params.upper];
+        // transfer in token amount
         SafeTransfers.transferIn(
                                  params.zeroForOne ? cache.constants.token0 
                                                    : cache.constants.token1,
                                  params.amount + cache.swapCache.input
                                 );
+        // if swap output
         if (cache.swapCache.output > 0)
             SafeTransfers.transferOut(
                 params.to,
@@ -56,9 +60,12 @@ library MintCall {
             );
         // bump to the next tick if there is no liquidity
         if (cache.pool.liquidity == 0) {
+            /// @dev - this makes sure to have liquidity unlocked if undercutting
             (cache, cache.pool) = Ticks.unlock(cache, cache.pool, ticks, tickMap, params.zeroForOne);
         }
+        // mint position if amount is left
         if (params.amount > 0 && params.lower < params.upper) {
+            /// @auditor not sure if the lower >= upper case is possible
             (cache.pool, cache.position) = Positions.add(
                 cache,
                 ticks,
@@ -76,38 +83,39 @@ library MintCall {
             );
             if (params.zeroForOne) {
                 uint160 priceLower = TickMath.getPriceAtTick(params.lower, cache.constants);
-                if (priceLower < cache.pool.price) {
+                if (priceLower <= cache.pool.price) {
+                    // save liquidity if active
                     if (cache.pool.liquidity > 0) {
                         cache.pool = Ticks.insertSingle(params, ticks, tickMap, cache.pool, cache.constants);
                     }
                     cache.pool.price = priceLower;
                     cache.pool.tickAtPrice = params.lower;
                     cache.pool.liquidity += uint128(cache.liquidityMinted);
-                    // set epoch on start tick to signify position being crossed into
                     cache.pool.swapEpoch += 1;
                     cache.position.claimPriceLast = TickMath.getPriceAtTick(params.lower, cache.constants);
+                    // set epoch on start tick to signify position being crossed into
+                    /// @auditor - this is safe assuming we have swapped at least this far on the other side
                     EpochMap.set(params.lower, cache.pool.swapEpoch, tickMap, cache.constants);
-                } else if (priceLower == cache.pool.price) {
-                    cache.pool.liquidity += uint128(cache.liquidityMinted);
                 }
             } else {
                 uint160 priceUpper = TickMath.getPriceAtTick(params.upper, cache.constants);
-                if (priceUpper > cache.pool.price) {
+                if (priceUpper >= cache.pool.price) {
                     if (cache.pool.liquidity > 0) {
                         cache.pool = Ticks.insertSingle(params, ticks, tickMap, cache.pool, cache.constants);
                     }
                     cache.pool.price = priceUpper;
                     cache.pool.tickAtPrice = params.upper;
                     cache.pool.liquidity += uint128(cache.liquidityMinted);
-                    // set epoch on start tick to signify position being crossed into
                     cache.pool.swapEpoch += 1;
                     cache.position.claimPriceLast = TickMath.getPriceAtTick(params.upper, cache.constants);
+                    // set epoch on start tick to signify position being crossed into
+                    /// @auditor - this is safe assuming we have swapped at least this far on the other side
                     EpochMap.set(params.upper, cache.pool.swapEpoch, tickMap, cache.constants);
-                } else if (priceUpper == cache.pool.price) {
-                    cache.pool.liquidity += uint128(cache.liquidityMinted);
                 }
             }
+            // save lp side for safe reentrancy
             save(cache.pool, pool);
+            // save position to storage
             positions[params.to][params.lower][params.upper] = cache.position;
 
             emit MintLimit(

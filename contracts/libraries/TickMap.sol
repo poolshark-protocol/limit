@@ -292,8 +292,10 @@ library TickMap {
     ) {
         roundedTick = tick / tickSpacing * tickSpacing;
         if (roundedTick == tick) return tick;
+        /// @dev - rounding down only needed if negative
         if (zeroForOne && roundedTick < 0)
             roundedTick -= tickSpacing;
+        /// @dev - rounding up only needed if positive
         else if (!zeroForOne && roundedTick > 0)
             roundedTick += tickSpacing;
     }

@@ -138,7 +138,6 @@ library Claims {
     }
 
     function getDeltas(
-        mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
         ILimitPoolStructs.UpdatePositionCache memory cache,
         ILimitPoolStructs.UpdateParams memory params,
         ILimitPoolStructs.Immutables memory constants
@@ -151,66 +150,36 @@ library Claims {
             cache.position.claimPriceLast = params.zeroForOne ? cache.priceLower
                                                               : cache.priceUpper;
         }
-        // if tick hasn't been set back calculate amountIn
-        if (params.zeroForOne ? cache.position.claimPriceLast < cache.priceClaim
-                              : cache.position.claimPriceLast > cache.priceClaim) {
-            uint128 amountIn = uint128(params.zeroForOne ? ConstantProduct.getDy(cache.position.liquidity, cache.position.claimPriceLast, cache.priceClaim, false)
-                                                         : ConstantProduct.getDx(cache.position.liquidity, cache.priceClaim, cache.position.claimPriceLast, false));
-
-
-            if (cache.pool.price == cache.priceClaim &&
-                params.claim % constants.tickSpacing == 0 &&
-                params.claim != (params.zeroForOne ? params.upper : params.lower)) {
-                // get nearest mid tick and measure delta in between nearest full tick and claim price
-                int24 nearestMidTick = params.claim + (params.zeroForOne ? constants.tickSpacing / 2 : -constants.tickSpacing / 2);
-                if (ticks[nearestMidTick].priceAt > 0) {
-                     // calculate price at the closest start tick
-                    uint160 startPrice = TickMath.getPriceAtTick(params.claim, constants);
-                    // use claimPriceLast if that is past startPrice
-                    if (params.zeroForOne ? cache.position.claimPriceLast > startPrice
-                                            : cache.position.claimPriceLast < startPrice)
-                        startPrice = cache.position.claimPriceLast;
-                    // calculate amount which should be ignored in amountInClaimed calculation
-                    uint128 amountInClaimed = uint128(params.zeroForOne ? ConstantProduct.getDy(cache.position.liquidity - params.amount, startPrice, cache.priceClaim, false)
-                                                                        : ConstantProduct.getDx(cache.position.liquidity - params.amount, cache.priceClaim, startPrice, false));
-                    cache.pool.amountInClaimed += amountInClaimed;
-                }
-            }
-            // if the user is burning their position
-            cache.position.amountIn += amountIn;
+        ILimitPoolStructs.GetDeltasLocals memory locals;
+        locals.previousFullTick = TickMap.roundDown(params.claim, constants, params.zeroForOne, cache.priceClaim);
+        locals.pricePrevious = ConstantProduct.getPriceAtTick(locals.previousFullTick, constants);
+        console.log('previous full tick', uint24(locals.previousFullTick), uint24(params.lower));
+        if (params.zeroForOne ? locals.previousFullTick > params.lower
+                              : locals.previousFullTick < params.upper) {
+            
+            // claim amounts up to latest full tick crossed
+            cache.position.amountIn += uint128(params.zeroForOne ? ConstantProduct.getDy(cache.position.liquidity, cache.priceLower, locals.pricePrevious, false)
+                                                                 : ConstantProduct.getDx(cache.position.liquidity, locals.pricePrevious, cache.priceUpper, false));
+            cache.position.claimPriceLast = locals.pricePrevious.toUint160();
+            console.log('position amount 1', cache.position.amountIn);
         }
-        // clear amountInClaimed on removal
-        if (params.amount > 0 &&
-                params.claim % constants.tickSpacing == 0 &&
-                params.claim != (params.zeroForOne ? params.upper : params.lower)) {
-                // calculate price at the closest start tick
-                uint160 startPrice = TickMath.getPriceAtTick(params.claim, constants);
-                // get nearest mid tick and measure delta in between nearest full tick and claim price
-                int24 nearestMidTick = params.claim + (params.zeroForOne ? constants.tickSpacing / 2 : -constants.tickSpacing / 2);
-                if (ticks[nearestMidTick].priceAt > 0 &&
-                    (params.zeroForOne ? cache.position.claimPriceLast > startPrice
-                                       : cache.position.claimPriceLast < startPrice)) {
-                    uint128 amountInBurned = uint128(params.zeroForOne ? ConstantProduct.getDy(params.amount, startPrice, cache.position.claimPriceLast, false)
-                                                                       : ConstantProduct.getDx(params.amount, cache.position.claimPriceLast, startPrice, false));
-                    if (amountInBurned < cache.pool.amountInClaimed)
-                        cache.pool.amountInClaimed -= amountInBurned;
-                    else
-                        cache.pool.amountInClaimed = 0;
-                }
+        if (params.amount > 0) {
+           // if tick hasn't been set back calculate amountIn
+            if (params.zeroForOne ? cache.priceClaim > locals.pricePrevious
+                                  : cache.priceClaim < locals.pricePrevious) {
+                // allow partial tick claim if removing liquidity
+                cache.position.amountIn += uint128(params.zeroForOne ? ConstantProduct.getDy(params.amount, locals.pricePrevious, cache.priceClaim, false)
+                                                                     : ConstantProduct.getDx(params.amount, cache.priceClaim, locals.pricePrevious, false));  
+                console.log('position amount 2', cache.position.amountIn, locals.pricePrevious, cache.priceClaim);
+            } 
         }
         // use priceClaim if tick hasn't been set back
         // else use claimPriceLast to calculate amountOut
         if (params.claim != (params.zeroForOne ? params.upper : params.lower)) {
-            if (params.zeroForOne ? cache.position.claimPriceLast < cache.priceClaim
-                                  : cache.position.claimPriceLast > cache.priceClaim) {
-                cache.position.amountOut += uint128(params.zeroForOne ? ConstantProduct.getDx(params.amount, cache.priceClaim, cache.priceUpper, false)
-                                                                      : ConstantProduct.getDy(params.amount, cache.priceLower, cache.priceClaim, false));
-                cache.position.claimPriceLast = cache.priceClaim;
-            } 
-            else
-                cache.position.amountOut += uint128(params.zeroForOne ? ConstantProduct.getDx(params.amount, cache.position.claimPriceLast, cache.priceUpper, false)
-                                                                      : ConstantProduct.getDy(params.amount, cache.priceLower, cache.position.claimPriceLast, false));
+            cache.position.amountOut += uint128(params.zeroForOne ? ConstantProduct.getDx(params.amount, cache.priceClaim, cache.priceUpper, false)
+                                                                  : ConstantProduct.getDy(params.amount, cache.priceLower, cache.priceClaim, false));
 
+            console.log('position amount 3', cache.position.amountOut);
         }
         return cache;
     }

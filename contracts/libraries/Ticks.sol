@@ -343,7 +343,7 @@ library Ticks {
         }
         /// @dev - this should always be positive if liquidity is 0
         pool.liquidity += uint128(ticks[pool.tickAtPrice].liquidityDelta);
-        ticks[pool.tickAtPrice] = ILimitPoolStructs.Tick(0,0);
+        ticks[pool.tickAtPrice] = ILimitPoolStructs.Tick(0,0,0);
 
         /// @dev can we delete the tick here?
         if (pool.tickAtPrice % cache.constants.tickSpacing == 0){
@@ -373,11 +373,10 @@ library Ticks {
 
         if (liquidityDelta > 0) cache.liquidity += uint128(liquidityDelta);
         else cache.liquidity -= uint128(-liquidityDelta);
-        pool.amountInClaimed = 0;
         pool.tickAtPrice = cache.crossTick;
 
         // zero out liquidityDelta and priceAt
-        ticks[cache.crossTick] = ILimitPoolStructs.Tick(0, 0);
+        ticks[cache.crossTick] = ILimitPoolStructs.Tick(0,0,0);
         TickMap.unset(tickMap, cache.crossTick, cache.constants.tickSpacing);
         if (zeroForOne) {
             cache.crossTick = TickMap.previous(tickMap, cache.crossTick, cache.constants.tickSpacing, false);
@@ -419,7 +418,7 @@ library Ticks {
         uint128 amount,
         bool isPool0
     ) external {
-        /// @dev - validation of ticks is in Positions.validate
+        /// @auditor - validation of ticks is in Positions.validate
         if (amount > (uint128(type(int128).max) - pool.liquidityGlobal) )
             require (false, 'LiquidityOverflow()');
 
@@ -458,139 +457,82 @@ library Ticks {
     ) internal returns (
         ILimitPoolStructs.PoolState memory
     ){
-        // load ticks into memory to reduce reads/writes
-        // round to mid point -> 101 - 109 => 105
-        // round down if less than -> 
+        /// @auditor - wouuld be smart to protect against the case of epochs crossing
+        /// (i.e. pool0 starts crossing into the pool1 active region)
+        /// (this is a failure case)
         int24 tickToSave = pool.tickAtPrice;
+        // rounds to nearest full tick
         uint160 roundedPrice = TickMath.getPriceAtTick(TickMap.round(tickToSave, constants.tickSpacing), constants);
         if (tickToSave % (constants.tickSpacing / 2) != 0 ||
             pool.price != roundedPrice) {
             tickToSave = TickMap.round(pool.tickAtPrice, constants.tickSpacing);
-            if (tickToSave >= 0) tickToSave += constants.tickSpacing / 2;
-            else tickToSave -= constants.tickSpacing / 2;
+            if (tickToSave > 0) tickToSave += constants.tickSpacing / 2;
+            else if (tickToSave < 0) tickToSave -= constants.tickSpacing / 2;
+            else {
+                // if tickToSave rounds to 0, check pool.tickAtPrice
+                if (pool.tickAtPrice >= 0) {
+                    tickToSave += constants.tickSpacing / 2;
+                } else {
+                    tickToSave -= constants.tickSpacing / 2;
+                }
+            }
+            // price at nearest full tick
             roundedPrice = TickMath.getPriceAtTick(TickMap.round(tickToSave, constants.tickSpacing), constants);
         }
-
         // update tick to save
         ILimitPoolStructs.Tick memory tick = ticks[tickToSave];
+        /// @auditor - tick.priceAt will be zero for tick % tickSpacing == 0
         if (tick.priceAt == 0) {
             TickMap.set(tickMap, tickToSave, constants.tickSpacing);
             EpochMap.set(tickToSave, pool.swapEpoch, tickMap, constants);
             tick.liquidityDelta += int128(pool.liquidity);
-            // if ((params.zeroForOne ? params.lower : params.upper) != tickToSave)
         }
+        // skip if we are at the nearest full tick
         if(pool.price != roundedPrice) {
+            // if empty just save the pool price
             if (tick.priceAt == 0) {
                 tick.priceAt = pool.price;
                 pool.liquidity = 0;
             }
+            // if not empty advance the previous fill
             else {
                 ILimitPoolStructs.InsertSingleLocals memory locals;
                 if (params.zeroForOne) {
                     // 0 -> 1 positions price moves up so nextFullTick is greater
                     locals.previousFullTick = tickToSave - constants.tickSpacing / 2;
                     locals.nextFullTick = tickToSave + constants.tickSpacing / 2;
-                    locals.priceAtNext = TickMath.getPriceAtTick(locals.nextFullTick, constants);
-                    locals.amountFilled = ConstantProduct.getDy(pool.liquidity, roundedPrice, pool.price, false);
-                    // factor in amount already claimed
-                    if (pool.amountInClaimed <= locals.amountFilled) {
-                        locals.amountFilled -= pool.amountInClaimed;
-                    } else {
-                        locals.amountFilled = 0;
-                    }
-                    locals.amountToCross = ConstantProduct.getDy(uint128(tick.liquidityDelta), tick.priceAt, locals.priceAtNext, true);
-                    // set pool liquidity back to previous full tick
-                    if (locals.amountFilled <= locals.amountToCross) {
-                        if (params.lower != locals.previousFullTick) {
-                            ticks[locals.previousFullTick].liquidityDelta += int128(pool.liquidity);
-                            if (!TickMap.set(tickMap, locals.previousFullTick, constants.tickSpacing))
-                                EpochMap.set(locals.previousFullTick, pool.swapEpoch, tickMap, constants);
-                           // zero out liquidity as this will not be used yet
-                           pool.liquidity = 0;
-                        }
-                        /// @dev - else no need to change pool or tick liquidity
-                        // move priceAt
-                        if (locals.amountFilled < locals.amountToCross)
-                            tick.priceAt = ConstantProduct.getNewPrice(tick.priceAt, uint128(tick.liquidityDelta), locals.amountFilled, false, false).toUint160();
-                    }
-                    // migrate liquidityDelta to next full tick
-                    if (locals.amountFilled >= locals.amountToCross) {
-                        pool.amountInClaimed = 0;
-                        ticks[locals.nextFullTick].liquidityDelta += int128(tick.liquidityDelta);
-                        // set tick in map
-                        TickMap.set(tickMap, locals.nextFullTick, constants.tickSpacing);
-                        // migrate epoch from the current half tick
-                        uint32 epochToSave = EpochMap.get(tickToSave, tickMap, constants);
-                        EpochMap.set(locals.nextFullTick, epochToSave, tickMap, constants);
-                    }
-                    // if there is leftover give to most recent fill
-                    if (locals.amountFilled > locals.amountToCross) {
-                        tick.liquidityDelta = int128(pool.liquidity);
-                        tick.priceAt = ConstantProduct.getNewPrice(roundedPrice, pool.liquidity, locals.amountFilled - locals.amountToCross, false, false).toUint160();
-                        EpochMap.set(tickToSave, pool.swapEpoch, tickMap, constants);
-                        pool.liquidity = 0;
-                    } else if (locals.amountFilled == locals.amountToCross) {
-                        // zero out tick
-                        tick = ILimitPoolStructs.Tick(0,0);
-                        // unset in tick map
-                        TickMap.unset(tickMap, tickToSave, constants.tickSpacing);
-                    }
+                    locals.pricePrevious = TickMath.getPriceAtTick(locals.previousFullTick, constants);
+                    locals.priceNext = TickMath.getPriceAtTick(locals.nextFullTick, constants);
+                    // calculate output filled thus far
+                    /// @auditor - mid ticks can only have a positive liquidity delta
+                    locals.amountOutExact = ConstantProduct.getDy(pool.liquidity, locals.pricePrevious, pool.price, false);
+                    // console.log('amount filled check 1');
+                    // console.log(pool.liquidity, pool.price, locals.priceNext, ConstantProduct.getDx(pool.liquidity, pool.price, locals.priceNext, false));
+                    locals.amountOutExact += ConstantProduct.getDy(uint128(tick.liquidityDelta), locals.pricePrevious, tick.priceAt, false);
+                    // console.log('amount filled check 2');
+                    // console.log(uint128(tick.liquidityDelta), tick.priceAt, locals.priceNext, ConstantProduct.getDx(uint128(tick.liquidityDelta), tick.priceAt, locals.priceNext, false));
+
+                    tick.liquidityDelta += int128(pool.liquidity);
+                    /// @auditor - the opposing amount calculated is off by 1/100 millionth
+                    /// (i.e. since we're using exactOut we lose precision on exactInput amount)
+                    /// the expected dy to the next tick is either exact or slightly more
+                    /// the expected dx to the next tick is 1/100 millionth less after the blend
+                    tick.priceAt = ConstantProduct.getNewPrice(uint256(locals.pricePrevious), uint128(tick.liquidityDelta), locals.amountOutExact, false, true).toUint160();
+                    // dx to the next tick is less than before the tick blend
+                    EpochMap.set(tickToSave, pool.swapEpoch, tickMap, constants);
+                    pool.liquidity = 0;
+                    // guard against next tick being crossed
                 } else {
-                    // 1 -> 0 price moves down so we need the next full tick greater than tickToSave
-                    roundedPrice = TickMath.getPriceAtTick(tickToSave + constants.tickSpacing / 2, constants);
                     // 0 -> 1 positions price moves up so nextFullTick is lesser
                     locals.previousFullTick = tickToSave + constants.tickSpacing / 2;
-                    locals.nextFullTick = tickToSave - constants.tickSpacing / 2;
-                    locals.priceAtNext = TickMath.getPriceAtTick(locals.nextFullTick, constants);
-                    locals.amountFilled = ConstantProduct.getDx(pool.liquidity, pool.price, roundedPrice, false);
-                    // factor in amount already claimed
-                    if (pool.amountInClaimed < locals.amountFilled) {
-                        locals.amountFilled -= pool.amountInClaimed;
-                    } else {
-                        locals.amountFilled = 0;
-                    }
-                    locals.amountToCross = ConstantProduct.getDx(uint128(tick.liquidityDelta), locals.priceAtNext, tick.priceAt, true);
-                    if (locals.amountFilled <= locals.amountToCross) {
-                        // if lower is previousFullTick modify liquidityDelta
-                        if (params.upper != locals.previousFullTick) {
-                           ticks[locals.previousFullTick].liquidityDelta += int128(pool.liquidity);
-                            if (!TickMap.set(tickMap, locals.previousFullTick, constants.tickSpacing))
-                                EpochMap.set(locals.previousFullTick, pool.swapEpoch, tickMap, constants);
-                           // zero out liquidity as this will not be used yet
-                           pool.liquidity = 0;
-                        }
-                        // move priceAt
-                        if (locals.amountFilled < locals.amountToCross)
-                            tick.priceAt = ConstantProduct.getNewPrice(tick.priceAt, uint128(tick.liquidityDelta), locals.amountFilled, true, false).toUint160();
-                    }
-                    // migrate liquidity to next full tick
-                    if (locals.amountFilled >= locals.amountToCross) {
-                        pool.amountInClaimed = 0;
-                        /// @dev - we may have to flip signage when merging logic w/ range
-                        ticks[locals.nextFullTick].liquidityDelta += int128(tick.liquidityDelta);
-                        // set tick in map
-                        TickMap.set(tickMap, locals.nextFullTick, constants.tickSpacing);
-                        // migrate epoch from the current half tick
-                        uint32 epochToSave = EpochMap.get(tickToSave, tickMap, constants);
-                        EpochMap.set(locals.nextFullTick, epochToSave, tickMap, constants);
-                    }
-                    // if there is leftover give to current fill
-                    if (locals.amountFilled > locals.amountToCross) {
-                        tick.liquidityDelta = int128(pool.liquidity);
-                        tick.priceAt = ConstantProduct.getNewPrice(roundedPrice, pool.liquidity, locals.amountFilled - locals.amountToCross, true, false).toUint160();
-                        EpochMap.set(tickToSave, pool.swapEpoch, tickMap, constants);
-                        // zero out pool liquidity 
-                        pool.liquidity = 0;
-                    } else if (locals.amountFilled == locals.amountToCross) {
-                        // zero out tick
-                        tick = ILimitPoolStructs.Tick(0,0);
-                        // unset in tick map
-                        TickMap.unset(tickMap, tickToSave, constants.tickSpacing);
-                        /// @dev - liquidity was already zeroed out above
-                    }
+                    locals.pricePrevious = TickMath.getPriceAtTick(locals.previousFullTick, constants);
+                    locals.amountOutExact = ConstantProduct.getDx(pool.liquidity, pool.price, locals.pricePrevious, false);
+                    locals.amountOutExact += ConstantProduct.getDx(uint128(tick.liquidityDelta), tick.priceAt, locals.pricePrevious, false);
+                    tick.liquidityDelta += int128(pool.liquidity);
+                    tick.priceAt = ConstantProduct.getNewPrice(uint256(locals.pricePrevious), uint128(tick.liquidityDelta), locals.amountOutExact, true, true).toUint160();
+                    EpochMap.set(tickToSave, pool.swapEpoch, tickMap, constants);
+                    pool.liquidity = 0;
                 }
-                // zero out pool.amountInClaimed
-                pool.amountInClaimed = 0;
             }
         } else if ((params.zeroForOne ? params.lower : params.upper) != tickToSave) {
             pool.liquidity = 0;

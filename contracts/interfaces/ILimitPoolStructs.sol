@@ -15,7 +15,6 @@ interface ILimitPoolStructs {
         uint160 price; /// @dev Starting price current
         uint128 liquidity; /// @dev Liquidity currently active
         uint128 liquidityGlobal;
-        uint128 amountInClaimed;
         uint32  swapEpoch;
         int24 tickAtPrice;
     }
@@ -29,6 +28,7 @@ interface ILimitPoolStructs {
 
     struct Tick {
         uint160 priceAt;
+        uint160 priceAtBurn;
         int128 liquidityDelta;
     }
 
@@ -204,8 +204,16 @@ interface ILimitPoolStructs {
     struct InsertSingleLocals {
         int24 previousFullTick;
         int24 nextFullTick;
-        uint256 priceAtNext;
-        uint256 amountFilled;
+        uint256 priceNext;
+        uint256 pricePrevious;
+        uint256 amountInExact;
+        uint256 amountOutExact;
         uint256 amountToCross;
+    }
+
+    struct GetDeltasLocals {
+        int24 previousFullTick;
+        uint256 pricePrevious;
+        uint256 priceNext;
     }
 }

@@ -3,6 +3,7 @@ pragma solidity ^0.8.13;
 
 import './constant-product/DyDxMath.sol';
 import './constant-product/TickMath.sol';
+import 'hardhat/console.sol';
 
 /// @notice Math library that facilitates ranged liquidity calculations.
 library ConstantProduct {
@@ -55,9 +56,20 @@ library ConstantProduct {
         unchecked {
             if (liquidity == 0) return 0;
             if (roundUp) {
-                dx = OverflowMath.divRoundingUp(OverflowMath.mulDivRoundingUp(liquidity << 96, priceUpper - priceLower, priceUpper), priceLower);
+                dx = OverflowMath.divRoundingUp(
+                        OverflowMath.mulDivRoundingUp(
+                            liquidity << 96, 
+                            priceUpper - priceLower,
+                            priceUpper
+                        ),
+                        priceLower
+                );
             } else {
-                dx = OverflowMath.mulDiv(liquidity << 96, priceUpper - priceLower, priceUpper) / priceLower;
+                dx = OverflowMath.mulDiv(
+                        liquidity << 96,
+                        priceUpper - priceLower,
+                        priceUpper
+                ) / priceLower;
             }
         }
     }
@@ -108,7 +120,7 @@ library ConstantProduct {
         uint256 amount,
         bool zeroForOne,
         bool exactIn
-    ) internal pure returns (
+    ) internal view returns (
         uint256 newPrice
     ) {
         if (exactIn) {
@@ -118,9 +130,10 @@ library ConstantProduct {
                                 liquidityPadded,
                                 price,
                                 liquidityPadded + price * amount
-                        );
+                    );
             } else {
-                newPrice = price + OverflowMath.mulDiv(amount, Q96, liquidity);
+                console.log('finding new price');
+                newPrice = price + (amount << 96) / liquidity;
             }
         } else {
             if (zeroForOne) {

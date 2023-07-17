@@ -28,6 +28,7 @@ interface ILimitPoolStructs {
 
     struct Tick {
         uint160 priceAt;
+        uint160 priceAtBurn;
         int128 liquidityDelta;
     }
 
@@ -205,7 +206,8 @@ interface ILimitPoolStructs {
         int24 nextFullTick;
         uint256 priceNext;
         uint256 pricePrevious;
-        uint256 amountFilled;
+        uint256 amountInExact;
+        uint256 amountOutExact;
         uint256 amountToCross;
     }
 

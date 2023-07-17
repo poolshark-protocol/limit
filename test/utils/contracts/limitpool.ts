@@ -225,6 +225,11 @@ export async function validateSwap(params: ValidateSwapParams) {
         return
     }
 
+    if (true) {
+        console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
+        console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
+    }
+
     let balanceInAfter
     let balanceOutAfter
     if (zeroForOne) {

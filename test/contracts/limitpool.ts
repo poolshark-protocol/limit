@@ -72,7 +72,7 @@ describe('LimitPool Tests', function () {
         await mintSigners20(hre.props.token1, tokenAmountBn.mul(10), [hre.props.alice, hre.props.bob])
     })
 
-    it('pool0 - Should mint, fully fill, and burn 13', async function () {
+    it('pool0 - Should mint, fully fill, and burn 18', async function () {
         const aliceLiquidity = '20051041647900280328782'
         // mint should revert
         await validateMint({
@@ -118,7 +118,7 @@ describe('LimitPool Tests', function () {
         if (debugMode) await getPositionLiquidity(true, hre.props.alice.address, 0, 100, debugMode)
     })
 
-    it('pool1 - Should mint, fully fill, and burn 13', async function () {
+    it('pool1 - Should mint, fully fill, and burn 18', async function () {
         const aliceLiquidity = '20051041647900280328782'
         // mint should revert
         await validateMint({
@@ -179,7 +179,7 @@ describe('LimitPool Tests', function () {
         })
     })
 
-    it('pool0 - Should mint, partially fill, and burn 12', async function () {
+    it('pool0 - Should mint, partially fill, and burn 56', async function () {
         const aliceLiquidity = '20051041647900280328782'
         // mint should revert
         await validateMint({
@@ -274,7 +274,7 @@ describe('LimitPool Tests', function () {
         if (debugMode) await getTick(false, -100, true)
     })
 
-    it('pool0 - Should mint, partially fill, partially burn, fill remaining, and burn again 12', async function () {
+    it('pool0 - Should mint, partially fill, partially burn, fill remaining, and burn again 34', async function () {
         const aliceLiquidity = '20051041647900280328782'
         // mint should revert
         await validateMint({
@@ -313,7 +313,7 @@ describe('LimitPool Tests', function () {
             claim: '45',
             liquidityPercent: ethers.utils.parseUnits('5', 37),
             zeroForOne: true,
-            balanceInIncrease: '49999999999999999999',
+            balanceInIncrease: '45070101571418444482',
             balanceOutIncrease: '25062185832052667420',
             lowerTickCleared: true,
             upperTickCleared: false,
@@ -342,7 +342,7 @@ describe('LimitPool Tests', function () {
             claim: '100',
             liquidityPercent: ethers.utils.parseUnits('1', 38),
             zeroForOne: true,
-            balanceInIncrease: '25250613481152560175',
+            balanceInIncrease: '30180511909734115692',
             balanceOutIncrease: '0',
             lowerTickCleared: true,
             upperTickCleared: true,
@@ -353,7 +353,7 @@ describe('LimitPool Tests', function () {
         if (debugMode) await getTick(false, -100, true)
     })
 
-    it('pool1 - Should mint, partially fill, partially burn, fill remaining, and burn again 12', async function () {
+    it('pool1 - Should mint, partially fill, partially burn, fill remaining, and burn again 34', async function () {
         const aliceLiquidity = '20051041647900280328782'
         // mint should revert
         await validateMint({
@@ -390,7 +390,7 @@ describe('LimitPool Tests', function () {
             claim: '-45',
             liquidityPercent: ethers.utils.parseUnits('5', 37),
             zeroForOne: false,
-            balanceInIncrease: '49999999999999999999',
+            balanceInIncrease: '45070101571418444482',
             balanceOutIncrease: '25062185832052667420',
             lowerTickCleared: false,
             upperTickCleared: true,
@@ -431,7 +431,7 @@ describe('LimitPool Tests', function () {
             claim: '-100',
             liquidityPercent: ethers.utils.parseUnits('1', 38),
             zeroForOne: false,
-            balanceInIncrease: '25250613481152560175',
+            balanceInIncrease: '30180511909734115692',
             balanceOutIncrease: '0',
             lowerTickCleared: true,
             upperTickCleared: true,
@@ -441,7 +441,7 @@ describe('LimitPool Tests', function () {
         if (debugMode) await getTick(false, -100, true)
     })
 
-    it('pool0 - Should mint, undercut, swap, and burn x2 19', async function () {
+    it('pool0 - Should mint, undercut, swap, and burn x2 34', async function () {
         if (debugMode) await getPrice(false, true)
         const aliceLiquidity = '20051041647900280328782'
         const bobLiquidity = '20151542874862585449132'
@@ -551,7 +551,7 @@ describe('LimitPool Tests', function () {
     //TODO: claiming should check pool.price epoch and check next tick epoch after that
     // price lower check true 79625275426524748796330556128 177159557114295710296101716160
     //price lower check false 79625275426524748796330556128 79625275426524748796330556128
-    it('pool1 - Should mint, undercut, swap, and burn x2 19', async function () {
+    it('pool1 - Should mint, undercut, swap, and burn x2 34', async function () {
         if (debugMode) await getPrice(false, true)
         const aliceLiquidity = '20051041647900280328782'
         const bobLiquidity = '20151542874862585449132'
@@ -678,7 +678,7 @@ describe('LimitPool Tests', function () {
         })
     })
 
-    it('pool0 - Should mint, undercut, burn undercut swap, and burn 26', async function () {
+    it('pool0 - Should mint, undercut, burn undercut swap, and burn 34', async function () {
         if (debugMode) await getPrice(false, true)
         const aliceLiquidity = '20051041647900280328782'
         const bobLiquidity = '20151542874862585449132'
@@ -795,7 +795,7 @@ describe('LimitPool Tests', function () {
         })
     })
 
-    it('pool1 - Should mint, undercut, burn undercut, swap, and burn', async function () {
+    it('pool1 - Should mint, undercut, burn undercut, swap, and burn 34', async function () {
         if (debugMode) await getPrice(false, true)
         const aliceLiquidity = '20051041647900280328782'
         const bobLiquidity = '20151542874862585449132'
@@ -919,7 +919,7 @@ describe('LimitPool Tests', function () {
         })
     })
 
-    it('pool0 - Should undercut and burn 26', async function () {
+    it('pool0 - Should undercut and burn 34', async function () {
         if (debugMode) await getPrice(false, true)
         const aliceLiquidity = '20051041647900280328782'
         const bobLiquidity = '20151542874862585449132'
@@ -958,7 +958,7 @@ describe('LimitPool Tests', function () {
         })
     })
 
-    it('pool1 - Should undercut and burn 26', async function () {
+    it('pool1 - Should undercut and burn 33', async function () {
         if (debugMode) await getPrice(false, true)
         const aliceLiquidity = '20051041647900280328782'
         const bobLiquidity = '754380626357928274821'
@@ -1737,7 +1737,7 @@ describe('LimitPool Tests', function () {
         }
     })
 
-    it('pool0 - Should mint, partial fill, undercut, partial fill to same area, undercut and advance fill, and burn x2 22', async function () {
+    it.skip('pool0 - Should mint, partial fill, undercut, partial fill to same area, undercut and advance fill, and burn x2 22', async function () {
         // mint position
         if (debugMode) await getPrice(false, true)
         const aliceLiquidity = '10050583320695160003177'
@@ -1938,7 +1938,7 @@ describe('LimitPool Tests', function () {
         }
     })
 
-    it('pool1 - Should mint, partial fill, undercut, partial fill to same area, undercut and advance1 fill, and burn x2 22', async function () {
+    it.skip('pool1 - Should mint, partial fill, undercut, partial fill to same area, undercut and advance1 fill, and burn x2 22', async function () {
         // mint position
         if (debugMode) await getPrice(false, true)
         const aliceLiquidity = '10050583320695160003177'

@@ -208,4 +208,9 @@ interface ILimitPoolStructs {
         uint256 amountFilled;
         uint256 amountToCross;
     }
+
+    struct GetDeltasLocals {
+        int24 previousFullTick;
+        uint256 pricePrevious;
+    }
 }

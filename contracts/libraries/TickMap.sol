@@ -283,6 +283,25 @@ library TickMap {
         return tick / tickSpacing * tickSpacing;
     }
 
+    function roundDown(
+        int24 tick,
+        ILimitPoolStructs.Immutables memory constants,
+        bool zeroForOne,
+        uint256 price
+    ) internal pure returns (
+        int24 roundedTick
+    ) {
+        roundedTick = tick / constants.tickSpacing * constants.tickSpacing;
+        if (price == ConstantProduct.getPriceAtTick(roundedTick, constants))
+            return roundedTick;
+        /// @dev - rounding down only needed if negative
+        if (zeroForOne && roundedTick < 0)
+            roundedTick -= constants.tickSpacing;
+        /// @dev - rounding up only needed if positive
+        else if (!zeroForOne && roundedTick > 0)
+            roundedTick += constants.tickSpacing;
+    }
+
     function roundUp(
         int24 tick,
         int24 tickSpacing,

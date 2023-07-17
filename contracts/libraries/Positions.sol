@@ -526,7 +526,7 @@ library Positions {
             return (params, cache, state);
         }
         // calculate position deltas
-        cache = Claims.getDeltas(ticks, cache, params, constants);
+        cache = Claims.getDeltas(cache, params, constants);
 
         return (params, cache, state);
     }

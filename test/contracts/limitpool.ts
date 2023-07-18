@@ -1737,7 +1737,7 @@ describe('LimitPool Tests', function () {
         }
     })
 
-    it.only('pool0 - Should mint, partial fill, undercut, partial fill to same area, undercut and advance fill, and burn x2 22', async function () {
+    it('pool0 - Should mint, partial fill, undercut, partial fill to same area, undercut and advance fill, and burn x2 22', async function () {
         // mint position
         if (debugMode) await getPrice(false, true)
         const aliceLiquidity = '50252916603475800015887'
@@ -1769,7 +1769,7 @@ describe('LimitPool Tests', function () {
             balanceOutIncrease: '125279333803276231912',
             revertMessage: '',
         })
-        return
+
         if (debugMode) await getTick(false, 21000)
         if (true) console.log('BEFORE MINT 2')
         if (debugMode) await getPrice(true, true)
@@ -1887,9 +1887,8 @@ describe('LimitPool Tests', function () {
             priceLimit: BigNumber.from('80034378775772204256025656562'),
             balanceInDecrease: '978876909147407918465',
             balanceOutIncrease: '968197964616739457759',
-            revertMessage: '',
+            revertMessage: ''
         })
-
         if (true) {
             console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
             console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
@@ -2020,9 +2019,9 @@ describe('LimitPool Tests', function () {
             priceLimit: BigNumber.from('78734700000000000000000000000'), // set to price at tick -125
             balanceInDecrease: '314955547887618095421',
             balanceOutIncrease: '312993887392031766268',
-            revertMessage: '',
+            revertMessage: ''
         })
-        return
+
         // should revert until we update other position
         await validateMint({
             signer: hre.props.alice,
@@ -2108,7 +2107,7 @@ describe('LimitPool Tests', function () {
             priceLimit: BigNumber.from('78339868342809377387252074392'),
             balanceInDecrease: '576598886440136827493',
             balanceOutIncrease: '568325432430399648662',
-            revertMessage: '',
+            revertMessage: ''
         })
 
         await validateBurn({
@@ -2142,8 +2141,6 @@ describe('LimitPool Tests', function () {
             upperTickCleared: true,
             revertMessage: '',
         })
-
-
 
         if (true) {
             console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
@@ -2191,6 +2188,6 @@ describe('LimitPool Tests', function () {
             console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
             console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
         }
-        return
+
     })
 })

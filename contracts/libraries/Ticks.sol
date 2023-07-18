@@ -172,8 +172,7 @@ library Ticks {
         uint256,
         uint256,
         uint160
-    )
-    {
+    ) {
         cache = ILimitPoolStructs.SwapCache({
             state: cache.state,
             constants: cache.constants,
@@ -216,7 +215,7 @@ library Ticks {
         uint160 priceLimit,
         ILimitPoolStructs.PoolState memory pool,
         ILimitPoolStructs.SwapCache memory cache
-    ) internal pure returns (
+    ) internal view returns (
         ILimitPoolStructs.PoolState memory,
         ILimitPoolStructs.SwapCache memory
     ) {
@@ -468,7 +467,7 @@ library Ticks {
         int24 tickToSave = pool.tickAtPrice;
         // rounds to nearest full tick
         uint160 roundedPrice = TickMath.getPriceAtTick(TickMap.round(tickToSave, constants.tickSpacing), constants);
-        if (tickToSave % (constants.tickSpacing / 2) != 0 ||
+        if (tickToSave % constants.tickSpacing != 0 ||
             pool.price != roundedPrice) {
             tickToSave = TickMap.round(pool.tickAtPrice, constants.tickSpacing);
             if (tickToSave > 0) tickToSave += constants.tickSpacing / 2;

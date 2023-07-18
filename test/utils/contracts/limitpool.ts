@@ -178,7 +178,7 @@ export async function validateSwap(params: ValidateSwapParams) {
         priceLimit: priceLimit,
         amount: amountIn,
         zeroForOne: zeroForOne,
-        exactIn: false
+        exactIn: true
     })
 
     const amountInQuoted = quote[0]
@@ -194,9 +194,9 @@ export async function validateSwap(params: ValidateSwapParams) {
             [{
               to: signer.address,
               zeroForOne: zeroForOne,
-              amount: amountIn,
+              amount: amountIn.div(splitInto),
               priceLimit: priceLimit,
-              exactIn: false,
+              exactIn: true,
               callbackData: ethers.utils.formatBytes32String('')
             }])
             if (splitInto == 1) await txn.wait()
@@ -216,7 +216,7 @@ export async function validateSwap(params: ValidateSwapParams) {
               zeroForOne: zeroForOne,
               amount: amountIn,
               priceLimit: priceLimit,
-              exactIn: false,
+              exactIn: true,
               callbackData: ethers.utils.formatBytes32String('')
             }])
         ).to.be.revertedWith(revertMessage)
@@ -241,8 +241,11 @@ export async function validateSwap(params: ValidateSwapParams) {
     expect(balanceInBefore.sub(balanceInAfter)).to.be.equal(balanceInDecrease)
     expect(balanceOutAfter.sub(balanceOutBefore)).to.be.equal(balanceOutIncrease)
     //TODO: validate quote amount
-    expect(balanceInBefore.sub(balanceInAfter)).to.be.equal(amountInQuoted)
-    expect(balanceOutAfter.sub(balanceOutBefore)).to.be.equal(amountOutQuoted)
+    if (splitInto == 1) {
+        expect(balanceInBefore.sub(balanceInAfter)).to.be.equal(amountInQuoted)
+        expect(balanceOutAfter.sub(balanceOutBefore)).to.be.equal(amountOutQuoted)
+    }
+
 
     const poolAfter: PoolState = zeroForOne
         ? await hre.props.limitPool.pool1()

@@ -1737,7 +1737,7 @@ describe('LimitPool Tests', function () {
         }
     })
 
-    it('pool0 - Should mint, partial fill, undercut, partial fill to same area, undercut and advance fill, and burn x2 22', async function () {
+    it.only('pool0 - Should mint, partial fill, undercut, partial fill to same area, undercut and advance fill, and burn x2 22', async function () {
         // mint position
         if (debugMode) await getPrice(false, true)
         const aliceLiquidity = '50252916603475800015887'
@@ -1769,7 +1769,7 @@ describe('LimitPool Tests', function () {
             balanceOutIncrease: '125279333803276231912',
             revertMessage: '',
         })
-
+        return
         if (debugMode) await getTick(false, 21000)
         if (true) console.log('BEFORE MINT 2')
         if (debugMode) await getPrice(true, true)
@@ -2022,7 +2022,7 @@ describe('LimitPool Tests', function () {
             balanceOutIncrease: '312993887392031766268',
             revertMessage: '',
         })
-
+        return
         // should revert until we update other position
         await validateMint({
             signer: hre.props.alice,

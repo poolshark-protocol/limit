@@ -169,9 +169,10 @@ library Ticks {
         ILimitPoolStructs.SwapCache memory cache,
         ILimitPoolStructs.PoolState memory pool
     ) internal view returns (
-            ILimitPoolStructs.PoolState memory,
-            ILimitPoolStructs.SwapCache memory
-        )
+        uint256,
+        uint256,
+        uint160
+    )
     {
         cache = ILimitPoolStructs.SwapCache({
             state: cache.state,
@@ -189,7 +190,9 @@ library Ticks {
             amountLeft: params.amount
         });
         while (cache.cross) {
-            cache.crossPrice = ConstantProduct.getPriceAtTick(cache.crossTick, cache.constants);
+                        cache.crossPrice = cache.crossTick % cache.constants.tickSpacing == 0 ? 
+                                    ConstantProduct.getPriceAtTick(cache.crossTick, cache.constants)
+                                  : ticks[cache.crossTick].priceAt;
             (pool, cache) = _quoteSingle(params.zeroForOne, params.priceLimit, pool, cache);
             if (cache.cross) {
                 (pool, cache) = _pass(
@@ -201,9 +204,11 @@ library Ticks {
                 );
             }
         }
-        //TODO: safe downcasting
-        pool.price = uint160(cache.price);
-        return (pool, cache);
+        return (
+            cache.input,
+            cache.output,
+            uint160(cache.price)
+        );
     }
 
     function _quoteSingle(

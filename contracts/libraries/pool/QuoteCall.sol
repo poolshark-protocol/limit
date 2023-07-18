@@ -21,8 +21,9 @@ library QuoteCall {
         ILimitPoolStructs.TickMap storage tickMap,
         mapping(int24 => ILimitPoolStructs.Tick) storage ticks
     ) external view returns (
-        ILimitPoolStructs.PoolState memory,
-        ILimitPoolStructs.SwapCache memory    
+        uint256,
+        uint256,
+        uint160
     ) {
         return Ticks.quote(
             ticks,

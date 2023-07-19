@@ -416,7 +416,7 @@ library Ticks {
         ILimitPoolStructs.TickMap storage tickMap,
         ILimitPoolStructs.MintCache memory cache,
         ILimitPoolStructs.MintParams memory params
-    ) external {
+    ) internal {
         /// @auditor - validation of ticks is in Positions.validate
         if (cache.liquidityMinted > (uint128(type(int128).max) - cache.pool.liquidityGlobal) )
             require (false, 'LiquidityOverflow()');

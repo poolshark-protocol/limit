@@ -11,7 +11,6 @@ library Collect {
         mapping(address => mapping(int24 => mapping(int24 => ILimitPoolStructs.Position)))
             storage positions,
         ILimitPoolStructs.BurnParams memory params
-        
     ) internal {
         params.zeroForOne ? params.lower = params.claim : params.upper = params.claim;
 

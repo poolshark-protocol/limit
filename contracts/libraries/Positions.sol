@@ -10,6 +10,7 @@ import './Claims.sol';
 import './EpochMap.sol';
 import './utils/SafeCast.sol';
 import './pool/SwapCall.sol';
+import 'hardhat/console.sol';
 
 /// @notice Position management library for ranged liquidity.
 library Positions {
@@ -202,11 +203,12 @@ library Positions {
         ILimitPoolStructs.UpdateParams memory params,
         ILimitPoolStructs.Immutables memory constants
     ) internal returns (uint128, ILimitPoolStructs.PoolState memory) {
+        console.log('msg sender', msg.sender, msg.sender);
         // validate burn percentage
         if (params.amount > 1e38) require (false, 'InvalidBurnPercentage()');
         // initialize cache
         ILimitPoolStructs.UpdateCache memory cache;
-        cache.position = positions[params.owner][params.lower][params.upper];
+        cache.position = positions[msg.sender][params.lower][params.upper];
         cache.priceLower = ConstantProduct.getPriceAtTick(params.lower, constants);
         cache.priceUpper = ConstantProduct.getPriceAtTick(params.upper, constants);
         cache.removeLower = true; cache.removeUpper = true;
@@ -275,7 +277,7 @@ library Positions {
         );
 
         cache.position.liquidity -= uint128(params.amount);
-        positions[params.owner][params.lower][params.upper] = cache.position;
+        positions[msg.sender][params.lower][params.upper] = cache.position;
 
         if (params.amount > 0) {
             emit BurnLimit(
@@ -377,7 +379,7 @@ library Positions {
                 // subtract remaining position liquidity out from global
                 pool.liquidityGlobal -= cache.position.liquidity;
             }
-            delete positions[params.owner][params.lower][params.upper];
+            delete positions[msg.sender][params.lower][params.upper];
         }
         // force collection to the user
         // store cached position in memory
@@ -386,8 +388,8 @@ library Positions {
             cache.position.claimPriceLast = 0;
         }
         params.zeroForOne
-            ? positions[params.owner][params.claim][params.upper] = cache.position
-            : positions[params.owner][params.lower][params.claim] = cache.position;
+            ? positions[msg.sender][params.claim][params.upper] = cache.position
+            : positions[msg.sender][params.lower][params.claim] = cache.position;
         
         emit BurnLimit(
             params.to,
@@ -430,15 +432,8 @@ library Positions {
             constants
         );
 
-        if (cache.earlyReturn) {
-            if (params.amount > 0)
-                cache.position.amountOut += uint128(
-                    params.zeroForOne
-                        ? ConstantProduct.getDx(params.amount, cache.priceLower, cache.priceUpper, false)
-                        : ConstantProduct.getDy(params.amount, cache.priceLower, cache.priceUpper, false)
-                );
-            return cache.position;
-        }
+        if (cache.earlyReturn)
+            return (cache.position);
 
         if (params.amount > 0) {
             cache.position.liquidity -= uint128(params.amount);

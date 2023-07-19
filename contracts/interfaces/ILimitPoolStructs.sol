@@ -185,7 +185,7 @@ interface ILimitPoolStructs {
         uint256 liquidityMinted;
     }
 
-    struct UpdatePositionCache {
+    struct UpdateCache {
         PoolState pool;
         uint256 amountInFilledMax;    // considers the range covered by each update
         uint256 amountOutUnfilledMax; // considers the range covered by each update

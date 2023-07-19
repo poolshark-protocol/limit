@@ -64,12 +64,13 @@ library BurnCall {
                 ticks,
                 tickMap,
                 cache.pool,
-                ILimitPoolStructs.RemoveParams(
+                ILimitPoolStructs.UpdateParams(
                     msg.sender,
                     params.to,
                     params.burnPercent,
                     params.lower,
                     params.upper,
+                    params.zeroForOne ? params.lower : params.upper,
                     params.zeroForOne
                 ),
                 cache.constants

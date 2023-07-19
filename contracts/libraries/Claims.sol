@@ -19,11 +19,11 @@ library Claims {
         ILimitPoolStructs.TickMap storage tickMap,
         ILimitPoolStructs.PoolState memory pool,
         ILimitPoolStructs.UpdateParams memory params,
-        ILimitPoolStructs.UpdatePositionCache memory cache,
+        ILimitPoolStructs.UpdateCache memory cache,
         ILimitPoolStructs.Immutables memory constants
     ) internal view returns (
         ILimitPoolStructs.UpdateParams memory,
-        ILimitPoolStructs.UpdatePositionCache memory
+        ILimitPoolStructs.UpdateCache memory
     ) {
         // validate position liquidity
         if (params.amount > cache.position.liquidity) require (false, 'NotEnoughPsitionLiquidity()');
@@ -138,11 +138,11 @@ library Claims {
     }
 
     function getDeltas(
-        ILimitPoolStructs.UpdatePositionCache memory cache,
+        ILimitPoolStructs.UpdateCache memory cache,
         ILimitPoolStructs.UpdateParams memory params,
         ILimitPoolStructs.Immutables memory constants
     ) internal pure returns (
-        ILimitPoolStructs.UpdatePositionCache memory
+        ILimitPoolStructs.UpdateCache memory
     ) {
         // if half tick priceAt > 0 add amountOut to amountOutClaimed
         // set claimPriceLast if zero

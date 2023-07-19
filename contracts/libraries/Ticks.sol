@@ -544,22 +544,21 @@ library Ticks {
     function remove(
         mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
         ILimitPoolStructs.TickMap storage tickMap,
-        ILimitPoolStructs.Immutables memory constants,
-        int24 lower,
-        int24 upper,
-        uint128 amount,
-        bool isPool0,
-        bool removeLower,
-        bool removeUpper
+        ILimitPoolStructs.UpdateCache memory cache,
+        ILimitPoolStructs.UpdateParams memory params,
+        ILimitPoolStructs.Immutables memory constants
     ) internal {
-        {
+        // set ticks based on claim and zeroForOne
+        int24 lower = params.zeroForOne ? params.claim : params.lower;
+        int24 upper = params.zeroForOne ? params.upper : params.claim;
+        {    
             ILimitPoolStructs.Tick memory tickLower = ticks[lower];
             
-            if (removeLower) {
-                if (isPool0) {
-                    tickLower.liquidityDelta -= int128(amount);
+            if (cache.removeLower) {
+                if (params.zeroForOne) {
+                    tickLower.liquidityDelta -= int128(params.amount);
                 } else {
-                    tickLower.liquidityDelta += int128(amount);
+                    tickLower.liquidityDelta += int128(params.amount);
                 }
                 ticks[lower] = tickLower;
             }
@@ -570,11 +569,11 @@ library Ticks {
         }
         {
             ILimitPoolStructs.Tick memory tickUpper = ticks[upper];
-            if (removeUpper) {
-                if (isPool0) {
-                    tickUpper.liquidityDelta += int128(amount);
+            if (cache.removeUpper) {
+                if (params.zeroForOne) {
+                    tickUpper.liquidityDelta += int128(params.amount);
                 } else {
-                    tickUpper.liquidityDelta -= int128(amount);
+                    tickUpper.liquidityDelta -= int128(params.amount);
                 }
                 ticks[upper] = tickUpper;
             }

@@ -199,20 +199,21 @@ library Positions {
         mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
         ILimitPoolStructs.TickMap storage tickMap,
         ILimitPoolStructs.PoolState memory pool,
-        ILimitPoolStructs.RemoveParams memory params,
+        ILimitPoolStructs.UpdateParams memory params,
         ILimitPoolStructs.Immutables memory constants
     ) internal returns (uint128, ILimitPoolStructs.PoolState memory) {
         // validate burn percentage
         if (params.amount > 1e38) require (false, 'InvalidBurnPercentage()');
         // initialize cache
-        ILimitPoolStructs.PositionCache memory cache = ILimitPoolStructs.PositionCache({
-            position: positions[params.owner][params.lower][params.upper],
-            priceLower: ConstantProduct.getPriceAtTick(params.lower, constants),
-            priceUpper: ConstantProduct.getPriceAtTick(params.upper, constants),
-            liquidityMinted: 0
-        });
+        ILimitPoolStructs.UpdateCache memory cache;
+        cache.position = positions[params.owner][params.lower][params.upper];
+        cache.priceLower = ConstantProduct.getPriceAtTick(params.lower, constants);
+        cache.priceUpper = ConstantProduct.getPriceAtTick(params.upper, constants);
+        cache.removeLower = true; cache.removeUpper = true;
+
         // convert percentage to liquidity amount
         params.amount = _convert(cache.position.liquidity, params.amount);
+
         // early return if no liquidity to remove
         if (params.amount == 0) return (0, pool);
         if (params.amount > cache.position.liquidity) {
@@ -253,13 +254,9 @@ library Positions {
         Ticks.remove(
             ticks,
             tickMap,
-            constants,
-            params.lower,
-            params.upper,
-            params.amount,
-            params.zeroForOne,
-            true,
-            true
+            cache,
+            params,
+            constants
         );
 
         // update liquidity global
@@ -310,7 +307,7 @@ library Positions {
         int24
     )
     {
-        ILimitPoolStructs.UpdatePositionCache memory cache;
+        ILimitPoolStructs.UpdateCache memory cache;
         (
             params,
             cache,
@@ -362,13 +359,9 @@ library Positions {
             Ticks.remove(
                 ticks,
                 tickMap,
-                constants,
-                params.zeroForOne ? params.claim : params.lower,
-                params.zeroForOne ? params.upper : params.claim,
-                params.amount,
-                params.zeroForOne,
-                cache.removeLower,
-                cache.removeUpper
+                cache,
+                params,
+                constants
             );
             // update position liquidity
             cache.position.liquidity -= uint128(params.amount);
@@ -422,7 +415,7 @@ library Positions {
     ) external view returns (
         ILimitPoolStructs.Position memory
     ) {
-        ILimitPoolStructs.UpdatePositionCache memory cache;
+        ILimitPoolStructs.UpdateCache memory cache;
         (
             params,
             cache,
@@ -482,10 +475,10 @@ library Positions {
         ILimitPoolStructs.Immutables memory constants
     ) internal view returns (
         ILimitPoolStructs.UpdateParams memory,
-        ILimitPoolStructs.UpdatePositionCache memory,
+        ILimitPoolStructs.UpdateCache memory,
         ILimitPoolStructs.GlobalState memory
     ) {
-        ILimitPoolStructs.UpdatePositionCache memory cache = ILimitPoolStructs.UpdatePositionCache({
+        ILimitPoolStructs.UpdateCache memory cache = ILimitPoolStructs.UpdateCache({
             position: positions[params.owner][params.lower][params.upper],
             pool: pool,
             priceLower: ConstantProduct.getPriceAtTick(params.lower, constants),

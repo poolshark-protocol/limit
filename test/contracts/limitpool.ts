@@ -2186,7 +2186,7 @@ describe('LimitPool Tests', function () {
 
     })
 
-    it('pool0 - SShould undercut twice, advance fill, and burn', async function () {
+    it('pool0 - Should undercut twice, advance fill, and burn', async function () {
         // mint position
         if (debugMode) await getPrice(false, true)
         const aliceLiquidity = '50252916603475800015887'

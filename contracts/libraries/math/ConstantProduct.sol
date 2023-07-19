@@ -3,7 +3,6 @@ pragma solidity ^0.8.13;
 
 import './constant-product/DyDxMath.sol';
 import './constant-product/TickMath.sol';
-import 'hardhat/console.sol';
 
 /// @notice Math library that facilitates ranged liquidity calculations.
 library ConstantProduct {
@@ -120,7 +119,7 @@ library ConstantProduct {
         uint256 amount,
         bool zeroForOne,
         bool exactIn
-    ) internal view returns (
+    ) internal pure returns (
         uint256 newPrice
     ) {
         if (exactIn) {
@@ -132,7 +131,6 @@ library ConstantProduct {
                                 liquidityPadded + price * amount
                     );
             } else {
-                console.log('finding new price');
                 newPrice = price + (amount << 96) / liquidity;
             }
         } else {

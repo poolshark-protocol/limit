@@ -10,7 +10,6 @@ import './Claims.sol';
 import './EpochMap.sol';
 import './utils/SafeCast.sol';
 import './pool/SwapCall.sol';
-import 'hardhat/console.sol';
 
 /// @notice Position management library for ranged liquidity.
 library Positions {
@@ -203,7 +202,6 @@ library Positions {
         ILimitPoolStructs.UpdateParams memory params,
         ILimitPoolStructs.Immutables memory constants
     ) internal returns (uint128, ILimitPoolStructs.PoolState memory) {
-        console.log('msg sender', msg.sender, msg.sender);
         // validate burn percentage
         if (params.amount > 1e38) require (false, 'InvalidBurnPercentage()');
         // initialize cache

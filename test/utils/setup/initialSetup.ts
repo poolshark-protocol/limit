@@ -145,10 +145,6 @@ export class InitialSetup {
             MintCall__factory,
             'mintCall',
             [],
-            {
-                'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address,
-                'contracts/libraries/pool/SwapCall.sol:SwapCall': hre.props.swapCall.address,
-            }
         )
 
         await this.deployAssist.deployContractWithRetry(

@@ -10,16 +10,13 @@ library Collect {
         ILimitPoolStructs.BurnCache memory cache,
         mapping(address => mapping(int24 => mapping(int24 => ILimitPoolStructs.Position)))
             storage positions,
-        ILimitPoolStructs.CollectParams memory params
-        
+        ILimitPoolStructs.BurnParams memory params
     ) internal {
         params.zeroForOne ? params.lower = params.claim : params.upper = params.claim;
 
         // store amounts for transferOut
         uint128 amountIn  = positions[msg.sender][params.lower][params.upper].amountIn;
         uint128 amountOut = positions[msg.sender][params.lower][params.upper].amountOut;
-
-        // console.log('position amounts', amountIn, amountOut);
 
         /// zero out balances and transfer out
         if (amountIn > 0) {

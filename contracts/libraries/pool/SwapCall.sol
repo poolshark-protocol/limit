@@ -45,7 +45,6 @@ library SwapCall {
         );
         save(cache.pool, poolState);
         // transfer output amount
-        console.log('transferring amounts', cache.input, cache.output);
         SafeTransfers.transferOut(
             params.to, 
             params.zeroForOne ? cache.constants.token1

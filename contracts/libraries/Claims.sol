@@ -19,11 +19,11 @@ library Claims {
         ILimitPoolStructs.TickMap storage tickMap,
         ILimitPoolStructs.PoolState memory pool,
         ILimitPoolStructs.UpdateParams memory params,
-        ILimitPoolStructs.UpdatePositionCache memory cache,
+        ILimitPoolStructs.UpdateCache memory cache,
         ILimitPoolStructs.Immutables memory constants
     ) internal view returns (
         ILimitPoolStructs.UpdateParams memory,
-        ILimitPoolStructs.UpdatePositionCache memory
+        ILimitPoolStructs.UpdateCache memory
     ) {
         // validate position liquidity
         if (params.amount > cache.position.liquidity) require (false, 'NotEnoughPsitionLiquidity()');
@@ -138,11 +138,11 @@ library Claims {
     }
 
     function getDeltas(
-        ILimitPoolStructs.UpdatePositionCache memory cache,
+        ILimitPoolStructs.UpdateCache memory cache,
         ILimitPoolStructs.UpdateParams memory params,
         ILimitPoolStructs.Immutables memory constants
-    ) internal view returns (
-        ILimitPoolStructs.UpdatePositionCache memory
+    ) internal pure returns (
+        ILimitPoolStructs.UpdateCache memory
     ) {
         // if half tick priceAt > 0 add amountOut to amountOutClaimed
         // set claimPriceLast if zero
@@ -153,7 +153,6 @@ library Claims {
         ILimitPoolStructs.GetDeltasLocals memory locals;
         locals.previousFullTick = TickMap.roundDown(params.claim, constants, params.zeroForOne, cache.priceClaim);
         locals.pricePrevious = ConstantProduct.getPriceAtTick(locals.previousFullTick, constants);
-        console.log('previous full tick', uint24(locals.previousFullTick), uint24(params.lower));
         if (params.zeroForOne ? locals.previousFullTick > params.lower
                               : locals.previousFullTick < params.upper) {
             
@@ -161,7 +160,6 @@ library Claims {
             cache.position.amountIn += uint128(params.zeroForOne ? ConstantProduct.getDy(cache.position.liquidity, cache.priceLower, locals.pricePrevious, false)
                                                                  : ConstantProduct.getDx(cache.position.liquidity, locals.pricePrevious, cache.priceUpper, false));
             cache.position.claimPriceLast = locals.pricePrevious.toUint160();
-            console.log('position amount 1', cache.position.amountIn);
         }
         if (params.amount > 0) {
            // if tick hasn't been set back calculate amountIn
@@ -170,7 +168,6 @@ library Claims {
                 // allow partial tick claim if removing liquidity
                 cache.position.amountIn += uint128(params.zeroForOne ? ConstantProduct.getDy(params.amount, locals.pricePrevious, cache.priceClaim, false)
                                                                      : ConstantProduct.getDx(params.amount, cache.priceClaim, locals.pricePrevious, false));  
-                console.log('position amount 2', cache.position.amountIn, locals.pricePrevious, cache.priceClaim);
             } 
         }
         // use priceClaim if tick hasn't been set back
@@ -178,8 +175,6 @@ library Claims {
         if (params.claim != (params.zeroForOne ? params.upper : params.lower)) {
             cache.position.amountOut += uint128(params.zeroForOne ? ConstantProduct.getDx(params.amount, cache.priceClaim, cache.priceUpper, false)
                                                                   : ConstantProduct.getDy(params.amount, cache.priceLower, cache.priceClaim, false));
-
-            console.log('position amount 3', cache.position.amountOut);
         }
         return cache;
     }

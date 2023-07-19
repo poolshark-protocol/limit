@@ -70,16 +70,7 @@ library MintCall {
                 cache,
                 ticks,
                 tickMap,
-                cache.pool,
-                ILimitPoolStructs.AddParams(
-                    params.to,
-                    uint128(cache.liquidityMinted),
-                    params.amount,
-                    params.lower,
-                    params.upper,
-                    params.zeroForOne
-                ),
-                cache.constants
+                params
             );
             if (params.zeroForOne) {
                 uint160 priceLower = TickMath.getPriceAtTick(params.lower, cache.constants);

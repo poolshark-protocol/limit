@@ -154,24 +154,22 @@ library Positions {
         ILimitPoolStructs.MintCache memory cache,
         mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
         ILimitPoolStructs.TickMap storage tickMap,
-        ILimitPoolStructs.PoolState memory pool,
-        ILimitPoolStructs.AddParams memory params,
-        ILimitPoolStructs.Immutables memory constants
+        ILimitPoolStructs.MintParams memory params
     ) internal returns (
         ILimitPoolStructs.PoolState memory,
         ILimitPoolStructs.Position memory
     ) {
-        if (params.amount == 0) return (pool, cache.position);
+        if (cache.liquidityMinted == 0) return (cache.pool, cache.position);
 
         if (cache.position.liquidity == 0) {
-            cache.position.epochLast = pool.swapEpoch;
+            cache.position.epochLast = cache.pool.swapEpoch;
         } else {
             // safety check in case we somehow get here
             if (
                 params.zeroForOne
-                    ? EpochMap.get(params.lower, tickMap, constants)
+                    ? EpochMap.get(params.lower, tickMap, cache.constants)
                             > cache.position.epochLast
-                    : EpochMap.get(params.upper, tickMap, constants)
+                    : EpochMap.get(params.upper, tickMap, cache.constants)
                             > cache.position.epochLast
             ) {
                 require (false, string.concat('UpdatePositionFirstAt(', String.from(params.lower), ', ', String.from(params.upper), ')'));
@@ -183,21 +181,16 @@ library Positions {
         Ticks.insert(
             ticks,
             tickMap,
-            pool,
-            constants,
             cache,
-            params.lower,
-            params.upper,
-            uint128(params.amount),
-            params.zeroForOne
+            params
         );
 
-        // // update liquidity global
-        pool.liquidityGlobal += params.amount;
+        // update liquidity global
+        cache.pool.liquidityGlobal += uint128(cache.liquidityMinted);
 
-        cache.position.liquidity += uint128(params.amount);
+        cache.position.liquidity += uint128(cache.liquidityMinted);
 
-        return (pool, cache.position);
+        return (cache.pool, cache.position);
     }
 
     function remove(
@@ -206,20 +199,21 @@ library Positions {
         mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
         ILimitPoolStructs.TickMap storage tickMap,
         ILimitPoolStructs.PoolState memory pool,
-        ILimitPoolStructs.RemoveParams memory params,
+        ILimitPoolStructs.UpdateParams memory params,
         ILimitPoolStructs.Immutables memory constants
     ) internal returns (uint128, ILimitPoolStructs.PoolState memory) {
         // validate burn percentage
         if (params.amount > 1e38) require (false, 'InvalidBurnPercentage()');
         // initialize cache
-        ILimitPoolStructs.PositionCache memory cache = ILimitPoolStructs.PositionCache({
-            position: positions[params.owner][params.lower][params.upper],
-            priceLower: ConstantProduct.getPriceAtTick(params.lower, constants),
-            priceUpper: ConstantProduct.getPriceAtTick(params.upper, constants),
-            liquidityMinted: 0
-        });
+        ILimitPoolStructs.UpdateCache memory cache;
+        cache.position = positions[msg.sender][params.lower][params.upper];
+        cache.priceLower = ConstantProduct.getPriceAtTick(params.lower, constants);
+        cache.priceUpper = ConstantProduct.getPriceAtTick(params.upper, constants);
+        cache.removeLower = true; cache.removeUpper = true;
+
         // convert percentage to liquidity amount
         params.amount = _convert(cache.position.liquidity, params.amount);
+
         // early return if no liquidity to remove
         if (params.amount == 0) return (0, pool);
         if (params.amount > cache.position.liquidity) {
@@ -260,13 +254,9 @@ library Positions {
         Ticks.remove(
             ticks,
             tickMap,
-            constants,
-            params.lower,
-            params.upper,
-            params.amount,
-            params.zeroForOne,
-            true,
-            true
+            cache,
+            params,
+            constants
         );
 
         // update liquidity global
@@ -285,7 +275,7 @@ library Positions {
         );
 
         cache.position.liquidity -= uint128(params.amount);
-        positions[params.owner][params.lower][params.upper] = cache.position;
+        positions[msg.sender][params.lower][params.upper] = cache.position;
 
         if (params.amount > 0) {
             emit BurnLimit(
@@ -317,7 +307,7 @@ library Positions {
         int24
     )
     {
-        ILimitPoolStructs.UpdatePositionCache memory cache;
+        ILimitPoolStructs.UpdateCache memory cache;
         (
             params,
             cache,
@@ -369,13 +359,9 @@ library Positions {
             Ticks.remove(
                 ticks,
                 tickMap,
-                constants,
-                params.zeroForOne ? params.claim : params.lower,
-                params.zeroForOne ? params.upper : params.claim,
-                params.amount,
-                params.zeroForOne,
-                cache.removeLower,
-                cache.removeUpper
+                cache,
+                params,
+                constants
             );
             // update position liquidity
             cache.position.liquidity -= uint128(params.amount);
@@ -391,7 +377,7 @@ library Positions {
                 // subtract remaining position liquidity out from global
                 pool.liquidityGlobal -= cache.position.liquidity;
             }
-            delete positions[params.owner][params.lower][params.upper];
+            delete positions[msg.sender][params.lower][params.upper];
         }
         // force collection to the user
         // store cached position in memory
@@ -400,8 +386,8 @@ library Positions {
             cache.position.claimPriceLast = 0;
         }
         params.zeroForOne
-            ? positions[params.owner][params.claim][params.upper] = cache.position
-            : positions[params.owner][params.lower][params.claim] = cache.position;
+            ? positions[msg.sender][params.claim][params.upper] = cache.position
+            : positions[msg.sender][params.lower][params.claim] = cache.position;
         
         emit BurnLimit(
             params.to,
@@ -429,7 +415,7 @@ library Positions {
     ) external view returns (
         ILimitPoolStructs.Position memory
     ) {
-        ILimitPoolStructs.UpdatePositionCache memory cache;
+        ILimitPoolStructs.UpdateCache memory cache;
         (
             params,
             cache,
@@ -444,15 +430,8 @@ library Positions {
             constants
         );
 
-        if (cache.earlyReturn) {
-            if (params.amount > 0)
-                cache.position.amountOut += uint128(
-                    params.zeroForOne
-                        ? ConstantProduct.getDx(params.amount, cache.priceLower, cache.priceUpper, false)
-                        : ConstantProduct.getDy(params.amount, cache.priceLower, cache.priceUpper, false)
-                );
-            return cache.position;
-        }
+        if (cache.earlyReturn)
+            return (cache.position);
 
         if (params.amount > 0) {
             cache.position.liquidity -= uint128(params.amount);
@@ -489,22 +468,16 @@ library Positions {
         ILimitPoolStructs.Immutables memory constants
     ) internal view returns (
         ILimitPoolStructs.UpdateParams memory,
-        ILimitPoolStructs.UpdatePositionCache memory,
+        ILimitPoolStructs.UpdateCache memory,
         ILimitPoolStructs.GlobalState memory
     ) {
-        ILimitPoolStructs.UpdatePositionCache memory cache = ILimitPoolStructs.UpdatePositionCache({
+        ILimitPoolStructs.UpdateCache memory cache = ILimitPoolStructs.UpdateCache({
             position: positions[params.owner][params.lower][params.upper],
             pool: pool,
             priceLower: ConstantProduct.getPriceAtTick(params.lower, constants),
             priceClaim: ConstantProduct.getPriceAtTick(params.claim, constants),
             priceUpper: ConstantProduct.getPriceAtTick(params.upper, constants),
-            priceSpread: ConstantProduct.getPriceAtTick(params.zeroForOne ? params.claim - constants.tickSpacing 
-                                                                          : params.claim + constants.tickSpacing,
-                                                        constants),
-            amountInFilledMax: 0,
-            amountOutUnfilledMax: 0,
             claimTick: ticks[params.claim],
-            finalTick: ticks[params.zeroForOne ? params.lower : params.upper],
             earlyReturn: false,
             removeLower: false,
             removeUpper: false

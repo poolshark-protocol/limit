@@ -4,7 +4,6 @@ pragma solidity ^0.8.13;
 import './math/ConstantProduct.sol';
 import '../interfaces/ILimitPool.sol';
 import '../interfaces/ILimitPoolStructs.sol';
-import 'hardhat/console.sol';
 
 library TickMap {
 
@@ -64,7 +63,6 @@ library TickMap {
         int24 previousTick
     ) {
         unchecked {
-            console.log('tick previous check', uint24((-5) % 5));
             // rounds up to ensure relative position
             if ((tick % (tickSpacing / 2) != 0 || roundedUp)
                  && tick < round(TickMath.MAX_TICK, tickSpacing)) tick += tickSpacing / 2;

@@ -144,7 +144,7 @@ contract LimitPool is
     function quote(
         QuoteParams memory params
     ) external view override returns (
-        int256 inAmount,
+        uint256 inAmount,
         uint256 outAmount,
         uint256 priceAfter
     ) {
@@ -152,25 +152,12 @@ contract LimitPool is
         cache.pool = params.zeroForOne ? pool1 : pool0;
         cache.state = globalState;
         cache.constants = _immutables();
-        (cache.pool, cache) = QuoteCall.perform(
+        return QuoteCall.perform(
             params,
             cache,
             tickMap,
             params.zeroForOne ? ticks1 : ticks0
         );
-        if (params.zeroForOne) {
-            return (
-                int128(params.amount) - int256(cache.input),
-                cache.output,
-                cache.price 
-            );
-        } else {
-            return (
-                int128(params.amount) - int256(cache.input),
-                cache.output,
-                cache.price 
-            );
-        }
     }
 
     function snapshot(

@@ -22,7 +22,7 @@ interface ILimitPool is ILimitPoolStructs {
     function quote(
         QuoteParams memory params
     ) external view returns (
-        int256 inAmount,
+        uint256 inAmount,
         uint256 outAmount,
         uint256 priceAfter
     );

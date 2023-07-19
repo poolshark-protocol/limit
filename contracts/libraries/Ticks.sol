@@ -169,10 +169,10 @@ library Ticks {
         ILimitPoolStructs.SwapCache memory cache,
         ILimitPoolStructs.PoolState memory pool
     ) internal view returns (
-            ILimitPoolStructs.PoolState memory,
-            ILimitPoolStructs.SwapCache memory
-        )
-    {
+        uint256,
+        uint256,
+        uint160
+    ) {
         cache = ILimitPoolStructs.SwapCache({
             state: cache.state,
             constants: cache.constants,
@@ -189,7 +189,9 @@ library Ticks {
             amountLeft: params.amount
         });
         while (cache.cross) {
-            cache.crossPrice = ConstantProduct.getPriceAtTick(cache.crossTick, cache.constants);
+                        cache.crossPrice = (cache.crossTick % cache.constants.tickSpacing == 0) ? 
+                                    ConstantProduct.getPriceAtTick(cache.crossTick, cache.constants)
+                                  : ticks[cache.crossTick].priceAt;
             (pool, cache) = _quoteSingle(params.zeroForOne, params.priceLimit, pool, cache);
             if (cache.cross) {
                 (pool, cache) = _pass(
@@ -201,9 +203,11 @@ library Ticks {
                 );
             }
         }
-        //TODO: safe downcasting
-        pool.price = uint160(cache.price);
-        return (pool, cache);
+        return (
+            cache.input,
+            cache.output,
+            uint160(cache.price)
+        );
     }
 
     function _quoteSingle(
@@ -343,7 +347,7 @@ library Ticks {
         }
         /// @dev - this should always be positive if liquidity is 0
         pool.liquidity += uint128(ticks[pool.tickAtPrice].liquidityDelta);
-        ticks[pool.tickAtPrice] = ILimitPoolStructs.Tick(0,0,0);
+        ticks[pool.tickAtPrice] = ILimitPoolStructs.Tick(0,0);
 
         /// @dev can we delete the tick here?
         if (pool.tickAtPrice % cache.constants.tickSpacing == 0){
@@ -376,7 +380,7 @@ library Ticks {
         pool.tickAtPrice = cache.crossTick;
 
         // zero out liquidityDelta and priceAt
-        ticks[cache.crossTick] = ILimitPoolStructs.Tick(0,0,0);
+        ticks[cache.crossTick] = ILimitPoolStructs.Tick(0,0);
         TickMap.unset(tickMap, cache.crossTick, cache.constants.tickSpacing);
         if (zeroForOne) {
             cache.crossTick = TickMap.previous(tickMap, cache.crossTick, cache.constants.tickSpacing, false);
@@ -410,41 +414,38 @@ library Ticks {
     function insert(
         mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
         ILimitPoolStructs.TickMap storage tickMap,
-        ILimitPoolStructs.PoolState memory pool,
-        ILimitPoolStructs.Immutables memory constants,
         ILimitPoolStructs.MintCache memory cache,
-        int24 lower,
-        int24 upper,
-        uint128 amount,
-        bool isPool0
-    ) external {
+        ILimitPoolStructs.MintParams memory params
+    ) internal {
         /// @auditor - validation of ticks is in Positions.validate
-        if (amount > (uint128(type(int128).max) - pool.liquidityGlobal) )
+        if (cache.liquidityMinted > (uint128(type(int128).max) - cache.pool.liquidityGlobal) )
             require (false, 'LiquidityOverflow()');
 
+        int256 liquidityMinted = int256(cache.liquidityMinted);
+
         // check if adding liquidity necessary
-        if (isPool0 ? cache.priceLower > pool.price
-                    : true) {
+        if (params.zeroForOne ? cache.priceLower > cache.pool.price
+                              : true) {
             // sets bit in map
-            TickMap.set(tickMap, lower, constants.tickSpacing);
-            ILimitPoolStructs.Tick memory tickLower = ticks[lower];
-            if (isPool0) {
-                tickLower.liquidityDelta += int128(amount);
+            TickMap.set(tickMap, params.lower, cache.constants.tickSpacing);
+            ILimitPoolStructs.Tick memory tickLower = ticks[params.lower];
+            if (params.zeroForOne) {
+                tickLower.liquidityDelta += int128(liquidityMinted);
             } else {
-                tickLower.liquidityDelta -= int128(amount);
+                tickLower.liquidityDelta -= int128(liquidityMinted);
             }
-            ticks[lower] = tickLower;
+            ticks[params.lower] = tickLower;
         }
 
-        if (isPool0 ? true : cache.priceUpper < pool.price) {
-            TickMap.set(tickMap, upper, constants.tickSpacing);
-            ILimitPoolStructs.Tick memory tickUpper = ticks[upper];
-            if (isPool0) {
-                tickUpper.liquidityDelta -= int128(amount);
+        if (params.zeroForOne ? true : cache.priceUpper < cache.pool.price) {
+            TickMap.set(tickMap, params.upper, cache.constants.tickSpacing);
+            ILimitPoolStructs.Tick memory tickUpper = ticks[params.upper];
+            if (params.zeroForOne) {
+                tickUpper.liquidityDelta -= int128(liquidityMinted);
             } else {
-                tickUpper.liquidityDelta += int128(amount);
+                tickUpper.liquidityDelta += int128(liquidityMinted);
             }
-            ticks[upper] = tickUpper;
+            ticks[params.upper] = tickUpper;
         }
     }
 
@@ -461,9 +462,10 @@ library Ticks {
         /// (i.e. pool0 starts crossing into the pool1 active region)
         /// (this is a failure case)
         int24 tickToSave = pool.tickAtPrice;
-        // rounds to nearest full tick
+        // get price at nearest full tick
         uint160 roundedPrice = TickMath.getPriceAtTick(TickMap.round(tickToSave, constants.tickSpacing), constants);
-        if (tickToSave % (constants.tickSpacing / 2) != 0 ||
+        /// @dev - either these gas costs get passed to the LP (i.e. here) or we have to load an extra tick each time
+        if (tickToSave % constants.tickSpacing != 0 ||
             pool.price != roundedPrice) {
             tickToSave = TickMap.round(pool.tickAtPrice, constants.tickSpacing);
             if (tickToSave > 0) tickToSave += constants.tickSpacing / 2;
@@ -500,23 +502,16 @@ library Ticks {
                 if (params.zeroForOne) {
                     // 0 -> 1 positions price moves up so nextFullTick is greater
                     locals.previousFullTick = tickToSave - constants.tickSpacing / 2;
-                    locals.nextFullTick = tickToSave + constants.tickSpacing / 2;
                     locals.pricePrevious = TickMath.getPriceAtTick(locals.previousFullTick, constants);
-                    locals.priceNext = TickMath.getPriceAtTick(locals.nextFullTick, constants);
-                    // calculate output filled thus far
-                    /// @auditor - mid ticks can only have a positive liquidity delta
+                    // calculate amountOut filled across both partial fills
                     locals.amountOutExact = ConstantProduct.getDy(pool.liquidity, locals.pricePrevious, pool.price, false);
-                    // console.log('amount filled check 1');
-                    // console.log(pool.liquidity, pool.price, locals.priceNext, ConstantProduct.getDx(pool.liquidity, pool.price, locals.priceNext, false));
                     locals.amountOutExact += ConstantProduct.getDy(uint128(tick.liquidityDelta), locals.pricePrevious, tick.priceAt, false);
-                    // console.log('amount filled check 2');
-                    // console.log(uint128(tick.liquidityDelta), tick.priceAt, locals.priceNext, ConstantProduct.getDx(uint128(tick.liquidityDelta), tick.priceAt, locals.priceNext, false));
-
                     tick.liquidityDelta += int128(pool.liquidity);
                     /// @auditor - the opposing amount calculated is off by 1/100 millionth
-                    /// (i.e. since we're using exactOut we lose precision on exactInput amount)
-                    /// the expected dy to the next tick is either exact or slightly more
-                    /// the expected dx to the next tick is 1/100 millionth less after the blend
+                    ///            (i.e. since we're using exactOut we lose precision on exactInput amount)
+                    ///            the expected dy to the next tick is either exact or slightly more
+                    ///            the expected dx to the next tick is 1/100 millionth less after the blend
+                    // advance price past closest full tick using amountOut filled
                     tick.priceAt = ConstantProduct.getNewPrice(uint256(locals.pricePrevious), uint128(tick.liquidityDelta), locals.amountOutExact, false, true).toUint160();
                     // dx to the next tick is less than before the tick blend
                     EpochMap.set(tickToSave, pool.swapEpoch, tickMap, constants);
@@ -526,15 +521,20 @@ library Ticks {
                     // 0 -> 1 positions price moves up so nextFullTick is lesser
                     locals.previousFullTick = tickToSave + constants.tickSpacing / 2;
                     locals.pricePrevious = TickMath.getPriceAtTick(locals.previousFullTick, constants);
+                    // calculate amountOut filled across both partial fills
                     locals.amountOutExact = ConstantProduct.getDx(pool.liquidity, pool.price, locals.pricePrevious, false);
                     locals.amountOutExact += ConstantProduct.getDx(uint128(tick.liquidityDelta), tick.priceAt, locals.pricePrevious, false);
+                    // add current pool liquidity to partial tick
                     tick.liquidityDelta += int128(pool.liquidity);
+                    // advance price past closest full tick using amountOut filled
                     tick.priceAt = ConstantProduct.getNewPrice(uint256(locals.pricePrevious), uint128(tick.liquidityDelta), locals.amountOutExact, true, true).toUint160();
+                    // mark epoch for second partial fill positions
                     EpochMap.set(tickToSave, pool.swapEpoch, tickMap, constants);
                     pool.liquidity = 0;
                 }
             }
         } else if ((params.zeroForOne ? params.lower : params.upper) != tickToSave) {
+            // if we are exactly at the full tick liquidity delta modified above 
             pool.liquidity = 0;
         }
         ticks[tickToSave] = tick;
@@ -544,22 +544,21 @@ library Ticks {
     function remove(
         mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
         ILimitPoolStructs.TickMap storage tickMap,
-        ILimitPoolStructs.Immutables memory constants,
-        int24 lower,
-        int24 upper,
-        uint128 amount,
-        bool isPool0,
-        bool removeLower,
-        bool removeUpper
+        ILimitPoolStructs.UpdateCache memory cache,
+        ILimitPoolStructs.UpdateParams memory params,
+        ILimitPoolStructs.Immutables memory constants
     ) internal {
-        {
+        // set ticks based on claim and zeroForOne
+        int24 lower = params.zeroForOne ? params.claim : params.lower;
+        int24 upper = params.zeroForOne ? params.upper : params.claim;
+        {    
             ILimitPoolStructs.Tick memory tickLower = ticks[lower];
             
-            if (removeLower) {
-                if (isPool0) {
-                    tickLower.liquidityDelta -= int128(amount);
+            if (cache.removeLower) {
+                if (params.zeroForOne) {
+                    tickLower.liquidityDelta -= int128(params.amount);
                 } else {
-                    tickLower.liquidityDelta += int128(amount);
+                    tickLower.liquidityDelta += int128(params.amount);
                 }
                 ticks[lower] = tickLower;
             }
@@ -570,11 +569,11 @@ library Ticks {
         }
         {
             ILimitPoolStructs.Tick memory tickUpper = ticks[upper];
-            if (removeUpper) {
-                if (isPool0) {
-                    tickUpper.liquidityDelta += int128(amount);
+            if (cache.removeUpper) {
+                if (params.zeroForOne) {
+                    tickUpper.liquidityDelta += int128(params.amount);
                 } else {
-                    tickUpper.liquidityDelta -= int128(amount);
+                    tickUpper.liquidityDelta -= int128(params.amount);
                 }
                 ticks[upper] = tickUpper;
             }

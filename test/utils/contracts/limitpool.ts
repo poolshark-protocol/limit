@@ -184,8 +184,6 @@ export async function validateSwap(params: ValidateSwapParams) {
     const amountInQuoted = quote[0]
     const amountOutQuoted = quote[1]
 
-    // await network.provider.send('evm_setAutomine', [false]);
-
     if (revertMessage == '') {
         if (splitInto > 1) await ethers.provider.send("evm_setAutomine", [false]);
         for (let i = 0; i < splitInto; i++) {
@@ -196,7 +194,7 @@ export async function validateSwap(params: ValidateSwapParams) {
             [{
               to: signer.address,
               zeroForOne: zeroForOne,
-              amount: amountIn,
+              amount: amountIn.div(splitInto),
               priceLimit: priceLimit,
               exactIn: true,
               callbackData: ethers.utils.formatBytes32String('')
@@ -225,11 +223,6 @@ export async function validateSwap(params: ValidateSwapParams) {
         return
     }
 
-    if (true) {
-        console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
-        console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
-    }
-
     let balanceInAfter
     let balanceOutAfter
     if (zeroForOne) {
@@ -242,9 +235,11 @@ export async function validateSwap(params: ValidateSwapParams) {
 
     expect(balanceInBefore.sub(balanceInAfter)).to.be.equal(balanceInDecrease)
     expect(balanceOutAfter.sub(balanceOutBefore)).to.be.equal(balanceOutIncrease)
-    //TODO: validate quote amount
-    // expect(balanceInBefore.sub(balanceInAfter)).to.be.equal(amountInQuoted)
-    // expect(balanceOutAfter.sub(balanceOutBefore)).to.be.equal(amountOutQuoted)
+    if (splitInto == 1) {
+        expect(balanceInBefore.sub(balanceInAfter)).to.be.equal(amountInQuoted)
+        expect(balanceOutAfter.sub(balanceOutBefore)).to.be.equal(amountOutQuoted)
+    }
+
 
     const poolAfter: PoolState = zeroForOne
         ? await hre.props.limitPool.pool1()
@@ -422,7 +417,7 @@ export async function validateBurn(params: ValidateBurnParams) {
     const revertMessage = params.revertMessage
     const expectedUpper = params.expectedUpper ? BigNumber.from(params.expectedUpper) : null
     const expectedLower = params.expectedLower ? BigNumber.from(params.expectedLower) : null
-    const compareSnapshot = params.compareSnapshot ? params.compareSnapshot : false
+    const compareSnapshot = params.compareSnapshot ? params.compareSnapshot : true
 
     let balanceInBefore
     let balanceOutBefore
@@ -460,14 +455,14 @@ export async function validateBurn(params: ValidateBurnParams) {
         liquidityAmount = liquidityPercent.mul(positionBefore.liquidity).div(ethers.utils.parseUnits("1",38))
     }
     if (revertMessage == '') {
-        // positionSnapshot = await hre.props.limitPool.snapshot({
-        //     owner: signer.address,
-        //     burnPercent: liquidityPercent,
-        //     lower: lower,
-        //     claim: claim,
-        //     upper: upper,
-        //     zeroForOne: zeroForOne
-        // })
+        positionSnapshot = await hre.props.limitPool.snapshot({
+            owner: signer.address,
+            lower: lower,
+            claim: claim,
+            upper: upper,
+            zeroForOne: zeroForOne,
+            burnPercent: liquidityPercent
+        })
         const burnTxn = await hre.props.limitPool
             .connect(signer)
             .burn({
@@ -516,7 +511,6 @@ export async function validateBurn(params: ValidateBurnParams) {
     let lowerTickAfter: Tick
     let upperTickAfter: Tick
     let positionAfter: Position
-    //TODO: implement expected lower/upper?
     if (zeroForOne) {
         lowerTickAfter = await hre.props.limitPool.ticks0(expectedLower ?? lower)
         upperTickAfter = await hre.props.limitPool.ticks0(upper)

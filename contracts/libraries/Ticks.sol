@@ -189,7 +189,7 @@ library Ticks {
             amountLeft: params.amount
         });
         while (cache.cross) {
-                        cache.crossPrice = cache.crossTick % cache.constants.tickSpacing == 0 ? 
+                        cache.crossPrice = (cache.crossTick % cache.constants.tickSpacing == 0) ? 
                                     ConstantProduct.getPriceAtTick(cache.crossTick, cache.constants)
                                   : ticks[cache.crossTick].priceAt;
             (pool, cache) = _quoteSingle(params.zeroForOne, params.priceLimit, pool, cache);
@@ -414,41 +414,38 @@ library Ticks {
     function insert(
         mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
         ILimitPoolStructs.TickMap storage tickMap,
-        ILimitPoolStructs.PoolState memory pool,
-        ILimitPoolStructs.Immutables memory constants,
         ILimitPoolStructs.MintCache memory cache,
-        int24 lower,
-        int24 upper,
-        uint128 amount,
-        bool isPool0
+        ILimitPoolStructs.MintParams memory params
     ) external {
         /// @auditor - validation of ticks is in Positions.validate
-        if (amount > (uint128(type(int128).max) - pool.liquidityGlobal) )
+        if (cache.liquidityMinted > (uint128(type(int128).max) - cache.pool.liquidityGlobal) )
             require (false, 'LiquidityOverflow()');
 
+        int256 liquidityMinted = int256(cache.liquidityMinted);
+
         // check if adding liquidity necessary
-        if (isPool0 ? cache.priceLower > pool.price
-                    : true) {
+        if (params.zeroForOne ? cache.priceLower > cache.pool.price
+                              : true) {
             // sets bit in map
-            TickMap.set(tickMap, lower, constants.tickSpacing);
-            ILimitPoolStructs.Tick memory tickLower = ticks[lower];
-            if (isPool0) {
-                tickLower.liquidityDelta += int128(amount);
+            TickMap.set(tickMap, params.lower, cache.constants.tickSpacing);
+            ILimitPoolStructs.Tick memory tickLower = ticks[params.lower];
+            if (params.zeroForOne) {
+                tickLower.liquidityDelta += int128(liquidityMinted);
             } else {
-                tickLower.liquidityDelta -= int128(amount);
+                tickLower.liquidityDelta -= int128(liquidityMinted);
             }
-            ticks[lower] = tickLower;
+            ticks[params.lower] = tickLower;
         }
 
-        if (isPool0 ? true : cache.priceUpper < pool.price) {
-            TickMap.set(tickMap, upper, constants.tickSpacing);
-            ILimitPoolStructs.Tick memory tickUpper = ticks[upper];
-            if (isPool0) {
-                tickUpper.liquidityDelta -= int128(amount);
+        if (params.zeroForOne ? true : cache.priceUpper < cache.pool.price) {
+            TickMap.set(tickMap, params.upper, cache.constants.tickSpacing);
+            ILimitPoolStructs.Tick memory tickUpper = ticks[params.upper];
+            if (params.zeroForOne) {
+                tickUpper.liquidityDelta -= int128(liquidityMinted);
             } else {
-                tickUpper.liquidityDelta += int128(amount);
+                tickUpper.liquidityDelta += int128(liquidityMinted);
             }
-            ticks[upper] = tickUpper;
+            ticks[params.upper] = tickUpper;
         }
     }
 
@@ -467,6 +464,7 @@ library Ticks {
         int24 tickToSave = pool.tickAtPrice;
         // get price at nearest full tick
         uint160 roundedPrice = TickMath.getPriceAtTick(TickMap.round(tickToSave, constants.tickSpacing), constants);
+        /// @dev - either these gas costs get passed to the LP (i.e. here) or we have to load an extra tick each time
         if (tickToSave % constants.tickSpacing != 0 ||
             pool.price != roundedPrice) {
             tickToSave = TickMap.round(pool.tickAtPrice, constants.tickSpacing);

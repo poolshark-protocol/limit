@@ -154,24 +154,22 @@ library Positions {
         ILimitPoolStructs.MintCache memory cache,
         mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
         ILimitPoolStructs.TickMap storage tickMap,
-        ILimitPoolStructs.PoolState memory pool,
-        ILimitPoolStructs.AddParams memory params,
-        ILimitPoolStructs.Immutables memory constants
+        ILimitPoolStructs.MintParams memory params
     ) internal returns (
         ILimitPoolStructs.PoolState memory,
         ILimitPoolStructs.Position memory
     ) {
-        if (params.amount == 0) return (pool, cache.position);
+        if (cache.liquidityMinted == 0) return (cache.pool, cache.position);
 
         if (cache.position.liquidity == 0) {
-            cache.position.epochLast = pool.swapEpoch;
+            cache.position.epochLast = cache.pool.swapEpoch;
         } else {
             // safety check in case we somehow get here
             if (
                 params.zeroForOne
-                    ? EpochMap.get(params.lower, tickMap, constants)
+                    ? EpochMap.get(params.lower, tickMap, cache.constants)
                             > cache.position.epochLast
-                    : EpochMap.get(params.upper, tickMap, constants)
+                    : EpochMap.get(params.upper, tickMap, cache.constants)
                             > cache.position.epochLast
             ) {
                 require (false, string.concat('UpdatePositionFirstAt(', String.from(params.lower), ', ', String.from(params.upper), ')'));
@@ -183,21 +181,16 @@ library Positions {
         Ticks.insert(
             ticks,
             tickMap,
-            pool,
-            constants,
             cache,
-            params.lower,
-            params.upper,
-            uint128(params.amount),
-            params.zeroForOne
+            params
         );
 
-        // // update liquidity global
-        pool.liquidityGlobal += params.amount;
+        // update liquidity global
+        cache.pool.liquidityGlobal += uint128(cache.liquidityMinted);
 
-        cache.position.liquidity += uint128(params.amount);
+        cache.position.liquidity += uint128(cache.liquidityMinted);
 
-        return (pool, cache.position);
+        return (cache.pool, cache.position);
     }
 
     function remove(

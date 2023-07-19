@@ -79,13 +79,7 @@ library BurnCall {
         Collect.burn(
             cache,
             positions,
-            ILimitPoolStructs.CollectParams(
-                params.to, //address(0) goes to msg.sender
-                params.lower,
-                params.claim,
-                params.upper,
-                params.zeroForOne
-            )
+            params
         );
         return cache;
     }

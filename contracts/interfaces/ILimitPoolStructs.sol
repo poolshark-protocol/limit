@@ -28,7 +28,6 @@ interface ILimitPoolStructs {
 
     struct Tick {
         uint160 priceAt;
-        uint160 priceAtBurn;
         int128 liquidityDelta;
     }
 
@@ -95,41 +94,6 @@ interface ILimitPoolStructs {
         bool zeroForOne;
     }
 
-    struct CollectParams {
-        address to;
-        int24 lower;
-        int24 claim;
-        int24 upper;
-        bool zeroForOne;
-    }
-
-    struct SizeParams {
-        uint256 priceLower;
-        uint256 priceUpper;
-        uint128 liquidityAmount;
-        bool zeroForOne;
-        int24 latestTick;
-        uint24 auctionCount;
-    }
-
-    struct AddParams {
-        address to;
-        uint128 amount;
-        uint128 amountIn;
-        int24 lower;
-        int24 upper;
-        bool zeroForOne;
-    }
-
-    struct RemoveParams {
-        address owner;
-        address to;
-        uint128 amount;
-        int24 lower;
-        int24 upper;
-        bool zeroForOne;
-    }
-
     struct UpdateParams {
         address owner;
         address to;
@@ -178,24 +142,13 @@ interface ILimitPoolStructs {
         bool cross;
     }
 
-    struct PositionCache {
-        Position position;
-        uint160 priceLower;
-        uint160 priceUpper;
-        uint256 liquidityMinted;
-    }
-
     struct UpdateCache {
         PoolState pool;
-        uint256 amountInFilledMax;    // considers the range covered by each update
-        uint256 amountOutUnfilledMax; // considers the range covered by each update
         Tick claimTick;
-        Tick finalTick;
         Position position;
         uint160 priceLower;
         uint160 priceClaim;
         uint160 priceUpper;
-        uint160 priceSpread;
         bool earlyReturn;
         bool removeLower;
         bool removeUpper;

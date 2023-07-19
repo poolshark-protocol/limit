@@ -347,7 +347,7 @@ library Ticks {
         }
         /// @dev - this should always be positive if liquidity is 0
         pool.liquidity += uint128(ticks[pool.tickAtPrice].liquidityDelta);
-        ticks[pool.tickAtPrice] = ILimitPoolStructs.Tick(0,0,0);
+        ticks[pool.tickAtPrice] = ILimitPoolStructs.Tick(0,0);
 
         /// @dev can we delete the tick here?
         if (pool.tickAtPrice % cache.constants.tickSpacing == 0){
@@ -380,7 +380,7 @@ library Ticks {
         pool.tickAtPrice = cache.crossTick;
 
         // zero out liquidityDelta and priceAt
-        ticks[cache.crossTick] = ILimitPoolStructs.Tick(0,0,0);
+        ticks[cache.crossTick] = ILimitPoolStructs.Tick(0,0);
         TickMap.unset(tickMap, cache.crossTick, cache.constants.tickSpacing);
         if (zeroForOne) {
             cache.crossTick = TickMap.previous(tickMap, cache.crossTick, cache.constants.tickSpacing, false);

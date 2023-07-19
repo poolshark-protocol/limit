@@ -484,13 +484,7 @@ library Positions {
             priceLower: ConstantProduct.getPriceAtTick(params.lower, constants),
             priceClaim: ConstantProduct.getPriceAtTick(params.claim, constants),
             priceUpper: ConstantProduct.getPriceAtTick(params.upper, constants),
-            priceSpread: ConstantProduct.getPriceAtTick(params.zeroForOne ? params.claim - constants.tickSpacing 
-                                                                          : params.claim + constants.tickSpacing,
-                                                        constants),
-            amountInFilledMax: 0,
-            amountOutUnfilledMax: 0,
             claimTick: ticks[params.claim],
-            finalTick: ticks[params.zeroForOne ? params.lower : params.upper],
             earlyReturn: false,
             removeLower: false,
             removeUpper: false

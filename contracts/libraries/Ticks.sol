@@ -303,7 +303,6 @@ library Ticks {
                 cache.price = uint160(newPrice);
             } else {
                 if (cache.exactIn) {
-                    //TODO: handle removal of ticks
                     amountOut = ConstantProduct.getDx(cache.liquidity, cache.price, nextPrice, false);
                     cache.input += amountMax;
                 } else {
@@ -437,7 +436,8 @@ library Ticks {
             ticks[params.lower] = tickLower;
         }
 
-        if (params.zeroForOne ? true : cache.priceUpper < cache.pool.price) {
+        if (params.zeroForOne ? true 
+                              : cache.priceUpper < cache.pool.price) {
             TickMap.set(tickMap, params.upper, cache.constants.tickSpacing);
             ILimitPoolStructs.Tick memory tickUpper = ticks[params.upper];
             if (params.zeroForOne) {

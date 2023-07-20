@@ -1252,7 +1252,7 @@ describe('LimitPool Tests', function () {
             lowerTickCleared: false,
             revertMessage: '',
         })
-        //TODO: test undercut on top of undercut
+
         if (debugMode) await getTick(false, 21000)
         if (debugMode) console.log('BEFORE MINT 2')
         if (debugMode) await getPrice(true, true)
@@ -1277,10 +1277,6 @@ describe('LimitPool Tests', function () {
         if (debugMode) console.log('BEFORE BURN 1')
         if (debugMode) await getTick(false, 21000, true)
         // close both positions
-        //amountOut should be
-        //49861732254639926627
-        //TODO: claim tick at 145 does not complain about epoch on 150
-        //TODO: claim tick at 150 is not reverted
         await validateBurn({
             signer: hre.props.bob,
             lower: '100',
@@ -1294,6 +1290,7 @@ describe('LimitPool Tests', function () {
             upperTickCleared: false,
             revertMessage: 'WrongTickClaimedAt()',
         })
+
         if (debugMode) console.log('BEFORE BURN 2')
         await validateBurn({
             signer: hre.props.bob,

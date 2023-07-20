@@ -54,7 +54,10 @@ library Positions {
             params.zeroForOne ? 0 : uint256(params.amount),
             params.zeroForOne ? uint256(params.amount) : 0
         );
-
+        // |||||       |           |
+        // 0           50         100
+        // if position is one spacing wide, push all the end to end of tick spacing
+        // if tickspacing is more than one spacing wide, 
         {
             cache.priceLimit = params.zeroForOne ? ConstantProduct.getNewPrice(cache.priceUpper, cache.liquidityMinted, params.amount / 2, true, true)
                                                  : ConstantProduct.getNewPrice(cache.priceLower, cache.liquidityMinted, params.amount / 2, false, true);
@@ -62,6 +65,7 @@ library Positions {
             cache.tickLimit = ConstantProduct.getTickAtPrice(cache.priceLimit.toUint160(), cache.constants);
             // round to nearest tick spacing
             if (cache.tickLimit % cache.constants.tickSpacing != 0) {
+                //TODO: make position more narrow
                 cache.tickLimit = TickMap.roundUp(cache.tickLimit, cache.constants.tickSpacing, params.zeroForOne);
             }
             cache.priceLimit = ConstantProduct.getPriceAtTick(cache.tickLimit, cache.constants);
@@ -89,6 +93,7 @@ library Positions {
                     to: params.to,
                     priceLimit: cache.priceLimit.toUint160(),
                     amount: params.amount,
+                    //TODO: handle exactOut
                     exactIn: true,
                     zeroForOne: params.zeroForOne,
                     callbackData: abi.encodePacked(bytes1(0x0))
@@ -100,6 +105,7 @@ library Positions {
             params.amount -= uint128(swapCache.input);
         }
         // move start tick based on amount filled in swap
+        //TODO: skip if minAmountMinted
         if ((params.amount > 0 && swapCache.input > 0) ||
             (params.zeroForOne ? cache.priceLower < cache.swapPool.price
                                : cache.priceUpper > cache.swapPool.price)
@@ -117,10 +123,11 @@ library Positions {
                 }
                 cache.priceLower = ConstantProduct.getPriceAtTick(params.lower, cache.constants);
             } else {
-                uint160 newPrice = ConstantProduct.getNewPrice(cache.priceUpper, cache.liquidityMinted, swapCache.input, true, true).toUint160();
-                int24 newUpper = ConstantProduct.getTickAtPrice(newPrice, cache.constants);
-                params.upper = TickMap.roundUp(newUpper, cache.constants.tickSpacing, false);
-                
+                if (params.amount > 0 && swapCache.input > 0) {
+                    uint160 newPrice = ConstantProduct.getNewPrice(cache.priceUpper, cache.liquidityMinted, swapCache.input, true, true).toUint160();
+                    int24 newUpper = ConstantProduct.getTickAtPrice(newPrice, cache.constants);
+                    params.upper = TickMap.roundUp(newUpper, cache.constants.tickSpacing, false);
+                }
                 if (params.upper > cache.tickLimit) {
                     // if rounding goes past limit trim position
                     /// @dev - if swap didn't go to limit user would be 100% filled

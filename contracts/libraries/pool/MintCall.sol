@@ -81,6 +81,7 @@ library MintCall {
                     }
                     cache.pool.price = priceLower;
                     cache.pool.tickAtPrice = params.lower;
+                    /// @auditor - double check liquidity is set correctly for this in insertSingle
                     cache.pool.liquidity += uint128(cache.liquidityMinted);
                     cache.pool.swapEpoch += 1;
                     cache.position.claimPriceLast = TickMath.getPriceAtTick(params.lower, cache.constants);
@@ -106,6 +107,7 @@ library MintCall {
             }
             // save lp side for safe reentrancy
             save(cache.pool, pool);
+
             // save position to storage
             positions[params.to][params.lower][params.upper] = cache.position;
 

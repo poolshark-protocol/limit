@@ -6,7 +6,7 @@ import '../Positions.sol';
 import '../utils/Collect.sol';
 
 library BurnCall {
-    event Burn(
+    event BurnLimit(
         address indexed to,
         int24 lower,
         int24 upper,
@@ -14,13 +14,7 @@ library BurnCall {
         bool zeroForOne,
         uint128 liquidityBurned,
         uint128 tokenInClaimed,
-        uint128 tokenOutClaimed,
-        uint128 tokenOutBurned,
-        uint128 amountInDeltaMaxStashedBurned,
-        uint128 amountOutDeltaMaxStashedBurned,
-        uint128 amountInDeltaMaxBurned,
-        uint128 amountOutDeltaMaxBurned,
-        uint160 claimPriceLast
+        uint128 tokenOutBurned
     );
 
     function perform(
@@ -32,7 +26,11 @@ library BurnCall {
             storage positions
     ) external returns (ILimitPoolStructs.BurnCache memory) {
        if (cache.position.claimPriceLast > 0
-            || params.claim != (params.zeroForOne ? params.lower : params.upper))
+            || params.claim != (params.zeroForOne ? params.lower : params.upper)
+            || cache.position.epochLast < (params.zeroForOne ? EpochMap.get(params.lower, tickMap, cache.constants)
+                                                             : EpochMap.get(params.upper, tickMap, cache.constants)))
+        //TODO: claim is still lower but position has been crossed into - DONE
+        //TODO: test case for this now
         // or position has been crossed into
         {
             // if position has been crossed into

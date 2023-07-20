@@ -26,10 +26,9 @@ library Claims {
         ILimitPoolStructs.UpdateCache memory
     ) {
         // validate position liquidity
-        if (params.amount > cache.position.liquidity) require (false, 'NotEnoughPsitionLiquidity()');
+        if (params.amount > cache.position.liquidity) require (false, 'NotEnoughPositionLiquidity()');
         if (cache.position.liquidity == 0) {
-            cache.earlyReturn = true;
-            return (params, cache);
+            require(false, 'NoPositionLiquidityFound()');
         }
 
         // if the position has not been crossed into at all
@@ -42,11 +41,6 @@ library Claims {
             cache.earlyReturn = true;
             return (params, cache);
         }
-        // early return if no update and amount burned is 0
-        if (params.amount == 0 && cache.position.claimPriceLast == pool.price) {
-            cache.earlyReturn = true;
-            return (params, cache);
-        } 
         
         if (params.claim < params.lower || params.claim > params.upper) require (false, 'InvalidClaimTick()');
 
@@ -132,8 +126,15 @@ library Claims {
                     require (false, string.concat('UpdatePositionFirstAt(', String.from(params.lower), ', ', String.from(params.claim), ')'));
                 }
             }
-            /// @dev - user cannot add liquidity if auction is active; checked for in Positions.validate()
         }
+
+        // early return if no update and amount burned is 0
+        //TODO: after we've cycled through claim ticks and there are no position updates just revert - DONE
+        //TODO: add test case for this
+        if (params.amount == 0 && cache.position.claimPriceLast == cache.priceClaim) {
+            require(false, 'NoPositionUpdates()');
+        }
+
         return (params, cache);
     }
 
@@ -168,13 +169,13 @@ library Claims {
                 // allow partial tick claim if removing liquidity
                 cache.position.amountIn += uint128(params.zeroForOne ? ConstantProduct.getDy(params.amount, locals.pricePrevious, cache.priceClaim, false)
                                                                      : ConstantProduct.getDx(params.amount, cache.priceClaim, locals.pricePrevious, false));  
-            } 
-        }
-        // use priceClaim if tick hasn't been set back
-        // else use claimPriceLast to calculate amountOut
-        if (params.claim != (params.zeroForOne ? params.upper : params.lower)) {
-            cache.position.amountOut += uint128(params.zeroForOne ? ConstantProduct.getDx(params.amount, cache.priceClaim, cache.priceUpper, false)
-                                                                  : ConstantProduct.getDy(params.amount, cache.priceLower, cache.priceClaim, false));
+            }
+            // use priceClaim if tick hasn't been set back
+            // else use claimPriceLast to calculate amountOut
+            if (params.claim != (params.zeroForOne ? params.upper : params.lower)) {
+                cache.position.amountOut += uint128(params.zeroForOne ? ConstantProduct.getDx(params.amount, cache.priceClaim, cache.priceUpper, false)
+                                                                      : ConstantProduct.getDy(params.amount, cache.priceLower, cache.priceClaim, false));
+            }
         }
         return cache;
     }

@@ -175,7 +175,7 @@ describe('LimitPool Tests', function () {
             balanceOutIncrease: '0',
             lowerTickCleared: true,
             upperTickCleared: true,
-            revertMessage: 'NotEnoughPositionLiquidity()',
+            revertMessage: 'PositionNotFound()',
         })
     })
 
@@ -422,7 +422,7 @@ describe('LimitPool Tests', function () {
             balanceOutIncrease: '0',
             lowerTickCleared: true,
             upperTickCleared: true,
-            revertMessage: 'NotEnoughPositionLiquidity()',
+            revertMessage: 'PositionNotFound()',
         })
         await validateBurn({
             signer: hre.props.alice,
@@ -1603,7 +1603,7 @@ describe('LimitPool Tests', function () {
             balanceOutIncrease: '99999999999999999999',
             lowerTickCleared: true,
             upperTickCleared: false,
-            revertMessage: 'NotEnoughPositionLiquidity()',
+            revertMessage: 'PositionNotFound()',
         })
         
         if (debugMode) {
@@ -1700,7 +1700,7 @@ describe('LimitPool Tests', function () {
             balanceOutIncrease: '99999999999999999999',
             lowerTickCleared: true,
             upperTickCleared: false,
-            revertMessage: 'NotEnoughPositionLiquidity()',
+            revertMessage: 'PositionNotFound()',
         })
         
         if (balanceCheck) {
@@ -2161,7 +2161,7 @@ describe('LimitPool Tests', function () {
             lowerTickCleared: false,
             upperTickCleared: false,
             expectedUpper: '-125',
-            revertMessage: 'NotEnoughPositionLiquidity()',
+            revertMessage: 'PositionNotFound()',
         })
 
         if (balanceCheck) {
@@ -2614,6 +2614,156 @@ describe('LimitPool Tests', function () {
             zeroForOne: false,
             balanceInIncrease: '0',
             balanceOutIncrease: '99999999999999999999',
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: '',
+        })
+
+        if (balanceCheck) {
+            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
+            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
+        }
+    })
+
+    it('pool0 - Should partial fill and skip mint due to mintPercent', async function () {
+        // mint position
+        if (debugMode) await getPrice(false, true)
+        const aliceLiquidity = '95988407038939537431696'
+        const bobLiquidity = '99257701875536776191977'
+        const aliceLiquidity2 = '16717549983581976690927'
+        const aliceMinusBobLiquidity = '11692258323234396689338'
+        // mint position
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: '-200', // epoch 2
+            upper: '-100',
+            amount: tokenAmountBn.mul(5),
+            zeroForOne: true,
+            balanceInDecrease: tokenAmountBn.mul(5),
+            liquidityIncrease: bobLiquidity,
+            upperTickCleared: false,
+            lowerTickCleared: true,
+            revertMessage: '',
+        })
+
+        // first undercut; priceAt is set on tick 125
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '-200', 
+            upper: '-100',
+            amount: tokenAmountBn.mul(5),
+            zeroForOne: false,
+            balanceInDecrease: BigNumber.from('245970337436687078101'),
+            balanceOutIncrease: BigNumber.from('250312484213305684795'),
+            liquidityIncrease: '0',
+            upperTickCleared: true,
+            lowerTickCleared: false,
+            expectedLower: '-150',
+            revertMessage: '',
+            mintPercent: ethers.utils.parseUnits('6', 27)
+        })
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-150', 
+            upper: '-100', 
+            claim: '-150',
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: true,
+            balanceInIncrease: '126567977088957993387',
+            balanceOutIncrease: '374847760063375226691',
+            lowerTickCleared: false,
+            upperTickCleared: false,
+            expectedUpper: '-125',
+            revertMessage: 'PositionNotFound()',
+        })
+
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: '-200', // epoch 2
+            upper: '-100',
+            claim: '-150',
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: true,
+            balanceInIncrease: '245970337436687078100',
+            balanceOutIncrease: '249687515786694315204',
+            lowerTickCleared: true,
+            upperTickCleared: false,
+            revertMessage: '',
+        })
+
+        if (balanceCheck) {
+            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
+            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
+        }
+    })
+
+    it('pool1 - Should partial fill and skip mint due to mintPercent', async function () {
+        // mint position
+        if (debugMode) await getPrice(false, true)
+        const aliceLiquidity = '95988407038939537431696'
+        const bobLiquidity = '100757714374312927245661'
+        const aliceLiquidity2 = '16717549983581976690927'
+        const aliceMinusBobLiquidity = '11692258323234396689338'
+        // mint position
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: '-200', // epoch 2
+            upper: '-100',
+            amount: tokenAmountBn.mul(5),
+            zeroForOne: false,
+            balanceInDecrease: tokenAmountBn.mul(5),
+            liquidityIncrease: bobLiquidity,
+            upperTickCleared: true,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
+
+        // first undercut; priceAt is set on tick 125
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '-200', 
+            upper: '-100',
+            amount: tokenAmountBn.mul(5),
+            zeroForOne: true,
+            balanceInDecrease: BigNumber.from('258536552378291262451'),
+            balanceOutIncrease: BigNumber.from('255312354013959802923'),
+            liquidityIncrease: '0',
+            upperTickCleared: false,
+            lowerTickCleared: true,
+            expectedLower: '-150',
+            revertMessage: '',
+            mintPercent: ethers.utils.parseUnits('6', 27)
+        })
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-150', 
+            upper: '-100', 
+            claim: '-150',
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: true,
+            balanceInIncrease: '126567977088957993387',
+            balanceOutIncrease: '374847760063375226691',
+            lowerTickCleared: false,
+            upperTickCleared: false,
+            expectedUpper: '-125',
+            revertMessage: 'PositionNotFound()',
+        })
+
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: '-200', // epoch 2
+            upper: '-100',
+            claim: '-150',
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: false,
+            balanceInIncrease: '258536552378291262449',
+            balanceOutIncrease: '244687645986040197076',
             lowerTickCleared: false,
             upperTickCleared: true,
             revertMessage: '',

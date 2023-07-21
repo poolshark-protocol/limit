@@ -64,10 +64,6 @@ library Positions {
             // get tick at price
             cache.tickLimit = ConstantProduct.getTickAtPrice(cache.priceLimit.toUint160(), cache.constants);
             // round to nearest tick spacing
-            if (cache.tickLimit % cache.constants.tickSpacing != 0) {
-                //TODO: make position more narrow
-                cache.tickLimit = TickMap.roundUp(cache.tickLimit, cache.constants.tickSpacing, params.zeroForOne);
-            }
             cache.priceLimit = ConstantProduct.getPriceAtTick(cache.tickLimit, cache.constants);
         }
 
@@ -110,32 +106,33 @@ library Positions {
             (params.zeroForOne ? cache.priceLower < cache.swapPool.price
                                : cache.priceUpper > cache.swapPool.price)
         ) {
-            if (params.zeroForOne) {
-                if (params.amount > 0 && swapCache.input > 0) {
-                    uint160 newPrice = ConstantProduct.getNewPrice(cache.priceLower, cache.liquidityMinted, swapCache.input, false, true).toUint160();
-                    int24 newLower = ConstantProduct.getTickAtPrice(newPrice, cache.constants);
-                    params.lower = TickMap.roundUp(newLower, cache.constants.tickSpacing, true);
+            // if (params.amount > 0 && swapCache.input > 0) {
+                // round ahead tickLimit to avoid crossing epochs
+                cache.tickLimit = TickMap.roundAheadWithPrice(cache.tickLimit, cache.constants, !params.zeroForOne, cache.priceLimit);
+                if (params.zeroForOne) {
+                    if (params.lower < cache.tickLimit) {
+                        // if rounding goes past limit trim position
+                        /// @dev - if swap didn't go to limit user would be 100% filled
+                        params.lower = cache.tickLimit;
+                        cache.priceLower = ConstantProduct.getPriceAtTick(params.lower, cache.constants);
+                    }
+                    if (params.lower == params.upper && params.upper < ConstantProduct.maxTick(cache.constants.tickSpacing)) {
+                        params.upper += cache.constants.tickSpacing;
+                    }
+                    cache.priceUpper = ConstantProduct.getPriceAtTick(params.upper, cache.constants);
+                } else {
+                    if (params.upper > cache.tickLimit) {
+                        // if rounding goes past limit trim position
+                        params.upper = cache.tickLimit;
+                        cache.priceUpper = ConstantProduct.getPriceAtTick(params.upper, cache.constants);
+                    }
+                    if (params.upper == params.lower && params.lower > ConstantProduct.minTick(cache.constants.tickSpacing)) {
+                        params.lower -= cache.constants.tickSpacing;
+                    }
+                    cache.priceLower = ConstantProduct.getPriceAtTick(params.lower, cache.constants);
                 }
-                if (params.lower < cache.tickLimit) {
-                    // if rounding goes past limit trim position
-                    /// @dev - if swap didn't go to limit user would be 100% filled
-                    params.lower = cache.tickLimit;
-                }
-                cache.priceLower = ConstantProduct.getPriceAtTick(params.lower, cache.constants);
-            } else {
-                if (params.amount > 0 && swapCache.input > 0) {
-                    uint160 newPrice = ConstantProduct.getNewPrice(cache.priceUpper, cache.liquidityMinted, swapCache.input, true, true).toUint160();
-                    int24 newUpper = ConstantProduct.getTickAtPrice(newPrice, cache.constants);
-                    params.upper = TickMap.roundUp(newUpper, cache.constants.tickSpacing, false);
-                }
-                if (params.upper > cache.tickLimit) {
-                    // if rounding goes past limit trim position
-                    /// @dev - if swap didn't go to limit user would be 100% filled
-                    params.upper = cache.tickLimit;
-                }
-                cache.priceUpper = ConstantProduct.getPriceAtTick(params.upper, cache.constants);
-            }
-            if (params.amount > 0)
+            // }
+            if (params.amount > 0 && params.lower < params.upper)
                 cache.liquidityMinted = ConstantProduct.getLiquidityForAmounts(
                     cache.priceLower,
                     cache.priceUpper,
@@ -150,7 +147,7 @@ library Positions {
         }
         // save swapCache
         cache.swapCache = swapCache;
- 
+
         return (
             params,
             cache
@@ -378,6 +375,7 @@ library Positions {
         // clear out old position
         if (params.zeroForOne ? params.claim != params.lower 
                               : params.claim != params.upper) {
+            
             /// @dev - this also clears out position end claims
             if (params.zeroForOne ? params.claim == params.lower 
                                   : params.claim == params.upper) {

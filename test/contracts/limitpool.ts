@@ -1236,7 +1236,7 @@ describe('LimitPool Tests', function () {
 
     it('pool1 - Should mint, partial mint on other side, and burn', async function () {
         if (debugMode) await getPrice(false, true)
-        const aliceLiquidity = '16525718019010484759604'
+        const aliceLiquidity = '20104447516992018640794'
         const bobLiquidity = '19851540375107355238395'
         // mint position
         await validateMint({
@@ -1264,7 +1264,7 @@ describe('LimitPool Tests', function () {
             amount: tokenAmountBn,
             zeroForOne: true,
             balanceInDecrease: tokenAmountBn,
-            balanceOutIncrease: BigNumber.from('60059986971211576542'),
+            balanceOutIncrease: BigNumber.from('51062470802791960584'),
             liquidityIncrease: aliceLiquidity,
             positionLiquidityChange: aliceLiquidity,
             upperTickCleared: false,
@@ -1296,11 +1296,11 @@ describe('LimitPool Tests', function () {
             signer: hre.props.bob,
             lower: '100',
             upper: '200',
-            claim: '140',
+            claim: '150',
             liquidityPercent: ethers.utils.parseUnits('1', 38),
             zeroForOne: false,
-            balanceInIncrease: '59047647077134520750',
-            balanceOutIncrease: '39940013028788423457',
+            balanceInIncrease: '50179203766640200814',
+            balanceOutIncrease: '48937529197208039415',
             lowerTickCleared: false,
             upperTickCleared: true,
             revertMessage: '',
@@ -1316,7 +1316,7 @@ describe('LimitPool Tests', function () {
             liquidityPercent: ethers.utils.parseUnits('1', 38),
             zeroForOne: true,
             balanceInIncrease: '0',
-            balanceOutIncrease: '40952352922865479248',
+            balanceOutIncrease: '49820796233359799184',
             lowerTickCleared: true,
             upperTickCleared: false,
             revertMessage: '',
@@ -1374,6 +1374,7 @@ describe('LimitPool Tests', function () {
         //amountOut should be
         //49861732254639926627
         /// @dev - fail case is if the pool prices have crossed each other
+        
         await validateBurn({
             signer: hre.props.bob,
             lower: '100',
@@ -1387,6 +1388,7 @@ describe('LimitPool Tests', function () {
             upperTickCleared: false,
             revertMessage: 'WrongTickClaimedAt()',
         })
+
         if (debugMode) console.log('BEFORE BURN 2')
         await validateBurn({
             signer: hre.props.bob,
@@ -1424,7 +1426,7 @@ describe('LimitPool Tests', function () {
     
     it('pool1 - Should mint, partial mint on other side and trim position, and burn', async function () {
         if (debugMode) await getPrice(false, true)
-        const aliceLiquidity = '16296231544675063179235'
+        const aliceLiquidity = '19749016985663918212779'
         const bobLiquidity = '20151542874862585449132'
         // mint position
         await validateMint({
@@ -1452,36 +1454,21 @@ describe('LimitPool Tests', function () {
             amount: tokenAmountBn,
             zeroForOne: true,
             balanceInDecrease: tokenAmountBn,
-            balanceOutIncrease: BigNumber.from('10022513869349080767'),
+            balanceOutIncrease: BigNumber.from('1002476897254236684'),
             liquidityIncrease: aliceLiquidity,
             positionLiquidityChange: aliceLiquidity,
             upperTickCleared: false,
             lowerTickCleared: true,
-            expectedLower: '-110',
+            expectedLower: '-100',
             revertMessage: '',
         })
-
+ 
         if (debugMode) await getPrice(true, true)
 
         if (debugMode) await getTick(false, 21000, true)
         // close both positions
-        //amountOut should be
-        //49861732254639926627
         /// @dev - fail case is if the pool prices have crossed each other
-        await validateBurn({
-            signer: hre.props.bob,
-            lower: '-200',
-            upper: '-100',
-            claim: '-115',
-            liquidityPercent: ethers.utils.parseUnits('1', 38),
-            zeroForOne: false,
-            balanceInIncrease: '0',
-            balanceOutIncrease: '0',
-            lowerTickCleared: true,
-            upperTickCleared: false,
-            revertMessage: 'WrongTickClaimedAt()',
-        })
-
+        if (debugMode) await getPrice(false, true)
         if (debugMode) console.log('BEFORE BURN 2')
         await validateBurn({
             signer: hre.props.bob,
@@ -1490,12 +1477,16 @@ describe('LimitPool Tests', function () {
             claim: '-100',
             liquidityPercent: ethers.utils.parseUnits('1', 38),
             zeroForOne: false,
-            balanceInIncrease: '10128299377855648627',
-            balanceOutIncrease: '89977486130650919232',
+            balanceInIncrease: '1012602077634497449',
+            balanceOutIncrease: '98997523102745763315',
             lowerTickCleared: false,
             upperTickCleared: true,
             revertMessage: '',
         })
+        if (balanceCheck) {
+            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
+            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
+        }
 
         if (debugMode) console.log('BEFORE BURN 3')
         await validateBurn({
@@ -1506,20 +1497,7 @@ describe('LimitPool Tests', function () {
             liquidityPercent: ethers.utils.parseUnits('1', 38),
             zeroForOne: true,
             balanceInIncrease: '0',
-            balanceOutIncrease: '99999999999999999999',
-            lowerTickCleared: true,
-            upperTickCleared: false,
-            revertMessage: 'NotEnoughPositionLiquidity()',
-        })
-        await validateBurn({
-            signer: hre.props.alice,
-            lower: '-110',
-            upper: '0',
-            claim: '-110',
-            liquidityPercent: ethers.utils.parseUnits('1', 38),
-            zeroForOne: true,
-            balanceInIncrease: '0',
-            balanceOutIncrease: '89871700622144351371',
+            balanceOutIncrease: '98987397922365502549',
             lowerTickCleared: true,
             upperTickCleared: false,
             revertMessage: '',
@@ -2036,6 +2014,7 @@ describe('LimitPool Tests', function () {
         if (debugMode) console.log('BEFORE BURN 3')
         if (debugMode) getPrice(false, true)
         //TODO: revert if there is no liquidity
+
         await validateBurn({
             signer: hre.props.alice,
             lower: '-200', 

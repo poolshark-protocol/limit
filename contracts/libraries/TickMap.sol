@@ -281,7 +281,7 @@ library TickMap {
         return tick / tickSpacing * tickSpacing;
     }
 
-    function roundDown(
+    function roundAheadWithPrice(
         int24 tick,
         ILimitPoolStructs.Immutables memory constants,
         bool zeroForOne,
@@ -300,7 +300,24 @@ library TickMap {
             roundedTick += constants.tickSpacing;
     }
 
-    function roundUp(
+    function roundAhead(
+        int24 tick,
+        int24 tickSpacing,
+        bool zeroForOne
+    ) internal pure returns (
+        int24 roundedTick
+    ) {
+        roundedTick = tick / tickSpacing * tickSpacing;
+        if (roundedTick == tick) return tick;
+        /// @dev - rounding down only needed if negative
+        if (zeroForOne && roundedTick < 0)
+            roundedTick += tickSpacing;
+        /// @dev - rounding up only needed if positive
+        else if (!zeroForOne && roundedTick > 0)
+            roundedTick -= tickSpacing;
+    }
+
+    function roundBack(
         int24 tick,
         int24 tickSpacing,
         bool zeroForOne
@@ -315,5 +332,25 @@ library TickMap {
         /// @dev - rounding up only needed if positive
         else if (!zeroForOne && roundedTick > 0)
             roundedTick += tickSpacing;
+    }
+
+    function roundBackWithPrice(
+        int24 tick,
+        ILimitPoolStructs.Immutables memory constants,
+        bool zeroForOne,
+        uint256 price
+    ) internal pure returns (
+        int24 roundedTick
+    ) {
+        roundedTick = tick / constants.tickSpacing * constants.tickSpacing;
+        if (price == ConstantProduct.getPriceAtTick(roundedTick, constants))
+            return roundedTick;
+        if (roundedTick == tick) return tick;
+        /// @dev - rounding down only needed if negative
+        if (zeroForOne && roundedTick < 0)
+            roundedTick -= constants.tickSpacing;
+        /// @dev - rounding up only needed if positive
+        else if (!zeroForOne && roundedTick > 0)
+            roundedTick += constants.tickSpacing;
     }
 }

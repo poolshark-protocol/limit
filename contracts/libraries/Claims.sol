@@ -50,7 +50,7 @@ library Claims {
             if (pool.price >= cache.priceClaim) {
                 if (pool.price <= cache.priceUpper) {
                     cache.priceClaim = pool.price;
-                    params.claim = TickMap.roundUp(pool.tickAtPrice, constants.tickSpacing, true);
+                    params.claim = TickMap.roundBackWithPrice(pool.tickAtPrice, constants, params.zeroForOne, cache.priceClaim);
                     claimTickEpoch = pool.swapEpoch;
                 } else {
                     cache.priceClaim = cache.priceUpper;
@@ -68,9 +68,9 @@ library Claims {
             if (pool.price <= cache.priceClaim) {
                 if (pool.price >= cache.priceLower) {
                     cache.priceClaim = pool.price;
-                    params.claim = TickMap.roundUp(pool.tickAtPrice, constants.tickSpacing, true);
+                    params.claim = TickMap.roundBackWithPrice(pool.tickAtPrice, constants, params.zeroForOne, cache.priceClaim);
                     // handles tickAtPrice not being crossed yet
-                    if (params.claim % constants.tickSpacing == 0 &&
+                    if (pool.tickAtPrice % constants.tickSpacing == 0 &&
                         pool.price > ConstantProduct.getPriceAtTick(pool.tickAtPrice, constants)){
                         params.claim += constants.tickSpacing;
                     }
@@ -142,7 +142,7 @@ library Claims {
         ILimitPoolStructs.UpdateCache memory cache,
         ILimitPoolStructs.UpdateParams memory params,
         ILimitPoolStructs.Immutables memory constants
-    ) internal pure returns (
+    ) internal view returns (
         ILimitPoolStructs.UpdateCache memory
     ) {
         // if half tick priceAt > 0 add amountOut to amountOutClaimed
@@ -152,7 +152,10 @@ library Claims {
                                                               : cache.priceUpper;
         }
         ILimitPoolStructs.GetDeltasLocals memory locals;
-        locals.previousFullTick = TickMap.roundDown(params.claim, constants, params.zeroForOne, cache.priceClaim);
+        if (cache.priceClaim != cache.pool.price)
+            locals.previousFullTick = TickMap.roundBackWithPrice(params.claim, constants, params.zeroForOne, cache.priceClaim);
+        else
+            locals.previousFullTick = params.claim;
         locals.pricePrevious = ConstantProduct.getPriceAtTick(locals.previousFullTick, constants);
         if (params.zeroForOne ? locals.previousFullTick > params.lower
                               : locals.previousFullTick < params.upper) {
@@ -168,7 +171,7 @@ library Claims {
                                   : cache.priceClaim < locals.pricePrevious) {
                 // allow partial tick claim if removing liquidity
                 cache.position.amountIn += uint128(params.zeroForOne ? ConstantProduct.getDy(params.amount, locals.pricePrevious, cache.priceClaim, false)
-                                                                     : ConstantProduct.getDx(params.amount, cache.priceClaim, locals.pricePrevious, false));  
+                                                                     : ConstantProduct.getDx(params.amount, cache.priceClaim, locals.pricePrevious, false));
             }
             // use priceClaim if tick hasn't been set back
             // else use claimPriceLast to calculate amountOut

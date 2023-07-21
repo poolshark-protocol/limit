@@ -89,7 +89,6 @@ library String {
                 str[3+i*2] = alphabet[uint(uint8(data[i] & 0x0f))];
             }
         }
-
         return string(str);
     }
 }

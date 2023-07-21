@@ -13,8 +13,6 @@ import './pool/SwapCall.sol';
 
 /// @notice Position management library for ranged liquidity.
 library Positions {
-    uint256 internal constant Q96 = 0x1000000000000000000000000;
-
     using SafeCast for uint256;
 
     event BurnLimit(
@@ -206,8 +204,6 @@ library Positions {
         ILimitPoolStructs.UpdateParams memory params,
         ILimitPoolStructs.Immutables memory constants
     ) internal returns (uint128, ILimitPoolStructs.PoolState memory) {
-        // validate burn percentage
-        if (params.amount > 1e38) require (false, 'InvalidBurnPercentage()');
         // initialize cache
         ILimitPoolStructs.UpdateCache memory cache;
         cache.position = positions[msg.sender][params.lower][params.upper];
@@ -222,35 +218,34 @@ library Positions {
         if (params.amount == 0) return (0, pool);
         if (params.amount > cache.position.liquidity) {
             require (false, 'NotEnoughPositionLiquidity()');
-        } else {
-            /// @dev - validate needed in case user passes in wrong tick
-            if (params.zeroForOne) {
-                if (EpochMap.get(params.lower, tickMap, constants)
-                            > cache.position.epochLast) {
-                    int24 nextTick = TickMap.next(tickMap, params.lower, constants.tickSpacing);
-                    if (pool.price > cache.priceLower ||
-                        EpochMap.get(nextTick, tickMap, constants)
-                            > cache.position.epochLast) {
-                        require (false, 'WrongTickClaimedAt()');            
-                    }
-                    if (pool.price == cache.priceLower) {
-                        pool.liquidity -= params.amount;
-                    }
+        }
+        /// @dev - validate position has not been crossed into
+        if (params.zeroForOne) {
+            if (EpochMap.get(params.lower, tickMap, constants)
+                        > cache.position.epochLast) {
+                int24 nextTick = TickMap.next(tickMap, params.lower, constants.tickSpacing);
+                if (pool.price > cache.priceLower ||
+                    EpochMap.get(nextTick, tickMap, constants)
+                        > cache.position.epochLast) {
+                    require (false, 'WrongTickClaimedAt()');            
                 }
-                // if pool price is further along
-                // OR next tick has a greater epoch
-            } else {
-                if (EpochMap.get(params.upper, tickMap, constants)
-                            > cache.position.epochLast) {
-                    int24 previousTick = TickMap.previous(tickMap, params.upper, constants.tickSpacing, false);
-                    if (pool.price < cache.priceUpper ||
-                        EpochMap.get(previousTick, tickMap, constants)
-                            > cache.position.epochLast) {
-                        require (false, 'WrongTickClaimedAt()');            
-                    }
-                    if (pool.price == cache.priceUpper) {
-                        pool.liquidity -= params.amount;
-                    }
+                if (pool.price == cache.priceLower) {
+                    pool.liquidity -= params.amount;
+                }
+            }
+            // if pool price is further along
+            // OR next tick has a greater epoch
+        } else {
+            if (EpochMap.get(params.upper, tickMap, constants)
+                        > cache.position.epochLast) {
+                int24 previousTick = TickMap.previous(tickMap, params.upper, constants.tickSpacing, false);
+                if (pool.price < cache.priceUpper ||
+                    EpochMap.get(previousTick, tickMap, constants)
+                        > cache.position.epochLast) {
+                    require (false, 'WrongTickClaimedAt()');            
+                }
+                if (pool.price == cache.priceUpper) {
+                    pool.liquidity -= params.amount;
                 }
             }
         }
@@ -265,12 +260,6 @@ library Positions {
 
         // update liquidity global
         pool.liquidityGlobal -= params.amount;
-
-        {
-            // update max deltas
-            ILimitPoolStructs.Tick memory finalTick = ticks[params.zeroForOne ? params.lower : params.upper];
-            ticks[params.zeroForOne ? params.lower : params.upper] = finalTick;
-        }
 
         cache.position.amountOut += uint128(
             params.zeroForOne

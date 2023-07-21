@@ -47,6 +47,5 @@ contract PoolRouter is
                 IPool(pools[i]).swap(params[i]);
             }
         }
-
     }
 }

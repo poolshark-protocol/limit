@@ -139,7 +139,6 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
                 );
             }
         }
-
         emit ProtocolFeesModified(modifyPools, syncFees, fillFees, setFees, token0Fees, token1Fees);
     }
 

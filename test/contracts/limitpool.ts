@@ -1822,6 +1822,21 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
 
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '120', 
+            upper: '200', 
+            claim: '120',
+            liquidityPercent: ethers.utils.parseUnits('0', 37),
+            zeroForOne: true,
+            balanceInIncrease: '6299506528577082722',
+            balanceOutIncrease: '93477298451459613958',
+            lowerTickCleared: true,
+            upperTickCleared: false,
+            expectedLower: '120',
+            revertMessage: 'NoPositionUpdates()',
+        })
+
         if (debugMode) console.log('BEFORE BURN 3')
 
         //TODO: make sure active pool liquidity is removed on burn removal
@@ -2043,6 +2058,21 @@ describe('LimitPool Tests', function () {
             upperTickCleared: true,
             expectedUpper: '-120',
             revertMessage: '',
+        })
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-200', 
+            upper: '-120',
+            claim: '-120',
+            liquidityPercent: ethers.utils.parseUnits('0', 37),
+            zeroForOne: false,
+            balanceInIncrease: '6273424767410208531',
+            balanceOutIncrease: '93503056303984116865', //TODO: if we go back to the same tick why is amountOut more?
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            expectedUpper: '-120',
+            revertMessage: 'NoPositionUpdates()',
         })
 
         if (debugMode) console.log('BEFORE MINT 3')

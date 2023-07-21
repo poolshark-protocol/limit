@@ -130,8 +130,9 @@ library Claims {
 
         // early return if no update and amount burned is 0
         //TODO: after we've cycled through claim ticks and there are no position updates just revert - DONE
-        //TODO: add test case for this
-        if (params.amount == 0 && cache.position.claimPriceLast == cache.priceClaim) {
+        if (params.amount == 0 &&
+            (params.zeroForOne ? params.claim == params.lower
+                               : params.claim == params.upper)) {
             require(false, 'NoPositionUpdates()');
         }
 
@@ -142,7 +143,7 @@ library Claims {
         ILimitPoolStructs.UpdateCache memory cache,
         ILimitPoolStructs.UpdateParams memory params,
         ILimitPoolStructs.Immutables memory constants
-    ) internal view returns (
+    ) internal pure returns (
         ILimitPoolStructs.UpdateCache memory
     ) {
         // if half tick priceAt > 0 add amountOut to amountOutClaimed

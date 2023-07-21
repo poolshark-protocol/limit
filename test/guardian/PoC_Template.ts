@@ -72,56 +72,6 @@ describe('LimitPool Tests', function () {
         await mintSigners20(hre.props.token1, tokenAmountBn.mul(10), [hre.props.alice, hre.props.bob])
     })
 
-    it.only('pool0 - Should mint, fill, and burn', async function () {
-        const aliceLiquidity = '20051041647900280328782'
-
-        // Alice mints 0 to 100
-        await validateMint({
-            signer: hre.props.alice,
-            recipient: hre.props.alice.address,
-            lower: '0',
-            upper: '100',
-            amount: tokenAmountBn,
-            zeroForOne: true,
-            balanceInDecrease: tokenAmountBn,
-            liquidityIncrease: aliceLiquidity,
-            upperTickCleared: false,
-            lowerTickCleared: true,
-            revertMessage: '',
-        })
-
-        // Pool price is at tick 0
-        expect(await getPrice(true)).to.eq("79228162514264337593543950336"); // Q96 price E.g. tick 0
-        expect(await getTickAtPrice(true)).to.eq(0);
-
-        // Swaps to just before tick 20
-        await validateSwap({
-            signer: hre.props.alice,
-            recipient: hre.props.alice.address,
-            zeroForOne: false,
-            amountIn: ethers.utils.parseUnits('1', token0Decimals),
-            priceLimit: maxPrice,
-            balanceInDecrease: '1000000000000000000',
-            balanceOutIncrease: '999950129766456738',
-            revertMessage: '',
-        })
-
-        // Alic burns, experiences underflow
-        await validateBurn({
-            signer: hre.props.alice,
-            lower: '0',
-            upper: '100',
-            claim: '0',
-            liquidityAmount: liquidityAmount,
-            zeroForOne: true,
-            balanceInIncrease: '999999999999999999',
-            balanceOutIncrease: '99000049870233543261',
-            lowerTickCleared: true,
-            upperTickCleared: false,
-            revertMessage: '',
-        })
-
-        if (debugMode) await getPositionLiquidity(true, hre.props.alice.address, 0, 100, debugMode)
-    })
+    it.only('PoC Here', async function () {})
 
 });

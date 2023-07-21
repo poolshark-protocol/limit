@@ -419,7 +419,7 @@ export async function validateBurn(params: ValidateBurnParams) {
     const revertMessage = params.revertMessage
     const expectedUpper = params.expectedUpper ? BigNumber.from(params.expectedUpper) : null
     const expectedLower = params.expectedLower ? BigNumber.from(params.expectedLower) : null
-    const compareSnapshot = params.compareSnapshot ? params.compareSnapshot : false
+    const compareSnapshot = params.compareSnapshot ? params.compareSnapshot : true
 
     let balanceInBefore
     let balanceOutBefore
@@ -457,14 +457,14 @@ export async function validateBurn(params: ValidateBurnParams) {
         liquidityAmount = liquidityPercent.mul(positionBefore.liquidity).div(ethers.utils.parseUnits("1",38))
     }
     if (revertMessage == '') {
-        // positionSnapshot = await hre.props.limitPool.snapshot({
-        //     owner: signer.address,
-        //     lower: lower,
-        //     claim: claim,
-        //     upper: upper,
-        //     zeroForOne: zeroForOne,
-        //     burnPercent: liquidityPercent
-        // })
+        positionSnapshot = await hre.props.limitPool.snapshot({
+            owner: signer.address,
+            lower: lower,
+            claim: claim,
+            upper: upper,
+            zeroForOne: zeroForOne,
+            burnPercent: liquidityPercent
+        })
         const burnTxn = await hre.props.limitPool
             .connect(signer)
             .burn({

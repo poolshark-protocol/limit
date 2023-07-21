@@ -197,10 +197,14 @@ contract LimitPool is
             globalState.protocolFee = protocolFee1;
         }
         address feeTo = ILimitPoolManager(owner).feeTo();
+        token0Fees = globalState.protocolFees.token0;
+        token1Fees = globalState.protocolFees.token1;
         globalState.protocolFees.token0 = 0;
         globalState.protocolFees.token1 = 0;
-        SafeTransfers.transferOut(feeTo, token0, token0Fees);
-        SafeTransfers.transferOut(feeTo, token1, token1Fees);
+        if (token0Fees > 0)
+            SafeTransfers.transferOut(feeTo, token0, token0Fees);
+        if (token1Fees > 0)
+            SafeTransfers.transferOut(feeTo, token1, token1Fees);
     }
 
     function _immutables() private view returns (

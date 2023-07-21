@@ -40,7 +40,6 @@ library Ticks {
     );
 
     uint256 internal constant Q96 = 0x1000000000000000000000000;
-    uint256 internal constant Q128 = 0x100000000000000000000000000000000;
 
     function initialize(
         ILimitPoolStructs.TickMap storage tickMap,
@@ -458,7 +457,7 @@ library Ticks {
     ) internal returns (
         ILimitPoolStructs.PoolState memory
     ){
-        /// @auditor - wouuld be smart to protect against the case of epochs crossing
+        /// @auditor - would be smart to protect against the case of epochs crossing
         /// (i.e. pool0 starts crossing into the pool1 active region)
         /// (this is a failure case)
         int24 tickToSave = pool.tickAtPrice;

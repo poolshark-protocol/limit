@@ -55,7 +55,7 @@ interface ILimitPoolStructs {
         address to;
         address refundTo;
         uint128 amount;
-        uint64 mintPercent;
+        uint96 mintPercent;
         int24 lower;
         int24 upper;
         bool zeroForOne;
@@ -113,6 +113,7 @@ interface ILimitPoolStructs {
         PoolState swapPool;
         SwapCache swapCache;
         uint256 liquidityMinted;
+        uint256 mintSize;
         uint256 priceLimit;
         int256 amountIn;
         uint256 amountOut;

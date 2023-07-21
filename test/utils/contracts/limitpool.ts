@@ -54,6 +54,7 @@ export interface ValidateMintParams {
     collectRevertMessage?: string
     expectedLower?: string
     expectedUpper?: string
+    mintPercent?: BigNumber
 }
 
 export interface ValidateSwapParams {
@@ -267,6 +268,7 @@ export async function validateMint(params: ValidateMintParams) {
     const expectedUpper = params.expectedUpper ? BigNumber.from(params.expectedUpper) : null
     const expectedLower = params.expectedLower ? BigNumber.from(params.expectedLower) : null
     const balanceOutIncrease = params.balanceOutIncrease ? BigNumber.from(params.balanceOutIncrease) : 0
+    const mintPercent = params.mintPercent ? params.mintPercent : BN_ZERO
 
     let balanceInBefore
     let balanceOutBefore
@@ -315,7 +317,7 @@ export async function validateMint(params: ValidateMintParams) {
                 lower: lower,
                 upper: upper,
                 zeroForOne: zeroForOne,
-                mintPercent: BN_ZERO
+                mintPercent: mintPercent
             })
         await txn.wait()
     } else {

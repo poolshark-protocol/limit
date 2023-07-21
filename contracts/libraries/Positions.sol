@@ -44,6 +44,7 @@ library Positions {
         // cannot mint empty position
         if (params.amount == 0) require (false, 'PositionAmountZero()');
 
+        cache.mintSize = uint256(params.mintPercent) * uint256(params.amount) / 1e28;
         // calculate L constant
         cache.liquidityMinted = ConstantProduct.getLiquidityForAmounts(
             cache.priceLower,
@@ -98,6 +99,7 @@ library Positions {
             // subtract from remaining input amount
             params.amount -= uint128(swapCache.input);
         }
+        if (params.amount < cache.mintSize) params.amount = 0;
         // move start tick based on amount filled in swap
         //TODO: skip if minAmountMinted
         if ((params.amount > 0 && swapCache.input > 0) ||

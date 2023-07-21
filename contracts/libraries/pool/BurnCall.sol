@@ -25,7 +25,8 @@ library BurnCall {
         mapping(address => mapping(int24 => mapping(int24 => ILimitPoolStructs.Position)))
             storage positions
     ) external returns (ILimitPoolStructs.BurnCache memory) {
-       if (cache.position.claimPriceLast > 0
+        if (cache.position.epochLast == 0) require(false, 'PositionNotFound()');
+        if (cache.position.claimPriceLast > 0
             || params.claim != (params.zeroForOne ? params.lower : params.upper)
             || cache.position.epochLast < (params.zeroForOne ? EpochMap.get(params.lower, tickMap, cache.constants)
                                                              : EpochMap.get(params.upper, tickMap, cache.constants)))

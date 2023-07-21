@@ -29,7 +29,7 @@ library BurnCall {
         if (cache.position.claimPriceLast > 0
             || params.claim != (params.zeroForOne ? params.lower : params.upper)
             || cache.position.epochLast < (params.zeroForOne ? EpochMap.get(params.lower, tickMap, cache.constants)
-                                                                : EpochMap.get(params.upper, tickMap, cache.constants)))
+                                                             : EpochMap.get(params.upper, tickMap, cache.constants)))
         {
             // position has been crossed into
             (

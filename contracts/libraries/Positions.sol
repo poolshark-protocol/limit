@@ -11,7 +11,6 @@ import './EpochMap.sol';
 import './utils/SafeCast.sol';
 import './pool/SwapCall.sol';
 
-
 /// @notice Position management library for ranged liquidity.
 library Positions {
     using SafeCast for uint256;

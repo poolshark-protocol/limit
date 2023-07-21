@@ -52,7 +52,6 @@ library SwapCall {
             cache.output
         );
 
-        //TODO: skip if calling through mint function
         // check balance and execute callback
         uint256 balanceStart = balance(params, cache);
         IPoolsharkSwapCallback(msg.sender).poolsharkSwapCallback(

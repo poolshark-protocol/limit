@@ -314,7 +314,8 @@ export async function validateMint(params: ValidateMintParams) {
                 amount: amountDesired,
                 lower: lower,
                 upper: upper,
-                zeroForOne: zeroForOne
+                zeroForOne: zeroForOne,
+                mintPercent: BN_ZERO
             })
         await txn.wait()
     } else {
@@ -327,7 +328,8 @@ export async function validateMint(params: ValidateMintParams) {
                     lower: lower,
                     upper: upper,
                     amount: amountDesired,
-                    zeroForOne: zeroForOne
+                    zeroForOne: zeroForOne,
+                    mintPercent: BN_ZERO
                 })
         ).to.be.revertedWith(revertMessage)
         return

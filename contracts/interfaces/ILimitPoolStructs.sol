@@ -55,6 +55,7 @@ interface ILimitPoolStructs {
         address to;
         address refundTo;
         uint128 amount;
+        uint64 mintPercent;
         int24 lower;
         int24 upper;
         bool zeroForOne;

@@ -153,7 +153,7 @@ library Claims {
                                                               : cache.priceUpper;
         }
         ILimitPoolStructs.GetDeltasLocals memory locals;
-        if (cache.priceClaim != cache.pool.price)
+        if (params.claim % constants.tickSpacing != 0)
             locals.previousFullTick = TickMap.roundBackWithPrice(params.claim, constants, params.zeroForOne, cache.priceClaim);
         else
             locals.previousFullTick = params.claim;

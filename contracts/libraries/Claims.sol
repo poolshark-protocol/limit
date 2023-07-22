@@ -60,7 +60,7 @@ library Claims {
                 claimTickEpoch = pool.swapEpoch;
             } else if (params.claim % constants.tickSpacing != 0) {
                 if (cache.claimTick.priceAt == 0) {
-                    require (false, 'WrongTickClaimedAt()');
+                    require (false, 'WrongTickClaimedAt1()');
                 }
                 cache.priceClaim = cache.claimTick.priceAt;
             }
@@ -83,7 +83,7 @@ library Claims {
                 claimTickEpoch = pool.swapEpoch;
             } else if (params.claim % constants.tickSpacing != 0) {
                 if (cache.claimTick.priceAt == 0) {
-                    require (false, 'WrongTickClaimedAt()');
+                    require (false, 'WrongTickClaimedAt2()');
                 }
                 cache.priceClaim = cache.claimTick.priceAt;
             }
@@ -92,7 +92,7 @@ library Claims {
         // validate claim tick
         if (params.claim == (params.zeroForOne ? params.upper : params.lower)) {
              if (claimTickEpoch <= cache.position.epochLast)
-                require (false, 'WrongTickClaimedAt()');
+                require (false, 'WrongTickClaimedAt3()');
         } else if (params.amount > 0) {
             /// @dev - partway claim is valid as long as liquidity is not being removed
             int24 claimTickNext = params.zeroForOne
@@ -101,7 +101,7 @@ library Claims {
             // if we cleared the final tick of their position, this is the wrong claim tick
             if (params.zeroForOne ? claimTickNext > params.upper
                                   : claimTickNext < params.lower) {
-                require (false, 'WrongTickClaimedAt()');
+                require (false, 'WrongTickClaimedAt4()');
             }
             // zero fill or partial fill
             /// @dev - if the next tick was crossed after position creation, the claim tick is incorrect
@@ -109,13 +109,13 @@ library Claims {
             uint32 claimTickNextAccumEpoch = EpochMap.get(claimTickNext, tickMap, constants);
             ///@dev - next swapEpoch should not be greater
             if (claimTickNextAccumEpoch > cache.position.epochLast) {
-                require (false, 'WrongTickClaimedAt()');
+                require (false, 'WrongTickClaimedAt5()');
             }
         }
         if (params.claim != params.upper && params.claim != params.lower) {
             // check epochLast on claim tick
             if (claimTickEpoch <= cache.position.epochLast)
-                require (false, 'WrongTickClaimedAt()');
+                require (false, 'WrongTickClaimedAt6()');
             // prevent position overwriting at claim tick
             if (params.zeroForOne) {
                 if (positions[params.owner][params.lower][params.claim].liquidity > 0) {

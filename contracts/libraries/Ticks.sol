@@ -214,7 +214,7 @@ library Ticks {
         uint160 priceLimit,
         ILimitPoolStructs.PoolState memory pool,
         ILimitPoolStructs.SwapCache memory cache
-    ) internal pure returns (
+    ) internal view returns (
         ILimitPoolStructs.PoolState memory,
         ILimitPoolStructs.SwapCache memory
     ) {
@@ -343,20 +343,26 @@ library Ticks {
                 EpochMap.set(pool.tickAtPrice, pool.swapEpoch, tickMap, cache.constants);
             }
         }
-        /// @dev - this should always be positive if liquidity is 0
-        pool.liquidity += uint128(ticks[pool.tickAtPrice].liquidityDelta);
-        ticks[pool.tickAtPrice] = ILimitPoolStructs.Tick(0,0);
 
-        /// @dev can we delete the tick here?
-        if (pool.tickAtPrice % cache.constants.tickSpacing == 0){
+        // increment pool liquidity
+        pool.liquidity += uint128(ticks[pool.tickAtPrice].liquidityDelta);
+        int24 tickToClear = pool.tickAtPrice;
+
+        if (pool.tickAtPrice % cache.constants.tickSpacing == 0) {
+            // if full tick crossed
             pool.price = ConstantProduct.getPriceAtTick(pool.tickAtPrice, cache.constants);
         } else {
+            // if half tick crossed
             uint160 priceAt = ticks[pool.tickAtPrice].priceAt;
             if (priceAt > 0) {
                 pool.price = priceAt;
                 pool.tickAtPrice = ConstantProduct.getTickAtPrice(priceAt, cache.constants);
             }
         }
+
+        // zero out tick
+        ticks[tickToClear] = ILimitPoolStructs.Tick(0,0);
+
         return (cache, pool);
     }
 
@@ -536,6 +542,7 @@ library Ticks {
             // if we are exactly at the full tick liquidity delta modified above 
             pool.liquidity = 0;
         }
+
         ticks[tickToSave] = tick;
         return pool;
     }

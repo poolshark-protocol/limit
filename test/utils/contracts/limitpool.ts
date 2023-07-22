@@ -42,10 +42,10 @@ export interface ValidateMintParams {
     recipient: string
     lower: string
     upper: string
-    amount: BigNumber
+    amount: string
     zeroForOne: boolean
-    balanceInDecrease: BigNumber
-    balanceOutIncrease?: BigNumber
+    balanceInDecrease: string
+    balanceOutIncrease?: string
     liquidityIncrease: string
     positionLiquidityChange?: string
     upperTickCleared: boolean
@@ -259,7 +259,7 @@ export async function validateMint(params: ValidateMintParams) {
     const upper = BigNumber.from(params.upper)
     const amountDesired = params.amount
     const zeroForOne = params.zeroForOne
-    const balanceInDecrease = params.balanceInDecrease
+    const balanceInDecrease = BigNumber.from(params.balanceInDecrease)
     const liquidityIncrease = BigNumber.from(params.liquidityIncrease)
     const upperTickCleared = params.upperTickCleared
     const lowerTickCleared = params.lowerTickCleared
@@ -267,7 +267,7 @@ export async function validateMint(params: ValidateMintParams) {
     const collectRevertMessage = params.collectRevertMessage
     const expectedUpper = params.expectedUpper ? BigNumber.from(params.expectedUpper) : null
     const expectedLower = params.expectedLower ? BigNumber.from(params.expectedLower) : null
-    const balanceOutIncrease = params.balanceOutIncrease ? BigNumber.from(params.balanceOutIncrease) : 0
+    const balanceOutIncrease = params.balanceOutIncrease ? BigNumber.from(params.balanceOutIncrease) : BN_ZERO
     const mintPercent = params.mintPercent ? params.mintPercent : BN_ZERO
 
     let balanceInBefore

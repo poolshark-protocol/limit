@@ -99,9 +99,9 @@ library Positions {
             // subtract from remaining input amount
             params.amount -= uint128(swapCache.input);
         }
+
         if (params.amount < cache.mintSize) params.amount = 0;
         // move start tick based on amount filled in swap
-        //TODO: skip if minAmountMinted
         if ((params.amount > 0 && swapCache.input > 0) ||
             (params.zeroForOne ? cache.priceLower < cache.swapPool.price
                                : cache.priceUpper > cache.swapPool.price)
@@ -229,7 +229,7 @@ library Positions {
                 if (pool.price > cache.priceLower ||
                     EpochMap.get(nextTick, tickMap, constants)
                         > cache.position.epochLast) {
-                    require (false, 'WrongTickClaimedAt()');            
+                    require (false, 'WrongTickClaimedAt7()');            
                 }
                 if (pool.price == cache.priceLower) {
                     pool.liquidity -= params.amount;
@@ -244,7 +244,7 @@ library Positions {
                 if (pool.price < cache.priceUpper ||
                     EpochMap.get(previousTick, tickMap, constants)
                         > cache.position.epochLast) {
-                    require (false, 'WrongTickClaimedAt()');            
+                    require (false, 'WrongTickClaimedAt8()');            
                 }
                 if (pool.price == cache.priceUpper) {
                     pool.liquidity -= params.amount;
@@ -319,12 +319,11 @@ library Positions {
 
         if (cache.earlyReturn)
             return (state, pool, params.claim);
-        
+
         // update pool liquidity
-        if (params.zeroForOne ? (cache.priceLower <= pool.price && cache.priceUpper > pool.price)
-                              : (cache.priceLower < pool.price && cache.priceUpper >= pool.price))
+        if (cache.priceClaim == pool.price)
             pool.liquidity -= params.amount;
-        
+
         if (params.amount > 0) {
             if (params.claim == (params.zeroForOne ? params.upper : params.lower)) {
                 // only remove once if final tick of position

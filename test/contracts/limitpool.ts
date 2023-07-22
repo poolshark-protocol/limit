@@ -3008,7 +3008,7 @@ describe('LimitPool Tests', function () {
         expect(await getLiquidity(false, false)).to.be.equal(BN_ZERO)
 
         expect(await getTickAtPrice(false)).to.be.equal(100)
-        console.log('BEFORE MINT 3')
+        if (debugMode) console.log('BEFORE MINT 3')
         // we should have swapped some amount here
         await validateMint({
             signer: hre.props.bob,
@@ -3070,7 +3070,7 @@ describe('LimitPool Tests', function () {
         })
         // The fix is to move the ticks[pool.tickAtPrice] = ILimitPoolStructs.Tick(0,0); line to the end of
         // the Ticks.unlock function, this way the pool.price is able to update as the priceAt will not always be 0.
-        if (true) {
+        if (balanceCheck) {
             console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
             console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
         }

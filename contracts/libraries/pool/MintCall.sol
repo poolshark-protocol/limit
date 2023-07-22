@@ -4,7 +4,6 @@ pragma solidity 0.8.13;
 import '../../interfaces/ILimitPoolStructs.sol';
 import '../Positions.sol';
 import '../utils/Collect.sol';
-import 'hardhat/console.sol';
 
 library MintCall {
     event MintLimit(
@@ -34,7 +33,7 @@ library MintCall {
         if (cache.swapPool.liquidity == 0) {
             (cache, cache.swapPool) = Ticks.unlock(cache, cache.swapPool, swapTicks, tickMap, !params.zeroForOne);
         }
-        console.log('swap pool liquidity', cache.swapPool.liquidity);
+
         // resize position if necessary
         (params, cache) = Positions.resize(
             params,

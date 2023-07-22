@@ -10,6 +10,7 @@ import './Claims.sol';
 import './EpochMap.sol';
 import './utils/SafeCast.sol';
 import './pool/SwapCall.sol';
+import 'hardhat/console.sol';
 
 /// @notice Position management library for ranged liquidity.
 library Positions {
@@ -77,6 +78,8 @@ library Positions {
         else if (cache.swapPool.swapEpoch < cache.pool.swapEpoch)
             cache.swapPool.swapEpoch = cache.pool.swapEpoch;
 
+        console.log('swap pool liquidity 2', cache.priceLimit < cache.swapPool.price);
+
         // only swap if priceLimit is beyond current pool price
         if (params.zeroForOne ? cache.priceLimit < cache.swapPool.price
                               : cache.priceLimit > cache.swapPool.price) {
@@ -99,9 +102,9 @@ library Positions {
             // subtract from remaining input amount
             params.amount -= uint128(swapCache.input);
         }
+        console.log('swap check', swapCache.input, swapCache.output, uint24(cache.tickLimit));
         if (params.amount < cache.mintSize) params.amount = 0;
         // move start tick based on amount filled in swap
-        //TODO: skip if minAmountMinted
         if ((params.amount > 0 && swapCache.input > 0) ||
             (params.zeroForOne ? cache.priceLower < cache.swapPool.price
                                : cache.priceUpper > cache.swapPool.price)
@@ -147,6 +150,7 @@ library Positions {
         }
         // save swapCache
         cache.swapCache = swapCache;
+        console.log('tick bounds', uint24(params.lower), uint24(params.upper));
 
         return (
             params,
@@ -229,7 +233,7 @@ library Positions {
                 if (pool.price > cache.priceLower ||
                     EpochMap.get(nextTick, tickMap, constants)
                         > cache.position.epochLast) {
-                    require (false, 'WrongTickClaimedAt()');            
+                    require (false, 'WrongTickClaimedAt7()');            
                 }
                 if (pool.price == cache.priceLower) {
                     pool.liquidity -= params.amount;
@@ -244,7 +248,7 @@ library Positions {
                 if (pool.price < cache.priceUpper ||
                     EpochMap.get(previousTick, tickMap, constants)
                         > cache.position.epochLast) {
-                    require (false, 'WrongTickClaimedAt()');            
+                    require (false, 'WrongTickClaimedAt8()');            
                 }
                 if (pool.price == cache.priceUpper) {
                     pool.liquidity -= params.amount;
@@ -319,12 +323,11 @@ library Positions {
 
         if (cache.earlyReturn)
             return (state, pool, params.claim);
-        
+        console.log('before pool liquidity', pool.liquidity);
         // update pool liquidity
-        if (params.zeroForOne ? (cache.priceLower <= pool.price && cache.priceUpper > pool.price)
-                              : (cache.priceLower < pool.price && cache.priceUpper >= pool.price))
+        if (cache.priceClaim == pool.price)
             pool.liquidity -= params.amount;
-        
+        console.log('after pool liquidity', pool.liquidity);
         if (params.amount > 0) {
             if (params.claim == (params.zeroForOne ? params.upper : params.lower)) {
                 // only remove once if final tick of position

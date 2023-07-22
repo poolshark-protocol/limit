@@ -11,6 +11,7 @@ import './math/OverflowMath.sol';
 import './TickMap.sol';
 import './EpochMap.sol';
 import './utils/SafeCast.sol';
+import 'hardhat/console.sol';
 
 /// @notice Tick management library
 library Ticks {
@@ -126,6 +127,7 @@ library Ticks {
         cache.pool.swapEpoch += 1;
         // grab latest sample and store in cache for _cross
         while (cache.cross) {
+            console.log('next tick to cross', uint24(cache.crossTick), cache.liquidity, ticks[cache.crossTick].priceAt);
             cache.crossPrice = cache.crossTick % cache.constants.tickSpacing == 0 ? 
                                     ConstantProduct.getPriceAtTick(cache.crossTick, cache.constants)
                                   : ticks[cache.crossTick].priceAt;
@@ -214,7 +216,7 @@ library Ticks {
         uint160 priceLimit,
         ILimitPoolStructs.PoolState memory pool,
         ILimitPoolStructs.SwapCache memory cache
-    ) internal pure returns (
+    ) internal view returns (
         ILimitPoolStructs.PoolState memory,
         ILimitPoolStructs.SwapCache memory
     ) {
@@ -224,6 +226,7 @@ library Ticks {
             cache.price == cache.constants.bounds.max ||
             cache.amountLeft == 0)
         {
+            console.log('early swap return');
             cache.cross = false;
             return (pool, cache);
         }
@@ -343,20 +346,28 @@ library Ticks {
                 EpochMap.set(pool.tickAtPrice, pool.swapEpoch, tickMap, cache.constants);
             }
         }
-        /// @dev - this should always be positive if liquidity is 0
-        pool.liquidity += uint128(ticks[pool.tickAtPrice].liquidityDelta);
-        ticks[pool.tickAtPrice] = ILimitPoolStructs.Tick(0,0);
 
-        /// @dev can we delete the tick here?
-        if (pool.tickAtPrice % cache.constants.tickSpacing == 0){
+        // increment pool liquidity
+        pool.liquidity += uint128(ticks[pool.tickAtPrice].liquidityDelta);
+        int24 tickToClear = pool.tickAtPrice;
+        console.log('pool liquidity', pool.liquidity);
+
+        if (pool.tickAtPrice % cache.constants.tickSpacing == 0) {
+            // if full tick crossed
             pool.price = ConstantProduct.getPriceAtTick(pool.tickAtPrice, cache.constants);
         } else {
+            // if half tick crossed
             uint160 priceAt = ticks[pool.tickAtPrice].priceAt;
             if (priceAt > 0) {
                 pool.price = priceAt;
                 pool.tickAtPrice = ConstantProduct.getTickAtPrice(priceAt, cache.constants);
             }
         }
+        console.log('price and tick', uint24(pool.tickAtPrice)); 
+
+        // zero out tick
+        ticks[tickToClear] = ILimitPoolStructs.Tick(0,0);
+
         return (cache, pool);
     }
 
@@ -536,6 +547,7 @@ library Ticks {
             // if we are exactly at the full tick liquidity delta modified above 
             pool.liquidity = 0;
         }
+        console.log('saving tick', uint24(tickToSave), uint128(tick.liquidityDelta));
         ticks[tickToSave] = tick;
         return pool;
     }

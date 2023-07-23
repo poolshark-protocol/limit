@@ -11,6 +11,7 @@ import './math/OverflowMath.sol';
 import './TickMap.sol';
 import './EpochMap.sol';
 import './utils/SafeCast.sol';
+import 'hardhat/console.sol';
 
 /// @notice Tick management library
 library Ticks {
@@ -122,6 +123,7 @@ library Ticks {
             exactIn: params.exactIn,
             amountLeft: params.amount
         });
+        console.log('initial swap state', pool.liquidity, uint24(cache.crossTick), uint24(pool.tickAtPrice));
         // increment swap epoch
         cache.pool.swapEpoch += 1;
         // grab latest sample and store in cache for _cross
@@ -148,7 +150,7 @@ library Ticks {
         } else {
             pool.tickAtPrice = cache.crossTick;
         }
-
+        console.log('input and output', cache.input, cache.output, uint24(pool.tickAtPrice));
         emit Swap(
             params.to,
             params.zeroForOne,
@@ -361,7 +363,9 @@ library Ticks {
         }
 
         // zero out tick
-        ticks[tickToClear] = ILimitPoolStructs.Tick(0,0);
+        ticks[tickToClear].liquidityDelta = 0;
+        Ticks.clear(ticks, cache.constants, tickMap, tickToClear);
+        
 
         return (cache, pool);
     }
@@ -379,18 +383,21 @@ library Ticks {
         EpochMap.set(cache.crossTick, cache.pool.swapEpoch, tickMap, cache.constants);
         int128 liquidityDelta = ticks[cache.crossTick].liquidityDelta;
 
+        console.log('crossing tick', uint24(cache.crossTick), liquidityDelta > 0 ? 'adding liquidity' : 'removing liquidity', liquidityDelta > 0 ? uint128(liquidityDelta) : uint128(-liquidityDelta));
+
         if (liquidityDelta > 0) cache.liquidity += uint128(liquidityDelta);
         else cache.liquidity -= uint128(-liquidityDelta);
         pool.tickAtPrice = cache.crossTick;
 
         // zero out liquidityDelta and priceAt
         ticks[cache.crossTick] = ILimitPoolStructs.Tick(0,0);
-        TickMap.unset(tickMap, cache.crossTick, cache.constants.tickSpacing);
+        clear(ticks, cache.constants, tickMap, cache.crossTick);
         if (zeroForOne) {
             cache.crossTick = TickMap.previous(tickMap, cache.crossTick, cache.constants.tickSpacing, false);
         } else {
             cache.crossTick = TickMap.next(tickMap, cache.crossTick, cache.constants.tickSpacing);
         }
+        console.log('next tick to cross', uint24(cache.crossTick), ticks[cache.crossTick].priceAt);
         return (pool, cache);
     }
 
@@ -500,8 +507,8 @@ library Ticks {
             if (tick.priceAt == 0) {
                 tick.priceAt = pool.price;
             }
-            // if not empty advance the previous fill
             else {
+                // we need to blend the two partial fills into a single tick
                 ILimitPoolStructs.InsertSingleLocals memory locals;
                 if (params.zeroForOne) {
                     // 0 -> 1 positions price moves up so nextFullTick is greater
@@ -556,6 +563,9 @@ library Ticks {
         // set ticks based on claim and zeroForOne
         int24 lower = params.zeroForOne ? params.claim : params.lower;
         int24 upper = params.zeroForOne ? params.upper : params.claim;
+        if (lower == 15 || upper == 15) {
+            console.log('removing from tick 15', params.amount);
+        }
         {    
             ILimitPoolStructs.Tick memory tickLower = ticks[lower];
             
@@ -567,6 +577,9 @@ library Ticks {
                 }
                 ticks[lower] = tickLower;
             }
+                    if (lower == 15) {
+            console.log('removing from tick 15 empty lower check', _empty(tickLower));
+        }
             if (lower != ConstantProduct.minTick(constants.tickSpacing) && _empty(tickLower)) {
                 ticks[lower].priceAt = 0;
                 TickMap.unset(tickMap, lower, constants.tickSpacing);
@@ -582,9 +595,28 @@ library Ticks {
                 }
                 ticks[upper] = tickUpper;
             }
+                                if (upper == 15) {
+            console.log('removing from tick 15 empty upper check', _empty(tickUpper));
+        }
             if (upper != ConstantProduct.maxTick(constants.tickSpacing) && _empty(tickUpper)) {
                 ticks[upper].priceAt = 0;
                 TickMap.unset(tickMap, upper, constants.tickSpacing);
+            }
+        }
+    }
+
+    function clear(
+        mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
+        ILimitPoolStructs.Immutables memory constants,
+        ILimitPoolStructs.TickMap storage tickMap,
+        int24 tickToClear
+    ) internal {
+        if (_empty(ticks[tickToClear])) {
+            if (tickToClear != ConstantProduct.maxTick(constants.tickSpacing) &&
+                tickToClear != ConstantProduct.minTick(constants.tickSpacing)) {
+                ticks[tickToClear] = ILimitPoolStructs.Tick(0,0);
+                TickMap.unset(tickMap, tickToClear, constants.tickSpacing);
+                console.log('unsetting tick', tickToClear > 0 ? 'positive' : 'negative', tickToClear > 0 ? uint24(tickToClear) : uint24(-tickToClear));
             }
         }
     }

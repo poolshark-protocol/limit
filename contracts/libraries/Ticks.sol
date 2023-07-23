@@ -128,7 +128,7 @@ library Ticks {
         cache.pool.swapEpoch += 1;
         // grab latest sample and store in cache for _cross
         while (cache.cross) {
-            cache.crossPrice = cache.crossTick % cache.constants.tickSpacing == 0 ? 
+            cache.crossPrice = ticks[cache.crossTick].priceAt == 0 ? 
                                     ConstantProduct.getPriceAtTick(cache.crossTick, cache.constants)
                                   : ticks[cache.crossTick].priceAt;
             (pool, cache) = _quoteSingle(params.zeroForOne, params.priceLimit, pool, cache);
@@ -190,9 +190,9 @@ library Ticks {
             amountLeft: params.amount
         });
         while (cache.cross) {
-                        cache.crossPrice = (cache.crossTick % cache.constants.tickSpacing == 0) ? 
-                                    ConstantProduct.getPriceAtTick(cache.crossTick, cache.constants)
-                                  : ticks[cache.crossTick].priceAt;
+            cache.crossPrice = ticks[cache.crossTick].priceAt == 0 ? 
+                                 ConstantProduct.getPriceAtTick(cache.crossTick, cache.constants)
+                               : ticks[cache.crossTick].priceAt;
             (pool, cache) = _quoteSingle(params.zeroForOne, params.priceLimit, pool, cache);
             if (cache.cross) {
                 (pool, cache) = _pass(
@@ -349,17 +349,15 @@ library Ticks {
         // increment pool liquidity
         pool.liquidity += uint128(ticks[pool.tickAtPrice].liquidityDelta);
         int24 tickToClear = pool.tickAtPrice;
+        uint160 tickPriceAt = ticks[pool.tickAtPrice].priceAt;
 
-        if (pool.tickAtPrice % cache.constants.tickSpacing == 0) {
+        if (tickPriceAt == 0) {
             // if full tick crossed
             pool.price = ConstantProduct.getPriceAtTick(pool.tickAtPrice, cache.constants);
         } else {
             // if half tick crossed
-            uint160 priceAt = ticks[pool.tickAtPrice].priceAt;
-            if (priceAt > 0) {
-                pool.price = priceAt;
-                pool.tickAtPrice = ConstantProduct.getTickAtPrice(priceAt, cache.constants);
-            }
+            pool.price = tickPriceAt;
+            pool.tickAtPrice = ConstantProduct.getTickAtPrice(tickPriceAt, cache.constants);
         }
 
         // zero out tick

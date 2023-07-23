@@ -580,10 +580,7 @@ library Ticks {
                     if (lower == 15) {
             console.log('removing from tick 15 empty lower check', _empty(tickLower));
         }
-            if (lower != ConstantProduct.minTick(constants.tickSpacing) && _empty(tickLower)) {
-                ticks[lower].priceAt = 0;
-                TickMap.unset(tickMap, lower, constants.tickSpacing);
-            }
+            clear(ticks, constants, tickMap, lower);
         }
         {
             ILimitPoolStructs.Tick memory tickUpper = ticks[upper];
@@ -598,10 +595,7 @@ library Ticks {
                                 if (upper == 15) {
             console.log('removing from tick 15 empty upper check', _empty(tickUpper));
         }
-            if (upper != ConstantProduct.maxTick(constants.tickSpacing) && _empty(tickUpper)) {
-                ticks[upper].priceAt = 0;
-                TickMap.unset(tickMap, upper, constants.tickSpacing);
-            }
+            clear(ticks, constants, tickMap, upper);
         }
     }
 

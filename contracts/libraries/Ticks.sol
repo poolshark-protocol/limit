@@ -214,7 +214,7 @@ library Ticks {
         uint160 priceLimit,
         ILimitPoolStructs.PoolState memory pool,
         ILimitPoolStructs.SwapCache memory cache
-    ) internal view returns (
+    ) internal pure returns (
         ILimitPoolStructs.PoolState memory,
         ILimitPoolStructs.SwapCache memory
     ) {
@@ -499,7 +499,6 @@ library Ticks {
             // if empty just save the pool price
             if (tick.priceAt == 0) {
                 tick.priceAt = pool.price;
-                pool.liquidity = 0;
             }
             // if not empty advance the previous fill
             else {
@@ -520,8 +519,6 @@ library Ticks {
                     tick.priceAt = ConstantProduct.getNewPrice(uint256(locals.pricePrevious), uint128(tick.liquidityDelta), locals.amountOutExact, false, true).toUint160();
                     // dx to the next tick is less than before the tick blend
                     EpochMap.set(tickToSave, pool.swapEpoch, tickMap, constants);
-                    pool.liquidity = 0;
-                    // guard against next tick being crossed
                 } else {
                     // 0 -> 1 positions price moves up so nextFullTick is lesser
                     locals.previousFullTick = tickToSave + constants.tickSpacing / 2;
@@ -535,12 +532,14 @@ library Ticks {
                     tick.priceAt = ConstantProduct.getNewPrice(uint256(locals.pricePrevious), uint128(tick.liquidityDelta), locals.amountOutExact, true, true).toUint160();
                     // mark epoch for second partial fill positions
                     EpochMap.set(tickToSave, pool.swapEpoch, tickMap, constants);
-                    pool.liquidity = 0;
                 }
             }
-        } else if ((params.zeroForOne ? params.lower : params.upper) != tickToSave) {
-            // if we are exactly at the full tick liquidity delta modified above 
+        }
+        // invariant => if we save liquidity to tick clear pool liquidity
+        if ((tickToSave != (params.zeroForOne ? params.lower : params.upper))) {
             pool.liquidity = 0;
+        } else {
+            tick.liquidityDelta -= int128(pool.liquidity);
         }
 
         ticks[tickToSave] = tick;

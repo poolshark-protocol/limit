@@ -3504,7 +3504,7 @@ describe('LimitPool Tests', function () {
             balanceOutIncrease: '199999999999999999999',
             revertMessage: ''
         })
-        await getLiquidity(true, true)
+        if (debugMode) await getLiquidity(true, true)
         await validateBurn({
             signer: hre.props.alice,
             lower: '-100', 
@@ -3546,7 +3546,7 @@ describe('LimitPool Tests', function () {
             balanceOutIncrease: '0',
             revertMessage: '',
         })
-        await getLiquidity(true, true)
+        if (debugMode) await getLiquidity(true, true)
         await validateSwap({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
@@ -3557,7 +3557,7 @@ describe('LimitPool Tests', function () {
             balanceOutIncrease: '0',
             revertMessage: '',
         })
-        return
+
         await validateSwap({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
@@ -3572,7 +3572,7 @@ describe('LimitPool Tests', function () {
         const aliceLiquidity = '10000458327205120325604';
         const bobLiquidity = '10000458327205120325604';
 
-        expect(await getTickAtPrice(false)).to.eq(0);
+        expect(await getTickAtPrice(false)).to.eq(-887270);
 
         await validateMint({
             signer: hre.props.bob,

@@ -11,7 +11,6 @@ import './math/OverflowMath.sol';
 import './TickMap.sol';
 import './EpochMap.sol';
 import './utils/SafeCast.sol';
-import 'hardhat/console.sol';
 
 /// @notice Tick management library
 library Ticks {
@@ -137,7 +136,6 @@ library Ticks {
                                     ConstantProduct.getPriceAtTick(cache.crossTick, cache.constants)
                                   : ticks[cache.crossTick].priceAt;
             }
-            console.log('cross price check', cache.crossPrice == pool.price);
             (pool, cache) = _quoteSingle(params.zeroForOne, params.priceLimit, pool, cache);
             if (cache.cross) {
                 (pool, cache) = _cross(

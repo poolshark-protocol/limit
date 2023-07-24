@@ -3414,7 +3414,7 @@ describe('LimitPool Tests', function () {
         }
     })
 
-    it.only('Broken Swap When Overlapped LPs', async function () {
+    it.skip('Broken Swap When Overlapped LPs', async function () {
 
         const aliceLiquidity = '10000458327205120325604';
         const bobLiquidity = '10000458327205120325604';

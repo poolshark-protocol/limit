@@ -130,9 +130,9 @@ library Ticks {
             cache.crossPrice = ticks[cache.crossTick].priceAt == 0 ? 
                                     ConstantProduct.getPriceAtTick(cache.crossTick, cache.constants)
                                   : ticks[cache.crossTick].priceAt;
-            if (pool.price == cache.crossPrice) {
-                cache.crossTick = params.zeroForOne ? TickMap.previous(tickMap, pool.tickAtPrice, cache.constants.tickSpacing, false) 
-                                                    : TickMap.next(tickMap, pool.tickAtPrice, cache.constants.tickSpacing);
+            // handle price being at cross tick
+            if (params.zeroForOne && pool.price == cache.crossPrice) {
+                cache.crossTick = TickMap.previous(tickMap, pool.tickAtPrice, cache.constants.tickSpacing, false);
                 cache.crossPrice = ticks[cache.crossTick].priceAt == 0 ? 
                                     ConstantProduct.getPriceAtTick(cache.crossTick, cache.constants)
                                   : ticks[cache.crossTick].priceAt;
@@ -200,9 +200,8 @@ library Ticks {
                                  ConstantProduct.getPriceAtTick(cache.crossTick, cache.constants)
                                : ticks[cache.crossTick].priceAt;
             // handle price being at cross tick
-            if (pool.price == cache.crossPrice) {
-                cache.crossTick = params.zeroForOne ? TickMap.previous(tickMap, pool.tickAtPrice, cache.constants.tickSpacing, false) 
-                                                    : TickMap.next(tickMap, pool.tickAtPrice, cache.constants.tickSpacing);
+            if (params.zeroForOne && pool.price == cache.crossPrice) {
+                cache.crossTick = TickMap.previous(tickMap, pool.tickAtPrice, cache.constants.tickSpacing, false);
                 cache.crossPrice = ticks[cache.crossTick].priceAt == 0 ? 
                                     ConstantProduct.getPriceAtTick(cache.crossTick, cache.constants)
                                   : ticks[cache.crossTick].priceAt;

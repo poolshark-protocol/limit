@@ -11,7 +11,6 @@ import './math/OverflowMath.sol';
 import './TickMap.sol';
 import './EpochMap.sol';
 import './utils/SafeCast.sol';
-import 'hardhat/console.sol';
 
 /// @notice Tick management library
 library Ticks {

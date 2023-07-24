@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.13;
+pragma solidity 0.8.13;
 
 import './modules/curves/ICurveMath.sol';
 import './modules/sources/ITwapSource.sol';
@@ -55,7 +55,7 @@ interface ILimitPoolStructs {
         address to;
         address refundTo;
         uint128 amount;
-        uint64 mintPercent;
+        uint96 mintPercent;
         int24 lower;
         int24 upper;
         bool zeroForOne;
@@ -113,6 +113,7 @@ interface ILimitPoolStructs {
         PoolState swapPool;
         SwapCache swapCache;
         uint256 liquidityMinted;
+        uint256 mintSize;
         uint256 priceLimit;
         int256 amountIn;
         uint256 amountOut;

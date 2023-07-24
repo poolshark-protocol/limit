@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.13;
+pragma solidity 0.8.13;
 
 import '../../interfaces/ILimitPoolStructs.sol';
 import '../Positions.sol';
@@ -25,15 +25,13 @@ library BurnCall {
         mapping(address => mapping(int24 => mapping(int24 => ILimitPoolStructs.Position)))
             storage positions
     ) external returns (ILimitPoolStructs.BurnCache memory) {
-       if (cache.position.claimPriceLast > 0
+        if (cache.position.epochLast == 0) require(false, 'PositionNotFound()');
+        if (cache.position.claimPriceLast > 0
             || params.claim != (params.zeroForOne ? params.lower : params.upper)
             || cache.position.epochLast < (params.zeroForOne ? EpochMap.get(params.lower, tickMap, cache.constants)
                                                              : EpochMap.get(params.upper, tickMap, cache.constants)))
-        //TODO: claim is still lower but position has been crossed into - DONE
-        //TODO: test case for this now
-        // or position has been crossed into
         {
-            // if position has been crossed into
+            // position has been crossed into
             (
                 cache.state,
                 cache.pool,
@@ -56,7 +54,7 @@ library BurnCall {
                 cache.constants
             );
         } else {
-            // if position hasn't been crossed into
+            // position has not been crossed into
             (, cache.pool) = Positions.remove(
                 positions,
                 ticks,

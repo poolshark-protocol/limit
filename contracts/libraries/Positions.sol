@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.13;
+pragma solidity 0.8.13;
 
 import '../interfaces/modules/curves/ICurveMath.sol';
 import './Ticks.sol';
@@ -13,8 +13,6 @@ import './pool/SwapCall.sol';
 
 /// @notice Position management library for ranged liquidity.
 library Positions {
-    uint256 internal constant Q96 = 0x1000000000000000000000000;
-
     using SafeCast for uint256;
 
     event BurnLimit(
@@ -46,6 +44,7 @@ library Positions {
         // cannot mint empty position
         if (params.amount == 0) require (false, 'PositionAmountZero()');
 
+        cache.mintSize = uint256(params.mintPercent) * uint256(params.amount) / 1e28;
         // calculate L constant
         cache.liquidityMinted = ConstantProduct.getLiquidityForAmounts(
             cache.priceLower,
@@ -100,8 +99,9 @@ library Positions {
             // subtract from remaining input amount
             params.amount -= uint128(swapCache.input);
         }
+
+        if (params.amount < cache.mintSize) params.amount = 0;
         // move start tick based on amount filled in swap
-        //TODO: skip if minAmountMinted
         if ((params.amount > 0 && swapCache.input > 0) ||
             (params.zeroForOne ? cache.priceLower < cache.swapPool.price
                                : cache.priceUpper > cache.swapPool.price)
@@ -206,8 +206,6 @@ library Positions {
         ILimitPoolStructs.UpdateParams memory params,
         ILimitPoolStructs.Immutables memory constants
     ) internal returns (uint128, ILimitPoolStructs.PoolState memory) {
-        // validate burn percentage
-        if (params.amount > 1e38) require (false, 'InvalidBurnPercentage()');
         // initialize cache
         ILimitPoolStructs.UpdateCache memory cache;
         cache.position = positions[msg.sender][params.lower][params.upper];
@@ -222,35 +220,34 @@ library Positions {
         if (params.amount == 0) return (0, pool);
         if (params.amount > cache.position.liquidity) {
             require (false, 'NotEnoughPositionLiquidity()');
-        } else {
-            /// @dev - validate needed in case user passes in wrong tick
-            if (params.zeroForOne) {
-                if (EpochMap.get(params.lower, tickMap, constants)
-                            > cache.position.epochLast) {
-                    int24 nextTick = TickMap.next(tickMap, params.lower, constants.tickSpacing);
-                    if (pool.price > cache.priceLower ||
-                        EpochMap.get(nextTick, tickMap, constants)
-                            > cache.position.epochLast) {
-                        require (false, 'WrongTickClaimedAt()');            
-                    }
-                    if (pool.price == cache.priceLower) {
-                        pool.liquidity -= params.amount;
-                    }
+        }
+        /// @dev - validate position has not been crossed into
+        if (params.zeroForOne) {
+            if (EpochMap.get(params.lower, tickMap, constants)
+                        > cache.position.epochLast) {
+                int24 nextTick = TickMap.next(tickMap, params.lower, constants.tickSpacing);
+                if (pool.price > cache.priceLower ||
+                    EpochMap.get(nextTick, tickMap, constants)
+                        > cache.position.epochLast) {
+                    require (false, 'WrongTickClaimedAt7()');            
                 }
-                // if pool price is further along
-                // OR next tick has a greater epoch
-            } else {
-                if (EpochMap.get(params.upper, tickMap, constants)
-                            > cache.position.epochLast) {
-                    int24 previousTick = TickMap.previous(tickMap, params.upper, constants.tickSpacing, false);
-                    if (pool.price < cache.priceUpper ||
-                        EpochMap.get(previousTick, tickMap, constants)
-                            > cache.position.epochLast) {
-                        require (false, 'WrongTickClaimedAt()');            
-                    }
-                    if (pool.price == cache.priceUpper) {
-                        pool.liquidity -= params.amount;
-                    }
+                if (pool.price == cache.priceLower) {
+                    pool.liquidity -= params.amount;
+                }
+            }
+            // if pool price is further along
+            // OR next tick has a greater epoch
+        } else {
+            if (EpochMap.get(params.upper, tickMap, constants)
+                        > cache.position.epochLast) {
+                int24 previousTick = TickMap.previous(tickMap, params.upper, constants.tickSpacing, false);
+                if (pool.price < cache.priceUpper ||
+                    EpochMap.get(previousTick, tickMap, constants)
+                        > cache.position.epochLast) {
+                    require (false, 'WrongTickClaimedAt8()');            
+                }
+                if (pool.price == cache.priceUpper) {
+                    pool.liquidity -= params.amount;
                 }
             }
         }
@@ -265,12 +262,6 @@ library Positions {
 
         // update liquidity global
         pool.liquidityGlobal -= params.amount;
-
-        {
-            // update max deltas
-            ILimitPoolStructs.Tick memory finalTick = ticks[params.zeroForOne ? params.lower : params.upper];
-            ticks[params.zeroForOne ? params.lower : params.upper] = finalTick;
-        }
 
         cache.position.amountOut += uint128(
             params.zeroForOne
@@ -328,12 +319,16 @@ library Positions {
 
         if (cache.earlyReturn)
             return (state, pool, params.claim);
-        
+
         // update pool liquidity
-        if (params.zeroForOne ? (cache.priceLower <= pool.price && cache.priceUpper > pool.price)
-                              : (cache.priceLower < pool.price && cache.priceUpper >= pool.price))
-            pool.liquidity -= params.amount;
-        
+        if (cache.priceClaim == pool.price) {
+            // handle pool.price at edge of range
+            if (params.zeroForOne ? cache.priceClaim < cache.priceUpper
+                                  : cache.priceClaim > cache.priceLower)
+                pool.liquidity -= params.amount;
+        }
+
+
         if (params.amount > 0) {
             if (params.claim == (params.zeroForOne ? params.upper : params.lower)) {
                 // only remove once if final tick of position

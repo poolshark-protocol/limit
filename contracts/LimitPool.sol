@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.13;
+pragma solidity 0.8.13;
 
 import './interfaces/ILimitPool.sol';
 import './interfaces/ILimitPoolManager.sol';
@@ -62,25 +62,11 @@ contract LimitPool is
     ) external override lock {
         MintCache memory cache;
         {
-            SwapCache memory swapCache;
-            cache = MintCache({
-                state: globalState,
-                position: Position(0,0,0,0,0),
-                constants: _immutables(),
-                liquidityMinted: 0,
-                pool: params.zeroForOne ? pool0 : pool1,
-                swapPool: params.zeroForOne ? pool1 : pool0,
-                swapCache: swapCache,
-                priceLower: 0,
-                priceUpper: 0,
-                priceLimit: 0,
-                tickLimit: 0,
-                amountIn: 0,
-                amountOut: 0
-            });
+            cache.state = globalState;
+            cache.constants = _immutables();
+            cache.pool = params.zeroForOne ? pool0 : pool1;
+            cache.swapPool = params.zeroForOne ? pool1 : pool0;
         }
-        // getNewPrice by consuming half the input and use that priceLimit
-        // check if pool price in range
         cache = MintCall.perform(
             params,
             cache,
@@ -197,10 +183,14 @@ contract LimitPool is
             globalState.protocolFee = protocolFee1;
         }
         address feeTo = ILimitPoolManager(owner).feeTo();
+        token0Fees = globalState.protocolFees.token0;
+        token1Fees = globalState.protocolFees.token1;
         globalState.protocolFees.token0 = 0;
         globalState.protocolFees.token1 = 0;
-        SafeTransfers.transferOut(feeTo, token0, token0Fees);
-        SafeTransfers.transferOut(feeTo, token1, token1Fees);
+        if (token0Fees > 0)
+            SafeTransfers.transferOut(feeTo, token0, token0Fees);
+        if (token1Fees > 0)
+            SafeTransfers.transferOut(feeTo, token1, token1Fees);
     }
 
     function _immutables() private view returns (

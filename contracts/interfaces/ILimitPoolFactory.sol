@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.13;
+pragma solidity 0.8.13;
 import '../base/storage/LimitPoolFactoryStorage.sol';
 
 abstract contract ILimitPoolFactory is LimitPoolFactoryStorage {

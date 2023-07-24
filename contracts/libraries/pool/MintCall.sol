@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.13;
+pragma solidity 0.8.13;
 
 import '../../interfaces/ILimitPoolStructs.sol';
 import '../Positions.sol';
@@ -33,6 +33,7 @@ library MintCall {
         if (cache.swapPool.liquidity == 0) {
             (cache, cache.swapPool) = Ticks.unlock(cache, cache.swapPool, swapTicks, tickMap, !params.zeroForOne);
         }
+
         // resize position if necessary
         (params, cache) = Positions.resize(
             params,

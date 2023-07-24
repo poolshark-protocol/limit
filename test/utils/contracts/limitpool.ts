@@ -403,7 +403,6 @@ export async function validateMint(params: ValidateMintParams) {
         }
     }
     const positionLiquidityChange = params.positionLiquidityChange ? BigNumber.from(params.positionLiquidityChange) : liquidityIncrease
-    console.log('position before and after', positionAfter.liquidity.toString(), positionBefore.liquidity.toString())
     expect(positionAfter.liquidity.sub(positionBefore.liquidity)).to.be.equal(positionLiquidityChange)
 }
 

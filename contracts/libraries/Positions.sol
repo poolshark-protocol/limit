@@ -10,7 +10,6 @@ import './Claims.sol';
 import './EpochMap.sol';
 import './utils/SafeCast.sol';
 import './pool/SwapCall.sol';
-import 'hardhat/console.sol';
 
 /// @notice Position management library for ranged liquidity.
 library Positions {
@@ -148,8 +147,6 @@ library Positions {
         }
         // save swapCache
         cache.swapCache = swapCache;
-
-        console.log('position bounds:', uint24(params.lower), uint24(params.upper));
 
         return (
             params,
@@ -325,11 +322,10 @@ library Positions {
 
         // update pool liquidity
         if (cache.priceClaim == pool.price) {
-            console.log('price check', cache.priceUpper, cache.priceClaim);
             // handle pool.price at edge of range
             if (params.zeroForOne ? cache.priceClaim < cache.priceUpper
                                   : cache.priceClaim > cache.priceLower)
-            pool.liquidity -= params.amount;
+                pool.liquidity -= params.amount;
         }
 
 

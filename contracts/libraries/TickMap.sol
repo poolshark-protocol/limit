@@ -4,7 +4,6 @@ pragma solidity 0.8.13;
 import './math/ConstantProduct.sol';
 import '../interfaces/ILimitPool.sol';
 import '../interfaces/ILimitPoolStructs.sol';
-import 'hardhat/console.sol';
 
 library TickMap {
 
@@ -156,9 +155,6 @@ library TickMap {
     ) internal returns (
         bool exists
     ) {
-        if (tick == 15) {
-            console.log('setting tick 15');
-        }
         (
             uint256 tickIndex,
             uint256 wordIndex,

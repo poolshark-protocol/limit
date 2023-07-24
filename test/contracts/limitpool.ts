@@ -2846,7 +2846,6 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
         expect(await getLiquidity(true, false)).to.be.equal(aliceLiquidity)
-        await getTick(true, 15, true)
         await validateMint({
             signer: hre.props.bob,
             recipient: hre.props.bob.address,
@@ -2860,7 +2859,6 @@ describe('LimitPool Tests', function () {
             lowerTickCleared: true,
             revertMessage: '',
         })
-        await getTick(true, 15, true)
         expect(await getLiquidity(true, false)).to.be.equal(bobLiquidity)
 
         await validateBurn({
@@ -2877,7 +2875,7 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
         expect(await getLiquidity(true, false)).to.be.equal(BN_ZERO)
-        await getTickAtPrice(true, true)
+        if (debugMode) await getTickAtPrice(true, true)
 
         // we should have swapped some amount here
         await validateMint({
@@ -2939,7 +2937,7 @@ describe('LimitPool Tests', function () {
         // The fix is to move the ticks[pool.tickAtPrice] = ILimitPoolStructs.Tick(0,0); line to the end of
         // the Ticks.unlock function, this way the pool.price is able to update as the priceAt will not always be 0.
 
-        if (true) {
+        if (balanceCheck) {
             console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
             console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
         }
@@ -3410,7 +3408,7 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
 
-        if (true) {
+        if (balanceCheck) {
             console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
             console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
         }

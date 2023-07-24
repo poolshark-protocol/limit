@@ -110,9 +110,7 @@ library MintCall {
             save(cache.pool, pool);
 
             // save position to storage
-            console.log('storing at', uint24(params.lower), uint24(params.upper));
             positions[params.to][params.lower][params.upper] = cache.position;
-            // console.log('lower and upper set', TickMap.set(tickMap, params.lower, cache.constants.tickSpacing));
 
             emit MintLimit(
                 params.to,

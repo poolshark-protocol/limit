@@ -126,7 +126,7 @@ library Ticks {
         cache.pool.swapEpoch += 1;
         // grab latest sample and store in cache for _cross
         while (cache.cross) {
-            cache.crossPrice = cache.crossTick % cache.constants.tickSpacing == 0 ? 
+            cache.crossPrice = ticks[cache.crossTick].priceAt == 0 ? 
                                     ConstantProduct.getPriceAtTick(cache.crossTick, cache.constants)
                                   : ticks[cache.crossTick].priceAt;
             (pool, cache) = _quoteSingle(params.zeroForOne, params.priceLimit, pool, cache);
@@ -148,7 +148,6 @@ library Ticks {
         } else {
             pool.tickAtPrice = cache.crossTick;
         }
-
         emit Swap(
             params.to,
             params.zeroForOne,
@@ -188,9 +187,9 @@ library Ticks {
             amountLeft: params.amount
         });
         while (cache.cross) {
-                        cache.crossPrice = (cache.crossTick % cache.constants.tickSpacing == 0) ? 
-                                    ConstantProduct.getPriceAtTick(cache.crossTick, cache.constants)
-                                  : ticks[cache.crossTick].priceAt;
+            cache.crossPrice = ticks[cache.crossTick].priceAt == 0 ? 
+                                 ConstantProduct.getPriceAtTick(cache.crossTick, cache.constants)
+                               : ticks[cache.crossTick].priceAt;
             (pool, cache) = _quoteSingle(params.zeroForOne, params.priceLimit, pool, cache);
             if (cache.cross) {
                 (pool, cache) = _pass(
@@ -214,7 +213,7 @@ library Ticks {
         uint160 priceLimit,
         ILimitPoolStructs.PoolState memory pool,
         ILimitPoolStructs.SwapCache memory cache
-    ) internal view returns (
+    ) internal pure returns (
         ILimitPoolStructs.PoolState memory,
         ILimitPoolStructs.SwapCache memory
     ) {
@@ -347,21 +346,21 @@ library Ticks {
         // increment pool liquidity
         pool.liquidity += uint128(ticks[pool.tickAtPrice].liquidityDelta);
         int24 tickToClear = pool.tickAtPrice;
+        uint160 tickPriceAt = ticks[pool.tickAtPrice].priceAt;
 
-        if (pool.tickAtPrice % cache.constants.tickSpacing == 0) {
+        if (tickPriceAt == 0) {
             // if full tick crossed
             pool.price = ConstantProduct.getPriceAtTick(pool.tickAtPrice, cache.constants);
         } else {
             // if half tick crossed
-            uint160 priceAt = ticks[pool.tickAtPrice].priceAt;
-            if (priceAt > 0) {
-                pool.price = priceAt;
-                pool.tickAtPrice = ConstantProduct.getTickAtPrice(priceAt, cache.constants);
-            }
+            pool.price = tickPriceAt;
+            pool.tickAtPrice = ConstantProduct.getTickAtPrice(tickPriceAt, cache.constants);
         }
 
         // zero out tick
-        ticks[tickToClear] = ILimitPoolStructs.Tick(0,0);
+        ticks[tickToClear].liquidityDelta = 0;
+        Ticks.clear(ticks, cache.constants, tickMap, tickToClear);
+        
 
         return (cache, pool);
     }
@@ -385,7 +384,7 @@ library Ticks {
 
         // zero out liquidityDelta and priceAt
         ticks[cache.crossTick] = ILimitPoolStructs.Tick(0,0);
-        TickMap.unset(tickMap, cache.crossTick, cache.constants.tickSpacing);
+        clear(ticks, cache.constants, tickMap, cache.crossTick);
         if (zeroForOne) {
             cache.crossTick = TickMap.previous(tickMap, cache.crossTick, cache.constants.tickSpacing, false);
         } else {
@@ -499,10 +498,9 @@ library Ticks {
             // if empty just save the pool price
             if (tick.priceAt == 0) {
                 tick.priceAt = pool.price;
-                pool.liquidity = 0;
             }
-            // if not empty advance the previous fill
             else {
+                // we need to blend the two partial fills into a single tick
                 ILimitPoolStructs.InsertSingleLocals memory locals;
                 if (params.zeroForOne) {
                     // 0 -> 1 positions price moves up so nextFullTick is greater
@@ -520,8 +518,6 @@ library Ticks {
                     tick.priceAt = ConstantProduct.getNewPrice(uint256(locals.pricePrevious), uint128(tick.liquidityDelta), locals.amountOutExact, false, true).toUint160();
                     // dx to the next tick is less than before the tick blend
                     EpochMap.set(tickToSave, pool.swapEpoch, tickMap, constants);
-                    pool.liquidity = 0;
-                    // guard against next tick being crossed
                 } else {
                     // 0 -> 1 positions price moves up so nextFullTick is lesser
                     locals.previousFullTick = tickToSave + constants.tickSpacing / 2;
@@ -535,12 +531,14 @@ library Ticks {
                     tick.priceAt = ConstantProduct.getNewPrice(uint256(locals.pricePrevious), uint128(tick.liquidityDelta), locals.amountOutExact, true, true).toUint160();
                     // mark epoch for second partial fill positions
                     EpochMap.set(tickToSave, pool.swapEpoch, tickMap, constants);
-                    pool.liquidity = 0;
                 }
             }
-        } else if ((params.zeroForOne ? params.lower : params.upper) != tickToSave) {
-            // if we are exactly at the full tick liquidity delta modified above 
+        }
+        // invariant => if we save liquidity to tick clear pool liquidity
+        if ((tickToSave != (params.zeroForOne ? params.lower : params.upper))) {
             pool.liquidity = 0;
+        } else {
+            tick.liquidityDelta -= int128(pool.liquidity);
         }
 
         ticks[tickToSave] = tick;
@@ -568,10 +566,7 @@ library Ticks {
                 }
                 ticks[lower] = tickLower;
             }
-            if (lower != ConstantProduct.minTick(constants.tickSpacing) && _empty(tickLower)) {
-                ticks[lower].priceAt = 0;
-                TickMap.unset(tickMap, lower, constants.tickSpacing);
-            }
+            clear(ticks, constants, tickMap, lower);
         }
         {
             ILimitPoolStructs.Tick memory tickUpper = ticks[upper];
@@ -583,9 +578,21 @@ library Ticks {
                 }
                 ticks[upper] = tickUpper;
             }
-            if (upper != ConstantProduct.maxTick(constants.tickSpacing) && _empty(tickUpper)) {
-                ticks[upper].priceAt = 0;
-                TickMap.unset(tickMap, upper, constants.tickSpacing);
+            clear(ticks, constants, tickMap, upper);
+        }
+    }
+
+    function clear(
+        mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
+        ILimitPoolStructs.Immutables memory constants,
+        ILimitPoolStructs.TickMap storage tickMap,
+        int24 tickToClear
+    ) internal {
+        if (_empty(ticks[tickToClear])) {
+            if (tickToClear != ConstantProduct.maxTick(constants.tickSpacing) &&
+                tickToClear != ConstantProduct.minTick(constants.tickSpacing)) {
+                ticks[tickToClear] = ILimitPoolStructs.Tick(0,0);
+                TickMap.unset(tickMap, tickToClear, constants.tickSpacing);
             }
         }
     }

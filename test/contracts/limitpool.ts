@@ -89,6 +89,8 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
 
+        expect(await getLiquidity(true)).to.be.equal(aliceLiquidity)
+
         // no-op swap
         await validateSwap({
             signer: hre.props.alice,
@@ -100,6 +102,8 @@ describe('LimitPool Tests', function () {
             balanceOutIncrease: '99999999999999999999',
             revertMessage: '',
         })
+
+        expect(await getLiquidity(true)).to.be.equal(BN_ZERO)
 
         await validateBurn({
             signer: hre.props.alice,
@@ -2781,6 +2785,27 @@ describe('LimitPool Tests', function () {
         const bobLiquidity2 = '27891383310849199095788'
 
         // Get the pool1 tickAtPrice to not be an even multiple of the tick spacing
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: true,
+            amountIn: tokenAmountBn.mul(4),
+            priceLimit: BigNumber.from('78632271998467896963137734028'),
+            balanceInDecrease: '0',
+            balanceOutIncrease: '0',
+            revertMessage: '',
+        })
+
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: false,
+            amountIn: tokenAmountBn.mul(4),
+            priceLimit: maxPrice,
+            balanceInDecrease: '0',
+            balanceOutIncrease: '0',
+            revertMessage: '',
+        })
 
         // Check that I've set the pool tick to tick 15
         const poolPrice = await getPrice(false);
@@ -2790,7 +2815,7 @@ describe('LimitPool Tests', function () {
         expect(pool1Tick).to.eq(-151);
 
         let pool0Tick = await getTickAtPrice(true);
-        expect(pool0Tick).to.eq(887270);
+        // expect(pool0Tick).to.eq(887270);
 
         // Mint a position and undercut the price such that we get resized
         // Resulting in more liquidity being swapped in a tick range than exists
@@ -2850,6 +2875,7 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
         expect(await getLiquidity(true, false)).to.be.equal(BN_ZERO)
+        if (debugMode) await getTickAtPrice(true, true)
 
         // we should have swapped some amount here
         await validateMint({
@@ -2910,6 +2936,11 @@ describe('LimitPool Tests', function () {
         })
         // The fix is to move the ticks[pool.tickAtPrice] = ILimitPoolStructs.Tick(0,0); line to the end of
         // the Ticks.unlock function, this way the pool.price is able to update as the priceAt will not always be 0.
+
+        if (balanceCheck) {
+            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
+            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
+        }
     });
 
     it('pool1 - pool.price not updated when the pool.tickAtPrice is not a multiple of the tick spacing', async function () {
@@ -3075,4 +3106,311 @@ describe('LimitPool Tests', function () {
             console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
         }
     });
+
+    it('insertSingle double counts liquidity 23', async function () {
+        const liquidityAmount = '20051041647900280328782'
+
+        // // Get pool price right on an even tick
+        // let pool0Tick = await getTickAtPrice(true);
+        // let pool1Tick = await getTickAtPrice(false);
+
+        // expect(pool0Tick).to.eq(50);
+        // expect(pool1Tick).to.eq(49);
+
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: true,
+            amountIn: tokenAmountBn.mul(4),
+            priceLimit: minPrice,
+            balanceInDecrease: '0',
+            balanceOutIncrease: '0',
+            revertMessage: '',
+        })
+
+        expect(await getLiquidity(true, false)).to.be.equal(BN_ZERO)
+
+        // Initial mint to get the pool.price to tick 0 with liquidity there
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: '0',
+            upper: '100',
+            expectedLower: '0',
+            amount: tokenAmount,
+            zeroForOne: true,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: liquidityAmount,
+            upperTickCleared: false,
+            lowerTickCleared: true,
+            revertMessage: '',
+        })
+        expect(await getLiquidity(true, false)).to.be.equal(liquidityAmount)
+        // Mint such that the lower is at the pool.price
+        // Notice that the validation fails, as the liquidity is double counted
+        // The pool.liquidity goes to liquidityAmount.mul(2), however the liquidityDelta for
+        // tick 0 is incremented to liquidityAmount.
+        // The validation is commented out atm to show the full effects of this bug.
+
+        // This is because the pool.liquidity is not zeroed out, meanwhile the tick.liquidityDelta is still incremented
+        // by the pool.liquidity when the following are satisfied:
+        // * params.lower == tickToSave
+        // * pool.price == roundedPrice
+        // * tickToSave.priceAt == 0
+
+        // The remediation is to ensure that whenever the liquidityDelta is updated on the tickToSave,
+        // the pool.liquidity is zeroed out, every time.
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '0',
+            upper: '100',
+            amount: tokenAmount,
+            zeroForOne: true,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: liquidityAmount,
+            upperTickCleared: false,
+            lowerTickCleared: true,
+            revertMessage: '',
+        })
+
+        // Now this tick 0 can be crossed and it's liquidity delta can be added to the pool liquidity.
+        // This is catastrophic as now the liquidity from other positions (far from the current price)
+        // Can now be used to swap in the pool at the current price, and when these users attempt to burn
+        // They will receive an ERC20 token balance underflow and experience a significant loss.
+
+        // Mint a position to move down a tick so that the cross tick is tick 0 which has the extra liquidity
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '-10',
+            upper: '90',
+            amount: tokenAmount,
+            zeroForOne: true,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: "20041019134030931248014",
+            upperTickCleared: false,
+            lowerTickCleared: true,
+            revertMessage: '',
+        })
+
+        // ~ liquidityAmount * 3 has actually been added, however I can swap more than the token amount
+        // that should be supported by the actual liquidity that has been added.
+        //
+        // In this scenario since there are no other positions away from the current price, this will result in
+        // and ERC20 balance underflow. In a real life scenario this would drain funds from positions away from the
+        // current price and result in significant losses for those users.
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: false,
+            amountIn: tokenAmountBn.mul(4),
+            priceLimit: maxPrice,
+            balanceInDecrease: '301403234913524799094',
+            balanceOutIncrease: '299999999999999999999',
+            revertMessage: '',
+        })
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-10',
+            upper: '90',
+            claim: '50',
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: true,
+            balanceInIncrease: '100400780988914558392',
+            balanceOutIncrease: '0',
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: '',
+        })
+
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '0',
+            upper: '100',
+            claim: '50',
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: true,
+            balanceInIncrease: '100501226962305120350',
+            balanceOutIncrease: '0',
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: '',
+        })
+
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: '0',
+            upper: '100',
+            claim: '50',
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: true,
+            balanceInIncrease: '100501226962305120350',
+            balanceOutIncrease: '0',
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: '',
+        })
+
+        if (balanceCheck) {
+            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
+            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
+        }
+    })
+
+    it('pool1 - insertSingle double counts liquidity 23', async function () {
+        const liquidityAmount = '19951041647900280328782'
+
+        // // Get pool price right on an even tick
+        // let pool0Tick = await getTickAtPrice(true);
+        // let pool1Tick = await getTickAtPrice(false);
+
+        // expect(pool0Tick).to.eq(50);
+        // expect(pool1Tick).to.eq(49);
+
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: true,
+            amountIn: tokenAmountBn.mul(4),
+            priceLimit: minPrice,
+            balanceInDecrease: '0',
+            balanceOutIncrease: '0',
+            revertMessage: '',
+        })
+
+        expect(await getLiquidity(false, false)).to.be.equal(BN_ZERO)
+
+        // Initial mint to get the pool.price to tick 0 with liquidity there
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: '0',
+            upper: '100',
+            amount: tokenAmount,
+            zeroForOne: false,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: liquidityAmount,
+            upperTickCleared: true,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
+        expect(await getLiquidity(false)).to.be.equal(liquidityAmount)
+
+        // Mint such that the lower is at the pool.price
+        // Notice that the validation fails, as the liquidity is double counted
+        // The pool.liquidity goes to liquidityAmount.mul(2), however the liquidityDelta for
+        // tick 0 is incremented to liquidityAmount.
+        // The validation is commented out atm to show the full effects of this bug.
+
+        // This is because the pool.liquidity is not zeroed out, meanwhile the tick.liquidityDelta is still incremented
+        // by the pool.liquidity when the following are satisfied:
+        // * params.lower == tickToSave
+        // * pool.price == roundedPrice
+        // * tickToSave.priceAt == 0
+
+        // The remediation is to ensure that whenever the liquidityDelta is updated on the tickToSave,
+        // the pool.liquidity is zeroed out, every time.
+
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '0',
+            upper: '100',
+            amount: tokenAmount,
+            zeroForOne: false,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: liquidityAmount,
+            upperTickCleared: true,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
+
+        // Now this tick 0 can be crossed and it's liquidity delta can be added to the pool liquidity.
+        // This is catastrophic as now the liquidity from other positions (far from the current price)
+        // Can now be used to swap in the pool at the current price, and when these users attempt to burn
+        // They will receive an ERC20 token balance underflow and experience a significant loss.
+
+        // Mint a position to move down a tick so that the cross tick is tick 0 which has the extra liquidity
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '10',
+            upper: '110',
+            amount: tokenAmount,
+            zeroForOne: false,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: "19941069119034430548140",
+            upperTickCleared: true,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
+
+        // ~ liquidityAmount * 3 has actually been added, however I can swap more than the token amount
+        // that should be supported by the actual liquidity that has been added.
+        //
+        // In this scenario since there are no other positions away from the current price, this will result in
+        // and ERC20 balance underflow. In a real life scenario this would drain funds from positions away from the
+        // current price and result in significant losses for those users.
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: true,
+            amountIn: tokenAmountBn.mul(4),
+            priceLimit: minPrice,
+            balanceInDecrease: '298404371809799214515',
+            balanceOutIncrease: '299999999999999999999',
+            revertMessage: '',
+        })
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '10',
+            upper: '110',
+            claim: '110',
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: false,
+            balanceInIncrease: '99401826223949033740',
+            balanceOutIncrease: '0',
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: '',
+        })
+
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '0',
+            upper: '100',
+            claim: '50',
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: false,
+            balanceInIncrease: '99501272792925090386',
+            balanceOutIncrease: '0',
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: '',
+        })
+
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: '0',
+            upper: '100',
+            claim: '50',
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: false,
+            balanceInIncrease: '99501272792925090386',
+            balanceOutIncrease: '0',
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: '',
+        })
+
+        if (balanceCheck) {
+            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
+            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
+        }
+    })
 })

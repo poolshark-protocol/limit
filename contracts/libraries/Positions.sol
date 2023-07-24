@@ -321,8 +321,13 @@ library Positions {
             return (state, pool, params.claim);
 
         // update pool liquidity
-        if (cache.priceClaim == pool.price)
-            pool.liquidity -= params.amount;
+        if (cache.priceClaim == pool.price) {
+            // handle pool.price at edge of range
+            if (params.zeroForOne ? cache.priceClaim < cache.priceUpper
+                                  : cache.priceClaim > cache.priceLower)
+                pool.liquidity -= params.amount;
+        }
+
 
         if (params.amount > 0) {
             if (params.claim == (params.zeroForOne ? params.upper : params.lower)) {

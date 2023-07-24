@@ -78,7 +78,7 @@ library MintCall {
                 if (priceLower <= cache.pool.price) {
                     // save liquidity if active
                     if (cache.pool.liquidity > 0) {
-                        cache.pool = Ticks.insertSingle(params, ticks, tickMap, cache.pool, cache.constants);
+                        cache.pool = Ticks.insertSingle(params, ticks, tickMap, cache, cache.pool, cache.constants);
                     }
                     cache.pool.price = priceLower;
                     cache.pool.tickAtPrice = params.lower;
@@ -94,7 +94,7 @@ library MintCall {
                 uint160 priceUpper = TickMath.getPriceAtTick(params.upper, cache.constants);
                 if (priceUpper >= cache.pool.price) {
                     if (cache.pool.liquidity > 0) {
-                        cache.pool = Ticks.insertSingle(params, ticks, tickMap, cache.pool, cache.constants);
+                        cache.pool = Ticks.insertSingle(params, ticks, tickMap, cache, cache.pool, cache.constants);
                     }
                     cache.pool.price = priceUpper;
                     cache.pool.tickAtPrice = params.upper;

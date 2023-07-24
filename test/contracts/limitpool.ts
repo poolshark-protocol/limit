@@ -3413,4 +3413,82 @@ describe('LimitPool Tests', function () {
             console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
         }
     })
+
+    it.only('Broken Swap When Overlapped LPs', async function () {
+
+        const aliceLiquidity = '10000458327205120325604';
+        const bobLiquidity = '10000458327205120325604';
+
+        expect(await getTickAtPrice(false)).to.eq(0);
+        expect(await getTickAtPrice(true)).to.eq(0);
+
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: '-100', 
+            upper: '100',
+            amount: tokenAmount,
+            zeroForOne: false,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: bobLiquidity,
+            upperTickCleared: true,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
+
+
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '-100', 
+            upper: '100',
+            amount: tokenAmount,
+            zeroForOne: false,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: aliceLiquidity,
+            upperTickCleared: true,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
+
+        // Nothing is swapped in due to the cross tick matching the tick at pool's price
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: true,
+            amountIn: tokenAmountBn.mul(2),
+            priceLimit: minPrice,
+            balanceInDecrease: '200000000000000000000',
+            balanceOutIncrease: '199999999999999999999',
+            revertMessage: ''
+        })
+        return
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-100', 
+            upper: '100', 
+            claim: '100',
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: false,
+            balanceInIncrease: '0',
+            balanceOutIncrease: '99999999999999999999',
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: '',
+        })
+
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: '-100', 
+            upper: '100',
+            claim: '100',
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: false,
+            balanceInIncrease: '0',
+            balanceOutIncrease: '99999999999999999999', 
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: '',
+        })
+    })
 })

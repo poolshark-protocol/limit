@@ -11,6 +11,7 @@ import './math/OverflowMath.sol';
 import './TickMap.sol';
 import './EpochMap.sol';
 import './utils/SafeCast.sol';
+import 'hardhat/console.sol';
 
 /// @notice Tick management library
 library Ticks {
@@ -129,6 +130,14 @@ library Ticks {
             cache.crossPrice = ticks[cache.crossTick].priceAt == 0 ? 
                                     ConstantProduct.getPriceAtTick(cache.crossTick, cache.constants)
                                   : ticks[cache.crossTick].priceAt;
+            if (pool.price == cache.crossPrice) {
+                cache.crossTick = params.zeroForOne ? TickMap.previous(tickMap, pool.tickAtPrice, cache.constants.tickSpacing, false) 
+                                                    : TickMap.next(tickMap, pool.tickAtPrice, cache.constants.tickSpacing);
+                cache.crossPrice = ticks[cache.crossTick].priceAt == 0 ? 
+                                    ConstantProduct.getPriceAtTick(cache.crossTick, cache.constants)
+                                  : ticks[cache.crossTick].priceAt;
+            }
+            console.log('cross price check', cache.crossPrice == pool.price);
             (pool, cache) = _quoteSingle(params.zeroForOne, params.priceLimit, pool, cache);
             if (cache.cross) {
                 (pool, cache) = _cross(
@@ -190,6 +199,14 @@ library Ticks {
             cache.crossPrice = ticks[cache.crossTick].priceAt == 0 ? 
                                  ConstantProduct.getPriceAtTick(cache.crossTick, cache.constants)
                                : ticks[cache.crossTick].priceAt;
+            // handle price being at cross tick
+            if (pool.price == cache.crossPrice) {
+                cache.crossTick = params.zeroForOne ? TickMap.previous(tickMap, pool.tickAtPrice, cache.constants.tickSpacing, false) 
+                                                    : TickMap.next(tickMap, pool.tickAtPrice, cache.constants.tickSpacing);
+                cache.crossPrice = ticks[cache.crossTick].priceAt == 0 ? 
+                                    ConstantProduct.getPriceAtTick(cache.crossTick, cache.constants)
+                                  : ticks[cache.crossTick].priceAt;
+            }
             (pool, cache) = _quoteSingle(params.zeroForOne, params.priceLimit, pool, cache);
             if (cache.cross) {
                 (pool, cache) = _pass(

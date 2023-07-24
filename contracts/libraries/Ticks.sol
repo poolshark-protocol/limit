@@ -11,6 +11,7 @@ import './math/OverflowMath.sol';
 import './TickMap.sol';
 import './EpochMap.sol';
 import './utils/SafeCast.sol';
+import 'hardhat/console.sol';
 
 /// @notice Tick management library
 library Ticks {
@@ -38,6 +39,11 @@ library Ticks {
         uint128 liquidity,
         int24 tickAtPrice
     );
+    //  -10             0     2 3    10        20           30
+    /// |               | --  | |     |         |            |
+    /// |                ||||||||||||
+    /// -10             |  ||||||         |                   |
+    ///                 0    150   300      500                 1000
 
     uint256 internal constant Q96 = 0x1000000000000000000000000;
 

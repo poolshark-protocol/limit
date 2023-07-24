@@ -55,8 +55,8 @@ describe('LimitPool Tests', function () {
 
         expect(liquidity).to.be.equal(BN_ZERO)
 
-        minPrice = BigNumber.from('4297706460')
-        maxPrice = BigNumber.from('1460570142285104104286607650833256105367815198570')
+        minPrice = BigNumber.from('0')
+        maxPrice = BigNumber.from('1461501637330902918203684832716283019655932542975')
         token0Decimals = await hre.props.token0.decimals()
         token1Decimals = await hre.props.token1.decimals()
         tokenAmountBn = ethers.utils.parseUnits('100', token0Decimals)
@@ -3107,7 +3107,7 @@ describe('LimitPool Tests', function () {
         }
     });
 
-    it('insertSingle double counts liquidity 23', async function () {
+    it('pool0 - insertSingle double counts liquidity 23', async function () {
         const liquidityAmount = '20051041647900280328782'
 
         // // Get pool price right on an even tick

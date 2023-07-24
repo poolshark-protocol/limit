@@ -252,7 +252,7 @@ library Ticks {
             }
             uint256 amountMax = cache.exactIn ? DyDxMath.getDx(cache.liquidity, nextPrice, cache.price, true)
                                               : DyDxMath.getDy(cache.liquidity, nextPrice, cache.price, false);
-            if (cache.amountLeft <= amountMax) {
+            if (cache.amountLeft < amountMax) {
                 // We can swap within the current range.
                 uint256 liquidityPadded = uint256(cache.liquidity) << 96;
                 // calculate price after swap
@@ -283,8 +283,7 @@ library Ticks {
                     cache.input += DyDxMath.getDx(cache.liquidity, nextPrice, cache.price, true);
                 }
                 cache.amountLeft -= amountMax;
-                if (nextPrice == cache.crossPrice
-                        && nextPrice != cache.price) { cache.cross = true; }
+                if (nextPrice == cache.crossPrice) { cache.cross = true; }
                 else cache.cross = false;
                 cache.price = uint160(nextPrice);
             }
@@ -295,7 +294,7 @@ library Ticks {
             }
             uint256 amountMax = cache.exactIn ? DyDxMath.getDy(cache.liquidity, uint256(cache.price), nextPrice, true)
                                               : DyDxMath.getDx(cache.liquidity, uint256(cache.price), nextPrice, false);
-            if (cache.amountLeft <= amountMax) {
+            if (cache.amountLeft < amountMax) {
                 uint256 newPrice;
                 if (cache.exactIn) {
                     newPrice = cache.price +
@@ -324,8 +323,7 @@ library Ticks {
                     cache.input += ConstantProduct.getDy(cache.liquidity, cache.price, nextPrice, true);
                 }
                 cache.amountLeft -= amountMax;
-                if (nextPrice == cache.crossPrice 
-                    && nextPrice != cache.price) { cache.cross = true; }
+                if (nextPrice == cache.crossPrice) { cache.cross = true; }
                 else cache.cross = false;
                 cache.price = uint160(nextPrice);
             }

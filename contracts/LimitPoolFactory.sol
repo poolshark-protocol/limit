@@ -28,6 +28,10 @@ contract LimitPoolFactory is
         uint160 startPrice
     ) external override returns (address pool) {
         LimitPoolParams memory params;
+        // validate token pair
+        if (tokenIn == tokenOut || tokenIn == address(0) || tokenOut == address(0)) {
+            revert InvalidTokenAddress();
+        }
         // sort tokens by address
         params.token0 = tokenIn < tokenOut ? tokenIn : tokenOut;
         params.token1 = tokenIn < tokenOut ? tokenOut : tokenIn;

@@ -179,14 +179,14 @@ contract LimitPool is
         uint128 token1Fees
     ) {
         if (setFees) {
-            globalState.protocolFee = protocolFee0;
-            globalState.protocolFee = protocolFee1;
+            pool0.protocolFee = protocolFee0;
+            pool1.protocolFee = protocolFee1;
         }
         address feeTo = ILimitPoolManager(owner).feeTo();
-        token0Fees = globalState.protocolFees.token0;
-        token1Fees = globalState.protocolFees.token1;
-        globalState.protocolFees.token0 = 0;
-        globalState.protocolFees.token1 = 0;
+        token0Fees = pool1.protocolFees;
+        token1Fees = pool0.protocolFees;
+        pool0.protocolFees = 0;
+        pool1.protocolFees = 0;
         if (token0Fees > 0)
             SafeTransfers.transferOut(feeTo, token0, token0Fees);
         if (token1Fees > 0)

@@ -6,8 +6,6 @@ import './modules/sources/ITwapSource.sol';
 
 interface ILimitPoolStructs {
     struct GlobalState {
-        ProtocolFees protocolFees;
-        uint16 protocolFee;
         uint8   unlocked;
     }
 
@@ -15,7 +13,9 @@ interface ILimitPoolStructs {
         uint160 price; /// @dev Starting price current
         uint128 liquidity; /// @dev Liquidity currently active
         uint128 liquidityGlobal;
+        uint128 protocolFees;
         uint32  swapEpoch;
+        uint16 protocolFee;
         int24 tickAtPrice;
     }
 
@@ -44,11 +44,6 @@ interface ILimitPoolStructs {
         address token0;
         address token1;
         int16 tickSpacing;
-    }
-
-    struct ProtocolFees {
-        uint128 token0;
-        uint128 token1;
     }
 
     struct MintParams {

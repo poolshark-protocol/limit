@@ -181,6 +181,13 @@ library Claims {
                                                                       : ConstantProduct.getDy(params.amount, cache.priceLower, cache.priceClaim, false));
             }
         }
+        // take protocol fee if needed
+        if (cache.pool.protocolFee > 0 && cache.position.amountIn > 0) {
+            uint128 protocolFeeAmount = cache.position.amountIn * cache.pool.protocolFee / 10000;
+            cache.position.amountIn -= protocolFeeAmount;
+            cache.pool.protocolFees += protocolFeeAmount;
+        }
+
         return cache;
     }
 }

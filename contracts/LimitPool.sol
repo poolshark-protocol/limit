@@ -178,9 +178,9 @@ contract LimitPool is
         uint128 token0Fees,
         uint128 token1Fees
     ) {
-        if (protocolFee0 > 10000 || protocolFee1 > 10000)
-            revert ProtocolFeeCeilingExceeded();
         if (setFees) {
+            if (protocolFee0 > 10000 || protocolFee1 > 10000)
+                revert ProtocolFeeCeilingExceeded();
             pool1.protocolFee = protocolFee0;
             pool0.protocolFee = protocolFee1;
         }

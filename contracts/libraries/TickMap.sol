@@ -281,7 +281,7 @@ library TickMap {
         return tick / tickSpacing * tickSpacing;
     }
 
-    function roundAheadWithPrice(
+    function roundAhead(
         int24 tick,
         ILimitPoolStructs.Immutables memory constants,
         bool zeroForOne,
@@ -304,7 +304,7 @@ library TickMap {
         }
     }
 
-    function roundBackWithPrice(
+    function roundBack(
         int24 tick,
         ILimitPoolStructs.Immutables memory constants,
         bool zeroForOne,

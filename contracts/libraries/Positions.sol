@@ -110,7 +110,7 @@ library Positions {
             // if (params.amount > 0 && swapCache.input > 0) {
                 // round ahead tickLimit to avoid crossing epochs
                 console.log('tickLimit check', uint24(cache.tickLimit));
-                cache.tickLimit = TickMap.roundAheadWithPrice(cache.tickLimit, cache.constants, params.zeroForOne, cache.priceLimit);
+                cache.tickLimit = TickMap.roundAhead(cache.tickLimit, cache.constants, params.zeroForOne, cache.priceLimit);
                 if (params.zeroForOne) {
                     if (params.lower < cache.tickLimit) {
                         // if rounding goes past limit trim position

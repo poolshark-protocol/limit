@@ -3108,7 +3108,7 @@ describe('LimitPool Tests', function () {
         }
     });
 
-    it('pool0 - insertSingle double counts liquidity 23', async function () {
+    it('pool0 - insertSingle double counts liquidity', async function () {
         const liquidityAmount = '20051041647900280328782'
 
         // // Get pool price right on an even tick
@@ -3261,7 +3261,7 @@ describe('LimitPool Tests', function () {
         }
     })
 
-    it('pool1 - insertSingle double counts liquidity 23', async function () {
+    it('pool1 - insertSingle double counts liquidity', async function () {
         const liquidityAmount = '19951041647900280328782'
 
         // // Get pool price right on an even tick

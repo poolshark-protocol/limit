@@ -3644,4 +3644,187 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
     })
+
+    it("pool0 - Should resize users properly when no amount is swapped :: GUARDIAN AUDITS", async () => {
+        const bobLiquidity = '25076345870220594091872';
+        const aliceLiquidity = '18223659436328876602453'
+
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: true,
+            amountIn: tokenAmountBn.mul(4),
+            priceLimit: BigNumber.from('177159557114295710296101716160'),
+            balanceInDecrease: '0',
+            balanceOutIncrease: '0',
+            revertMessage: '',
+        })
+
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: false,
+            amountIn: tokenAmountBn.mul(4),
+            priceLimit: BigNumber.from('177159557114295710296101716160'),
+            balanceInDecrease: '0',
+            balanceOutIncrease: '0',
+            revertMessage: '',
+        })
+
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '-10',
+            upper: '100',
+            amount: tokenAmount,
+            zeroForOne: true,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: aliceLiquidity,
+            upperTickCleared: false,
+            lowerTickCleared: true,
+            revertMessage: '',
+        });
+
+        const alicePositionLiquidity = await getPositionLiquidity(true, alice.address, -10, 100);
+        expect(alicePositionLiquidity).to.eq(aliceLiquidity);
+
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: '-100',
+            upper: '0',
+            expectedUpper: '-20',
+            amount: tokenAmount,
+            zeroForOne: false,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: bobLiquidity,
+            balanceOutIncrease: "0",
+            upperTickCleared: true,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
+
+        // Notice that bob is shrunk to -50, however no swap was performed on resize -- this is fine
+        // as the pool price was above the midpoint of his position.
+        // However, bob was not resized to the market price, he was resized to the midpoint of his position
+        // E.g. the priceLimit.
+        const bobPositionLiquidity = await getPositionLiquidity(false, bob.address, -100, -20);
+        expect(bobPositionLiquidity).to.eq(bobLiquidity);
+
+        // Bob should have been resized to [-10, -100], but he was resized away from the current market price
+        // to [-50, -100] and now the current price is at tick -50.
+        expect(await getTickAtPrice(false)).to.eq(-20);
+        expect(await getTickAtPrice(false)).to.eq(-20);
+
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: '-100', 
+            upper: '-20',
+            claim: '-20',
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: false,
+            balanceInIncrease: '0',
+            balanceOutIncrease: '99999999999999999999', 
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: '',
+        })
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-10', 
+            upper: '100',
+            claim: '-10',
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: true,
+            balanceInIncrease: '0',
+            balanceOutIncrease: '99999999999999999999', 
+            lowerTickCleared: true,
+            upperTickCleared: false,
+            revertMessage: '',
+        })
+
+        // The fix is to resize the position to the current market price when no swap will occur.
+        // You can comment out the added section in Positions.sol to see the adjusted resizing.
+    })
+
+    it("pool1 - Should resize users properly when no amount is swapped :: GUARDIAN AUDITS", async () => {
+        const bobLiquidity = '25076345870220594091872';
+        const aliceLiquidity = '18223659436328876602453'
+
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '-100',
+            upper: '10',
+            amount: tokenAmount,
+            zeroForOne: false,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: aliceLiquidity,
+            upperTickCleared: true,
+            lowerTickCleared: false,
+            revertMessage: '',
+        });
+
+        const alicePositionLiquidity = await getPositionLiquidity(false, alice.address, -100, 10);
+        expect(alicePositionLiquidity).to.eq(aliceLiquidity);
+
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: '0',
+            upper: '100',
+            expectedLower: '20',
+            amount: tokenAmount,
+            zeroForOne: true,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: bobLiquidity,
+            balanceOutIncrease: "0",
+            upperTickCleared: false,
+            lowerTickCleared: true,
+            revertMessage: '',
+        })
+
+        // Notice that bob is shrunk to -50, however no swap was performed on resize -- this is fine
+        // as the pool price was above the midpoint of his position.
+        // However, bob was not resized to the market price, he was resized to the midpoint of his position
+        // E.g. the priceLimit.
+        const bobPositionLiquidity = await getPositionLiquidity(true, bob.address, 20, 100);
+        expect(bobPositionLiquidity).to.eq(bobLiquidity);
+
+        // Bob should have been resized to [-10, -100], but he was resized away from the current market price
+        // to [-50, -100] and now the current price is at tick -50.
+        expect(await getTickAtPrice(false)).to.eq(10);
+        expect(await getTickAtPrice(true)).to.eq(20);
+
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: '20', 
+            upper: '100',
+            claim: '20',
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: true,
+            balanceInIncrease: '0',
+            balanceOutIncrease: '99999999999999999999', 
+            lowerTickCleared: true,
+            upperTickCleared: false,
+            revertMessage: '',
+        })
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-100', 
+            upper: '10',
+            claim: '10',
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: false,
+            balanceInIncrease: '0',
+            balanceOutIncrease: '99999999999999999999', 
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: '',
+        })
+        // The fix is to resize the position to the current market price when no swap will occur.
+        // You can comment out the added section in Positions.sol to see the adjusted resizing.
+    })
 })

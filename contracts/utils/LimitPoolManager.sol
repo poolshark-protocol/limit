@@ -102,9 +102,10 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
         if (collectPools.length == 0) require (false, 'EmptyPoolsArray()');
         uint128[] memory token0Fees = new uint128[](collectPools.length);
         uint128[] memory token1Fees = new uint128[](collectPools.length);
-        unchecked {
-            for (uint i; i < collectPools.length; ++i) {
-                (token0Fees[i], token1Fees[i]) = ILimitPool(collectPools[i]).fees(0,0,false);
+        for (uint i; i < collectPools.length;) {
+            (token0Fees[i], token1Fees[i]) = ILimitPool(collectPools[i]).fees(0,0,false);
+            unchecked {
+                ++i;
             }
         }
         emit ProtocolFeesCollected(collectPools, token0Fees, token1Fees);
@@ -124,18 +125,19 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
         }
         uint128[] memory token0Fees = new uint128[](modifyPools.length);
         uint128[] memory token1Fees = new uint128[](modifyPools.length);
-        unchecked {
-            for (uint i; i < modifyPools.length; ++i) {
-                if (syncFees[i] > MAX_PROTOCOL_FEE) require (false, 'ProtocolFeeCeilingExceeded()');
-                if (fillFees[i] > MAX_PROTOCOL_FEE) require (false, 'ProtocolFeeCeilingExceeded()');
-                (
-                    token0Fees[i],
-                    token1Fees[i]
-                ) = ILimitPool(modifyPools[i]).fees(
-                    syncFees[i],
-                    fillFees[i],
-                    setFees[i]
-                );
+        for (uint i; i < modifyPools.length;) {
+            if (syncFees[i] > MAX_PROTOCOL_FEE) require (false, 'ProtocolFeeCeilingExceeded()');
+            if (fillFees[i] > MAX_PROTOCOL_FEE) require (false, 'ProtocolFeeCeilingExceeded()');
+            (
+                token0Fees[i],
+                token1Fees[i]
+            ) = ILimitPool(modifyPools[i]).fees(
+                syncFees[i],
+                fillFees[i],
+                setFees[i]
+            );
+            unchecked {
+                ++i;
             }
         }
         emit ProtocolFeesModified(modifyPools, syncFees, fillFees, setFees, token0Fees, token1Fees);

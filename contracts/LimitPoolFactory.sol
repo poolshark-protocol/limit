@@ -33,8 +33,7 @@ contract LimitPoolFactory is
             revert InvalidTokenAddress();
         }
         // sort tokens by address
-        params.token0 = tokenIn < tokenOut ? tokenIn : tokenOut;
-        params.token1 = tokenIn < tokenOut ? tokenOut : tokenIn;
+        (params.token0, params.token1) = tokenIn < tokenOut ? (tokenIn, tokenOut) : (tokenOut, tokenIn);
         // generate key for pool
         bytes32 key = keccak256(abi.encode(params.token0, params.token1, tickSpacing));
         if (limitPools[key] != address(0)) {

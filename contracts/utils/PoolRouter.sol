@@ -41,10 +41,11 @@ contract PoolRouter is
         SwapParams[] memory params 
     ) external {
         if (pools.length != params.length) require(false, 'InputArrayLengthsMismatch()');
-        unchecked {
-            for (uint i = 0; i < pools.length; ++i) {
-                params[i].callbackData = abi.encode(SwapCallbackData({sender: msg.sender}));
-                IPool(pools[i]).swap(params[i]);
+        for (uint i = 0; i < pools.length;) {
+            params[i].callbackData = abi.encode(SwapCallbackData({sender: msg.sender}));
+            IPool(pools[i]).swap(params[i]);
+            unchecked {
+                ++i;
             }
         }
     }

@@ -18,6 +18,7 @@ abstract contract LimitPoolErrors {
     error UpperNotOddTick();
     error MaxTickLiquidity();
     error CollectToZeroAddress();
+    error ProtocolFeeCeilingExceeded();
     error Overflow();
     error NotEnoughOutputLiquidity();
     error WaitUntilEnoughObservations();

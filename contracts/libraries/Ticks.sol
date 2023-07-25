@@ -445,8 +445,7 @@ library Ticks {
         int256 liquidityMinted = int256(cache.liquidityMinted);
 
         // check if adding liquidity necessary
-        if (params.zeroForOne ? cache.priceLower > cache.pool.price
-                              : true) {
+        if (!params.zeroForOne || cache.priceLower > cache.pool.price) {
             // sets bit in map
             TickMap.set(tickMap, params.lower, cache.constants.tickSpacing);
             ILimitPoolStructs.Tick memory tickLower = ticks[params.lower];
@@ -458,8 +457,7 @@ library Ticks {
             ticks[params.lower] = tickLower;
         }
 
-        if (params.zeroForOne ? true 
-                              : cache.priceUpper < cache.pool.price) {
+        if (params.zeroForOne || cache.priceUpper < cache.pool.price) {
             TickMap.set(tickMap, params.upper, cache.constants.tickSpacing);
             ILimitPoolStructs.Tick memory tickUpper = ticks[params.upper];
             if (params.zeroForOne) {

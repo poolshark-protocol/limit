@@ -463,6 +463,7 @@ describe('LimitPool Tests', function () {
             lowerTickCleared: true,
             revertMessage: '',
         })
+
         await validateSwap({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
@@ -2779,7 +2780,7 @@ describe('LimitPool Tests', function () {
         }
     })
 
-    it('pool0 - pool.price not updated when the pool.tickAtPrice is not a multiple of the tick spacing', async function () {
+    it('pool0 - pool.price not updated when the pool.tickAtPrice is not a multiple of the tick spacing :: GUARDIAN AUDITS', async function () {
         const aliceLiquidity = '20051041647900280328782'
         const bobLiquidity = aliceLiquidity
         const bobLiquidity2 = '27891383310849199095788'
@@ -2943,7 +2944,7 @@ describe('LimitPool Tests', function () {
         }
     });
 
-    it('pool1 - pool.price not updated when the pool.tickAtPrice is not a multiple of the tick spacing', async function () {
+    it('pool1 - pool.price not updated when the pool.tickAtPrice is not a multiple of the tick spacing :: GUARDIAN AUDITS', async function () {
         const aliceLiquidity = '19951041647900280328782'
         const bobLiquidity = aliceLiquidity
         const bobLiquidity2 = '27832153891598856837297'
@@ -3414,7 +3415,7 @@ describe('LimitPool Tests', function () {
         }
     })
 
-    it('pool0 - Broken Swap When Overlapped LPs 24', async function () {
+    it('pool0 - Broken Swap When Overlapped LPs :: GUARDIAN AUDITS', async function () {
 
         await validateSwap({
             signer: hre.props.alice,
@@ -3534,7 +3535,7 @@ describe('LimitPool Tests', function () {
         })
     })
 
-    it('pool1 - Broken Swap When Overlapped LPs 24', async function () {
+    it('pool1 - Broken Swap When Overlapped LPs :: GUARDIAN AUDITS', async function () {
 
         await validateSwap({
             signer: hre.props.alice,

@@ -292,46 +292,16 @@ library TickMap {
         roundedTick = tick / constants.tickSpacing * constants.tickSpacing;
         if (price == ConstantProduct.getPriceAtTick(roundedTick, constants))
             return roundedTick;
-        /// @dev - rounding down only needed if negative
-        if (zeroForOne && roundedTick < 0)
-            roundedTick -= constants.tickSpacing;
-        /// @dev - rounding up only needed if positive
-        else if (!zeroForOne && roundedTick > 0)
-            roundedTick += constants.tickSpacing;
-    }
 
-    function roundAhead(
-        int24 tick,
-        int24 tickSpacing,
-        bool zeroForOne
-    ) internal pure returns (
-        int24 roundedTick
-    ) {
-        roundedTick = tick / tickSpacing * tickSpacing;
-        if (roundedTick == tick) return tick;
-        /// @dev - rounding down only needed if negative
-        if (zeroForOne && roundedTick < 0)
-            roundedTick += tickSpacing;
-        /// @dev - rounding up only needed if positive
-        else if (!zeroForOne && roundedTick > 0)
-            roundedTick -= tickSpacing;
-    }
-
-    function roundBack(
-        int24 tick,
-        int24 tickSpacing,
-        bool zeroForOne
-    ) internal pure returns (
-        int24 roundedTick
-    ) {
-        roundedTick = tick / tickSpacing * tickSpacing;
-        if (roundedTick == tick) return tick;
-        /// @dev - rounding down only needed if negative
-        if (zeroForOne && roundedTick < 0)
-            roundedTick -= tickSpacing;
-        /// @dev - rounding up only needed if positive
-        else if (!zeroForOne && roundedTick > 0)
-            roundedTick += tickSpacing;
+        if (zeroForOne) {
+            // round up if positive
+            if (roundedTick > 0 || (roundedTick == 0 && tick > 0))
+                roundedTick += constants.tickSpacing;
+        } else {
+            // round down if negative
+            if (roundedTick < 0 || (roundedTick == 0 && tick < 0))
+                roundedTick -= constants.tickSpacing;
+        }
     }
 
     function roundBackWithPrice(
@@ -345,12 +315,14 @@ library TickMap {
         roundedTick = tick / constants.tickSpacing * constants.tickSpacing;
         if (price == ConstantProduct.getPriceAtTick(roundedTick, constants))
             return roundedTick;
-        if (roundedTick == tick) return tick;
-        /// @dev - rounding down only needed if negative
-        if (zeroForOne && roundedTick < 0)
-            roundedTick -= constants.tickSpacing;
-        /// @dev - rounding up only needed if positive
-        else if (!zeroForOne && roundedTick > 0)
-            roundedTick += constants.tickSpacing;
+        if (zeroForOne) {
+            // round down if negative
+            if (roundedTick < 0 || (roundedTick == 0 && tick < 0))
+                roundedTick -= constants.tickSpacing;
+        } else {
+            // round up if positive
+            if (roundedTick > 0 || (roundedTick == 0 && tick > 0))
+                roundedTick += constants.tickSpacing;
+        }
     }
 }

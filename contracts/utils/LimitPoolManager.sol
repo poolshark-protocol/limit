@@ -25,11 +25,9 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
         feeTo = msg.sender;
         emit OwnerTransfer(address(0), msg.sender);
 
-        // create initial volatility tiers
-        _tickSpacings[5] = true;
+        // create supported tick spacings
         _tickSpacings[10] = true;
         _tickSpacings[20] = true;
-        emit TickSpacingEnabled(5);
         emit TickSpacingEnabled(10);
         emit TickSpacingEnabled(20);
     }
@@ -85,6 +83,7 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
         int16 tickSpacing
     ) external onlyOwner {
         if (tickSpacing <= 0) revert InvalidTickSpacing();
+        if (tickSpacing % 2 != 0) revert InvalidTickSpacing();
         _tickSpacings[tickSpacing] = true;
         emit TickSpacingEnabled(tickSpacing);
     }

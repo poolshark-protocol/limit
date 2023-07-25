@@ -10,6 +10,7 @@ import './Claims.sol';
 import './EpochMap.sol';
 import './utils/SafeCast.sol';
 import './pool/SwapCall.sol';
+import 'hardhat/console.sol';
 
 /// @notice Position management library for ranged liquidity.
 library Positions {
@@ -108,7 +109,8 @@ library Positions {
         ) {
             // if (params.amount > 0 && swapCache.input > 0) {
                 // round ahead tickLimit to avoid crossing epochs
-                cache.tickLimit = TickMap.roundAheadWithPrice(cache.tickLimit, cache.constants, !params.zeroForOne, cache.priceLimit);
+                console.log('tickLimit check', uint24(cache.tickLimit));
+                cache.tickLimit = TickMap.roundAheadWithPrice(cache.tickLimit, cache.constants, params.zeroForOne, cache.priceLimit);
                 if (params.zeroForOne) {
                     if (params.lower < cache.tickLimit) {
                         // if rounding goes past limit trim position
@@ -147,6 +149,7 @@ library Positions {
         }
         // save swapCache
         cache.swapCache = swapCache;
+        console.log('position bounds', uint24(params.lower), uint24(params.upper));
 
         return (
             params,

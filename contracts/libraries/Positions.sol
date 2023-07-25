@@ -10,7 +10,6 @@ import './Claims.sol';
 import './EpochMap.sol';
 import './utils/SafeCast.sol';
 import './pool/SwapCall.sol';
-import 'hardhat/console.sol';
 
 /// @notice Position management library for ranged liquidity.
 library Positions {
@@ -107,33 +106,35 @@ library Positions {
             (params.zeroForOne ? cache.priceLower < cache.swapPool.price
                                : cache.priceUpper > cache.swapPool.price)
         ) {
-            // if (params.amount > 0 && swapCache.input > 0) {
-                // round ahead tickLimit to avoid crossing epochs
-                console.log('tickLimit check', uint24(cache.tickLimit));
-                cache.tickLimit = TickMap.roundAhead(cache.tickLimit, cache.constants, params.zeroForOne, cache.priceLimit);
-                if (params.zeroForOne) {
-                    if (params.lower < cache.tickLimit) {
-                        // if rounding goes past limit trim position
-                        /// @dev - if swap didn't go to limit user would be 100% filled
-                        params.lower = cache.tickLimit;
-                        cache.priceLower = ConstantProduct.getPriceAtTick(params.lower, cache.constants);
-                    }
-                    if (params.lower == params.upper && params.upper < ConstantProduct.maxTick(cache.constants.tickSpacing)) {
-                        params.upper += cache.constants.tickSpacing;
-                    }
-                    cache.priceUpper = ConstantProduct.getPriceAtTick(params.upper, cache.constants);
-                } else {
-                    if (params.upper > cache.tickLimit) {
-                        // if rounding goes past limit trim position
-                        params.upper = cache.tickLimit;
-                        cache.priceUpper = ConstantProduct.getPriceAtTick(params.upper, cache.constants);
-                    }
-                    if (params.upper == params.lower && params.lower > ConstantProduct.minTick(cache.constants.tickSpacing)) {
-                        params.lower -= cache.constants.tickSpacing;
-                    }
+            // move the tick limit based on pool.tickAtPrice
+            if (params.zeroForOne ? cache.swapPool.tickAtPrice < cache.tickLimit
+                                    : cache.swapPool.tickAtPrice > cache.tickLimit) {
+                cache.tickLimit = cache.swapPool.tickAtPrice;
+            }
+            // round ahead tickLimit to avoid crossing epochs
+            cache.tickLimit = TickMap.roundAhead(cache.tickLimit, cache.constants, params.zeroForOne, cache.priceLimit);
+            if (params.zeroForOne) {
+                if (params.lower < cache.tickLimit) {
+                    // if rounding goes past limit trim position
+                    /// @dev - if swap didn't go to limit user would be 100% filled
+                    params.lower = cache.tickLimit;
                     cache.priceLower = ConstantProduct.getPriceAtTick(params.lower, cache.constants);
                 }
-            // }
+                if (params.lower == params.upper && params.upper < ConstantProduct.maxTick(cache.constants.tickSpacing)) {
+                    params.upper += cache.constants.tickSpacing;
+                }
+                cache.priceUpper = ConstantProduct.getPriceAtTick(params.upper, cache.constants);
+            } else {
+                if (params.upper > cache.tickLimit) {
+                    // if rounding goes past limit trim position
+                    params.upper = cache.tickLimit;
+                    cache.priceUpper = ConstantProduct.getPriceAtTick(params.upper, cache.constants);
+                }
+                if (params.upper == params.lower && params.lower > ConstantProduct.minTick(cache.constants.tickSpacing)) {
+                    params.lower -= cache.constants.tickSpacing;
+                }
+                cache.priceLower = ConstantProduct.getPriceAtTick(params.lower, cache.constants);
+            }
             if (params.amount > 0 && params.lower < params.upper)
                 cache.liquidityMinted = ConstantProduct.getLiquidityForAmounts(
                     cache.priceLower,
@@ -149,7 +150,6 @@ library Positions {
         }
         // save swapCache
         cache.swapCache = swapCache;
-        console.log('position bounds', uint24(params.lower), uint24(params.upper));
 
         return (
             params,

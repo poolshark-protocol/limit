@@ -18,6 +18,7 @@ abstract contract LimitPoolErrors {
     error UpperNotOddTick();
     error MaxTickLiquidity();
     error CollectToZeroAddress();
+    error ProtocolFeeCeilingExceeded();
     error Overflow();
     error NotEnoughOutputLiquidity();
     error WaitUntilEnoughObservations();
@@ -43,6 +44,7 @@ abstract contract CoverPositionErrors {
 
 abstract contract LimitPoolFactoryErrors {
     error OwnerOnly();
+    error InvalidTokenAddress();
     error PoolAlreadyExists();
     error FeeTierNotSupported();
     error TickSpacingNotSupported();

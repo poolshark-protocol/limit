@@ -50,7 +50,7 @@ library Claims {
             if (pool.price >= cache.priceClaim) {
                 if (pool.price <= cache.priceUpper) {
                     cache.priceClaim = pool.price;
-                    params.claim = TickMap.roundBackWithPrice(pool.tickAtPrice, constants, params.zeroForOne, cache.priceClaim);
+                    params.claim = TickMap.roundBack(pool.tickAtPrice, constants, params.zeroForOne, cache.priceClaim);
                     claimTickEpoch = pool.swapEpoch;
                 } else {
                     cache.priceClaim = cache.priceUpper;
@@ -68,7 +68,7 @@ library Claims {
             if (pool.price <= cache.priceClaim) {
                 if (pool.price >= cache.priceLower) {
                     cache.priceClaim = pool.price;
-                    params.claim = TickMap.roundBackWithPrice(pool.tickAtPrice, constants, params.zeroForOne, cache.priceClaim);
+                    params.claim = TickMap.roundBack(pool.tickAtPrice, constants, params.zeroForOne, cache.priceClaim);
                     // handles tickAtPrice not being crossed yet
                     if (pool.tickAtPrice % constants.tickSpacing == 0 &&
                         pool.price > ConstantProduct.getPriceAtTick(pool.tickAtPrice, constants)){
@@ -154,7 +154,7 @@ library Claims {
         }
         ILimitPoolStructs.GetDeltasLocals memory locals;
         if (params.claim % constants.tickSpacing != 0)
-            locals.previousFullTick = TickMap.roundBackWithPrice(params.claim, constants, params.zeroForOne, cache.priceClaim);
+            locals.previousFullTick = TickMap.roundBack(params.claim, constants, params.zeroForOne, cache.priceClaim);
         else
             locals.previousFullTick = params.claim;
         locals.pricePrevious = ConstantProduct.getPriceAtTick(locals.previousFullTick, constants);
@@ -181,6 +181,13 @@ library Claims {
                                                                       : ConstantProduct.getDy(params.amount, cache.priceLower, cache.priceClaim, false));
             }
         }
+        // take protocol fee if needed
+        if (cache.pool.protocolFee > 0 && cache.position.amountIn > 0) {
+            uint128 protocolFeeAmount = cache.position.amountIn * cache.pool.protocolFee / 10000;
+            cache.position.amountIn -= protocolFeeAmount;
+            cache.pool.protocolFees += protocolFeeAmount;
+        }
+
         return cache;
     }
 }

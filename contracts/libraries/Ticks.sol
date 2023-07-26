@@ -38,11 +38,6 @@ library Ticks {
         uint128 liquidity,
         int24 tickAtPrice
     );
-    //  -10             0     2 3    10        20           30
-    /// |               | --  | |     |         |            |
-    /// |                ||||||||||||
-    /// -10             |  ||||||         |                   |
-    ///                 0    150   300      500                 1000
 
     uint256 internal constant Q96 = 0x1000000000000000000000000;
 
@@ -53,9 +48,7 @@ library Ticks {
         ILimitPoolStructs.GlobalState memory state,
         LimitPoolFactoryStructs.LimitPoolParams memory params
     ) external returns (
-        ILimitPoolStructs.GlobalState memory,
-        uint160,
-        uint160
+        ILimitPoolStructs.GlobalState memory
     ) {
         // initialize epoch
         pool0.swapEpoch = 1;
@@ -86,7 +79,7 @@ library Ticks {
             pool0.price
         );
 
-        return (state, constants.bounds.min, constants.bounds.max);
+        return state;
     }
 
     function validate(

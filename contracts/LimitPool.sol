@@ -19,12 +19,6 @@ contract LimitPool is
     LimitPoolFactoryStructs,
     LimitPoolStorage
 {
-    address public immutable owner;
-    address public immutable token0;
-    address public immutable token1;
-    uint160 public immutable minPrice;
-    uint160 public immutable maxPrice;
-    int16   public immutable tickSpacing;
 
     modifier ownerOnly() {
         _onlyOwner();
@@ -37,23 +31,13 @@ contract LimitPool is
         _postlock();
     }
 
-    constructor(
+    constructor() {}
+
+    function initialize(
         LimitPoolParams memory params
-    ) {
-        // set addresses
-        owner      = params.owner;
-        token0     = params.token0;
-        token1     = params.token1;
-
-        // set other immutables
-        tickSpacing    = params.tickSpacing;
-
+    ) external override lock {
         // initialize state
-        (
-            globalState,
-            minPrice,
-            maxPrice
-        ) = Ticks.initialize(tickMap, pool0, pool1, globalState, params);
+        globalState = Ticks.initialize(tickMap, pool0, pool1, globalState, params);
     }
 
     // limitSwap
@@ -184,25 +168,25 @@ contract LimitPool is
             pool1.protocolFee = protocolFee0;
             pool0.protocolFee = protocolFee1;
         }
-        address feeTo = ILimitPoolManager(owner).feeTo();
+        address feeTo = ILimitPoolManager(address(0)).feeTo();
         token0Fees = pool1.protocolFees;
         token1Fees = pool0.protocolFees;
         pool0.protocolFees = 0;
         pool1.protocolFees = 0;
         if (token0Fees > 0)
-            SafeTransfers.transferOut(feeTo, token0, token0Fees);
+            SafeTransfers.transferOut(feeTo, address(0), token0Fees);
         if (token1Fees > 0)
-            SafeTransfers.transferOut(feeTo, token1, token1Fees);
+            SafeTransfers.transferOut(feeTo, address(0), token1Fees);
     }
 
     function _immutables() private view returns (
         Immutables memory
     ) {
         return Immutables(
-            ITickMath.PriceBounds(minPrice, maxPrice),
-            token0,
-            token1,
-            tickSpacing
+            ITickMath.PriceBounds(0, 0),
+            address(0),
+            address(0),
+            0
         );
     }
 
@@ -216,6 +200,6 @@ contract LimitPool is
     }
 
     function _onlyOwner() private view {
-        if (msg.sender != owner) revert OwnerOnly();
+        if (msg.sender != address(0)) revert OwnerOnly();
     }
 }

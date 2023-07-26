@@ -2,10 +2,13 @@
 pragma solidity 0.8.13;
 
 import './LimitPool.sol';
+import './LimitPoolClone.sol';
 import './interfaces/ILimitPoolFactory.sol';
 import './base/events/LimitPoolFactoryEvents.sol';
 import './base/structs/LimitPoolFactoryStructs.sol';
 import './utils/LimitPoolErrors.sol';
+import './libraries/solady/LibClone.sol';
+import './libraries/math/ConstantProduct.sol';
 
 contract LimitPoolFactory is 
     ILimitPoolFactory,
@@ -13,12 +16,17 @@ contract LimitPoolFactory is
     LimitPoolFactoryEvents,
     LimitPoolFactoryErrors
 {
+    using LibClone for address;
+
     address immutable public owner;
+    LimitPool public implementation;
 
     constructor(
-        address _owner
+        address owner_,
+        LimitPool implementation_
     ) {
-        owner = _owner;
+        owner = owner_;
+        implementation = implementation_;
     }
 
     function createLimitPool(
@@ -44,9 +52,27 @@ contract LimitPoolFactory is
         if (!ILimitPoolManager(owner).tickSpacings(tickSpacing)) revert TickSpacingNotSupported();
         params.tickSpacing = tickSpacing;
         params.startPrice = startPrice;
+        params.minPrice = ConstantProduct.minPrice(params.tickSpacing);
+        params.maxPrice = ConstantProduct.maxPrice(params.tickSpacing);
 
-        // launch pool and save address
-        pool = address(new LimitPool(params));
+        // generate salt
+        bytes32 salt = keccak256(abi.encodePacked(tokenIn, tokenOut, tickSpacing));
+        
+        // launch pool
+        pool = address(implementation).cloneDeterministic({
+            salt: salt,
+            data: abi.encodePacked(
+                params.owner,
+                params.token0,
+                params.token1,
+                params.minPrice,
+                params.maxPrice,
+                params.tickSpacing
+            )
+        });
+
+        // initialize pool storage
+        ILimitPool(pool).initialize(params);
 
         limitPools[key] = pool;
 

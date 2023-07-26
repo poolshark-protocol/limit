@@ -292,7 +292,6 @@ library TickMap {
         roundedTick = tick / constants.tickSpacing * constants.tickSpacing;
         if (price == ConstantProduct.getPriceAtTick(roundedTick, constants))
             return roundedTick;
-
         if (zeroForOne) {
             // round up if positive
             if (roundedTick > 0 || (roundedTick == 0 && tick > 0))

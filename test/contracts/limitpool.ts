@@ -3827,4 +3827,241 @@ describe('LimitPool Tests', function () {
         // The fix is to resize the position to the current market price when no swap will occur.
         // You can comment out the added section in Positions.sol to see the adjusted resizing.
     })
+
+    it.only("Can supply any claim tick", async () => {
+        const bobLiquidity = '40152271099188026073753'
+        const aliceLiquidity = '20051041647900280328782'
+        const aliceLiquidity2 = '19951041647900280328782'
+        const aliceLiquidity3 = '22173370812928211327045'
+
+        expect(await getTickAtPrice(false)).to.eq(16095);
+        expect(await getTickAtPrice(true)).to.eq(16095);
+
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '0',
+            upper: '100',
+            amount: tokenAmount,
+            zeroForOne: true,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: aliceLiquidity,
+            upperTickCleared: false,
+            lowerTickCleared: true,
+            revertMessage: '',
+        });
+
+        const alicePositionLiquidity = await getPositionLiquidity(true, alice.address, 0, 100);
+        expect(alicePositionLiquidity).to.eq(aliceLiquidity);
+
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: false,
+            amountIn: tokenAmountBn,
+            priceLimit: maxPrice,
+            balanceInDecrease: '100000000000000000000',
+            balanceOutIncrease: '99503747737971550932',
+            revertMessage: '',
+        });
+
+        await getTickAtPrice(true, true)
+
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '0',
+            upper: '100',
+            expectedUpper: "90",
+            amount: tokenAmount,
+            zeroForOne: false,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: aliceLiquidity3,
+            upperTickCleared: true,
+            lowerTickCleared: false,
+            revertMessage: '',
+        });
+
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: true,
+            amountIn: tokenAmountBn.mul(2),
+            priceLimit: minPrice,
+            balanceInDecrease: '99551033380443894704',
+            balanceOutIncrease: '99999999999999999999',
+            revertMessage: '',
+        });
+
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: '0',
+            upper: '100',
+            amount: tokenAmount,
+            zeroForOne: true,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: aliceLiquidity,
+            upperTickCleared: false,
+            lowerTickCleared: true,
+            revertMessage: '',
+        });
+
+        //tick 95 now exists
+        await getTick(true, 95, true)
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '0',
+            upper: '100',
+            claim: '95',
+            expectedLower: '90',
+            liquidityAmount: BigNumber.from("0"),
+            zeroForOne: true,
+            balanceInIncrease: '90428477551142091806',
+            balanceOutIncrease: '0',
+            lowerTickCleared: true,
+            upperTickCleared: false,
+            revertMessage: '',
+        });
+
+        // Alice still has her position shrunk to a non-standard tick
+        expect(await getPositionLiquidity(true, alice.address, 95, 100)).to.eq(0);
+        expect(await getPositionLiquidity(true, alice.address, 90, 100)).to.eq(aliceLiquidity);
+        // Swaps the rest of the way to fill the remainder
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: false,
+            amountIn: tokenAmountBn.mul(2),
+            priceLimit: maxPrice,
+            balanceInDecrease: '101002453924610240701',
+            balanceOutIncrease: '100496252262028449066',
+            revertMessage: '',
+        });
+
+        // Now everyone burns
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '90',
+            upper: '100',
+            claim: '90',
+            liquidityAmount: BigNumber.from(aliceLiquidity),
+            zeroForOne: true,
+            balanceInIncrease: '10072749411163028543',
+            balanceOutIncrease: '0',
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: '',
+        });
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '0',
+            upper: '90',
+            claim: '0',
+            liquidityAmount: BigNumber.from(aliceLiquidity3),
+            zeroForOne: false,
+            balanceInIncrease: '99551033380443894703',
+            balanceOutIncrease: '0',
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: '',
+        });
+
+        // Alice has a position that spans 0 ticks but still has liquidity on it
+        expect(await getPositionLiquidity(false, alice.address, 0, 0)).to.eq("0");
+        expect((await hre.props.limitPool.pool1()).liquidityGlobal).to.eq("0")
+
+        expect(await getTickAtPrice(false)).to.eq(-887270);
+        expect((await hre.props.limitPool.pool1()).liquidity).to.eq("0")
+
+        expect(await getTickAtPrice(true)).to.eq(887270);
+        expect((await hre.props.limitPool.pool0()).liquidity).to.eq("0")
+
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: '0',
+            upper: '100',
+            amount: tokenAmount,
+            zeroForOne: false,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: aliceLiquidity2,
+            upperTickCleared: true,
+            lowerTickCleared: false,
+            revertMessage: '',
+        });
+
+        // Burn again, this time removing alice's null position that still has liquidity
+        // Alice's liquidity will be subtracted from tick 0's liquidity delta, therefore
+        // having more negative liquidityDelta on that tick than the pool.liquidity.
+        //
+        // Ultimately this will brick the pool with an underflow revert when we reach this tick
+        // as we are attempting to subtract more liquidityDelta from the pool.liquidity than exists.
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '0',
+            upper: '0',
+            claim: '0',
+            liquidityAmount: BigNumber.from("39952020798957899520605"),
+            zeroForOne: false,
+            balanceInIncrease: '0',
+            balanceOutIncrease: '0',
+            lowerTickCleared: true,
+            upperTickCleared: false,
+            revertMessage: 'InvalidPositionBounds()',
+        });
+        expect((await hre.props.limitPool.pool1()).liquidityGlobal).to.eq("19951041647900280328782");
+
+        // So now we swap to get to these ticks and see that the pool is now bricked past this point
+        // This is catastrophic as anyone can create these positions and intentionally put the pool in this
+        // bricked state, essentially shutting down the entire protocol and preventing every user from getting filled.
+        //
+        // Additionally, this state will arise on common day-to-day use, making the pools virtually unusable over a non-trivial
+        // amount of time.
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: true,
+            amountIn: tokenAmountBn.mul(2),
+            priceLimit: minPrice,
+            balanceInDecrease: '99501272792925090387',
+            balanceOutIncrease: '99999999999999999999',
+            revertMessage: '',
+        });
+
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: '0',
+            upper: '100',
+            claim: '0',
+            liquidityAmount: BigNumber.from("20051041647900280328782"),
+            zeroForOne: true,
+            balanceInIncrease: '100501226962305120350',
+            balanceOutIncrease: '0',
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: '',
+        });
+
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: '0',
+            upper: '100',
+            claim: '0',
+            liquidityAmount: BigNumber.from(aliceLiquidity2),
+            zeroForOne: false,
+            balanceInIncrease: '99501272792925090386',
+            balanceOutIncrease: '0',
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: '',
+        });
+
+        if (true) {
+            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
+            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
+        }
+    })
 })

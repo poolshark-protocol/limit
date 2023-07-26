@@ -10,6 +10,7 @@ import './Claims.sol';
 import './EpochMap.sol';
 import './utils/SafeCast.sol';
 import './pool/SwapCall.sol';
+import 'hardhat/console.sol';
 
 /// @notice Position management library for ranged liquidity.
 library Positions {
@@ -150,6 +151,8 @@ library Positions {
         }
         // save swapCache
         cache.swapCache = swapCache;
+
+        console.log('position bounds', uint24(params.lower), uint24(params.upper));
 
         return (
             params,
@@ -302,6 +305,7 @@ library Positions {
     ) internal returns (
         ILimitPoolStructs.GlobalState memory,
         ILimitPoolStructs.PoolState memory,
+        ILimitPoolStructs.Position memory,
         int24
     )
     {
@@ -321,7 +325,7 @@ library Positions {
         );
 
         if (cache.earlyReturn)
-            return (state, pool, params.claim);
+            return (state, pool, cache.position, params.claim);
 
         // update pool liquidity
         if (cache.priceClaim == pool.price) {
@@ -380,6 +384,7 @@ library Positions {
                 // subtract remaining position liquidity out from global
                 pool.liquidityGlobal -= cache.position.liquidity;
             }
+            console.log('deleting position');
             delete positions[msg.sender][params.lower][params.upper];
         }
         // force collection to the user
@@ -388,9 +393,11 @@ library Positions {
             cache.position.epochLast = 0;
             cache.position.claimPriceLast = 0;
         }
-        params.zeroForOne
-            ? positions[msg.sender][params.claim][params.upper] = cache.position
-            : positions[msg.sender][params.lower][params.claim] = cache.position;
+        // if (params.zeroForOne ? params.claim != params.upper
+        //                       : params.claim != params.lower)
+        //     params.zeroForOne
+        //         ? positions[msg.sender][params.claim][params.upper] = cache.position
+        //         : positions[msg.sender][params.lower][params.claim] = cache.position;
         
         emit BurnLimit(
             params.to,
@@ -403,7 +410,7 @@ library Positions {
             cache.position.amountOut
         );
         // return cached position in memory and transfer out
-        return (state, pool, params.claim);
+        return (state, pool, cache.position, params.claim);
     }
 
     function snapshot(
@@ -455,7 +462,7 @@ library Positions {
         uint128
     ) {
         // convert percentage to liquidity amount
-        if (percent > 1e38) require (false, 'InvalidBurnPercentage()');
+        if (percent > 1e38) percent = 1e38;
         if (liquidity == 0 && percent > 0) require (false, 'NotEnoughPositionLiquidity()');
         return uint128(uint256(liquidity) * uint256(percent) / 1e38);
     }

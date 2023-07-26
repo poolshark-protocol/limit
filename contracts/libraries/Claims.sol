@@ -7,6 +7,7 @@ import './EpochMap.sol';
 import './TickMap.sol';
 import './utils/String.sol';
 import './utils/SafeCast.sol';
+import 'hardhat/console.sol';
 
 library Claims {
 
@@ -62,7 +63,9 @@ library Claims {
                 if (cache.claimTick.priceAt == 0) {
                     require (false, 'WrongTickClaimedAt1()');
                 }
+                console.log('price at claim', cache.claimTick.priceAt);
                 cache.priceClaim = cache.claimTick.priceAt;
+                params.claim = TickMap.roundBack(params.claim, constants, params.zeroForOne, cache.priceClaim);
             }
         } else {
             if (pool.price <= cache.priceClaim) {
@@ -86,6 +89,7 @@ library Claims {
                     require (false, 'WrongTickClaimedAt2()');
                 }
                 cache.priceClaim = cache.claimTick.priceAt;
+                params.claim = TickMap.roundBack(params.claim, constants, params.zeroForOne, cache.priceClaim);
             }
         }
 
@@ -111,6 +115,9 @@ library Claims {
             if (claimTickNextAccumEpoch > cache.position.epochLast) {
                 require (false, 'WrongTickClaimedAt5()');
             }
+        } else {
+            // params.claim = TickMap.roundBack(params.claim, constants, params.zeroForOne, cache.priceClaim);
+            console.log('handling zero burn', uint24(params.claim));
         }
         if (params.claim != params.upper && params.claim != params.lower) {
             // check epochLast on claim tick

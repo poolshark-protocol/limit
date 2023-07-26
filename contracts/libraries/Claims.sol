@@ -65,7 +65,6 @@ library Claims {
                 }
                 console.log('price at claim', cache.claimTick.priceAt);
                 cache.priceClaim = cache.claimTick.priceAt;
-                params.claim = TickMap.roundBack(params.claim, constants, params.zeroForOne, cache.priceClaim);
             }
         } else {
             if (pool.price <= cache.priceClaim) {
@@ -89,7 +88,6 @@ library Claims {
                     require (false, 'WrongTickClaimedAt2()');
                 }
                 cache.priceClaim = cache.claimTick.priceAt;
-                params.claim = TickMap.roundBack(params.claim, constants, params.zeroForOne, cache.priceClaim);
             }
         }
 
@@ -137,10 +135,10 @@ library Claims {
 
         // early return if no update and amount burned is 0
         //TODO: after we've cycled through claim ticks and there are no position updates just revert - DONE
-        if (params.amount == 0 &&
-            (params.zeroForOne ? params.claim == params.lower
-                               : params.claim == params.upper)) {
-            require(false, 'NoPositionUpdates()');
+        if (params.zeroForOne ? params.claim == params.lower
+                              : params.claim == params.upper) {
+            if (params.amount == 0)
+                require(false, 'NoPositionUpdates()');
         }
 
         return (params, cache);

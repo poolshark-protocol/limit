@@ -393,6 +393,8 @@ library Positions {
             cache.position.epochLast = 0;
             cache.position.claimPriceLast = 0;
         }
+        // round back claim tick for storage
+        params.claim = TickMap.roundBack(params.claim, constants, params.zeroForOne, cache.priceClaim);
         // if (params.zeroForOne ? params.claim != params.upper
         //                       : params.claim != params.lower)
         //     params.zeroForOne

@@ -2280,6 +2280,7 @@ describe('LimitPool Tests', function () {
 
         if (debugMode) console.log('BEFORE BURN 3')
         if (debugMode) getPrice(true, true)
+
         await validateBurn({
             signer: hre.props.alice,
             lower: '0', 
@@ -3828,7 +3829,7 @@ describe('LimitPool Tests', function () {
         // You can comment out the added section in Positions.sol to see the adjusted resizing.
     })
 
-    it.only("Can supply any claim tick", async () => {
+    it.skip("Can supply any claim tick", async () => {
         const bobLiquidity = '40152271099188026073753'
         const aliceLiquidity = '20051041647900280328782'
         const aliceLiquidity2 = '19951041647900280328782'

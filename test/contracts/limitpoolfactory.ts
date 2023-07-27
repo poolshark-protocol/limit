@@ -41,7 +41,7 @@ describe('LimitPoolFactory Tests', function () {
         ).to.be.revertedWith('InvalidTokenAddress()')
     })
 
-    it('Should not create pool with invalid token0 address', async function () {
+    it('Should not create pool with invalid token address', async function () {
         await expect(
             hre.props.limitPoolFactory
                 .connect(hre.props.admin)
@@ -52,9 +52,7 @@ describe('LimitPoolFactory Tests', function () {
                     '396140812571321687967719751680'
                 )
         ).to.be.revertedWith('InvalidTokenAddress()')
-    })
-
-    it('Should not create pool with invalid token1 address', async function () {
+        
         await expect(
             hre.props.limitPoolFactory
                 .connect(hre.props.admin)

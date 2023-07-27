@@ -384,6 +384,7 @@ describe('LimitPool Tests', function () {
             balanceOutIncrease: '49875628335894665158',
             revertMessage: '',
         })
+        debugMode = true
         if (debugMode) await getPrice(false, true)
         if (debugMode) await getTick(false, -100, true)
 
@@ -398,7 +399,8 @@ describe('LimitPool Tests', function () {
             balanceOutIncrease: '25062185832052667420',
             lowerTickCleared: false,
             upperTickCleared: true,
-            expectedUpper: '-40',
+            expectedUpper: '-45',
+            expectedPositionUpper: '-40',
             revertMessage: '',
         })
         // no-op swap
@@ -4104,7 +4106,6 @@ describe('LimitPool Tests', function () {
         });
         await getPrice(false, true)
         await getTickAtPrice(false, true)
-
         await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
@@ -4131,6 +4132,9 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         });
 
+        await getTick(false, -100, true)
+        await getPrice(false, true)
+
         await validateMint({
             signer: hre.props.bob,
             recipient: hre.props.bob.address,
@@ -4144,25 +4148,26 @@ describe('LimitPool Tests', function () {
             lowerTickCleared: false,
             revertMessage: '',
         });
-        //TODO: validate price crossed -100 and produce correct tick values
         //tick 95 now exists
+        await getPrice(false, true)
         await getTick(false, -100, true)
-        return
+        await getTick(false, -95, true)
+return
         await validateBurn({
             signer: hre.props.alice,
-            lower: '0',
-            upper: '100',
-            claim: '95',
-            expectedLower: '90',
+            lower: '-100',
+            upper: '0',
+            claim: '-95',
+            expectedLower: '-90',
             liquidityAmount: BigNumber.from("0"),
-            zeroForOne: true,
+            zeroForOne: false,
             balanceInIncrease: '90428477551142091806',
             balanceOutIncrease: '0',
             lowerTickCleared: true,
             upperTickCleared: false,
             revertMessage: '',
         });
-
+        return
         // Alice still has her position shrunk to a non-standard tick
         expect(await getPositionLiquidity(true, alice.address, 95, 100)).to.eq(0);
         expect(await getPositionLiquidity(true, alice.address, 90, 100)).to.eq(aliceLiquidity);

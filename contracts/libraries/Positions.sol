@@ -397,7 +397,9 @@ library Positions {
         }
 
         // round back claim tick for storage
-        params.claim = TickMap.roundBack(params.claim, constants, params.zeroForOne, cache.priceClaim);
+        console.log('claim check', uint24(-params.claim));
+        if (params.claim % constants.tickSpacing != 0)
+            params.claim = TickMap.roundBack(params.claim, constants, params.zeroForOne, cache.priceClaim);
         
         emit BurnLimit(
             params.to,

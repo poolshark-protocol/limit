@@ -84,6 +84,7 @@ export interface ValidateBurnParams {
     upperTickCleared: boolean
     expectedLower?: string
     expectedUpper?: string
+    expectedPositionUpper?: string
     compareSnapshot?: boolean
     revertMessage: string
 }
@@ -421,6 +422,7 @@ export async function validateBurn(params: ValidateBurnParams) {
     const revertMessage = params.revertMessage
     const expectedUpper = params.expectedUpper ? BigNumber.from(params.expectedUpper) : null
     const expectedLower = params.expectedLower ? BigNumber.from(params.expectedLower) : null
+    const expectedPositionUpper = params.expectedPositionUpper ? BigNumber.from(params.expectedPositionUpper) : null
     const compareSnapshot = params.compareSnapshot ? params.compareSnapshot : true
 
     let balanceInBefore
@@ -522,7 +524,11 @@ export async function validateBurn(params: ValidateBurnParams) {
     } else {
         lowerTickAfter = await hre.props.limitPool.ticks1(lower)
         upperTickAfter = await hre.props.limitPool.ticks1(expectedUpper ?? upper)
-        positionAfter = await hre.props.limitPool.positions1(signer.address, lower, expectedUpper ? expectedUpper : claim)
+        if (expectedPositionUpper) {
+            console.log('expected position upper')
+            positionAfter = await hre.props.limitPool.positions1(signer.address, lower, expectedPositionUpper)
+        } else 
+            positionAfter = await hre.props.limitPool.positions1(signer.address, lower, expectedUpper ? expectedUpper : claim)
     }
     //dependent on zeroForOne
     if (zeroForOne) {

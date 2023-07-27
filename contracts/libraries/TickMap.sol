@@ -4,6 +4,7 @@ pragma solidity 0.8.13;
 import './math/ConstantProduct.sol';
 import '../interfaces/ILimitPool.sol';
 import '../interfaces/ILimitPoolStructs.sol';
+import 'hardhat/console.sol';
 
 library TickMap {
 
@@ -281,6 +282,38 @@ library TickMap {
         return tick / tickSpacing * tickSpacing;
     }
 
+    function roundHalf(
+        int24 tick,
+        ILimitPoolStructs.Immutables memory constants,
+        uint256 price
+    ) internal pure returns (
+        int24 roundedTick,
+        uint160 roundedTickPrice
+    ) {
+        //pool.tickAtPrice -99.5
+        //pool.tickAtPrice -100
+        //-105
+        //-95
+        roundedTick = tick / constants.tickSpacing * constants.tickSpacing;
+        roundedTickPrice = ConstantProduct.getPriceAtTick(roundedTick, constants);
+        if (price == roundedTickPrice)
+            return (roundedTick, roundedTickPrice);
+        if (roundedTick > 0) {
+            roundedTick += constants.tickSpacing / 2;
+        } else if (roundedTick < 0) {
+            if (roundedTickPrice < price)
+                roundedTick += constants.tickSpacing / 2;
+            else
+                roundedTick -= constants.tickSpacing / 2;
+        } else {
+            if (price > roundedTickPrice) {
+                roundedTick += constants.tickSpacing / 2;
+            } else if (price < roundedTickPrice) {
+                roundedTick -= constants.tickSpacing / 2;
+            }
+        }
+    }
+
     function roundAhead(
         int24 tick,
         ILimitPoolStructs.Immutables memory constants,
@@ -290,16 +323,23 @@ library TickMap {
         int24 roundedTick
     ) {
         roundedTick = tick / constants.tickSpacing * constants.tickSpacing;
-        if (price == ConstantProduct.getPriceAtTick(roundedTick, constants))
+        uint160 roundedTickPrice = ConstantProduct.getPriceAtTick(roundedTick, constants);
+        if (price == roundedTickPrice)
             return roundedTick;
-
         if (zeroForOne) {
             // round up if positive
-            if (roundedTick > 0 || (roundedTick == 0 && tick > 0))
+            if (roundedTick > 0 || (roundedTick == 0 && tick >= 0))
                 roundedTick += constants.tickSpacing;
+            else if (tick % constants.tickSpacing == 0) {
+                // handle price at -99.5 and tickAtPrice == -100
+                if (tick < 0 && roundedTickPrice < price) {
+                    roundedTick += constants.tickSpacing;
+                }
+            }
         } else {
             // round down if negative
             if (roundedTick < 0 || (roundedTick == 0 && tick < 0))
+            /// @dev - strictly less due to TickMath always rounding to lesser values
                 roundedTick -= constants.tickSpacing;
         }
     }
@@ -309,11 +349,12 @@ library TickMap {
         ILimitPoolStructs.Immutables memory constants,
         bool zeroForOne,
         uint256 price
-    ) internal pure returns (
+    ) internal view returns (
         int24 roundedTick
     ) {
         roundedTick = tick / constants.tickSpacing * constants.tickSpacing;
-        if (price == ConstantProduct.getPriceAtTick(roundedTick, constants))
+        uint160 roundedTickPrice = ConstantProduct.getPriceAtTick(roundedTick, constants);
+        if (price == roundedTickPrice)
             return roundedTick;
         if (zeroForOne) {
             // round down if negative
@@ -321,8 +362,15 @@ library TickMap {
                 roundedTick -= constants.tickSpacing;
         } else {
             // round up if positive
-            if (roundedTick > 0 || (roundedTick == 0 && tick > 0))
+            if (roundedTick > 0 || (roundedTick == 0 && tick >= 0))
                 roundedTick += constants.tickSpacing;
+            else if (tick % constants.tickSpacing == 0) {
+                // handle price at -99.5 and tickAtPrice == -100
+                if (tick < 0 && roundedTickPrice < price) {
+                    roundedTick += constants.tickSpacing;
+                }
+            }
+            console.log('tickmap rounding', uint24(-tick), uint24(-roundedTick), uint16(constants.tickSpacing));
         }
     }
 }

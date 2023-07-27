@@ -7,6 +7,7 @@ import './EpochMap.sol';
 import './TickMap.sol';
 import './utils/String.sol';
 import './utils/SafeCast.sol';
+import 'hardhat/console.sol';
 
 library Claims {
 
@@ -62,6 +63,7 @@ library Claims {
                 if (cache.claimTick.priceAt == 0) {
                     require (false, 'WrongTickClaimedAt1()');
                 }
+                console.log('price at claim', cache.claimTick.priceAt);
                 cache.priceClaim = cache.claimTick.priceAt;
             }
         } else {
@@ -70,10 +72,8 @@ library Claims {
                     cache.priceClaim = pool.price;
                     params.claim = TickMap.roundBack(pool.tickAtPrice, constants, params.zeroForOne, cache.priceClaim);
                     // handles tickAtPrice not being crossed yet
-                    if (pool.tickAtPrice % constants.tickSpacing == 0 &&
-                        pool.price > ConstantProduct.getPriceAtTick(pool.tickAtPrice, constants)){
-                        params.claim += constants.tickSpacing;
-                    }
+                            console.log('claim check -1', uint24(-params.claim));
+                    console.log('claim check 0', uint24(-params.claim));
                     claimTickEpoch = pool.swapEpoch;
                 } else {
                     cache.priceClaim = cache.priceLower;
@@ -111,6 +111,9 @@ library Claims {
             if (claimTickNextAccumEpoch > cache.position.epochLast) {
                 require (false, 'WrongTickClaimedAt5()');
             }
+        } else {
+            // params.claim = TickMap.roundBack(params.claim, constants, params.zeroForOne, cache.priceClaim);
+            console.log('handling zero burn', uint24(params.claim));
         }
         if (params.claim != params.upper && params.claim != params.lower) {
             // check epochLast on claim tick
@@ -130,10 +133,10 @@ library Claims {
 
         // early return if no update and amount burned is 0
         //TODO: after we've cycled through claim ticks and there are no position updates just revert - DONE
-        if (params.amount == 0 &&
-            (params.zeroForOne ? params.claim == params.lower
-                               : params.claim == params.upper)) {
-            require(false, 'NoPositionUpdates()');
+        if (params.zeroForOne ? params.claim == params.lower
+                              : params.claim == params.upper) {
+            if (params.amount == 0)
+                require(false, 'NoPositionUpdates()');
         }
 
         return (params, cache);
@@ -143,7 +146,7 @@ library Claims {
         ILimitPoolStructs.UpdateCache memory cache,
         ILimitPoolStructs.UpdateParams memory params,
         ILimitPoolStructs.Immutables memory constants
-    ) internal pure returns (
+    ) internal view returns (
         ILimitPoolStructs.UpdateCache memory
     ) {
         // if half tick priceAt > 0 add amountOut to amountOutClaimed
@@ -153,8 +156,10 @@ library Claims {
                                                               : cache.priceUpper;
         }
         ILimitPoolStructs.GetDeltasLocals memory locals;
+        console.log('claim check 1', uint24(-params.claim));
         if (params.claim % constants.tickSpacing != 0)
-            locals.previousFullTick = TickMap.roundBack(params.claim, constants, params.zeroForOne, cache.priceClaim);
+        // this should pass price at the claim tick
+            locals.previousFullTick = TickMap.roundBack(params.claim, constants, params.zeroForOne, ConstantProduct.getPriceAtTick(params.claim, constants));
         else
             locals.previousFullTick = params.claim;
         locals.pricePrevious = ConstantProduct.getPriceAtTick(locals.previousFullTick, constants);

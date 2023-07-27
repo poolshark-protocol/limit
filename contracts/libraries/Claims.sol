@@ -7,7 +7,6 @@ import './EpochMap.sol';
 import './TickMap.sol';
 import './utils/String.sol';
 import './utils/SafeCast.sol';
-import 'hardhat/console.sol';
 
 library Claims {
 
@@ -63,7 +62,6 @@ library Claims {
                 if (cache.claimTick.priceAt == 0) {
                     require (false, 'WrongTickClaimedAt1()');
                 }
-                console.log('price at claim', cache.claimTick.priceAt);
                 cache.priceClaim = cache.claimTick.priceAt;
             }
         } else {
@@ -71,9 +69,6 @@ library Claims {
                 if (pool.price >= cache.priceLower) {
                     cache.priceClaim = pool.price;
                     params.claim = TickMap.roundBack(pool.tickAtPrice, constants, params.zeroForOne, cache.priceClaim);
-                    // handles tickAtPrice not being crossed yet
-                            console.log('claim check -1', uint24(-params.claim));
-                    console.log('claim check 0', uint24(-params.claim));
                     claimTickEpoch = pool.swapEpoch;
                 } else {
                     cache.priceClaim = cache.priceLower;
@@ -111,9 +106,6 @@ library Claims {
             if (claimTickNextAccumEpoch > cache.position.epochLast) {
                 require (false, 'WrongTickClaimedAt5()');
             }
-        } else {
-            // params.claim = TickMap.roundBack(params.claim, constants, params.zeroForOne, cache.priceClaim);
-            console.log('handling zero burn', uint24(params.claim));
         }
         if (params.claim != params.upper && params.claim != params.lower) {
             // check epochLast on claim tick
@@ -156,7 +148,7 @@ library Claims {
                                                               : cache.priceUpper;
         }
         ILimitPoolStructs.GetDeltasLocals memory locals;
-        console.log('claim check 1', uint24(-params.claim));
+
         if (params.claim % constants.tickSpacing != 0)
         // this should pass price at the claim tick
             locals.previousFullTick = TickMap.roundBack(params.claim, constants, params.zeroForOne, ConstantProduct.getPriceAtTick(params.claim, constants));

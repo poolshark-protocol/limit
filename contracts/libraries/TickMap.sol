@@ -4,7 +4,6 @@ pragma solidity 0.8.13;
 import './math/ConstantProduct.sol';
 import '../interfaces/ILimitPool.sol';
 import '../interfaces/ILimitPoolStructs.sol';
-import 'hardhat/console.sol';
 
 library TickMap {
 
@@ -349,7 +348,7 @@ library TickMap {
         ILimitPoolStructs.Immutables memory constants,
         bool zeroForOne,
         uint256 price
-    ) internal view returns (
+    ) internal pure returns (
         int24 roundedTick
     ) {
         roundedTick = tick / constants.tickSpacing * constants.tickSpacing;
@@ -370,7 +369,6 @@ library TickMap {
                     roundedTick += constants.tickSpacing;
                 }
             }
-            console.log('tickmap rounding', uint24(-tick), uint24(-roundedTick), uint16(constants.tickSpacing));
         }
     }
 }

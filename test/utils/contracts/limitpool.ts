@@ -525,7 +525,6 @@ export async function validateBurn(params: ValidateBurnParams) {
         lowerTickAfter = await hre.props.limitPool.ticks1(lower)
         upperTickAfter = await hre.props.limitPool.ticks1(expectedUpper ?? upper)
         if (expectedPositionUpper) {
-            console.log('expected position upper')
             positionAfter = await hre.props.limitPool.positions1(signer.address, lower, expectedPositionUpper)
         } else 
             positionAfter = await hre.props.limitPool.positions1(signer.address, lower, expectedUpper ? expectedUpper : claim)

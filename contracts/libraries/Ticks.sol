@@ -485,7 +485,6 @@ library Ticks {
             uint160 roundedPrice
         ) = TickMap.roundHalf(pool.tickAtPrice, constants, pool.price);
 
-        console.log('tick to save', uint24(-tickToSave));
         // update tick to save
         ILimitPoolStructs.Tick memory tick = ticks[tickToSave];
         /// @auditor - tick.priceAt will be zero for tick % tickSpacing == 0

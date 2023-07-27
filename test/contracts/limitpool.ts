@@ -384,7 +384,7 @@ describe('LimitPool Tests', function () {
             balanceOutIncrease: '49875628335894665158',
             revertMessage: '',
         })
-        debugMode = true
+
         if (debugMode) await getPrice(false, true)
         if (debugMode) await getTick(false, -100, true)
 
@@ -3868,7 +3868,7 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         });
 
-        await getTickAtPrice(true, true)
+        if (debugMode) await getTickAtPrice(true, true)
 
         await validateMint({
             signer: hre.props.alice,
@@ -3911,7 +3911,7 @@ describe('LimitPool Tests', function () {
         });
 
         //tick 95 now exists
-        await getTick(true, 95, true)
+        if (debugMode) await getTick(true, 95, true)
 
         await validateBurn({
             signer: hre.props.alice,
@@ -4104,8 +4104,8 @@ describe('LimitPool Tests', function () {
             balanceOutIncrease: '99503747737971550932',
             revertMessage: '',
         });
-        await getPrice(false, true)
-        await getTickAtPrice(false, true)
+        if (debugMode) await getPrice(false, true)
+        if (debugMode) await getTickAtPrice(false, true)
         await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
@@ -4132,8 +4132,8 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         });
 
-        await getTick(false, -100, true)
-        await getPrice(false, true)
+        if (debugMode) await getTick(false, -100, true)
+        if (debugMode) await getPrice(false, true)
 
         await validateMint({
             signer: hre.props.bob,
@@ -4149,9 +4149,9 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         });
         //tick 95 now exists
-        await getPrice(false, true)
-        await getTick(false, -100, true)
-        await getTick(false, -95, true)
+        if (debugMode) await getPrice(false, true)
+        if (debugMode) await getTick(false, -100, true)
+        if (debugMode) await getTick(false, -95, true)
 
         await validateBurn({
             signer: hre.props.alice,

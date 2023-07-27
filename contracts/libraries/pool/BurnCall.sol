@@ -83,8 +83,6 @@ library BurnCall {
             params.zeroForOne
                 ? positions[msg.sender][params.claim][params.upper] = cache.position
                 : positions[msg.sender][params.lower][params.claim] = cache.position;
-        console.log('saving position at', uint24(-params.lower), uint24(-params.claim));
-        console.log('position info', cache.position.liquidity, cache.position.claimPriceLast, cache.position.epochLast);
         return cache;
     }
 }

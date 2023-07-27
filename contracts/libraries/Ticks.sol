@@ -142,7 +142,7 @@ library Ticks {
                                   : ticks[cache.crossTick].priceAt;
 
             }
-            (pool, cache) = _quoteSingle(params.zeroForOne, params.priceLimit, pool, cache);
+            (pool, cache) = _quoteSingle(pool, cache, params.priceLimit, params.zeroForOne);
             if (cache.cross) {
                 (pool, cache) = _cross(
                     ticks,
@@ -210,7 +210,7 @@ library Ticks {
                                     ConstantProduct.getPriceAtTick(cache.crossTick, cache.constants)
                                   : ticks[cache.crossTick].priceAt;
             }
-            (pool, cache) = _quoteSingle(params.zeroForOne, params.priceLimit, pool, cache);
+            (pool, cache) = _quoteSingle(pool, cache, params.priceLimit, params.zeroForOne);
             if (cache.cross) {
                 (pool, cache) = _pass(
                     ticks,
@@ -229,18 +229,18 @@ library Ticks {
     }
 
     function _quoteSingle(
-        bool zeroForOne,
-        uint160 priceLimit,
         ILimitPoolStructs.PoolState memory pool,
-        ILimitPoolStructs.SwapCache memory cache
+        ILimitPoolStructs.SwapCache memory cache,
+        uint160 priceLimit,
+        bool zeroForOne
     ) internal pure returns (
         ILimitPoolStructs.PoolState memory,
         ILimitPoolStructs.SwapCache memory
     ) {
         if ((zeroForOne ? priceLimit >= cache.price
                         : priceLimit <= cache.price) ||
-            cache.price == cache.constants.bounds.min ||
-            cache.price == cache.constants.bounds.max ||
+            (zeroForOne && cache.price == cache.constants.bounds.min) ||
+            (!zeroForOne && cache.price == cache.constants.bounds.max) ||
             cache.amountLeft == 0)
         {
             cache.cross = false;

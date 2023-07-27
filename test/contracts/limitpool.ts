@@ -4304,9 +4304,71 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         });
 
-        if (true) {
+        if (balanceCheck) {
             console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
             console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
         }
+    })
+
+    it('pool - Should revert if liquidity minted is zero', async function () {
+        const aliceLiquidity = '20051041647900280328782'
+
+        // mint reverts as the price becomes out of bounds
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '-665460',
+            upper: '-665450',
+            amount: tokenAmount,
+            zeroForOne: true,
+            balanceInDecrease: '100000000000000000000',
+            liquidityIncrease: '804',
+            upperTickCleared: false,
+            lowerTickCleared: true,
+            revertMessage: 'PositionLiquidityZero()',
+        })
+
+        // mint reverts as the price becomes out of bounds
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '865450',
+            upper: '865460',
+            amount: '1000000000000000',
+            zeroForOne: false,
+            balanceInDecrease: '1000000000000000',
+            liquidityIncrease: '804',
+            upperTickCleared: false,
+            lowerTickCleared: true,
+            revertMessage: 'PositionLiquidityZero()',
+        })
+
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '0',
+            upper: '100',
+            amount: tokenAmount,
+            zeroForOne: true,
+            balanceInDecrease: '100000000000000000000',
+            liquidityIncrease: aliceLiquidity,
+            upperTickCleared: false,
+            lowerTickCleared: true,
+            revertMessage: '',
+        })
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '0',
+            upper: '100',
+            claim: '0',
+            liquidityAmount: BigNumber.from(aliceLiquidity),
+            zeroForOne: true,
+            balanceInIncrease: '0',
+            balanceOutIncrease: '99999999999999999999',
+            lowerTickCleared: true,
+            upperTickCleared: false,
+            revertMessage: '',
+        });
     })
 })

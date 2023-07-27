@@ -54,6 +54,8 @@ library Positions {
             params.zeroForOne ? 0 : uint256(params.amount),
             params.zeroForOne ? uint256(params.amount) : 0
         );
+
+        if (cache.liquidityMinted == 0) require (false, 'PositionLiquidityZero()');
         // |||||       |           |
         // 0           50         100
         // if position is one spacing wide, push all the end to end of tick spacing
@@ -61,7 +63,9 @@ library Positions {
         {
             cache.priceLimit = params.zeroForOne ? ConstantProduct.getNewPrice(cache.priceUpper, cache.liquidityMinted, params.amount / 2, true, true)
                                                  : ConstantProduct.getNewPrice(cache.priceLower, cache.liquidityMinted, params.amount / 2, false, true);
+            if (cache.priceLimit == 0) require (false, 'PriceLimitZero()');
             // get tick at price
+            console.log('liquidity minted', cache.liquidityMinted, cache.priceLimit);
             cache.tickLimit = ConstantProduct.getTickAtPrice(cache.priceLimit.toUint160(), cache.constants);
             // round to nearest tick spacing
             cache.priceLimit = ConstantProduct.getPriceAtTick(cache.tickLimit, cache.constants);

@@ -282,6 +282,38 @@ library TickMap {
         return tick / tickSpacing * tickSpacing;
     }
 
+    function roundHalf(
+        int24 tick,
+        ILimitPoolStructs.Immutables memory constants,
+        uint256 price
+    ) internal pure returns (
+        int24 roundedTick,
+        uint160 roundedTickPrice
+    ) {
+        //pool.tickAtPrice -99.5
+        //pool.tickAtPrice -100
+        //-105
+        //-95
+        roundedTick = tick / constants.tickSpacing * constants.tickSpacing;
+        roundedTickPrice = ConstantProduct.getPriceAtTick(roundedTick, constants);
+        if (price == roundedTickPrice)
+            return (roundedTick, roundedTickPrice);
+        if (roundedTick > 0) {
+            roundedTick += constants.tickSpacing / 2;
+        } else if (roundedTick < 0) {
+            if (roundedTickPrice < price)
+                roundedTick += constants.tickSpacing / 2;
+            else
+                roundedTick -= constants.tickSpacing / 2;
+        } else {
+            if (price > roundedTickPrice) {
+                roundedTick += constants.tickSpacing / 2;
+            } else if (price < roundedTickPrice) {
+                roundedTick -= constants.tickSpacing / 2;
+            }
+        }
+    }
+
     function roundAhead(
         int24 tick,
         ILimitPoolStructs.Immutables memory constants,

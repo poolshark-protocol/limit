@@ -480,28 +480,12 @@ library Ticks {
         ILimitPoolStructs.PoolState memory
     ){
         /// @auditor - would be smart to protect against the case of epochs crossing
-        /// (i.e. pool0 starts crossing into the pool1 active region)
-        /// (this is a failure case)
-        int24 tickToSave = pool.tickAtPrice;
-        // get price at nearest full tick
-        uint160 roundedPrice = TickMath.getPriceAtTick(TickMap.round(tickToSave, constants.tickSpacing), constants);
-        /// @dev - either these gas costs get passed to the LP (i.e. here) or we have to load an extra tick each time
-        if (tickToSave % constants.tickSpacing != 0 ||
-            pool.price != roundedPrice) {
-            tickToSave = TickMap.round(pool.tickAtPrice, constants.tickSpacing);
-            if (tickToSave > 0) tickToSave += constants.tickSpacing / 2;
-            else if (tickToSave < 0) tickToSave -= constants.tickSpacing / 2;
-            else {
-                // if tickToSave rounds to 0, check pool.tickAtPrice
-                if (pool.tickAtPrice >= 0) {
-                    tickToSave += constants.tickSpacing / 2;
-                } else {
-                    tickToSave -= constants.tickSpacing / 2;
-                }
-            }
-            // price at nearest full tick
-            roundedPrice = TickMath.getPriceAtTick(TickMap.round(tickToSave, constants.tickSpacing), constants);
-        }
+        (
+            int24 tickToSave,
+            uint160 roundedPrice
+        ) = TickMap.roundHalf(pool.tickAtPrice, constants, pool.price);
+
+        console.log('tick to save', uint24(-tickToSave));
         // update tick to save
         ILimitPoolStructs.Tick memory tick = ticks[tickToSave];
         /// @auditor - tick.priceAt will be zero for tick % tickSpacing == 0

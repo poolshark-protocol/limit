@@ -4371,4 +4371,102 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         });
     })
+
+    it('pool0 - Should decrement liquidityGlobal if params.amount is zero', async function () {
+        const aliceLiquidity = '20051041647900280328782'
+
+        // mint reverts as the price becomes out of bounds
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '0',
+            upper: '100',
+            amount: tokenAmount,
+            zeroForOne: true,
+            balanceInDecrease: '100000000000000000000',
+            liquidityIncrease: aliceLiquidity,
+            upperTickCleared: false,
+            lowerTickCleared: true,
+            revertMessage: '',
+        })
+
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: false,
+            amountIn: tokenAmountBn.mul(2),
+            priceLimit: maxPrice,
+            balanceInDecrease: '100501226962305120351',
+            balanceOutIncrease: '99999999999999999999',
+            revertMessage: '',
+        });
+
+        expect((await hre.props.limitPool.pool0()).liquidityGlobal).to.be.equal(aliceLiquidity)
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '0',
+            upper: '100',
+            claim: '0',
+            liquidityAmount: BN_ZERO,
+            zeroForOne: true,
+            positionLiquidityChange: '20051041647900280328782',
+            balanceInIncrease: '100501226962305120350',
+            balanceOutIncrease: '0',
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: '',
+        });
+
+        expect((await hre.props.limitPool.pool0()).liquidityGlobal).to.be.equal(BN_ZERO)
+    })
+
+    it('pool1 - Should decrement liquidityGlobal if params.amount is zero', async function () {
+        const aliceLiquidity = '20051041647900280328782'
+
+        // mint reverts as the price becomes out of bounds
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '-100',
+            upper: '0',
+            amount: tokenAmount,
+            zeroForOne: false,
+            balanceInDecrease: '100000000000000000000',
+            liquidityIncrease: aliceLiquidity,
+            upperTickCleared: true,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
+
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: true,
+            amountIn: tokenAmountBn.mul(2),
+            priceLimit: minPrice,
+            balanceInDecrease: '100501226962305120351',
+            balanceOutIncrease: '99999999999999999999',
+            revertMessage: '',
+        });
+
+        expect((await hre.props.limitPool.pool1()).liquidityGlobal).to.be.equal(aliceLiquidity)
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-100',
+            upper: '0',
+            claim: '0',
+            liquidityAmount: BN_ZERO,
+            zeroForOne: false,
+            positionLiquidityChange: '20051041647900280328782',
+            balanceInIncrease: '100501226962305120350',
+            balanceOutIncrease: '0',
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: '',
+        });
+
+        expect((await hre.props.limitPool.pool1()).liquidityGlobal).to.be.equal(BN_ZERO)
+    })
 })

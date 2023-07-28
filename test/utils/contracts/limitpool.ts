@@ -85,6 +85,7 @@ export interface ValidateBurnParams {
     expectedLower?: string
     expectedUpper?: string
     expectedPositionUpper?: string
+    positionLiquidityChange?: string
     compareSnapshot?: boolean
     revertMessage: string
 }
@@ -570,7 +571,8 @@ export async function validateBurn(params: ValidateBurnParams) {
             )
         }
     }
+    const positionLiquidityChange = params.positionLiquidityChange ? BigNumber.from(params.positionLiquidityChange) : liquidityAmount
     expect(positionAfter.liquidity.sub(positionBefore.liquidity)).to.be.equal(
-        BN_ZERO.sub(liquidityAmount)
+        BN_ZERO.sub(positionLiquidityChange)
     )
 }

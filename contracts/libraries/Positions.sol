@@ -373,6 +373,9 @@ library Positions {
             cache.position.liquidity -= uint128(params.amount);
             // update global liquidity
             pool.liquidityGlobal -= params.amount;
+        } else if (params.zeroForOne ? params.claim == params.upper
+                                     : params.claim == params.lower) {
+            pool.liquidityGlobal -= cache.position.liquidity;
         }
         // clear out old position
         if (params.zeroForOne ? params.claim != params.lower 

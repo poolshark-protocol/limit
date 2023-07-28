@@ -138,7 +138,7 @@ library Claims {
         ILimitPoolStructs.UpdateCache memory cache,
         ILimitPoolStructs.UpdateParams memory params,
         ILimitPoolStructs.Immutables memory constants
-    ) internal view returns (
+    ) internal pure returns (
         ILimitPoolStructs.UpdateCache memory
     ) {
         // if half tick priceAt > 0 add amountOut to amountOutClaimed

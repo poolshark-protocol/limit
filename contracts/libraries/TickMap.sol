@@ -12,26 +12,49 @@ library TickMap {
     error TickIndexBadSpacing();
     error BlockIndexOverflow();
 
-    function init(
+    function get(
         ILimitPoolStructs.TickMap storage tickMap,
         int24 tick,
         int24 tickSpacing
-    ) internal returns (
+    ) internal view returns (
         bool exists
-    )    
-    {
-        return _set(tickMap, tick, tickSpacing);
+    ) {
+        (
+            uint256 tickIndex,
+            uint256 wordIndex,
+        ) = getIndices(tick, tickSpacing);
+
+        // check if bit is already set
+        uint256 word = tickMap.ticks[wordIndex] | 1 << (tickIndex & 0xFF);
+        if (word == tickMap.ticks[wordIndex]) {
+            return true;
+        }
+        return false;
     }
 
     function set(
         ILimitPoolStructs.TickMap storage tickMap,
         int24 tick,
-        int16 tickSpacing
+        int24 tickSpacing
     ) internal returns (
         bool exists
-    )    
-    {
-        return _set(tickMap, tick, tickSpacing);
+    ) {
+        (
+            uint256 tickIndex,
+            uint256 wordIndex,
+            uint256 blockIndex
+        ) = getIndices(tick, tickSpacing);
+
+        // check if bit is already set
+        uint256 word = tickMap.ticks[wordIndex] | 1 << (tickIndex & 0xFF);
+        if (word == tickMap.ticks[wordIndex]) {
+            return true;
+        }
+
+        tickMap.ticks[wordIndex]     = word; 
+        tickMap.words[blockIndex]   |= 1 << (wordIndex & 0xFF); // same as modulus 255
+        tickMap.blocks              |= 1 << blockIndex;
+        return false;
     }
 
     function unset(
@@ -58,16 +81,18 @@ library TickMap {
         ILimitPoolStructs.TickMap storage tickMap,
         int24 tick,
         int16 tickSpacing,
-        bool roundedUp
+        bool roundUp
     ) internal view returns (
         int24 previousTick
     ) {
         unchecked {
             // rounds up to ensure relative position
-            if ((tick % (tickSpacing / 2) != 0 || roundedUp)
-                 && tick < round(TickMath.MAX_TICK, tickSpacing)) tick += tickSpacing / 2;
-            // rounds up to ensure relative position
-            // if (tick % (tickSpacing / 2) != 0) tick += tickSpacing;
+            if (tick % (tickSpacing / 2) != 0 || roundUp) {
+                if (tick >= 0 || (roundUp && tick % (tickSpacing / 2) == 0)) {
+                    if (tick > ConstantProduct.minTick(tickSpacing))
+                        tick += tickSpacing / 2;
+                }
+            }
             (
               uint256 tickIndex,
               uint256 wordIndex,
@@ -99,6 +124,11 @@ library TickMap {
         int24 nextTick
     ) {
         unchecked {
+            if (tick % (tickSpacing / 2) != 0) {
+                if (tick < 0)
+                    if (tick > ConstantProduct.minTick(tickSpacing))
+                        tick -= tickSpacing / 2;
+            }
             (
               uint256 tickIndex,
               uint256 wordIndex,
@@ -148,30 +178,7 @@ library TickMap {
         }
     }
 
-    function _set(
-        ILimitPoolStructs.TickMap storage tickMap,
-        int24 tick,
-        int24 tickSpacing
-    ) internal returns (
-        bool exists
-    ) {
-        (
-            uint256 tickIndex,
-            uint256 wordIndex,
-            uint256 blockIndex
-        ) = getIndices(tick, tickSpacing);
 
-        // check if bit is already set
-        uint256 word = tickMap.ticks[wordIndex] | 1 << (tickIndex & 0xFF);
-        if (word == tickMap.ticks[wordIndex]) {
-            return true;
-        }
-
-        tickMap.ticks[wordIndex]     = word; 
-        tickMap.words[blockIndex]   |= 1 << (wordIndex & 0xFF); // same as modulus 255
-        tickMap.blocks              |= 1 << blockIndex;
-        return false;
-    }
 
     function _tick (
         uint256 tickIndex,

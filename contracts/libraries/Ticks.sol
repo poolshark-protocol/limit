@@ -348,6 +348,7 @@ library Ticks {
     )
     {
         if (pool.liquidity > 0) return (cache, pool);
+
         if (zeroForOne) {
             pool.tickAtPrice = TickMap.next(tickMap, pool.tickAtPrice, cache.constants.tickSpacing);
             if (pool.tickAtPrice < ConstantProduct.maxTick(cache.constants.tickSpacing)) {
@@ -378,7 +379,6 @@ library Ticks {
         // zero out tick
         ticks[tickToClear].liquidityDelta = 0;
         Ticks.clear(ticks, cache.constants, tickMap, tickToClear);
-        
 
         return (cache, pool);
     }

@@ -55,10 +55,7 @@ library Positions {
         );
 
         if (cache.liquidityMinted == 0) require (false, 'PositionLiquidityZero()');
-        // |||||       |           |
-        // 0           50         100
-        // if position is one spacing wide, push all the end to end of tick spacing
-        // if tickspacing is more than one spacing wide, 
+        // calculate price limit by using half of input
         {
             cache.priceLimit = params.zeroForOne ? ConstantProduct.getNewPrice(cache.priceUpper, cache.liquidityMinted, params.amount / 2, true, true)
                                                  : ConstantProduct.getNewPrice(cache.priceLower, cache.liquidityMinted, params.amount / 2, false, true);

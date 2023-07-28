@@ -81,15 +81,15 @@ library TickMap {
         ILimitPoolStructs.TickMap storage tickMap,
         int24 tick,
         int16 tickSpacing,
-        bool roundUp
+        bool inclusive
     ) internal view returns (
         int24 previousTick
     ) {
         unchecked {
             // rounds up to ensure relative position
-            if (tick % (tickSpacing / 2) != 0 || roundUp) {
-                if (tick >= 0 || (roundUp && tick % (tickSpacing / 2) == 0)) {
-                    if (tick > ConstantProduct.minTick(tickSpacing))
+            if (tick % (tickSpacing / 2) != 0 || inclusive) {
+                if (tick >= 0 || (inclusive && tick % (tickSpacing / 2) == 0)) {
+                    if (tick < (ConstantProduct.maxTick(tickSpacing) - tickSpacing / 2))
                         tick += tickSpacing / 2;
                 }
             }
@@ -126,7 +126,7 @@ library TickMap {
         unchecked {
             if (tick % (tickSpacing / 2) != 0) {
                 if (tick < 0)
-                    if (tick > ConstantProduct.minTick(tickSpacing))
+                    if (tick > (ConstantProduct.minTick(tickSpacing) + tickSpacing / 2))
                         tick -= tickSpacing / 2;
             }
             (

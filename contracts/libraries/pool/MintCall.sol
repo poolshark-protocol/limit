@@ -124,7 +124,7 @@ library MintCall {
                 uint128(cache.liquidityMinted)
             );
         }
-        //console.log('previous check', uint24(TickMap.previous(tickMap, 10, cache.constants.tickSpacing, false)));
+        console.log('previous check', uint24(TickMap.previous(tickMap, 10, cache.constants.tickSpacing, false)));
         return cache;
     }
 

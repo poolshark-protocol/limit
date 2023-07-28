@@ -4362,7 +4362,7 @@ describe('LimitPool Tests', function () {
             lower: '0',
             upper: '100',
             claim: '0',
-            liquidityAmount: BN_ZERO,
+            liquidityAmount: BigNumber.from(aliceLiquidity),
             zeroForOne: true,
             balanceInIncrease: '0',
             balanceOutIncrease: '99999999999999999999',

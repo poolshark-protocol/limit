@@ -57,7 +57,7 @@ library BurnCall {
             );
         } else {
             // position has not been crossed into
-            (, cache.pool) = Positions.remove(
+            (cache.pool, cache.position) = Positions.remove(
                 positions,
                 ticks,
                 tickMap,
@@ -79,7 +79,7 @@ library BurnCall {
             params
         );
         if ((params.zeroForOne ? params.claim != params.upper
-                              : params.claim != params.lower))
+                               : params.claim != params.lower))
             params.zeroForOne
                 ? positions[msg.sender][params.claim][params.upper] = cache.position
                 : positions[msg.sender][params.lower][params.claim] = cache.position;

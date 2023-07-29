@@ -138,7 +138,7 @@ library Claims {
         ILimitPoolStructs.UpdateCache memory cache,
         ILimitPoolStructs.UpdateParams memory params,
         ILimitPoolStructs.Immutables memory constants
-    ) internal view returns (
+    ) internal pure returns (
         ILimitPoolStructs.UpdateCache memory
     ) {
         // if half tick priceAt > 0 add amountOut to amountOutClaimed
@@ -180,7 +180,7 @@ library Claims {
         }
         // take protocol fee if needed
         if (cache.pool.protocolFee > 0 && cache.position.amountIn > 0) {
-            uint128 protocolFeeAmount = cache.position.amountIn * cache.pool.protocolFee / 10000;
+            uint128 protocolFeeAmount = cache.position.amountIn * cache.pool.protocolFee / 1e6;
             cache.position.amountIn -= protocolFeeAmount;
             cache.pool.protocolFees += protocolFeeAmount;
         }

@@ -206,8 +206,8 @@ library ConstantProduct {
         int16 tickSpacing
     ) internal pure
     {
-        if (lower < minTick(tickSpacing)) require (false, 'LowerTickOutOfBounds()');
-        if (upper > maxTick(tickSpacing)) require (false, 'UpperTickOutOfBounds()');
+        if (lower <= minTick(tickSpacing)) require (false, 'LowerTickOutOfBounds()');
+        if (upper >= maxTick(tickSpacing)) require (false, 'UpperTickOutOfBounds()');
         if (lower % tickSpacing != 0) require (false, 'LowerTickOutsideTickSpacing()');
         if (upper % tickSpacing != 0) require (false, 'UpperTickOutsideTickSpacing()');
         if (lower >= upper) require (false, 'LowerUpperTickOrderInvalid()');

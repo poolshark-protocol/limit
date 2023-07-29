@@ -4,6 +4,7 @@ pragma solidity 0.8.13;
 import './interfaces/ILimitPool.sol';
 import './interfaces/ILimitPoolManager.sol';
 import './base/storage/LimitPoolStorage.sol';
+import './base/storage/LimitPoolImmutables.sol';
 import './base/structs/LimitPoolFactoryStructs.sol';
 import './utils/LimitPoolErrors.sol';
 import './libraries/pool/SwapCall.sol';
@@ -16,8 +17,9 @@ import './libraries/math/ConstantProduct.sol';
 /// @notice Poolshark Cover Pool Implementation
 contract LimitPool is
     ILimitPool,
-    LimitPoolFactoryStructs,
-    LimitPoolStorage
+    LimitPoolStorage,
+    LimitPoolImmutables,
+    LimitPoolFactoryStructs
 {
 
     modifier ownerOnly() {
@@ -47,7 +49,7 @@ contract LimitPool is
         MintCache memory cache;
         {
             cache.state = globalState;
-            cache.constants = _immutables();
+            cache.constants = immutables();
             cache.pool = params.zeroForOne ? pool0 : pool1;
             cache.swapPool = params.zeroForOne ? pool1 : pool0;
         }
@@ -72,7 +74,7 @@ contract LimitPool is
             state: globalState,
             position: params.zeroForOne ? positions0[msg.sender][params.lower][params.upper]
                                         : positions1[msg.sender][params.lower][params.upper],
-            constants: _immutables(),
+            constants: immutables(),
             pool: params.zeroForOne ? pool0 : pool1
         });
         cache = BurnCall.perform(
@@ -100,7 +102,7 @@ contract LimitPool is
         SwapCache memory cache;
         cache.pool = params.zeroForOne ? pool1 : pool0;
         cache.state = globalState;
-        cache.constants = _immutables();
+        cache.constants = immutables();
 
         return SwapCall.perform(
             params,
@@ -121,7 +123,7 @@ contract LimitPool is
         SwapCache memory cache;
         cache.pool = params.zeroForOne ? pool1 : pool0;
         cache.state = globalState;
-        cache.constants = _immutables();
+        cache.constants = immutables();
         return QuoteCall.perform(
             params,
             cache,
@@ -150,7 +152,7 @@ contract LimitPool is
                 params.claim,
                 params.zeroForOne
             ),
-            _immutables()
+            immutables()
         );
     }
 
@@ -179,14 +181,15 @@ contract LimitPool is
             SafeTransfers.transferOut(feeTo, address(0), token1Fees);
     }
 
-    function _immutables() private view returns (
+    function immutables() public pure returns (
         Immutables memory
     ) {
         return Immutables(
-            ITickMath.PriceBounds(0, 0),
-            address(0),
-            address(0),
-            0
+            owner(),
+            ConstantProduct.PriceBounds(minPrice(), maxPrice()),
+            token0(),
+            token1(),
+            tickSpacing()
         );
     }
 

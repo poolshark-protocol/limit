@@ -74,7 +74,7 @@ library MintCall {
                 params
             );
             if (params.zeroForOne) {
-                uint160 priceLower = TickMath.getPriceAtTick(params.lower, cache.constants);
+                uint160 priceLower = ConstantProduct.getPriceAtTick(params.lower, cache.constants);
                 if (priceLower <= cache.pool.price) {
                     // save liquidity if active
                     if (cache.pool.liquidity > 0) {
@@ -85,13 +85,13 @@ library MintCall {
                     /// @auditor - double check liquidity is set correctly for this in insertSingle
                     cache.pool.liquidity += uint128(cache.liquidityMinted);
                     cache.pool.swapEpoch += 1;
-                    cache.position.claimPriceLast = TickMath.getPriceAtTick(params.lower, cache.constants);
+                    cache.position.claimPriceLast = ConstantProduct.getPriceAtTick(params.lower, cache.constants);
                     // set epoch on start tick to signify position being crossed into
                     /// @auditor - this is safe assuming we have swapped at least this far on the other side
                     EpochMap.set(params.lower, cache.pool.swapEpoch, tickMap, cache.constants);
                 }
             } else {
-                uint160 priceUpper = TickMath.getPriceAtTick(params.upper, cache.constants);
+                uint160 priceUpper = ConstantProduct.getPriceAtTick(params.upper, cache.constants);
                 if (priceUpper >= cache.pool.price) {
                     if (cache.pool.liquidity > 0) {
                         cache.pool = Ticks.insertSingle(params, ticks, tickMap, cache, cache.pool, cache.constants);
@@ -100,7 +100,7 @@ library MintCall {
                     cache.pool.tickAtPrice = params.upper;
                     cache.pool.liquidity += uint128(cache.liquidityMinted);
                     cache.pool.swapEpoch += 1;
-                    cache.position.claimPriceLast = TickMath.getPriceAtTick(params.upper, cache.constants);
+                    cache.position.claimPriceLast = ConstantProduct.getPriceAtTick(params.upper, cache.constants);
                     // set epoch on start tick to signify position being crossed into
                     /// @auditor - this is safe assuming we have swapped at least this far on the other side
                     EpochMap.set(params.upper, cache.pool.swapEpoch, tickMap, cache.constants);

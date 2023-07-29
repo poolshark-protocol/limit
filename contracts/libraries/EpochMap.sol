@@ -85,7 +85,7 @@ library EpochMap {
                 require (false, 'TickIndexInvalid()');
             } 
             tickIndex = uint256(int256((_round(tick, constants.tickSpacing / 2) 
-                                        - _round(TickMath.MIN_TICK, constants.tickSpacing / 2)) 
+                                        - _round(ConstantProduct.MIN_TICK, constants.tickSpacing / 2)) 
                                         / (constants.tickSpacing / 2)));
             wordIndex = tickIndex >> 3;        // 2^3 epochs per word
             blockIndex = tickIndex >> 11;      // 2^8 words per block
@@ -101,9 +101,9 @@ library EpochMap {
         int24 tick
     ) {
         unchecked {
-            if (tickIndex > uint24(_round(TickMath.MAX_TICK, constants.tickSpacing) * 2) * 2) 
+            if (tickIndex > uint24(_round(ConstantProduct.MAX_TICK, constants.tickSpacing) * 2) * 2) 
                 require(false, 'TickIndexOverflow()');
-            tick = int24(int256(tickIndex) * (constants.tickSpacing / 2) + _round(TickMath.MIN_TICK, constants.tickSpacing / 2));
+            tick = int24(int256(tickIndex) * (constants.tickSpacing / 2) + _round(ConstantProduct.MIN_TICK, constants.tickSpacing / 2));
         }
     }
 

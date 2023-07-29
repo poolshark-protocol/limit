@@ -6,7 +6,6 @@ import {
     Positions,
     Ticks,
     Token20,
-    Claims,
     LimitPoolManager,
     TickMap,
     PoolRouter,
@@ -20,12 +19,12 @@ import { QuoteCall } from '../../../typechain'
 export interface BeforeEachProps {
     limitPool: LimitPool
     limitPool2: LimitPool
+    limitPoolImpl: LimitPool
     limitPoolManager: LimitPoolManager
     limitPoolFactory: LimitPoolFactory
     poolRouter: PoolRouter
     tickMapLib: TickMap
     ticksLib: Ticks
-    claimsLib: Claims
     positionsLib: Positions
     mintCall: MintCall
     burnCall: BurnCall
@@ -66,12 +65,12 @@ export class GetBeforeEach {
     public retrieveProps(): BeforeEachProps {
         let limitPool: LimitPool
         let limitPool2: LimitPool
+        let limitPoolImpl: LimitPool
         let limitPoolManager: LimitPoolManager
         let limitPoolFactory: LimitPoolFactory
         let poolRouter: PoolRouter
         let tickMapLib: TickMap
         let ticksLib: Ticks
-        let claimsLib: Claims
         let positionsLib: Positions
         let mintCall: MintCall
         let burnCall: BurnCall
@@ -90,12 +89,12 @@ export class GetBeforeEach {
         return {
             limitPool,
             limitPool2,
+            limitPoolImpl,
             limitPoolManager,
             limitPoolFactory,
             poolRouter,
             tickMapLib,
             ticksLib,
-            claimsLib,
             positionsLib,
             mintCall,
             burnCall,

@@ -2,7 +2,6 @@
 pragma solidity 0.8.13;
 
 import './LimitPool.sol';
-import './LimitPoolClone.sol';
 import './interfaces/ILimitPoolFactory.sol';
 import './base/events/LimitPoolFactoryEvents.sol';
 import './base/structs/LimitPoolFactoryStructs.sol';
@@ -19,11 +18,11 @@ contract LimitPoolFactory is
     using LibClone for address;
 
     address immutable public owner;
-    LimitPool public implementation;
+    address immutable public implementation;
 
     constructor(
         address owner_,
-        LimitPool implementation_
+        address implementation_
     ) {
         owner = owner_;
         implementation = implementation_;
@@ -55,12 +54,9 @@ contract LimitPoolFactory is
         params.minPrice = ConstantProduct.minPrice(params.tickSpacing);
         params.maxPrice = ConstantProduct.maxPrice(params.tickSpacing);
 
-        // generate salt
-        bytes32 salt = keccak256(abi.encodePacked(tokenIn, tokenOut, tickSpacing));
-        
         // launch pool
-        pool = address(implementation).cloneDeterministic({
-            salt: salt,
+        pool = implementation.cloneDeterministic({
+            salt: key,
             data: abi.encodePacked(
                 params.owner,
                 params.token0,

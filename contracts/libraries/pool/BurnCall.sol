@@ -57,7 +57,7 @@ library BurnCall {
             );
         } else {
             // position has not been crossed into
-            (, cache.pool) = Positions.remove(
+            (cache.pool, cache.position) = Positions.remove(
                 positions,
                 ticks,
                 tickMap,

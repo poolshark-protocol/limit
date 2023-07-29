@@ -180,7 +180,7 @@ library Claims {
         }
         // take protocol fee if needed
         if (cache.pool.protocolFee > 0 && cache.position.amountIn > 0) {
-            uint128 protocolFeeAmount = cache.position.amountIn * cache.pool.protocolFee / 10000;
+            uint128 protocolFeeAmount = cache.position.amountIn * cache.pool.protocolFee / 1e6;
             cache.position.amountIn -= protocolFeeAmount;
             cache.pool.protocolFees += protocolFeeAmount;
         }

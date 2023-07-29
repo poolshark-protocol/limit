@@ -386,7 +386,7 @@ export async function validateMint(params: ValidateMintParams) {
                liquidityIncrease
             )
         } else {
-            //expect(lowerTickAfter.liquidityDelta.sub(lowerTickBefore.liquidityDelta)).to.be.equal(BN_ZERO)
+            expect(lowerTickAfter.liquidityDelta.sub(lowerTickBefore.liquidityDelta)).to.be.equal(BN_ZERO)
         }
     } else {
         if (!lowerTickCleared) {

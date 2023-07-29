@@ -208,7 +208,10 @@ library Positions {
         ILimitPoolStructs.PoolState memory pool,
         ILimitPoolStructs.UpdateParams memory params,
         ILimitPoolStructs.Immutables memory constants
-    ) internal returns (uint128, ILimitPoolStructs.PoolState memory) {
+    ) internal returns (
+        ILimitPoolStructs.PoolState memory,
+        ILimitPoolStructs.Position memory
+    ) {
         // initialize cache
         ILimitPoolStructs.UpdateCache memory cache;
         cache.position = positions[msg.sender][params.lower][params.upper];
@@ -220,7 +223,7 @@ library Positions {
         params.amount = _convert(cache.position.liquidity, params.amount);
 
         // early return if no liquidity to remove
-        if (params.amount == 0) return (0, pool);
+        if (params.amount == 0) return (pool, cache.position);
         if (params.amount > cache.position.liquidity) {
             require (false, 'NotEnoughPositionLiquidity()');
         }
@@ -287,7 +290,7 @@ library Positions {
                     cache.position.amountOut
             );
         }
-        return (params.amount, pool);
+        return (pool, cache.position);
     }
 
     function update(
@@ -325,7 +328,7 @@ library Positions {
             return (state, pool, cache.position, params.claim);
 
         // update pool liquidity
-        if (cache.priceClaim == pool.price) {
+        if (cache.priceClaim == pool.price && params.amount > 0) {
             // handle pool.price at edge of range
             if (params.zeroForOne ? cache.priceClaim < cache.priceUpper
                                   : cache.priceClaim > cache.priceLower)
@@ -372,7 +375,7 @@ library Positions {
             pool.liquidityGlobal -= params.amount;
         }
         if (params.zeroForOne ? params.claim == params.upper
-                                     : params.claim == params.lower) {
+                              : params.claim == params.lower) {
             pool.liquidityGlobal -= cache.position.liquidity;
             cache.position.liquidity = 0;
         }

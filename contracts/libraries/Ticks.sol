@@ -493,7 +493,6 @@ library Ticks {
                 TickMap.set(tickMap, tickToSave, constants.tickSpacing);
             }
             EpochMap.set(tickToSave, pool.swapEpoch, tickMap, constants);
-            tick.liquidityDelta += int128(pool.liquidity);
         }
         // skip if we are at the nearest full tick
         if(pool.price != roundedPrice) {
@@ -511,13 +510,13 @@ library Ticks {
                     // calculate amountOut filled across both partial fills
                     locals.amountOutExact = ConstantProduct.getDy(pool.liquidity, locals.pricePrevious, pool.price, false);
                     locals.amountOutExact += ConstantProduct.getDy(uint128(tick.liquidityDelta), locals.pricePrevious, tick.priceAt, false);
-                    tick.liquidityDelta += int128(pool.liquidity);
+                    uint128 combinedLiquidity = pool.liquidity + uint128(tick.liquidityDelta);
                     /// @auditor - the opposing amount calculated is off by 1/100 millionth
                     ///            (i.e. since we're using exactOut we lose precision on exactInput amount)
                     ///            the expected dy to the next tick is either exact or slightly more
                     ///            the expected dx to the next tick is 1/100 millionth less after the blend
                     // advance price past closest full tick using amountOut filled
-                    tick.priceAt = ConstantProduct.getNewPrice(uint256(locals.pricePrevious), uint128(tick.liquidityDelta), locals.amountOutExact, false, true).toUint160();
+                    tick.priceAt = ConstantProduct.getNewPrice(uint256(locals.pricePrevious), combinedLiquidity, locals.amountOutExact, false, true).toUint160();
                     // dx to the next tick is less than before the tick blend
                     EpochMap.set(tickToSave, pool.swapEpoch, tickMap, constants);
                 } else {
@@ -528,9 +527,9 @@ library Ticks {
                     locals.amountOutExact = ConstantProduct.getDx(pool.liquidity, pool.price, locals.pricePrevious, false);
                     locals.amountOutExact += ConstantProduct.getDx(uint128(tick.liquidityDelta), tick.priceAt, locals.pricePrevious, false);
                     // add current pool liquidity to partial tick
-                    tick.liquidityDelta += int128(pool.liquidity);
+                    uint128 combinedLiquidity = pool.liquidity + uint128(tick.liquidityDelta);
                     // advance price past closest full tick using amountOut filled
-                    tick.priceAt = ConstantProduct.getNewPrice(uint256(locals.pricePrevious), uint128(tick.liquidityDelta), locals.amountOutExact, true, true).toUint160();
+                    tick.priceAt = ConstantProduct.getNewPrice(uint256(locals.pricePrevious), combinedLiquidity, locals.amountOutExact, true, true).toUint160();
                     // mark epoch for second partial fill positions
                     EpochMap.set(tickToSave, pool.swapEpoch, tickMap, constants);
                 }
@@ -538,11 +537,9 @@ library Ticks {
         }
         // invariant => if we save liquidity to tick clear pool liquidity
         if ((tickToSave != (params.zeroForOne ? params.lower : params.upper))) {
+            tick.liquidityDelta += int128(pool.liquidity);
             pool.liquidity = 0;
-        } else {
-            tick.liquidityDelta -= int128(pool.liquidity);
         }
-
         ticks[tickToSave] = tick;
         return pool;
     }

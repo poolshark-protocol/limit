@@ -53,13 +53,13 @@ library Positions {
             params.zeroForOne ? 0 : uint256(params.amount),
             params.zeroForOne ? uint256(params.amount) : 0
         );
-        // |||||       |           |
-        // 0           50         100
-        // if position is one spacing wide, push all the end to end of tick spacing
-        // if tickspacing is more than one spacing wide, 
+
+        if (cache.liquidityMinted == 0) require (false, 'PositionLiquidityZero()');
+        // calculate price limit by using half of input
         {
             cache.priceLimit = params.zeroForOne ? ConstantProduct.getNewPrice(cache.priceUpper, cache.liquidityMinted, params.amount / 2, true, true)
                                                  : ConstantProduct.getNewPrice(cache.priceLower, cache.liquidityMinted, params.amount / 2, false, true);
+            if (cache.priceLimit == 0) require (false, 'PriceLimitZero()');
             // get tick at price
             cache.tickLimit = ConstantProduct.getTickAtPrice(cache.priceLimit.toUint160(), cache.constants);
             // round to nearest tick spacing
@@ -107,14 +107,14 @@ library Positions {
                                : cache.priceUpper > cache.swapPool.price)
         ) {
             // move the tick limit based on pool.tickAtPrice
-            if (params.zeroForOne ? cache.swapPool.tickAtPrice < cache.tickLimit
-                                    : cache.swapPool.tickAtPrice > cache.tickLimit) {
+            if (params.zeroForOne ? cache.priceLower < cache.swapPool.price
+                                  : cache.priceUpper > cache.swapPool.price) {
                 cache.tickLimit = cache.swapPool.tickAtPrice;
             }
             // round ahead tickLimit to avoid crossing epochs
-            cache.tickLimit = TickMap.roundAhead(cache.tickLimit, cache.constants, params.zeroForOne, cache.priceLimit);
+            cache.tickLimit = TickMap.roundAhead(cache.tickLimit, cache.constants, params.zeroForOne, cache.swapPool.price);
             if (params.zeroForOne) {
-                if (params.lower < cache.tickLimit) {
+                if (cache.priceLower < cache.swapPool.price) {
                     // if rounding goes past limit trim position
                     /// @dev - if swap didn't go to limit user would be 100% filled
                     params.lower = cache.tickLimit;
@@ -125,7 +125,7 @@ library Positions {
                 }
                 cache.priceUpper = ConstantProduct.getPriceAtTick(params.upper, cache.constants);
             } else {
-                if (params.upper > cache.tickLimit) {
+                if (cache.priceUpper > cache.swapPool.price) {
                     // if rounding goes past limit trim position
                     params.upper = cache.tickLimit;
                     cache.priceUpper = ConstantProduct.getPriceAtTick(params.upper, cache.constants);
@@ -208,7 +208,10 @@ library Positions {
         ILimitPoolStructs.PoolState memory pool,
         ILimitPoolStructs.UpdateParams memory params,
         ILimitPoolStructs.Immutables memory constants
-    ) internal returns (uint128, ILimitPoolStructs.PoolState memory) {
+    ) internal returns (
+        ILimitPoolStructs.PoolState memory,
+        ILimitPoolStructs.Position memory
+    ) {
         // initialize cache
         ILimitPoolStructs.UpdateCache memory cache;
         cache.position = positions[msg.sender][params.lower][params.upper];
@@ -220,7 +223,7 @@ library Positions {
         params.amount = _convert(cache.position.liquidity, params.amount);
 
         // early return if no liquidity to remove
-        if (params.amount == 0) return (0, pool);
+        if (params.amount == 0) return (pool, cache.position);
         if (params.amount > cache.position.liquidity) {
             require (false, 'NotEnoughPositionLiquidity()');
         }
@@ -287,7 +290,7 @@ library Positions {
                     cache.position.amountOut
             );
         }
-        return (params.amount, pool);
+        return (pool, cache.position);
     }
 
     function update(
@@ -302,6 +305,7 @@ library Positions {
     ) internal returns (
         ILimitPoolStructs.GlobalState memory,
         ILimitPoolStructs.PoolState memory,
+        ILimitPoolStructs.Position memory,
         int24
     )
     {
@@ -321,10 +325,10 @@ library Positions {
         );
 
         if (cache.earlyReturn)
-            return (state, pool, params.claim);
+            return (state, pool, cache.position, params.claim);
 
         // update pool liquidity
-        if (cache.priceClaim == pool.price) {
+        if (cache.priceClaim == pool.price && params.amount > 0) {
             // handle pool.price at edge of range
             if (params.zeroForOne ? cache.priceClaim < cache.priceUpper
                                   : cache.priceClaim > cache.priceLower)
@@ -370,6 +374,11 @@ library Positions {
             // update global liquidity
             pool.liquidityGlobal -= params.amount;
         }
+        if (params.zeroForOne ? params.claim == params.upper
+                              : params.claim == params.lower) {
+            pool.liquidityGlobal -= cache.position.liquidity;
+            cache.position.liquidity = 0;
+        }
         // clear out old position
         if (params.zeroForOne ? params.claim != params.lower 
                               : params.claim != params.upper) {
@@ -382,15 +391,15 @@ library Positions {
             }
             delete positions[msg.sender][params.lower][params.upper];
         }
-        // force collection to the user
-        // store cached position in memory
+        // clear position if empty
         if (cache.position.liquidity == 0) {
             cache.position.epochLast = 0;
             cache.position.claimPriceLast = 0;
         }
-        params.zeroForOne
-            ? positions[msg.sender][params.claim][params.upper] = cache.position
-            : positions[msg.sender][params.lower][params.claim] = cache.position;
+
+        // round back claim tick for storage
+        if (params.claim % constants.tickSpacing != 0)
+            params.claim = TickMap.roundBack(params.claim, constants, params.zeroForOne, cache.priceClaim);
         
         emit BurnLimit(
             params.to,
@@ -403,7 +412,7 @@ library Positions {
             cache.position.amountOut
         );
         // return cached position in memory and transfer out
-        return (state, pool, params.claim);
+        return (state, pool, cache.position, params.claim);
     }
 
     function snapshot(
@@ -455,7 +464,7 @@ library Positions {
         uint128
     ) {
         // convert percentage to liquidity amount
-        if (percent > 1e38) require (false, 'InvalidBurnPercentage()');
+        if (percent > 1e38) percent = 1e38;
         if (liquidity == 0 && percent > 0) require (false, 'NotEnoughPositionLiquidity()');
         return uint128(uint256(liquidity) * uint256(percent) / 1e38);
     }

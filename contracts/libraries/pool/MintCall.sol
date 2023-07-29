@@ -4,7 +4,6 @@ pragma solidity 0.8.13;
 import '../../interfaces/ILimitPoolStructs.sol';
 import '../Positions.sol';
 import '../utils/Collect.sol';
-import 'hardhat/console.sol';
 
 library MintCall {
     event MintLimit(
@@ -124,7 +123,6 @@ library MintCall {
                 uint128(cache.liquidityMinted)
             );
         }
-        console.log('previous check', uint24(TickMap.previous(tickMap, 10, cache.constants.tickSpacing, false)));
         return cache;
     }
 

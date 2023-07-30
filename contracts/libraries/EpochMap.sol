@@ -5,6 +5,28 @@ import './math/ConstantProduct.sol';
 import '../interfaces/ILimitPoolStructs.sol';
 
 library EpochMap {
+    function get(
+        int24 tick,
+        ILimitPoolStructs.TickMap storage tickMap,
+        ILimitPoolStructs.Immutables memory constants
+    ) internal view returns (
+        uint32 epoch
+    ) {
+        (
+            uint256 tickIndex,
+            uint256 wordIndex,
+            uint256 blockIndex,
+            uint256 volumeIndex
+        ) = getIndices(tick, constants);
+
+        uint256 epochValue = tickMap.epochs[volumeIndex][blockIndex][wordIndex];
+        // right shift so first 8 bits are epoch value
+        epochValue >>= ((tickIndex & 0x7) * 32);
+        // clear other bits
+        epochValue &= ((1 << 32) - 1);
+        return uint32(epochValue);
+    }
+
     function set(
         int24  tick,
         uint256 epoch,
@@ -46,37 +68,15 @@ library EpochMap {
         tickMap.epochs[volumeIndex][blockIndex][wordIndex] = epochValue;
     }
 
-    function get(
-        int24 tick,
-        ILimitPoolStructs.TickMap storage tickMap,
-        ILimitPoolStructs.Immutables memory constants
-    ) internal view returns (
-        uint32 epoch
-    ) {
-        (
-            uint256 tickIndex,
-            uint256 wordIndex,
-            uint256 blockIndex,
-            uint256 volumeIndex
-        ) = getIndices(tick, constants);
-
-        uint256 epochValue = tickMap.epochs[volumeIndex][blockIndex][wordIndex];
-        // right shift so first 8 bits are epoch value
-        epochValue >>= ((tickIndex & 0x7) * 32);
-        // clear other bits
-        epochValue &= ((1 << 32) - 1);
-        return uint32(epochValue);
-    }
-
     function getIndices(
         int24 tick,
         ILimitPoolStructs.Immutables memory constants
     ) internal pure returns (
-            uint256 tickIndex,
-            uint256 wordIndex,
-            uint256 blockIndex,
-            uint256 volumeIndex
-        )
+        uint256 tickIndex,
+        uint256 wordIndex,
+        uint256 blockIndex,
+        uint256 volumeIndex
+    )
     {
         unchecked {
             if (tick > ConstantProduct.maxTick(constants.tickSpacing)) require (false, 'TickIndexOverflow()');

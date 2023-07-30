@@ -15,7 +15,7 @@ library TickMap {
     function get(
         ILimitPoolStructs.TickMap storage tickMap,
         int24 tick,
-        int24 tickSpacing
+        int16 tickSpacing
     ) internal view returns (
         bool exists
     ) {
@@ -35,7 +35,7 @@ library TickMap {
     function set(
         ILimitPoolStructs.TickMap storage tickMap,
         int24 tick,
-        int24 tickSpacing
+        int16 tickSpacing
     ) internal returns (
         bool exists
     ) {
@@ -158,12 +158,12 @@ library TickMap {
 
     function getIndices(
         int24 tick,
-        int24 tickSpacing
+        int16 tickSpacing
     ) public pure returns (
-            uint256 tickIndex,
-            uint256 wordIndex,
-            uint256 blockIndex
-        )
+        uint256 tickIndex,
+        uint256 wordIndex,
+        uint256 blockIndex
+    )
     {
         unchecked {
             if (tick > ConstantProduct.MAX_TICK) require(false, ' TickIndexOverflow()');
@@ -182,7 +182,7 @@ library TickMap {
 
     function _tick (
         uint256 tickIndex,
-        int24 tickSpacing
+        int16 tickSpacing
     ) internal pure returns (
         int24 tick
     ) {
@@ -281,7 +281,7 @@ library TickMap {
 
     function round(
         int24 tick,
-        int24 tickSpacing
+        int16 tickSpacing
     ) internal pure returns (
         int24 roundedTick
     ) {

@@ -23,24 +23,6 @@ library ConstantProduct {
         uint256 priceUpper,
         bool roundUp
     ) internal pure returns (uint256 dy) {
-        return _getDy(liquidity, priceLower, priceUpper, roundUp);
-    }
-
-    function getDx(
-        uint256 liquidity,
-        uint256 priceLower,
-        uint256 priceUpper,
-        bool roundUp
-    ) internal pure returns (uint256 dx) {
-        return _getDx(liquidity, priceLower, priceUpper, roundUp);
-    }
-
-    function _getDy(
-        uint256 liquidity,
-        uint256 priceLower,
-        uint256 priceUpper,
-        bool roundUp
-    ) internal pure returns (uint256 dy) {
         unchecked {
             if (liquidity == 0) return 0;
             if (roundUp) {
@@ -51,7 +33,7 @@ library ConstantProduct {
         }
     }
 
-    function _getDx(
+    function getDx(
         uint256 liquidity,
         uint256 priceLower,
         uint256 priceUpper,
@@ -109,12 +91,12 @@ library ConstantProduct {
         bool roundUp
     ) internal pure returns (uint128 token0amount, uint128 token1amount) {
         if (priceUpper <= currentPrice) {
-            token1amount = uint128(_getDy(liquidityAmount, priceLower, priceUpper, roundUp));
+            token1amount = uint128(getDy(liquidityAmount, priceLower, priceUpper, roundUp));
         } else if (currentPrice <= priceLower) {
-            token0amount = uint128(_getDx(liquidityAmount, priceLower, priceUpper, roundUp));
+            token0amount = uint128(getDx(liquidityAmount, priceLower, priceUpper, roundUp));
         } else {
-            token0amount = uint128(_getDx(liquidityAmount, currentPrice, priceUpper, roundUp));
-            token1amount = uint128(_getDy(liquidityAmount, priceLower, currentPrice, roundUp));
+            token0amount = uint128(getDx(liquidityAmount, currentPrice, priceUpper, roundUp));
+            token1amount = uint128(getDy(liquidityAmount, priceLower, currentPrice, roundUp));
         }
     }
 
@@ -216,13 +198,6 @@ library ConstantProduct {
         if (lower % tickSpacing != 0) require (false, 'LowerTickOutsideTickSpacing()');
         if (upper % tickSpacing != 0) require (false, 'UpperTickOutsideTickSpacing()');
         if (lower >= upper) require (false, 'LowerUpperTickOrderInvalid()');
-    }
-
-    function checkPrice(
-        uint160 price,
-        PriceBounds memory bounds
-    ) internal pure {
-        if (price < bounds.min || price >= bounds.max) require (false, 'PriceOutOfBounds()');
     }
 
     /// @notice Calculates sqrt(1.0001^tick) * 2^96.

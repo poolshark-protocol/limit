@@ -47,7 +47,7 @@ library Ticks {
         ILimitPoolStructs.PoolState storage pool1,
         ILimitPoolStructs.GlobalState memory state,
         LimitPoolFactoryStructs.LimitPoolParams memory params
-    ) external returns (
+    ) internal returns (
         ILimitPoolStructs.GlobalState memory
     ) {
         // initialize epoch

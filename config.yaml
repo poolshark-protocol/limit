@@ -1,0 +1,4 @@
+testMode: assertion
+corpusDir: corpus
+codeSize: 50000
+testLimit: 500000

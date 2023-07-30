@@ -170,7 +170,7 @@ library TickMap {
     function getIndices(
         int24 tick,
         int24 tickSpacing
-    ) public pure returns (
+    ) internal pure returns (
             uint256 tickIndex,
             uint256 wordIndex,
             uint256 blockIndex

@@ -27,7 +27,7 @@ library MintCall {
         mapping(int24 => ILimitPoolStructs.Tick) storage swapTicks,
         mapping(address => mapping(int24 => mapping(int24 => ILimitPoolStructs.Position)))
             storage positions
-    ) external returns (ILimitPoolStructs.MintCache memory) {
+    ) internal returns (ILimitPoolStructs.MintCache memory) {
         // bump swapPool in case user is trying to undercut
         // this avoids trimming positions unnecessarily
         if (cache.swapPool.liquidity == 0) {

@@ -20,7 +20,7 @@ library QuoteCall {
         ILimitPoolStructs.SwapCache memory cache,
         ILimitPoolStructs.TickMap storage tickMap,
         mapping(int24 => ILimitPoolStructs.Tick) storage ticks
-    ) external view returns (
+    ) internal view returns (
         uint256,
         uint256,
         uint160

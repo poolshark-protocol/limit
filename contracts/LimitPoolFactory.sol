@@ -48,7 +48,7 @@ contract LimitPoolFactory is
         }
         // check if tick spacing supported
         params.owner = owner;
-        if (!ILimitPoolManager(owner).tickSpacings(tickSpacing)) revert TickSpacingNotSupported();
+        // if (!ILimitPoolManager(owner).tickSpacings(tickSpacing)) revert TickSpacingNotSupported();
         params.tickSpacing = tickSpacing;
         params.startPrice = startPrice;
         params.minPrice = ConstantProduct.minPrice(params.tickSpacing);

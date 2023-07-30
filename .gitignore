@@ -1,7 +1,9 @@
 .idea
 yarn.lock
-typechain/
 node_modules
+.DS_Store
 artifacts
 cache
-.DS_Store
+typechain
+crytic-export
+corpus

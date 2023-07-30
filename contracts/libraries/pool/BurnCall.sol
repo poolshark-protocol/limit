@@ -24,8 +24,7 @@ library BurnCall {
         mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
         mapping(address => mapping(int24 => mapping(int24 => ILimitPoolStructs.Position)))
             storage positions
-    ) external returns (ILimitPoolStructs.BurnCache memory) {
-        if (params.lower >= params.upper) require (false, 'InvalidPositionBounds()');
+    ) internal returns (ILimitPoolStructs.BurnCache memory) {
         if (cache.position.epochLast == 0) require(false, 'PositionNotFound()');
         if (cache.position.claimPriceLast > 0
             || params.claim != (params.zeroForOne ? params.lower : params.upper)
@@ -45,7 +44,7 @@ library BurnCall {
                 cache.state,
                 cache.pool,
                 ILimitPoolStructs.UpdateParams(
-                    msg.sender,
+                    params.to,
                     params.to,
                     params.burnPercent,
                     params.lower,
@@ -63,7 +62,7 @@ library BurnCall {
                 tickMap,
                 cache.pool,
                 ILimitPoolStructs.UpdateParams(
-                    msg.sender,
+                    params.to,
                     params.to,
                     params.burnPercent,
                     params.lower,

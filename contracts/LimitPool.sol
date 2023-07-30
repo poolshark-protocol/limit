@@ -72,8 +72,8 @@ contract LimitPool is
         if (params.to == address(0)) revert CollectToZeroAddress();
         BurnCache memory cache = BurnCache({
             state: globalState,
-            position: params.zeroForOne ? positions0[msg.sender][params.lower][params.upper]
-                                        : positions1[msg.sender][params.lower][params.upper],
+            position: params.zeroForOne ? positions0[params.to][params.lower][params.upper]
+                                        : positions1[params.to][params.lower][params.upper],
             constants: immutables(),
             pool: params.zeroForOne ? pool0 : pool1
         });

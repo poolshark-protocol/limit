@@ -424,7 +424,7 @@ library Positions {
         ILimitPoolStructs.PoolState memory pool,
         ILimitPoolStructs.UpdateParams memory params,
         ILimitPoolStructs.Immutables memory constants
-    ) external view returns (
+    ) internal view returns (
         ILimitPoolStructs.Position memory
     ) {
         ILimitPoolStructs.UpdateCache memory cache;

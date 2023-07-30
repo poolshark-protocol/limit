@@ -32,7 +32,7 @@ library SwapCall {
         ILimitPoolStructs.TickMap storage tickMap,
         ILimitPoolStructs.PoolState storage poolState,
         mapping(int24 => ILimitPoolStructs.Tick) storage ticks
-    ) external returns (
+    ) internal returns (
         int256,
         int256
     ) {

@@ -170,15 +170,15 @@ contract LimitPool is
             pool1.protocolFee = protocolFee0;
             pool0.protocolFee = protocolFee1;
         }
-        address feeTo = ILimitPoolManager(address(0)).feeTo();
+        address feeTo = ILimitPoolManager(owner()).feeTo();
         token0Fees = pool1.protocolFees;
         token1Fees = pool0.protocolFees;
         pool0.protocolFees = 0;
         pool1.protocolFees = 0;
         if (token0Fees > 0)
-            SafeTransfers.transferOut(feeTo, address(0), token0Fees);
+            SafeTransfers.transferOut(feeTo, token0(), token0Fees);
         if (token1Fees > 0)
-            SafeTransfers.transferOut(feeTo, address(0), token1Fees);
+            SafeTransfers.transferOut(feeTo, token1(), token1Fees);
     }
 
     function immutables() public pure returns (
@@ -203,6 +203,6 @@ contract LimitPool is
     }
 
     function _onlyOwner() private view {
-        if (msg.sender != address(0)) revert OwnerOnly();
+        if (msg.sender != owner()) revert OwnerOnly();
     }
 }

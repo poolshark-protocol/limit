@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: GPLv3
 pragma solidity 0.8.13;
 
-import '../interfaces/modules/curves/ICurveMath.sol';
-
 interface PoolsharkStructs {
     struct SwapParams {
         address to;

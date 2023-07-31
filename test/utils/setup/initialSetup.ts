@@ -2,7 +2,7 @@ import { SUPPORTED_NETWORKS } from '../../../scripts/constants/supportedNetworks
 import { DeployAssist } from '../../../scripts/util/deployAssist'
 import { ContractDeploymentsKeys } from '../../../scripts/util/files/contractDeploymentKeys'
 import { ContractDeploymentsJson } from '../../../scripts/util/files/contractDeploymentsJson'
-import { QuoteCall__factory } from '../../../typechain'
+import { LimitPool__factory, QuoteCall__factory } from '../../../typechain'
 import { BurnCall__factory } from '../../../typechain'
 import { SwapCall__factory } from '../../../typechain'
 import { MintCall__factory } from '../../../typechain'
@@ -15,6 +15,9 @@ import {
     TickMap__factory,
     PoolRouter__factory
 } from '../../../typechain'
+
+import {abi as factoryAbi} from '../../../artifacts/contracts/LimitPoolFactory.sol/LimitPoolFactory.json'
+import { keccak256 } from 'ethers/lib/utils'
 
 export class InitialSetup {
     private token0Decimals = 18
@@ -99,6 +102,13 @@ export class InitialSetup {
         this.deployAssist.deleteContractDeployment(network, 'tokenA')
         this.deployAssist.deleteContractDeployment(network, 'tokenB')
 
+
+        // Encode the function parameters
+        // const abiCoder = new ethers.utils.AbiCoder();
+        // const encodedData = abiCoder.encode(["address", "address", "int16"], [hre.props.token0.address, hre.props.token1.address, 10]);
+        // const signature = keccak256(encodedData);
+        // console.log('encoded data:', signature);
+
         await this.deployAssist.deployContractWithRetry(
             network,
             // @ts-ignore
@@ -166,11 +176,9 @@ export class InitialSetup {
         await this.deployAssist.deployContractWithRetry(
             network,
             // @ts-ignore
-            LimitPoolFactory__factory,
-            'limitPoolFactory',
-            [   
-                hre.props.limitPoolManager.address
-            ],
+            LimitPool__factory,
+            'limitPoolImpl',
+            [],
             {
                 'contracts/libraries/Positions.sol:Positions': hre.props.positionsLib.address,
                 'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address,
@@ -184,10 +192,22 @@ export class InitialSetup {
         await this.deployAssist.deployContractWithRetry(
             network,
             // @ts-ignore
+            LimitPoolFactory__factory,
+            'limitPoolFactory',
+            [   
+                hre.props.limitPoolManager.address,
+                hre.props.limitPoolImpl.address
+            ],
+        )
+
+        await this.deployAssist.deployContractWithRetry(
+            network,
+            // @ts-ignore
             PoolRouter__factory,
             'poolRouter',
             [
-              hre.props.limitPoolFactory.address
+              hre.props.limitPoolFactory.address,
+              hre.props.limitPoolImpl.address
             ]
         )
 

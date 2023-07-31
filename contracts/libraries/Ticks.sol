@@ -38,11 +38,6 @@ library Ticks {
         uint128 liquidity,
         int24 tickAtPrice
     );
-    //  -10             0     2 3    10        20           30
-    /// |               | --  | |     |         |            |
-    /// |                ||||||||||||
-    /// -10             |  ||||||         |                   |
-    ///                 0    150   300      500                 1000
 
     uint256 internal constant Q96 = 0x1000000000000000000000000;
 
@@ -53,9 +48,7 @@ library Ticks {
         ILimitPoolStructs.GlobalState memory state,
         LimitPoolFactoryStructs.LimitPoolParams memory params
     ) external returns (
-        ILimitPoolStructs.GlobalState memory,
-        uint160,
-        uint160
+        ILimitPoolStructs.GlobalState memory
     ) {
         // initialize epoch
         pool0.swapEpoch = 1;
@@ -75,7 +68,7 @@ library Ticks {
         pool1.price = params.startPrice;
 
         constants.tickSpacing = params.tickSpacing;
-        int24 startTick = TickMath.getTickAtPrice(params.startPrice, constants);
+        int24 startTick = ConstantProduct.getTickAtPrice(params.startPrice, constants);
         pool0.tickAtPrice = startTick;
         pool1.tickAtPrice = startTick;
 
@@ -86,7 +79,7 @@ library Ticks {
             pool0.price
         );
 
-        return (state, constants.bounds.min, constants.bounds.max);
+        return state;
     }
 
     function validate(
@@ -254,8 +247,8 @@ library Ticks {
             if (nextPrice < priceLimit) {
                 nextPrice = priceLimit;
             }
-            uint256 amountMax = cache.exactIn ? DyDxMath.getDx(cache.liquidity, nextPrice, cache.price, true)
-                                              : DyDxMath.getDy(cache.liquidity, nextPrice, cache.price, false);
+            uint256 amountMax = cache.exactIn ? ConstantProduct.getDx(cache.liquidity, nextPrice, cache.price, true)
+                                              : ConstantProduct.getDy(cache.liquidity, nextPrice, cache.price, false);
             if (cache.amountLeft < amountMax) {
                 // We can swap within the current range.
                 uint256 liquidityPadded = uint256(cache.liquidity) << 96;
@@ -267,24 +260,24 @@ library Ticks {
                         cache.price,
                         liquidityPadded + uint256(cache.price) * uint256(cache.amountLeft)
                     );
-                    amountOut = DyDxMath.getDy(cache.liquidity, newPrice, uint256(cache.price), false);
+                    amountOut = ConstantProduct.getDy(cache.liquidity, newPrice, uint256(cache.price), false);
                     cache.input += cache.amountLeft;
                 } else {
                     newPrice = cache.price - 
                         OverflowMath.divRoundingUp(cache.amountLeft << 96, cache.liquidity);
                     amountOut = cache.amountLeft;
-                    cache.input += DyDxMath.getDx(cache.liquidity, newPrice, uint256(cache.price), true);
+                    cache.input += ConstantProduct.getDx(cache.liquidity, newPrice, uint256(cache.price), true);
                 }
                 cache.amountLeft = 0;
                 cache.cross = false;
                 cache.price = uint160(newPrice);
             } else {
                 if (cache.exactIn) {
-                    amountOut = DyDxMath.getDy(cache.liquidity, nextPrice, cache.price, false);
+                    amountOut = ConstantProduct.getDy(cache.liquidity, nextPrice, cache.price, false);
                     cache.input += amountMax;
                 } else {
                     amountOut = amountMax;
-                    cache.input += DyDxMath.getDx(cache.liquidity, nextPrice, cache.price, true);
+                    cache.input += ConstantProduct.getDx(cache.liquidity, nextPrice, cache.price, true);
                 }
                 cache.amountLeft -= amountMax;
                 if (nextPrice == cache.crossPrice) { cache.cross = true; }
@@ -296,14 +289,14 @@ library Ticks {
             if (nextPrice > priceLimit) {
                 nextPrice = priceLimit;
             }
-            uint256 amountMax = cache.exactIn ? DyDxMath.getDy(cache.liquidity, uint256(cache.price), nextPrice, true)
-                                              : DyDxMath.getDx(cache.liquidity, uint256(cache.price), nextPrice, false);
+            uint256 amountMax = cache.exactIn ? ConstantProduct.getDy(cache.liquidity, uint256(cache.price), nextPrice, true)
+                                              : ConstantProduct.getDx(cache.liquidity, uint256(cache.price), nextPrice, false);
             if (cache.amountLeft < amountMax) {
                 uint256 newPrice;
                 if (cache.exactIn) {
                     newPrice = cache.price +
                         OverflowMath.mulDiv(cache.amountLeft, Q96, cache.liquidity);
-                    amountOut = DyDxMath.getDx(cache.liquidity, cache.price, newPrice, false);
+                    amountOut = ConstantProduct.getDx(cache.liquidity, cache.price, newPrice, false);
                     cache.input += cache.amountLeft;
                 } else {
                     uint256 liquidityPadded = uint256(cache.liquidity) << 96;
@@ -313,7 +306,7 @@ library Ticks {
                         liquidityPadded - uint256(cache.price) * cache.amountLeft
                     );
                     amountOut = cache.amountLeft;
-                    cache.input += DyDxMath.getDy(cache.liquidity, cache.price, newPrice, true);
+                    cache.input += ConstantProduct.getDy(cache.liquidity, cache.price, newPrice, true);
                 }
                 cache.amountLeft = 0;
                 cache.cross = false;
@@ -506,7 +499,7 @@ library Ticks {
                 if (params.zeroForOne) {
                     // 0 -> 1 positions price moves up so nextFullTick is greater
                     locals.previousFullTick = tickToSave - constants.tickSpacing / 2;
-                    locals.pricePrevious = TickMath.getPriceAtTick(locals.previousFullTick, constants);
+                    locals.pricePrevious = ConstantProduct.getPriceAtTick(locals.previousFullTick, constants);
                     // calculate amountOut filled across both partial fills
                     locals.amountOutExact = ConstantProduct.getDy(pool.liquidity, locals.pricePrevious, pool.price, false);
                     locals.amountOutExact += ConstantProduct.getDy(uint128(tick.liquidityDelta), locals.pricePrevious, tick.priceAt, false);
@@ -522,7 +515,7 @@ library Ticks {
                 } else {
                     // 0 -> 1 positions price moves up so nextFullTick is lesser
                     locals.previousFullTick = tickToSave + constants.tickSpacing / 2;
-                    locals.pricePrevious = TickMath.getPriceAtTick(locals.previousFullTick, constants);
+                    locals.pricePrevious = ConstantProduct.getPriceAtTick(locals.previousFullTick, constants);
                     // calculate amountOut filled across both partial fills
                     locals.amountOutExact = ConstantProduct.getDx(pool.liquidity, pool.price, locals.pricePrevious, false);
                     locals.amountOutExact += ConstantProduct.getDx(uint128(tick.liquidityDelta), tick.priceAt, locals.pricePrevious, false);

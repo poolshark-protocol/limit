@@ -105,6 +105,9 @@ library Ticks {
             ILimitPoolStructs.SwapCache memory
         )
     {
+        (cache.crossTick,) = TickMap.roundHalf(pool.tickAtPrice, cache.constants, pool.price);
+        if (!params.zeroForOne && cache.crossTick % cache.constants.tickSpacing != 0) cache.crossTick -= 1;
+
         cache = ILimitPoolStructs.SwapCache({
             state: cache.state,
             constants: cache.constants,
@@ -112,14 +115,15 @@ library Ticks {
             price: pool.price,
             liquidity: pool.liquidity,
             cross: true,
-            crossTick: params.zeroForOne ? TickMap.previous(tickMap, pool.tickAtPrice, cache.constants.tickSpacing, true) 
-                                         : TickMap.next(tickMap, pool.tickAtPrice, cache.constants.tickSpacing),
+            crossTick: params.zeroForOne ? TickMap.previous(tickMap, cache.crossTick, cache.constants.tickSpacing, true) 
+                                         : TickMap.next(tickMap, cache.crossTick, cache.constants.tickSpacing),
             crossPrice: 0,
             input:  0,
             output: 0,
             exactIn: params.exactIn,
             amountLeft: params.amount
         });
+
         // increment swap epoch
         cache.pool.swapEpoch += 1;
         // grab latest sample and store in cache for _cross
@@ -177,6 +181,8 @@ library Ticks {
         uint256,
         uint160
     ) {
+        (cache.crossTick,) = TickMap.roundHalf(pool.tickAtPrice, cache.constants, pool.price);
+        if (!params.zeroForOne && cache.crossTick % cache.constants.tickSpacing != 0) cache.crossTick -= 1;
         cache = ILimitPoolStructs.SwapCache({
             state: cache.state,
             constants: cache.constants,
@@ -184,8 +190,8 @@ library Ticks {
             price: pool.price,
             liquidity: pool.liquidity,
             cross: true,
-            crossTick: params.zeroForOne ? TickMap.previous(tickMap, pool.tickAtPrice, cache.constants.tickSpacing, true) 
-                                         : TickMap.next(tickMap, pool.tickAtPrice, cache.constants.tickSpacing),
+            crossTick: params.zeroForOne ? TickMap.previous(tickMap, cache.crossTick, cache.constants.tickSpacing, true) 
+                                         : TickMap.next(tickMap, cache.crossTick, cache.constants.tickSpacing),
             crossPrice: 0,
             input:  0,
             output: 0,
@@ -415,8 +421,8 @@ library Ticks {
         ILimitPoolStructs.SwapCache memory
     ) {
         int128 liquidityDelta = ticks[cache.crossTick].liquidityDelta;
-        if (liquidityDelta > 0) cache.liquidity += uint128(ticks[cache.crossTick].liquidityDelta);
-        else cache.liquidity -= uint128(-ticks[cache.crossTick].liquidityDelta);
+        if (liquidityDelta > 0) cache.liquidity += uint128(liquidityDelta);
+        else cache.liquidity -= uint128(-liquidityDelta);
         if (zeroForOne) {
             cache.crossTick = TickMap.previous(tickMap, cache.crossTick, cache.constants.tickSpacing, false);
         } else {

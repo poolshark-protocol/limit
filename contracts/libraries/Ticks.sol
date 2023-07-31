@@ -106,8 +106,6 @@ library Ticks {
         )
     {
         (cache.crossTick,) = TickMap.roundHalf(pool.tickAtPrice, cache.constants, pool.price);
-        if (!params.zeroForOne && cache.crossTick % cache.constants.tickSpacing != 0) cache.crossTick -= 1;
-
         cache = ILimitPoolStructs.SwapCache({
             state: cache.state,
             constants: cache.constants,
@@ -116,7 +114,7 @@ library Ticks {
             liquidity: pool.liquidity,
             cross: true,
             crossTick: params.zeroForOne ? TickMap.previous(tickMap, cache.crossTick, cache.constants.tickSpacing, true) 
-                                         : TickMap.next(tickMap, cache.crossTick, cache.constants.tickSpacing),
+                                         : TickMap.next(tickMap, cache.crossTick, cache.constants.tickSpacing, true),
             crossPrice: 0,
             input:  0,
             output: 0,
@@ -182,7 +180,6 @@ library Ticks {
         uint160
     ) {
         (cache.crossTick,) = TickMap.roundHalf(pool.tickAtPrice, cache.constants, pool.price);
-        if (!params.zeroForOne && cache.crossTick % cache.constants.tickSpacing != 0) cache.crossTick -= 1;
         cache = ILimitPoolStructs.SwapCache({
             state: cache.state,
             constants: cache.constants,
@@ -191,7 +188,7 @@ library Ticks {
             liquidity: pool.liquidity,
             cross: true,
             crossTick: params.zeroForOne ? TickMap.previous(tickMap, cache.crossTick, cache.constants.tickSpacing, true) 
-                                         : TickMap.next(tickMap, cache.crossTick, cache.constants.tickSpacing),
+                                         : TickMap.next(tickMap, cache.crossTick, cache.constants.tickSpacing, true),
             crossPrice: 0,
             input:  0,
             output: 0,
@@ -349,7 +346,7 @@ library Ticks {
         if (pool.liquidity > 0) return (cache, pool);
 
         if (zeroForOne) {
-            pool.tickAtPrice = TickMap.next(tickMap, pool.tickAtPrice, cache.constants.tickSpacing);
+            pool.tickAtPrice = TickMap.next(tickMap, pool.tickAtPrice, cache.constants.tickSpacing, true);
             if (pool.tickAtPrice < ConstantProduct.maxTick(cache.constants.tickSpacing)) {
                 EpochMap.set(pool.tickAtPrice, pool.swapEpoch, tickMap, cache.constants);
             }
@@ -405,7 +402,7 @@ library Ticks {
         if (zeroForOne) {
             cache.crossTick = TickMap.previous(tickMap, cache.crossTick, cache.constants.tickSpacing, false);
         } else {
-            cache.crossTick = TickMap.next(tickMap, cache.crossTick, cache.constants.tickSpacing);
+            cache.crossTick = TickMap.next(tickMap, cache.crossTick, cache.constants.tickSpacing, false);
         }
         return (pool, cache);
     }
@@ -426,7 +423,7 @@ library Ticks {
         if (zeroForOne) {
             cache.crossTick = TickMap.previous(tickMap, cache.crossTick, cache.constants.tickSpacing, false);
         } else {
-            cache.crossTick = TickMap.next(tickMap, cache.crossTick, cache.constants.tickSpacing);
+            cache.crossTick = TickMap.next(tickMap, cache.crossTick, cache.constants.tickSpacing, false);
         }
         return (pool, cache);
     }

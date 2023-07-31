@@ -4750,4 +4750,237 @@ describe('LimitPool Tests', function () {
             console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
         }
     });
+
+    it.skip("pool0 - Should not skip over half tick when pool.tickAtPrice is further along:: GUARDIAN AUDITS", async function () {
+
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: '-20',
+            upper: '0',
+            amount: '2',
+            zeroForOne: true,
+            balanceInDecrease: '2',
+            liquidityIncrease: "1999",
+            balanceOutIncrease: "0",
+            upperTickCleared: false,
+            lowerTickCleared: true,
+            revertMessage: '',
+        })
+
+
+        console.log("Mint #1 Completed");
+        console.log();
+
+        // swap to tick -3
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: false,
+            amountIn: tokenAmountBn,
+            priceLimit: BigNumber.from("79220240490215316061937756560"),
+            balanceInDecrease: '2',
+            balanceOutIncrease: '1',
+            revertMessage: '',
+        })
+
+        console.log("Mint #2 Completed");
+        console.log();
+        await getPrice(true, true)
+
+        // liquidity is stashed on tick 5 when the tick at the current price is tick 4
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: '-60',
+            upper: '50',
+            amount: '2',
+            zeroForOne: true,
+            balanceInDecrease: '2',
+            liquidityIncrease: "363",
+            balanceOutIncrease: "0",
+            upperTickCleared: false,
+            lowerTickCleared: true,
+            revertMessage: '',
+        })
+
+        await getTick(true, -5, true)
+
+        console.log("Mint #3 Completed");
+        console.log();
+        await getPrice(true, true)
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '-60',
+            upper: '50',
+            amount: '2',
+            zeroForOne: true,
+            balanceInDecrease: '2',
+            liquidityIncrease: "363",
+            balanceOutIncrease: "0",
+            upperTickCleared: false,
+            lowerTickCleared: true,
+            revertMessage: '',
+        })
+
+        console.log("Mint #4 Completed");
+        console.log();
+        await getPrice(true, true)
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '-60',
+            upper: '50',
+            amount: '2',
+            zeroForOne: false,
+            balanceInDecrease: '2',
+            liquidityIncrease: "0",
+            balanceOutIncrease: "1",
+            upperTickCleared: true,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
+
+        console.log("Mint #5 Completed");
+        console.log();
+
+        await getTick(false, -5, true)
+        await getPrice(true, true)
+
+        // Mint fails here since the pool liquidity underflows
+        // liquidityDelta on tick 0 (-1999) exceeds the pool's liquidity
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '-150',
+            upper: '10000',
+            expectedUpper: '5560',
+            amount: '1000',
+            zeroForOne: false,
+            balanceInDecrease: '1000',
+            liquidityIncrease: "3037",
+            balanceOutIncrease: "1",
+            upperTickCleared: true,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
+      });
+
+    it("pool1 - Should not skip over half tick when pool.tickAtPrice is further along:: GUARDIAN AUDITS", async function () {
+
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: '0',
+            upper: '20',
+            amount: '2',
+            zeroForOne: false,
+            balanceInDecrease: '2',
+            liquidityIncrease: "1999",
+            balanceOutIncrease: "0",
+            upperTickCleared: true,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
+
+        console.log("Mint #1 Completed");
+        console.log();
+
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: '-50',
+            upper: '60',
+            amount: '2',
+            zeroForOne: true,
+            balanceInDecrease: '2',
+            liquidityIncrease: "0",
+            balanceOutIncrease: "1",
+            upperTickCleared: false,
+            lowerTickCleared: true,
+            revertMessage: '',
+        })
+
+        console.log("Mint #2 Completed");
+        console.log();
+
+        // liquidity is stashed on tick 5 when the tick at the current price is tick 4
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: '-50',
+            upper: '60',
+            amount: '2',
+            zeroForOne: false,
+            balanceInDecrease: '2',
+            liquidityIncrease: "363",
+            balanceOutIncrease: "0",
+            upperTickCleared: true,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
+
+        await getTick(false, 5, true)
+
+        console.log("Mint #3 Completed");
+        console.log();
+
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '-50',
+            upper: '60',
+            amount: '2',
+            zeroForOne: false,
+            balanceInDecrease: '2',
+            liquidityIncrease: "363",
+            balanceOutIncrease: "0",
+            upperTickCleared: true,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
+
+        console.log("Mint #4 Completed");
+        console.log();
+
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '-50',
+            upper: '60',
+            amount: '2',
+            zeroForOne: true,
+            balanceInDecrease: '2',
+            liquidityIncrease: "0",
+            balanceOutIncrease: "2",
+            upperTickCleared: false,
+            lowerTickCleared: true,
+            revertMessage: '',
+        })
+
+        console.log("Mint #5 Completed");
+        console.log();
+
+        await getTick(false, 5, true)
+        await getPrice(false, true)
+
+        // Mint fails here since the pool liquidity underflows
+        // liquidityDelta on tick 0 (-1999) exceeds the pool's liquidity
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '-10000',
+            upper: '150',
+            expectedLower: '-5560',
+            amount: '1000',
+            zeroForOne: true,
+            balanceInDecrease: '1000',
+            liquidityIncrease: "3037",
+            balanceOutIncrease: "1",
+            upperTickCleared: false,
+            lowerTickCleared: true,
+            revertMessage: '',
+        })
+      });
 })

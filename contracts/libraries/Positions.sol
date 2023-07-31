@@ -151,6 +151,8 @@ library Positions {
         // save swapCache
         cache.swapCache = swapCache;
 
+        console.log('position bounds', uint24(-params.lower), uint24(params.upper), uint24(-(cache.swapPool.tickAtPrice)));
+        console.log(cache.swapPool.price);
         return (
             params,
             cache

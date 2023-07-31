@@ -243,7 +243,6 @@ export async function validateSwap(params: ValidateSwapParams) {
         expect(balanceOutAfter.sub(balanceOutBefore)).to.be.equal(amountOutQuoted)
     }
 
-
     const poolAfter: PoolState = zeroForOne
         ? await hre.props.limitPool.pool1()
         : await hre.props.limitPool.pool0()

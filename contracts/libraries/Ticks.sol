@@ -11,6 +11,7 @@ import './math/OverflowMath.sol';
 import './TickMap.sol';
 import './EpochMap.sol';
 import './utils/SafeCast.sol';
+import 'hardhat/console.sol';
 
 /// @notice Tick management library
 library Ticks {
@@ -105,6 +106,8 @@ library Ticks {
             ILimitPoolStructs.SwapCache memory
         )
     {
+        (cache.crossTick,) = TickMap.roundHalf(pool.tickAtPrice, cache.constants, pool.price);
+        console.log('initial cross tick', uint24(-cache.crossTick));
         cache = ILimitPoolStructs.SwapCache({
             state: cache.state,
             constants: cache.constants,
@@ -112,14 +115,16 @@ library Ticks {
             price: pool.price,
             liquidity: pool.liquidity,
             cross: true,
-            crossTick: params.zeroForOne ? TickMap.previous(tickMap, pool.tickAtPrice, cache.constants.tickSpacing, true) 
-                                         : TickMap.next(tickMap, pool.tickAtPrice, cache.constants.tickSpacing),
+            crossTick: params.zeroForOne ? TickMap.previous(tickMap, cache.crossTick, cache.constants.tickSpacing, true) 
+                                         : TickMap.next(tickMap, cache.crossTick - cache.constants.tickSpacing / 2, cache.constants.tickSpacing),
             crossPrice: 0,
             input:  0,
             output: 0,
             exactIn: params.exactIn,
             amountLeft: params.amount
         });
+        console.log('initial state', params.zeroForOne);
+        console.log('cross tick', uint24(cache.crossTick), uint24(-pool.tickAtPrice), TickMap.get(tickMap, -5, cache.constants.tickSpacing));
         // increment swap epoch
         cache.pool.swapEpoch += 1;
         // grab latest sample and store in cache for _cross
@@ -150,8 +155,10 @@ library Ticks {
         pool.liquidity = cache.liquidity.toUint128();
 
         if (cache.price != cache.crossPrice) {
+            console.log('updating pool price', pool.price, uint24(-ConstantProduct.getTickAtPrice(pool.price, cache.constants)));
             pool.tickAtPrice = ConstantProduct.getTickAtPrice(pool.price, cache.constants);
         } else {
+            console.log('updating pool price 2', pool.price);
             pool.tickAtPrice = cache.crossTick;
         }
         emit Swap(
@@ -177,6 +184,7 @@ library Ticks {
         uint256,
         uint160
     ) {
+        (cache.crossTick,) = TickMap.roundHalf(pool.tickAtPrice, cache.constants, pool.price);
         cache = ILimitPoolStructs.SwapCache({
             state: cache.state,
             constants: cache.constants,
@@ -184,8 +192,8 @@ library Ticks {
             price: pool.price,
             liquidity: pool.liquidity,
             cross: true,
-            crossTick: params.zeroForOne ? TickMap.previous(tickMap, pool.tickAtPrice, cache.constants.tickSpacing, true) 
-                                         : TickMap.next(tickMap, pool.tickAtPrice, cache.constants.tickSpacing),
+            crossTick: params.zeroForOne ? TickMap.previous(tickMap, cache.crossTick, cache.constants.tickSpacing, true) 
+                                         : TickMap.next(tickMap, cache.crossTick - cache.constants.tickSpacing / 2, cache.constants.tickSpacing),
             crossPrice: 0,
             input:  0,
             output: 0,
@@ -389,6 +397,7 @@ library Ticks {
         EpochMap.set(cache.crossTick, cache.pool.swapEpoch, tickMap, cache.constants);
         int128 liquidityDelta = ticks[cache.crossTick].liquidityDelta;
 
+        console.log('liquidity delta', uint128(-liquidityDelta));
         if (liquidityDelta > 0) cache.liquidity += uint128(liquidityDelta);
         else cache.liquidity -= uint128(-liquidityDelta);
         pool.tickAtPrice = cache.crossTick;
@@ -415,8 +424,8 @@ library Ticks {
         ILimitPoolStructs.SwapCache memory
     ) {
         int128 liquidityDelta = ticks[cache.crossTick].liquidityDelta;
-        if (liquidityDelta > 0) cache.liquidity += uint128(ticks[cache.crossTick].liquidityDelta);
-        else cache.liquidity -= uint128(-ticks[cache.crossTick].liquidityDelta);
+        if (liquidityDelta > 0) cache.liquidity += uint128(liquidityDelta);
+        else cache.liquidity -= uint128(-liquidityDelta);
         if (zeroForOne) {
             cache.crossTick = TickMap.previous(tickMap, cache.crossTick, cache.constants.tickSpacing, false);
         } else {

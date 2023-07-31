@@ -231,7 +231,7 @@ library Positions {
         if (params.zeroForOne) {
             if (EpochMap.get(params.lower, tickMap, constants)
                         > cache.position.epochLast) {
-                int24 nextTick = TickMap.next(tickMap, params.lower, constants.tickSpacing);
+                int24 nextTick = TickMap.next(tickMap, params.lower, constants.tickSpacing, false);
                 if (pool.price > cache.priceLower ||
                     EpochMap.get(nextTick, tickMap, constants)
                         > cache.position.epochLast) {

@@ -88,9 +88,14 @@ library TickMap {
         unchecked {
             // rounds up to ensure relative position
             if (tick % (tickSpacing / 2) != 0 || inclusive) {
-                if (tick >= 0 || (inclusive && tick % (tickSpacing / 2) == 0)) {
-                    if (tick < (ConstantProduct.maxTick(tickSpacing) - tickSpacing / 2))
+                if (tick < (ConstantProduct.maxTick(tickSpacing) - tickSpacing / 2)) {
+                    /// @dev - ensures we cross when tick >= 0
+                    if (tick >= 0) {
                         tick += tickSpacing / 2;
+                    } else if (inclusive && tick % (tickSpacing / 2) == 0) {
+                    /// @dev - ensures we cross when tick == tickAtPrice
+                        tick += tickSpacing / 2;
+                    }
                 }
             }
             (
@@ -119,11 +124,17 @@ library TickMap {
     function next(
         ILimitPoolStructs.TickMap storage tickMap,
         int24 tick,
-        int16 tickSpacing
+        int16 tickSpacing,
+        bool inclusive
     ) internal view returns (
         int24 nextTick
     ) {
         unchecked {
+            /// @dev - handles tickAtPrice being past tickSpacing / 2
+            if (inclusive && tick % tickSpacing != 0) {
+                tick -= 1;
+            }
+            /// @dev - handles negative ticks rounding up
             if (tick % (tickSpacing / 2) != 0) {
                 if (tick < 0)
                     if (tick > (ConstantProduct.minTick(tickSpacing) + tickSpacing / 2))

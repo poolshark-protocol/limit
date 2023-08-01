@@ -345,14 +345,16 @@ library Ticks {
     {
         if (pool.liquidity > 0) return (cache, pool);
 
+        (int24 startTick,) = TickMap.roundHalf(pool.tickAtPrice, cache.constants, pool.price);
+
         if (zeroForOne) {
-            pool.tickAtPrice = TickMap.next(tickMap, pool.tickAtPrice, cache.constants.tickSpacing, true);
+            pool.tickAtPrice = TickMap.next(tickMap, startTick, cache.constants.tickSpacing, true);
             if (pool.tickAtPrice < ConstantProduct.maxTick(cache.constants.tickSpacing)) {
                 EpochMap.set(pool.tickAtPrice, pool.swapEpoch, tickMap, cache.constants);
             }
         } else {
             /// @dev - roundedUp true since liquidity could be equal to the current pool tickAtPrice
-            pool.tickAtPrice = TickMap.previous(tickMap, pool.tickAtPrice, cache.constants.tickSpacing, true);
+            pool.tickAtPrice = TickMap.previous(tickMap, startTick, cache.constants.tickSpacing, true);
             if (pool.tickAtPrice > ConstantProduct.minTick(cache.constants.tickSpacing)) {
                 EpochMap.set(pool.tickAtPrice, pool.swapEpoch, tickMap, cache.constants);
             }

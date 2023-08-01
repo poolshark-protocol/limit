@@ -1,1 +1,7 @@
 .idea
+yarn.lock
+typechain/
+node_modules
+artifacts
+cache
+.DS_Store

@@ -21,6 +21,7 @@ contract EchidnaPool {
     event Address(address a);
     event Price(uint160 price);
     event Prices(uint160 price0, uint160 price1);
+    event LiquidityGlobal(uint128 liq0Before, uint128 liq1Before, uint128 liq0After, uint128 liq1After);
     event Liquidity(uint128 liq0Before, uint128 liq1Before, uint128 liq0After, uint128 liq1After);
     event LiquidityDelta(int128 liqLowerBefore, int128 liqUpperBefore, int128 liqLowerAfter, int128 liqUperAfter);
     event Amount(uint256 amt);
@@ -85,6 +86,7 @@ contract EchidnaPool {
     function mint(uint128 amount, bool zeroForOne, int24 lower, int24 upper) public tickPreconditions(lower, upper) {
         // PRE CONDITIONS
         mintAndApprove();
+        require(amount > 1);
         PoolValues memory poolValues;
         (poolValues.price0Before, poolValues.liquidity0Before, poolValues.liquidityGlobal0Before,,,,) = pool.pool0();
         (poolValues.price1Before, poolValues.liquidity1Before, poolValues.liquidityGlobal1Before,,,,) = pool.pool1();
@@ -132,19 +134,29 @@ contract EchidnaPool {
 
         // Ensure prices have not crossed
         assert(poolValues.price0After >= poolValues.price1After);
-        // Ensure liquidity does not decrease on mint
+        
+        emit LiquidityGlobal(poolValues.liquidityGlobal0Before, poolValues.liquidityGlobal1Before, poolValues.liquidityGlobal0After, poolValues.liquidityGlobal1After);
+        emit Liquidity(poolValues.liquidity0Before, poolValues.liquidity1Before, poolValues.liquidity0After, poolValues.liquidity1After);
         if (zeroForOne) {
-            emit Liquidity(poolValues.liquidityGlobal0Before, poolValues.liquidityGlobal1Before, poolValues.liquidityGlobal0After, poolValues.liquidityGlobal1After);
+            // Ensure liquidity does not decrease on mint
             assert(poolValues.liquidityGlobal0After >= poolValues.liquidityGlobal0Before);
+            // Ensure pool.liquity is incremented when undercutting
+            if (poolValues.price0After < poolValues.price0Before) {
+                assert(poolValues.liquidity0After > 0);
+            }
 
             // emit LiquidityDelta(values.liquidityDeltaLowerBefore, values.liquidityDeltaUpperBefore, values.liquidityDeltaLowerAfter, values.liquidityDeltaUpperAfter);
             // assert(values.liquidityDeltaLowerAfter >= values.liquidityDeltaLowerBefore);
             // assert(values.liquidityDeltaUpperAfter <= values.liquidityDeltaUpperBefore);
         }
         else {
-            emit Liquidity(poolValues.liquidityGlobal0Before, poolValues.liquidityGlobal1Before, poolValues.liquidityGlobal0After, poolValues.liquidityGlobal1After);
+            // Ensure liquidity does not decrease on mint
             assert(poolValues.liquidityGlobal1After >= poolValues.liquidityGlobal1Before);
-           
+            // Ensure pool.liquity is incremented when undercutting
+            if (poolValues.price1After > poolValues.price1Before) {
+                assert(poolValues.liquidity1After > 0);
+            }
+
             // emit LiquidityDelta(values.liquidityDeltaLowerBefore, values.liquidityDeltaUpperBefore, values.liquidityDeltaLowerAfter, values.liquidityDeltaUpperAfter);
             // assert(values.liquidityDeltaUpperAfter >= values.liquidityDeltaUpperBefore);
             // assert(values.liquidityDeltaLowerAfter <= values.liquidityDeltaLowerBefore);
@@ -203,7 +215,6 @@ contract EchidnaPool {
     function mintThenBurnZeroLiquidityChange(uint128 amount, bool zeroForOne, int24 lower, int24 upper) public tickPreconditions(lower, upper) {
         // PRE CONDITIONS
         mintAndApprove();
-        require(amount > 0);
         (uint160 price0Before,/*liquidity*/,uint128 liquidityGlobal0Before,,,,) = pool.pool0();
         (uint160 price1Before,/*liquidity*/,uint128 liquidityGlobal1Before,,,,) = pool.pool1();
 
@@ -218,6 +229,7 @@ contract EchidnaPool {
         (uint160 price1After,/*liquidity*/,uint128 liquidityGlobal1After,,,,) = pool.pool1();
         emit Prices(price0After, price1After);
         assert(price0After >= price1After);
+        emit LiquidityGlobal(liquidityGlobal0Before, liquidityGlobal1Before, liquidityGlobal0After, liquidityGlobal1After);
         assert((liquidityGlobal0After == liquidityGlobal0Before) && (liquidityGlobal1After == liquidityGlobal1Before));
         
     }

@@ -46,4 +46,11 @@ interface ILimitPool is ILimitPoolStructs {
         uint128 token0Fees,
         uint128 token1Fees
     );
+
+    function priceBounds(
+        int16 tickSpacing
+    ) external pure returns (
+        uint160 minPrice,
+        uint160 maxPrice
+    );
 }

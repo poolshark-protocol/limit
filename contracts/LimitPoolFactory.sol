@@ -67,8 +67,10 @@ contract LimitPoolFactory is
         constants.owner = owner;
         constants.factory = original;
         constants.tickSpacing = tickSpacing;
-        constants.bounds.min = ConstantProduct.minPrice(constants.tickSpacing);
-        constants.bounds.max = ConstantProduct.maxPrice(constants.tickSpacing);
+        (
+            constants.bounds.min,
+            constants.bounds.max
+        ) = ILimitPool(implementation).priceBounds(constants.tickSpacing);
 
         // launch pool
         pool = implementation.cloneDeterministic({

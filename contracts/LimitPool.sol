@@ -13,6 +13,7 @@ import './libraries/pool/MintCall.sol';
 import './libraries/pool/BurnCall.sol';
 import './libraries/math/ConstantProduct.sol';
 import './libraries/solady/LibClone.sol';
+import './external/openzeppelin/security/ReentrancyGuard.sol';
 
 
 /// @notice Poolshark Cover Pool Implementation
@@ -20,7 +21,8 @@ contract LimitPool is
     ILimitPool,
     LimitPoolStorage,
     LimitPoolImmutables,
-    LimitPoolFactoryStructs
+    LimitPoolFactoryStructs,
+    ReentrancyGuard
 {
 
     modifier ownerOnly() {
@@ -33,10 +35,9 @@ contract LimitPool is
         _;
     }
 
-    modifier lock() {
-        _prelock();
+    modifier canoncialOnly() {
+        _onlyCanoncialClones();
         _;
-        _postlock();
     }
 
     address public immutable original;
@@ -51,7 +52,11 @@ contract LimitPool is
 
     function initialize(
         uint160 startPrice
-    ) external override factoryOnly {
+    ) external override 
+        nonReentrant
+        factoryOnly
+        canoncialOnly
+    {
         // initialize state
         globalState = Ticks.initialize(
             tickMap,
@@ -66,7 +71,10 @@ contract LimitPool is
     // limitSwap
     function mint(
         MintParams memory params
-    ) external override lock {
+    ) external override
+        nonReentrant
+        canoncialOnly
+    {
         MintCache memory cache;
         {
             cache.state = globalState;
@@ -89,7 +97,10 @@ contract LimitPool is
 
     function burn(
         BurnParams memory params
-    ) external override lock {
+    ) external override 
+        nonReentrant
+        canoncialOnly
+    {
         if (params.to == address(0)) revert CollectToZeroAddress();
         BurnCache memory cache = BurnCache({
             state: globalState,
@@ -115,7 +126,10 @@ contract LimitPool is
 
     function swap(
         SwapParams memory params
-    ) public override lock returns (
+    ) public override
+        nonReentrant
+        canoncialOnly
+    returns (
         int256,
         int256
     ) 
@@ -136,7 +150,7 @@ contract LimitPool is
 
     function quote(
         QuoteParams memory params
-    ) external view override returns (
+    ) external view override canoncialOnly returns (
         uint256 inAmount,
         uint256 outAmount,
         uint256 priceAfter
@@ -155,7 +169,7 @@ contract LimitPool is
 
     function snapshot(
        SnapshotParams memory params 
-    ) external view override returns (
+    ) external view override canoncialOnly returns (
         Position memory
     ) {
         return Positions.snapshot(
@@ -181,7 +195,7 @@ contract LimitPool is
         uint16 protocolFee0,
         uint16 protocolFee1,
         bool setFees
-    ) external override ownerOnly returns (
+    ) external override ownerOnly canoncialOnly returns (
         uint128 token0Fees,
         uint128 token1Fees
     ) {
@@ -215,11 +229,15 @@ contract LimitPool is
         );
     }
 
-    function _prelock() private {
+    function _onlyOwner() private view {
+        if (msg.sender != owner()) revert OwnerOnly();
+    }
+
+    function _onlyCanoncialClones() private view {
         // compute pool key
         bytes32 key = keccak256(abi.encode(original, token0(), token1(), tickSpacing()));
         
-        // only allow delegateCall from canonical clones
+        // computer canonical pool address
         address predictedAddress = LibClone.predictDeterministicAddress(
             original,
             abi.encodePacked(
@@ -233,19 +251,8 @@ contract LimitPool is
             key,
             factory
         );
+        // only allow delegateCall from canonical clones
         if (address(this) != predictedAddress) require(false, 'NoDelegateCall()');
-        
-        // check reentrancy lock
-        if (globalState.unlocked == 2) require(false, 'Locked()');
-        globalState.unlocked = 2;
-    }
-
-    function _postlock() private {
-        globalState.unlocked = 1;
-    }
-
-    function _onlyOwner() private view {
-        if (msg.sender != owner()) revert OwnerOnly();
     }
 
     function _onlyFactory() private view {

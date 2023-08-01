@@ -20,6 +20,7 @@ abstract contract LimitPoolErrors {
     error CollectToZeroAddress();
     error ProtocolFeeCeilingExceeded();
     error Overflow();
+    error PoolAlreadyInitialized();
     error NotEnoughOutputLiquidity();
     error WaitUntilEnoughObservations();
 }
@@ -48,6 +49,7 @@ abstract contract LimitPoolFactoryErrors {
     error PoolAlreadyExists();
     error FeeTierNotSupported();
     error TickSpacingNotSupported();
+    error PoolTypeNotSupported();
 }
 
 abstract contract CoverTransferErrors {

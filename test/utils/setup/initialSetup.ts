@@ -16,8 +16,9 @@ import {
     PoolRouter__factory
 } from '../../../typechain'
 
-import {abi as factoryAbi} from '../../../artifacts/contracts/LimitPoolFactory.sol/LimitPoolFactory.json'
-import { keccak256 } from 'ethers/lib/utils'
+// import {abi as factoryAbi} from '../../../artifacts/contracts/LimitPoolFactory.sol/LimitPoolFactory.json'
+// import { keccak256 } from 'ethers/lib/utils'
+const constantProductString =  ethers.utils.formatBytes32String('CONSTANT-PRODUCT')
 
 export class InitialSetup {
     private token0Decimals = 18
@@ -138,7 +139,19 @@ export class InitialSetup {
             // @ts-ignore
             LimitPoolManager__factory,
             'limitPoolManager',
-            []
+            [
+
+            ]
+        )
+
+        await this.deployAssist.deployContractWithRetry(
+            network,
+            // @ts-ignore
+            LimitPoolFactory__factory,
+            'limitPoolFactory',
+            [   
+                hre.props.limitPoolManager.address
+            ],
         )
 
         await this.deployAssist.deployContractWithRetry(
@@ -178,7 +191,9 @@ export class InitialSetup {
             // @ts-ignore
             LimitPool__factory,
             'limitPoolImpl',
-            [],
+            [
+                hre.props.limitPoolFactory.address
+            ],
             {
                 'contracts/libraries/Positions.sol:Positions': hre.props.positionsLib.address,
                 'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address,
@@ -189,16 +204,13 @@ export class InitialSetup {
             }
         )
 
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
-            LimitPoolFactory__factory,
-            'limitPoolFactory',
-            [   
-                hre.props.limitPoolManager.address,
-                hre.props.limitPoolImpl.address
-            ],
+        const enableImplTxn = await hre.props.limitPoolManager.enableImplementation(
+            constantProductString,
+            hre.props.limitPoolImpl.address
         )
+        await enableImplTxn.wait();
+
+        hre.nonce += 1;
 
         await this.deployAssist.deployContractWithRetry(
             network,
@@ -216,10 +228,11 @@ export class InitialSetup {
         )
         await setFactoryTxn.wait()
 
-        hre.nonce += 1
+        hre.nonce += 1;
 
         // create first limit pool
         let createPoolTxn = await hre.props.limitPoolFactory.createLimitPool(
+            constantProductString,
             hre.props.token0.address,
             hre.props.token1.address,
             '10',
@@ -230,6 +243,7 @@ export class InitialSetup {
         hre.nonce += 1
 
         let limitPoolAddress = await hre.props.limitPoolFactory.getLimitPool(
+            constantProductString,
             hre.props.token0.address,
             hre.props.token1.address,
             '10'
@@ -242,6 +256,7 @@ export class InitialSetup {
             'limitPool',
             hre.props.limitPool,
             [
+                constantProductString,
                 hre.props.token0.address,
                 hre.props.token1.address,
                 '10'
@@ -313,6 +328,7 @@ export class InitialSetup {
         await hre.props.limitPoolFactory
           .connect(hre.props.admin)
           .createLimitPool(
+            constantProductString,
             hre.props.token0.address,
             hre.props.token1.address,
             '10',

@@ -16,9 +16,12 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
     address public factory;
     uint16  public constant MAX_PROTOCOL_FEE = 1e4; /// @dev - max protocol fee of 1%
     // tickSpacing => enabled
+    mapping(bytes32 => address) internal _implementations;
     mapping(int16 => bool) internal _tickSpacings;
 
     error InvalidTickSpacing();
+    error TickSpacingAlreadyEnabled();
+    error ImplementationAlreadyExists();
 
     constructor() {
         owner = msg.sender;
@@ -82,10 +85,20 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
     function enableTickSpacing(
         int16 tickSpacing
     ) external onlyOwner {
+        if (_tickSpacings[tickSpacing]) revert TickSpacingAlreadyEnabled();
         if (tickSpacing <= 0) revert InvalidTickSpacing();
         if (tickSpacing % 2 != 0) revert InvalidTickSpacing();
         _tickSpacings[tickSpacing] = true;
         emit TickSpacingEnabled(tickSpacing);
+    }
+
+    function enableImplementation(
+        bytes32 poolType_,
+        address implementation_
+    ) external onlyOwner {
+        if (_implementations[poolType_] != address(0)) revert ImplementationAlreadyExists();
+        _implementations[poolType_] = implementation_;
+        emit ImplementationEnabled(poolType_, implementation_);
     }
 
     function setFactory(
@@ -141,6 +154,14 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
             }
         }
         emit ProtocolFeesModified(modifyPools, syncFees, fillFees, setFees, token0Fees, token1Fees);
+    }
+
+    function implementations(
+        bytes32 key
+    ) external view returns (
+        address
+    ) {
+        return _implementations[key];
     }
 
     function tickSpacings(

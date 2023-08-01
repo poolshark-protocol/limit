@@ -4,6 +4,7 @@ import '../base/storage/LimitPoolFactoryStorage.sol';
 
 abstract contract ILimitPoolFactory is LimitPoolFactoryStorage {
     function createLimitPool(
+        bytes32 poolType,
         address tokenIn,
         address tokenOut,
         int16  tickSpacing,
@@ -11,6 +12,7 @@ abstract contract ILimitPoolFactory is LimitPoolFactoryStorage {
     ) external virtual returns (address pool);
 
     function getLimitPool(
+        bytes32 poolType,
         address tokenIn,
         address tokenOut,
         int16  tickSpacing

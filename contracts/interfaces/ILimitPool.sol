@@ -6,7 +6,7 @@ import '../base/structs/LimitPoolFactoryStructs.sol';
 
 interface ILimitPool is ILimitPoolStructs {
     function initialize(
-        LimitPoolFactoryStructs.LimitPoolParams memory params
+        uint160 startPrice
     ) external;
 
     function mint(

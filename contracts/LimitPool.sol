@@ -12,6 +12,7 @@ import './libraries/pool/QuoteCall.sol';
 import './libraries/pool/MintCall.sol';
 import './libraries/pool/BurnCall.sol';
 import './libraries/math/ConstantProduct.sol';
+import './libraries/solady/LibClone.sol';
 
 
 /// @notice Poolshark Cover Pool Implementation
@@ -27,19 +28,39 @@ contract LimitPool is
         _;
     }
 
+    modifier factoryOnly() {
+        _onlyFactory();
+        _;
+    }
+
     modifier lock() {
         _prelock();
         _;
         _postlock();
     }
 
-    constructor() {}
+    address public immutable original;
+    address public immutable factory;
+
+    constructor(
+        address factory_
+    ) {
+        original = address(this);
+        factory = factory_;
+    }
 
     function initialize(
-        LimitPoolParams memory params
-    ) external override lock {
+        uint160 startPrice
+    ) external override factoryOnly {
         // initialize state
-        globalState = Ticks.initialize(tickMap, pool0, pool1, globalState, params);
+        globalState = Ticks.initialize(
+            tickMap,
+            pool0,
+            pool1,
+            globalState,
+            immutables(),
+            startPrice
+        );
     }
 
     // limitSwap
@@ -181,11 +202,12 @@ contract LimitPool is
             SafeTransfers.transferOut(feeTo, token1(), token1Fees);
     }
 
-    function immutables() public pure returns (
+    function immutables() public view returns (
         Immutables memory
     ) {
         return Immutables(
             owner(),
+            factory,
             ConstantProduct.PriceBounds(minPrice(), maxPrice()),
             token0(),
             token1(),
@@ -194,7 +216,27 @@ contract LimitPool is
     }
 
     function _prelock() private {
-        if (globalState.unlocked == 2) revert Locked();
+        // compute pool key
+        bytes32 key = keccak256(abi.encode(original, token0(), token1(), tickSpacing()));
+        
+        // only allow delegateCall from canonical clones
+        address predictedAddress = LibClone.predictDeterministicAddress(
+            original,
+            abi.encodePacked(
+                owner(),
+                token0(),
+                token1(),
+                minPrice(),
+                maxPrice(),
+                tickSpacing()
+            ),
+            key,
+            factory
+        );
+        if (address(this) != predictedAddress) require(false, 'NoDelegateCall()');
+        
+        // check reentrancy lock
+        if (globalState.unlocked == 2) require(false, 'Locked()');
         globalState.unlocked = 2;
     }
 
@@ -204,5 +246,9 @@ contract LimitPool is
 
     function _onlyOwner() private view {
         if (msg.sender != owner()) revert OwnerOnly();
+    }
+
+    function _onlyFactory() private view {
+        if (msg.sender != factory) revert FactoryOnly();
     }
 }

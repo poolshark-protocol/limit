@@ -4962,7 +4962,6 @@ describe('LimitPool Tests', function () {
         })
 
         if (debugMode) console.log("Mint #1 Completed");
-        console.log();
 
         await validateMint({
             signer: hre.props.bob,
@@ -4980,7 +4979,6 @@ describe('LimitPool Tests', function () {
         })
 
         if (debugMode) console.log("Mint #2 Completed");
-        console.log();
 
         // liquidity is stashed on tick 5 when the tick at the current price is tick 4
         await validateMint({
@@ -5001,7 +4999,6 @@ describe('LimitPool Tests', function () {
         if (debugMode) await getTick(false, 5, true)
 
         if (debugMode) console.log("Mint #3 Completed");
-        console.log();
 
         await validateMint({
             signer: hre.props.alice,
@@ -5019,7 +5016,6 @@ describe('LimitPool Tests', function () {
         })
 
         if (debugMode) console.log("Mint #4 Completed");
-        console.log();
 
         await validateMint({
             signer: hre.props.alice,
@@ -5037,7 +5033,6 @@ describe('LimitPool Tests', function () {
         })
 
         if (debugMode) console.log("Mint #5 Completed");
-        console.log();
 
         if (debugMode) await getTick(false, 5, true)
         if (debugMode) await getPrice(false, true)

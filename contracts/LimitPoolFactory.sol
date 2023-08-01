@@ -8,7 +8,6 @@ import './base/structs/PoolsharkStructs.sol';
 import './utils/LimitPoolErrors.sol';
 import './libraries/solady/LibClone.sol';
 import './libraries/math/ConstantProduct.sol';
-import 'hardhat/console.sol';
 
 contract LimitPoolFactory is 
     ILimitPoolFactory,

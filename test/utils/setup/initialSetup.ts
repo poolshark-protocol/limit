@@ -139,9 +139,7 @@ export class InitialSetup {
             // @ts-ignore
             LimitPoolManager__factory,
             'limitPoolManager',
-            [
-
-            ]
+            []
         )
 
         await this.deployAssist.deployContractWithRetry(

@@ -233,6 +233,10 @@ contract LimitPool is
         );
     }
 
+    function priceBounds(int16 tickSpacing) external pure returns (uint160, uint160) {
+        return ConstantProduct.priceBounds(tickSpacing);
+    }
+
     function _onlyOwner() private view {
         if (msg.sender != owner()) revert OwnerOnly();
     }

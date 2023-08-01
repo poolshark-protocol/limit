@@ -2,3 +2,5 @@ testMode: assertion
 corpusDir: corpus
 codeSize: 50000
 testLimit: 500000
+deployContracts: [["0x1f", "MintCall"]]
+cryticArgs: ["--compile-libraries=(MintCall,0x1f)"]

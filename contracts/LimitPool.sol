@@ -21,6 +21,7 @@ contract LimitPool is
     LimitPoolImmutables,
     LimitPoolFactoryStructs
 {
+    event SimulateMint(bytes b);
 
     modifier ownerOnly() {
         _onlyOwner();
@@ -64,6 +65,32 @@ contract LimitPool is
             params.zeroForOne ? positions0 : positions1
         );
         globalState = cache.state;
+    }
+
+    function getResizedTicks(
+        MintParams memory params
+    ) external returns (int24 lower, int24 upper, bool positionCreated){
+        MintCache memory cache;
+        {
+            cache.state = globalState;
+            cache.constants = immutables();
+            cache.pool = params.zeroForOne ? pool0 : pool1;
+            cache.swapPool = params.zeroForOne ? pool1 : pool0;
+        }
+
+        try MintCall.getResizedTicks(
+            params,
+            cache,
+            tickMap,
+            params.zeroForOne ? pool0 : pool1,
+            params.zeroForOne ? pool1 : pool0,
+            params.zeroForOne ? ticks0 : ticks1,
+            params.zeroForOne ? ticks1 : ticks0,
+            params.zeroForOne ? positions0 : positions1
+        ) {
+        } catch (bytes memory data) {
+            (, lower, upper, positionCreated) = abi.decode(abi.encodePacked(bytes28(0), data),(bytes32,int24,int24,bool));
+        }
     }
 
     function burn(

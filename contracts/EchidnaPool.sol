@@ -88,22 +88,12 @@ contract EchidnaPool {
     function mint(uint128 amount, bool zeroForOne, int24 lower, int24 upper) public tickPreconditions(lower, upper) {
         // PRE CONDITIONS
         mintAndApprove();
-        require(amount > 1);
+        require(amount > 0);
         PoolValues memory poolValues;
         (poolValues.price0Before, poolValues.liquidity0Before, poolValues.liquidityGlobal0Before,,,,) = pool.pool0();
         (poolValues.price1Before, poolValues.liquidity1Before, poolValues.liquidityGlobal1Before,,,,) = pool.pool1();
         
-        LiquidityDeltaValues memory values;
-        if (zeroForOne) {
-            (,values.liquidityDeltaLowerBefore) = pool.ticks0(lower);
-            (,values.liquidityDeltaUpperBefore) = pool.ticks0(upper);
-        }
-        else {
-            (,values.liquidityDeltaLowerBefore) = pool.ticks1(lower);
-            (,values.liquidityDeltaUpperBefore) = pool.ticks1(upper);
-        }
         
-        // ACTION 
         ILimitPoolStructs.MintParams memory params;
         params.to = msg.sender;
         params.refundTo = msg.sender;
@@ -113,14 +103,28 @@ contract EchidnaPool {
         params.upper = upper;
         params.zeroForOne = zeroForOne;
 
+        // Get the ticks the position will be minted with rather than what was passed directly by fuzzer
+        // This is so the we can properly compare before and after mint states of particular ticks.
+        bool posCreated;
+        (lower, upper, posCreated) = pool.getResizedTicks(params);
+
+        LiquidityDeltaValues memory values;
+        if (zeroForOne) {
+            (,values.liquidityDeltaLowerBefore) = pool.ticks0(lower);
+            (,values.liquidityDeltaUpperBefore) = pool.ticks0(upper);
+        }
+        else {
+            (,values.liquidityDeltaLowerBefore) = pool.ticks1(lower);
+            (,values.liquidityDeltaUpperBefore) = pool.ticks1(upper);
+        }
+
+        // ACTION 
         pool.mint(params);
-        // TODO: Check whether position was created. A position may not be created after mint.
-        positions.push(Position(msg.sender, lower, upper, zeroForOne));
+        if (posCreated) positions.push(Position(msg.sender, lower, upper, zeroForOne));
 
         (poolValues.price0After, poolValues.liquidity0After, poolValues.liquidityGlobal0After,,,,) = pool.pool0();
         (poolValues.price1After, poolValues.liquidity1After, poolValues.liquidityGlobal1After,,,,) = pool.pool1();
 
-        // TODO: update lower and upper as they may not be the original ticks after resize
         if (zeroForOne) {
             (,values.liquidityDeltaLowerAfter) = pool.ticks0(lower);
             (,values.liquidityDeltaUpperAfter) = pool.ticks0(upper);
@@ -147,9 +151,9 @@ contract EchidnaPool {
                 assert(poolValues.liquidity0After > 0);
             }
 
-            // emit LiquidityDelta(values.liquidityDeltaLowerBefore, values.liquidityDeltaUpperBefore, values.liquidityDeltaLowerAfter, values.liquidityDeltaUpperAfter);
-            // assert(values.liquidityDeltaLowerAfter >= values.liquidityDeltaLowerBefore);
-            // assert(values.liquidityDeltaUpperAfter <= values.liquidityDeltaUpperBefore);
+            emit LiquidityDelta(values.liquidityDeltaLowerBefore, values.liquidityDeltaUpperBefore, values.liquidityDeltaLowerAfter, values.liquidityDeltaUpperAfter);
+            assert(values.liquidityDeltaLowerAfter >= values.liquidityDeltaLowerBefore);
+            assert(values.liquidityDeltaUpperAfter <= values.liquidityDeltaUpperBefore);
         }
         else {
             // Ensure liquidity does not decrease on mint
@@ -159,9 +163,12 @@ contract EchidnaPool {
                 assert(poolValues.liquidity1After > 0);
             }
 
-            // emit LiquidityDelta(values.liquidityDeltaLowerBefore, values.liquidityDeltaUpperBefore, values.liquidityDeltaLowerAfter, values.liquidityDeltaUpperAfter);
-            // assert(values.liquidityDeltaUpperAfter >= values.liquidityDeltaUpperBefore);
-            // assert(values.liquidityDeltaLowerAfter <= values.liquidityDeltaLowerBefore);
+            emit LiquidityDelta(values.liquidityDeltaLowerBefore, values.liquidityDeltaUpperBefore, values.liquidityDeltaLowerAfter, values.liquidityDeltaUpperAfter);
+            if (posCreated) {
+                assert(values.liquidityDeltaUpperAfter >= values.liquidityDeltaUpperBefore);
+                assert(values.liquidityDeltaLowerAfter <= values.liquidityDeltaLowerBefore);
+            }
+            
         }
     }
 
@@ -214,7 +221,7 @@ contract EchidnaPool {
         assert(price0 >= price1);
     }
 
-    function mintThenBurnZeroLiquidityChange(uint128 amount, bool zeroForOne, int24 lower, int24 upper) public tickPreconditions(lower, upper) {
+    function mintThenBurnZeroLiquidityChange(uint128 amount, bool zeroForOne, int24 lower, int24 upper) internal tickPreconditions(lower, upper) {
         // PRE CONDITIONS
         mintAndApprove();
         (uint160 price0Before,/*liquidity*/,uint128 liquidityGlobal0Before,,,,) = pool.pool0();

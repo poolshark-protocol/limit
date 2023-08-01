@@ -12,6 +12,8 @@ import './libraries/pool/QuoteCall.sol';
 import './libraries/pool/MintCall.sol';
 import './libraries/pool/BurnCall.sol';
 import './libraries/math/ConstantProduct.sol';
+import './libraries/solady/LibClone.sol';
+import './external/openzeppelin/security/ReentrancyGuard.sol';
 
 
 /// @notice Poolshark Cover Pool Implementation
@@ -19,7 +21,8 @@ contract LimitPool is
     ILimitPool,
     LimitPoolStorage,
     LimitPoolImmutables,
-    LimitPoolFactoryStructs
+    LimitPoolFactoryStructs,
+    ReentrancyGuard
 {
 
     modifier ownerOnly() {
@@ -27,25 +30,51 @@ contract LimitPool is
         _;
     }
 
-    modifier lock() {
-        _prelock();
+    modifier factoryOnly() {
+        _onlyFactory();
         _;
-        _postlock();
     }
 
-    constructor() {}
+    modifier canoncialOnly() {
+        _onlyCanoncialClones();
+        _;
+    }
+
+    address public immutable original;
+    address public immutable factory;
+
+    constructor(
+        address factory_
+    ) {
+        original = address(this);
+        factory = factory_;
+    }
 
     function initialize(
-        LimitPoolParams memory params
-    ) external override lock {
+        uint160 startPrice
+    ) external override 
+        nonReentrant
+        factoryOnly
+        canoncialOnly
+    {
         // initialize state
-        globalState = Ticks.initialize(tickMap, pool0, pool1, globalState, params);
+        globalState = Ticks.initialize(
+            tickMap,
+            pool0,
+            pool1,
+            globalState,
+            immutables(),
+            startPrice
+        );
     }
 
     // limitSwap
     function mint(
         MintParams memory params
-    ) external override lock {
+    ) external override
+        nonReentrant
+        canoncialOnly
+    {
         MintCache memory cache;
         {
             cache.state = globalState;
@@ -68,7 +97,10 @@ contract LimitPool is
 
     function burn(
         BurnParams memory params
-    ) external override lock {
+    ) external override 
+        nonReentrant
+        canoncialOnly
+    {
         if (params.to == address(0)) revert CollectToZeroAddress();
         BurnCache memory cache = BurnCache({
             state: globalState,
@@ -94,7 +126,10 @@ contract LimitPool is
 
     function swap(
         SwapParams memory params
-    ) public override lock returns (
+    ) public override
+        nonReentrant
+        canoncialOnly
+    returns (
         int256,
         int256
     ) 
@@ -115,7 +150,7 @@ contract LimitPool is
 
     function quote(
         QuoteParams memory params
-    ) external view override returns (
+    ) external view override canoncialOnly returns (
         uint256 inAmount,
         uint256 outAmount,
         uint256 priceAfter
@@ -134,7 +169,7 @@ contract LimitPool is
 
     function snapshot(
        SnapshotParams memory params 
-    ) external view override returns (
+    ) external view override canoncialOnly returns (
         Position memory
     ) {
         return Positions.snapshot(
@@ -160,7 +195,11 @@ contract LimitPool is
         uint16 protocolFee0,
         uint16 protocolFee1,
         bool setFees
-    ) external override ownerOnly returns (
+    ) external override
+        ownerOnly
+        nonReentrant
+        canoncialOnly 
+    returns (
         uint128 token0Fees,
         uint128 token1Fees
     ) {
@@ -181,11 +220,12 @@ contract LimitPool is
             SafeTransfers.transferOut(feeTo, token1(), token1Fees);
     }
 
-    function immutables() public pure returns (
+    function immutables() public view returns (
         Immutables memory
     ) {
         return Immutables(
             owner(),
+            factory,
             ConstantProduct.PriceBounds(minPrice(), maxPrice()),
             token0(),
             token1(),
@@ -193,16 +233,33 @@ contract LimitPool is
         );
     }
 
-    function _prelock() private {
-        if (globalState.unlocked == 2) revert Locked();
-        globalState.unlocked = 2;
-    }
-
-    function _postlock() private {
-        globalState.unlocked = 1;
-    }
-
     function _onlyOwner() private view {
         if (msg.sender != owner()) revert OwnerOnly();
+    }
+
+    function _onlyCanoncialClones() private view {
+        // compute pool key
+        bytes32 key = keccak256(abi.encode(original, token0(), token1(), tickSpacing()));
+        
+        // computer canonical pool address
+        address predictedAddress = LibClone.predictDeterministicAddress(
+            original,
+            abi.encodePacked(
+                owner(),
+                token0(),
+                token1(),
+                minPrice(),
+                maxPrice(),
+                tickSpacing()
+            ),
+            key,
+            factory
+        );
+        // only allow delegateCall from canonical clones
+        if (address(this) != predictedAddress) require(false, 'NoDelegateCall()');
+    }
+
+    function _onlyFactory() private view {
+        if (msg.sender != factory) revert FactoryOnly();
     }
 }

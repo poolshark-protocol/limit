@@ -5,6 +5,9 @@ import { gBefore } from '../utils/hooks.test'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { BigNumber } from 'ethers'
 
+const constantProductString =  ethers.utils.formatBytes32String('CONSTANT-PRODUCT')
+const constantSumString = ethers.utils.formatBytes32String('CONSTANT-SUM')
+
 alice: SignerWithAddress
 describe('LimitPoolFactory Tests', function () {
     let token0Amount: BigNumber
@@ -28,11 +31,22 @@ describe('LimitPoolFactory Tests', function () {
 
     this.beforeEach(async function () {})
 
+    it('Should not initialize pool from non-factory address', async function () {
+        await expect(
+            hre.props.limitPool
+                .connect(hre.props.admin)
+                .initialize(
+                    '396140812571321687967719751680'
+                )
+        ).to.be.revertedWith('FactoryOnly()')
+    })
+
     it('Should not create pool with identical token address', async function () {
         await expect(
             hre.props.limitPoolFactory
                 .connect(hre.props.admin)
                 .createLimitPool(
+                    constantProductString,
                     '0x0000000000000000000000000000000000000000',
                     '0x0000000000000000000000000000000000000000',
                     '10',
@@ -46,6 +60,7 @@ describe('LimitPoolFactory Tests', function () {
             hre.props.limitPoolFactory
                 .connect(hre.props.admin)
                 .createLimitPool(
+                    constantProductString,
                     '0x0000000000000000000000000000000000000000',
                     hre.props.token0.address,
                     '10',
@@ -57,6 +72,7 @@ describe('LimitPoolFactory Tests', function () {
             hre.props.limitPoolFactory
                 .connect(hre.props.admin)
                 .createLimitPool(
+                    constantProductString,
                     '0x0000000000000000000000000000000000000000',
                     hre.props.token0.address,
                     '10',
@@ -71,6 +87,7 @@ describe('LimitPoolFactory Tests', function () {
             hre.props.limitPoolFactory
                 .connect(hre.props.admin)
                 .createLimitPool(
+                    constantProductString,
                     hre.props.token1.address,
                     hre.props.token0.address,
                     '10',
@@ -84,11 +101,26 @@ describe('LimitPoolFactory Tests', function () {
             hre.props.limitPoolFactory
                 .connect(hre.props.admin)
                 .createLimitPool(
+                    constantProductString,
                     hre.props.token1.address,
                     hre.props.token0.address,
                     '5',
                     '396140812571321687967719751680'
                 )
         ).to.be.revertedWith('TickSpacingNotSupported()')
+    })
+
+    it('Should not create pool if the pool type is not valid', async function () {
+        await expect(
+            hre.props.limitPoolFactory
+                .connect(hre.props.admin)
+                .createLimitPool(
+                    constantSumString,
+                    hre.props.token1.address,
+                    hre.props.token0.address,
+                    '10',
+                    '396140812571321687967719751680'
+                )
+        ).to.be.revertedWith('PoolTypeNotSupported()')
     })
 })

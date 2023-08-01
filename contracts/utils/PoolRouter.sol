@@ -4,7 +4,7 @@ pragma solidity 0.8.13;
 import '../interfaces/IPool.sol';
 import '../interfaces/callbacks/IPoolsharkSwapCallback.sol';
 import '../libraries/utils/SafeTransfers.sol';
-import '../base/PoolsharkStructs.sol';
+import '../base/structs/PoolsharkStructs.sol';
 import '../libraries/solady/LibClone.sol';
 
 contract PoolRouter is
@@ -33,7 +33,15 @@ contract PoolRouter is
         bytes calldata data
     ) external override {
         PoolsharkStructs.Immutables memory constants = IPool(msg.sender).immutables();
-        bytes32 key = keccak256(abi.encode(constants.token0, constants.token1, constants.tickSpacing));
+        // generate key for pool
+        bytes32 key = keccak256(abi.encode(
+            implementation,
+            constants.token0,
+            constants.token1,
+            constants.tickSpacing
+        ));
+
+        // compute address
         address predictedAddress = LibClone.predictDeterministicAddress(
             implementation,
             abi.encodePacked(
@@ -47,9 +55,14 @@ contract PoolRouter is
             key,
             factory
         );
+
         // revert on sender mismatch
         if (msg.sender != predictedAddress) require(false, 'InvalidCallerAddress()');
+
+        // decode original sender
         SwapCallbackData memory _data = abi.decode(data, (SwapCallbackData));
+        
+        // transfer from swap caller
         if (amount0Delta < 0) {
             SafeTransfers.transferInto(constants.token0, _data.sender, uint256(-amount0Delta));
         } else {

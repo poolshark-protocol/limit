@@ -3,6 +3,10 @@ pragma solidity 0.8.13;
 
 abstract contract LimitPoolManagerEvents {
     event FactoryChanged(address indexed previousFactory, address indexed newFactory);
+    event ImplementationEnabled(
+        bytes32 key,
+        address implementation
+    );
     event TickSpacingEnabled(
         int16 tickSpacing
     );

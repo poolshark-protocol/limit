@@ -46,36 +46,37 @@ library Ticks {
         ILimitPoolStructs.PoolState storage pool0,
         ILimitPoolStructs.PoolState storage pool1,
         ILimitPoolStructs.GlobalState memory state,
-        LimitPoolFactoryStructs.LimitPoolParams memory params
+        ILimitPoolStructs.Immutables memory constants,
+        uint160 startPrice
     ) external returns (
         ILimitPoolStructs.GlobalState memory
     ) {
+        // state should only be initialized once
+        if (pool0.price > 0) require (false, 'PoolAlreadyInitialized()');
+
         // initialize epoch
         pool0.swapEpoch = 1;
         pool1.swapEpoch = 1;
 
         // check price bounds
-        ILimitPoolStructs.Immutables memory constants;
-        (constants.bounds.min, constants.bounds.max) = ConstantProduct.priceBounds(params.tickSpacing);
-        if (params.startPrice < constants.bounds.min || params.startPrice >= constants.bounds.max) require(false, 'StartPriceInvalid()');
+        if (startPrice < constants.bounds.min || startPrice >= constants.bounds.max) require(false, 'StartPriceInvalid()');
 
         // initialize ticks
-        TickMap.set(tickMap, ConstantProduct.minTick(params.tickSpacing), params.tickSpacing);
-        TickMap.set(tickMap, ConstantProduct.maxTick(params.tickSpacing), params.tickSpacing);
+        TickMap.set(tickMap, ConstantProduct.minTick(constants.tickSpacing), constants.tickSpacing);
+        TickMap.set(tickMap, ConstantProduct.maxTick(constants.tickSpacing), constants.tickSpacing);
 
         // initialize price
-        pool0.price = params.startPrice;
-        pool1.price = params.startPrice;
+        pool0.price = startPrice;
+        pool1.price = startPrice;
 
-        constants.tickSpacing = params.tickSpacing;
-        int24 startTick = ConstantProduct.getTickAtPrice(params.startPrice, constants);
+        int24 startTick = ConstantProduct.getTickAtPrice(startPrice, constants);
         pool0.tickAtPrice = startTick;
         pool1.tickAtPrice = startTick;
 
         // emit event
         emit Initialize(
-            ConstantProduct.minTick(params.tickSpacing),
-            ConstantProduct.maxTick(params.tickSpacing),
+            ConstantProduct.minTick(constants.tickSpacing),
+            ConstantProduct.maxTick(constants.tickSpacing),
             pool0.price
         );
 

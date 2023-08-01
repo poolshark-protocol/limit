@@ -29,6 +29,7 @@ contract EchidnaPool {
     event PassedBurn();
 
     LimitPoolFactory public factory;
+    address public implementation;
     LimitPool public pool;
     Token20 public tokenIn;
     Token20 public tokenOut;
@@ -77,7 +78,8 @@ contract EchidnaPool {
         _;
     }
     constructor() {
-        factory = new LimitPoolFactory(msg.sender);
+        implementation = address(new LimitPool());
+        factory = new LimitPoolFactory(msg.sender, implementation);
         tokenIn = new Token20("IN", "IN", 18);
         tokenOut = new Token20("OUT", "OUT", 18);
         pool =  LimitPool(factory.createLimitPool(address(tokenIn), address(tokenOut), 10, 79228162514264337593543950336));

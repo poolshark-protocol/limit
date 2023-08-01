@@ -4,8 +4,7 @@ pragma solidity 0.8.13;
 import '../base/PoolsharkStructs.sol';
 
 interface IPool is PoolsharkStructs {
-    function token0() external view returns (address);
-    function token1() external view returns (address);
+    function immutables() external view returns (Immutables memory);
     function swap(
         SwapParams memory params
     ) external returns (

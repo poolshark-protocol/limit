@@ -25,6 +25,7 @@ library BurnCall {
         mapping(address => mapping(int24 => mapping(int24 => ILimitPoolStructs.Position)))
             storage positions
     ) external returns (ILimitPoolStructs.BurnCache memory) {
+        if (params.lower >= params.upper) require (false, 'InvalidPositionBounds()');
         if (cache.position.epochLast == 0) require(false, 'PositionNotFound()');
         if (cache.position.claimPriceLast > 0
             || params.claim != (params.zeroForOne ? params.lower : params.upper)
@@ -35,6 +36,7 @@ library BurnCall {
             (
                 cache.state,
                 cache.pool,
+                cache.position,
                 params.claim
             ) = Positions.update(
                 positions,
@@ -55,7 +57,7 @@ library BurnCall {
             );
         } else {
             // position has not been crossed into
-            (, cache.pool) = Positions.remove(
+            (cache.pool, cache.position) = Positions.remove(
                 positions,
                 ticks,
                 tickMap,
@@ -72,11 +74,15 @@ library BurnCall {
                 cache.constants
             );
         }
-        Collect.burn(
+        cache = Collect.burn(
             cache,
-            positions,
             params
         );
+        if ((params.zeroForOne ? params.claim != params.upper
+                               : params.claim != params.lower))
+            params.zeroForOne
+                ? positions[msg.sender][params.claim][params.upper] = cache.position
+                : positions[msg.sender][params.lower][params.claim] = cache.position;
         return cache;
     }
 }

@@ -5,19 +5,25 @@ import '../interfaces/IPool.sol';
 import '../interfaces/callbacks/IPoolsharkSwapCallback.sol';
 import '../libraries/utils/SafeTransfers.sol';
 import '../base/PoolsharkStructs.sol';
+import '../libraries/solady/LibClone.sol';
 
 contract PoolRouter is
     IPoolsharkSwapCallback,
     PoolsharkStructs
 {
     address public immutable factory;
+    address public immutable implementation;
 
     struct SwapCallbackData {
         address sender;
     }
 
-    constructor(address _factory) {
-        factory = _factory;
+    constructor(
+        address factory_,
+        address implementation_
+    ) {
+        factory = factory_;
+        implementation = implementation_;
     }
 
     /// @inheritdoc IPoolsharkSwapCallback
@@ -26,13 +32,28 @@ contract PoolRouter is
         int256 amount1Delta,
         bytes calldata data
     ) external override {
-        address token0 = IPool(msg.sender).token0();
-        address token1 = IPool(msg.sender).token1();
+        PoolsharkStructs.Immutables memory constants = IPool(msg.sender).immutables();
+        bytes32 key = keccak256(abi.encode(constants.token0, constants.token1, constants.tickSpacing));
+        address predictedAddress = LibClone.predictDeterministicAddress(
+            implementation,
+            abi.encodePacked(
+                constants.owner,
+                constants.token0,
+                constants.token1,
+                constants.bounds.min,
+                constants.bounds.max,
+                constants.tickSpacing
+            ),
+            key,
+            factory
+        );
+        // revert on sender mismatch
+        if (msg.sender != predictedAddress) require(false, 'InvalidCallerAddress()');
         SwapCallbackData memory _data = abi.decode(data, (SwapCallbackData));
         if (amount0Delta < 0) {
-            SafeTransfers.transferInto(token0, _data.sender, uint256(-amount0Delta));
+            SafeTransfers.transferInto(constants.token0, _data.sender, uint256(-amount0Delta));
         } else {
-            SafeTransfers.transferInto(token1, _data.sender, uint256(-amount1Delta));
+            SafeTransfers.transferInto(constants.token1, _data.sender, uint256(-amount1Delta));
         }
     }
 

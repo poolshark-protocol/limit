@@ -69,11 +69,6 @@ library Claims {
                 if (pool.price >= cache.priceLower) {
                     cache.priceClaim = pool.price;
                     params.claim = TickMap.roundBack(pool.tickAtPrice, constants, params.zeroForOne, cache.priceClaim);
-                    // handles tickAtPrice not being crossed yet
-                    if (pool.tickAtPrice % constants.tickSpacing == 0 &&
-                        pool.price > ConstantProduct.getPriceAtTick(pool.tickAtPrice, constants)){
-                        params.claim += constants.tickSpacing;
-                    }
                     claimTickEpoch = pool.swapEpoch;
                 } else {
                     cache.priceClaim = cache.priceLower;
@@ -96,7 +91,7 @@ library Claims {
         } else if (params.amount > 0) {
             /// @dev - partway claim is valid as long as liquidity is not being removed
             int24 claimTickNext = params.zeroForOne
-                ? TickMap.next(tickMap, params.claim, constants.tickSpacing)
+                ? TickMap.next(tickMap, params.claim, constants.tickSpacing, false)
                 : TickMap.previous(tickMap, params.claim, constants.tickSpacing, false);
             // if we cleared the final tick of their position, this is the wrong claim tick
             if (params.zeroForOne ? claimTickNext > params.upper
@@ -130,10 +125,10 @@ library Claims {
 
         // early return if no update and amount burned is 0
         //TODO: after we've cycled through claim ticks and there are no position updates just revert - DONE
-        if (params.amount == 0 &&
-            (params.zeroForOne ? params.claim == params.lower
-                               : params.claim == params.upper)) {
-            require(false, 'NoPositionUpdates()');
+        if (params.zeroForOne ? params.claim == params.lower
+                              : params.claim == params.upper) {
+            if (params.amount == 0)
+                require(false, 'NoPositionUpdates()');
         }
 
         return (params, cache);
@@ -153,8 +148,10 @@ library Claims {
                                                               : cache.priceUpper;
         }
         ILimitPoolStructs.GetDeltasLocals memory locals;
+
         if (params.claim % constants.tickSpacing != 0)
-            locals.previousFullTick = TickMap.roundBack(params.claim, constants, params.zeroForOne, cache.priceClaim);
+        // this should pass price at the claim tick
+            locals.previousFullTick = TickMap.roundBack(params.claim, constants, params.zeroForOne, ConstantProduct.getPriceAtTick(params.claim, constants));
         else
             locals.previousFullTick = params.claim;
         locals.pricePrevious = ConstantProduct.getPriceAtTick(locals.previousFullTick, constants);
@@ -183,7 +180,7 @@ library Claims {
         }
         // take protocol fee if needed
         if (cache.pool.protocolFee > 0 && cache.position.amountIn > 0) {
-            uint128 protocolFeeAmount = cache.position.amountIn * cache.pool.protocolFee / 10000;
+            uint128 protocolFeeAmount = cache.position.amountIn * cache.pool.protocolFee / 1e6;
             cache.position.amountIn -= protocolFeeAmount;
             cache.pool.protocolFees += protocolFeeAmount;
         }

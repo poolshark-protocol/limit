@@ -1,12 +1,17 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.13;
 
-import './constant-product/DyDxMath.sol';
-import './constant-product/TickMath.sol';
+import './OverflowMath.sol';
+import '../../interfaces/ILimitPoolStructs.sol';
 
 /// @notice Math library that facilitates ranged liquidity calculations.
 library ConstantProduct {
     uint256 internal constant Q96 = 0x1000000000000000000000000;
+
+    struct PriceBounds {
+        uint160 min;
+        uint160 max;
+    }
 
     /////////////////////////////////////////////////////////////
     ///////////////////////// DYDX MATH /////////////////////////
@@ -206,8 +211,8 @@ library ConstantProduct {
         int16 tickSpacing
     ) internal pure
     {
-        if (lower < minTick(tickSpacing)) require (false, 'LowerTickOutOfBounds()');
-        if (upper > maxTick(tickSpacing)) require (false, 'UpperTickOutOfBounds()');
+        if (lower <= minTick(tickSpacing)) require (false, 'LowerTickOutOfBounds()');
+        if (upper >= maxTick(tickSpacing)) require (false, 'UpperTickOutOfBounds()');
         if (lower % tickSpacing != 0) require (false, 'LowerTickOutsideTickSpacing()');
         if (upper % tickSpacing != 0) require (false, 'UpperTickOutsideTickSpacing()');
         if (lower >= upper) require (false, 'LowerUpperTickOrderInvalid()');
@@ -215,7 +220,7 @@ library ConstantProduct {
 
     function checkPrice(
         uint160 price,
-        ITickMath.PriceBounds memory bounds
+        PriceBounds memory bounds
     ) internal pure {
         if (price < bounds.min || price >= bounds.max) require (false, 'PriceOutOfBounds()');
     }

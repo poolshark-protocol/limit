@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.13;
 
-import './modules/curves/ICurveMath.sol';
+import '../libraries/math/ConstantProduct.sol';
 import './modules/sources/ITwapSource.sol';
 
 interface ILimitPoolStructs {
@@ -39,8 +39,14 @@ interface ILimitPoolStructs {
         uint32  epochLast;  // last epoch this position was updated at
     }
 
+    struct PriceBounds {
+        uint160 min;
+        uint160 max;
+    }
+
     struct Immutables {
-        ICurveMath.PriceBounds bounds;
+        address owner;
+        ConstantProduct.PriceBounds bounds;
         address token0;
         address token1;
         int16 tickSpacing;

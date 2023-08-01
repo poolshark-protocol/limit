@@ -12,26 +12,49 @@ library TickMap {
     error TickIndexBadSpacing();
     error BlockIndexOverflow();
 
-    function init(
+    function get(
         ILimitPoolStructs.TickMap storage tickMap,
         int24 tick,
         int24 tickSpacing
-    ) internal returns (
+    ) internal view returns (
         bool exists
-    )    
-    {
-        return _set(tickMap, tick, tickSpacing);
+    ) {
+        (
+            uint256 tickIndex,
+            uint256 wordIndex,
+        ) = getIndices(tick, tickSpacing);
+
+        // check if bit is already set
+        uint256 word = tickMap.ticks[wordIndex] | 1 << (tickIndex & 0xFF);
+        if (word == tickMap.ticks[wordIndex]) {
+            return true;
+        }
+        return false;
     }
 
     function set(
         ILimitPoolStructs.TickMap storage tickMap,
         int24 tick,
-        int16 tickSpacing
+        int24 tickSpacing
     ) internal returns (
         bool exists
-    )    
-    {
-        return _set(tickMap, tick, tickSpacing);
+    ) {
+        (
+            uint256 tickIndex,
+            uint256 wordIndex,
+            uint256 blockIndex
+        ) = getIndices(tick, tickSpacing);
+
+        // check if bit is already set
+        uint256 word = tickMap.ticks[wordIndex] | 1 << (tickIndex & 0xFF);
+        if (word == tickMap.ticks[wordIndex]) {
+            return true;
+        }
+
+        tickMap.ticks[wordIndex]     = word; 
+        tickMap.words[blockIndex]   |= 1 << (wordIndex & 0xFF); // same as modulus 255
+        tickMap.blocks              |= 1 << blockIndex;
+        return false;
     }
 
     function unset(
@@ -58,16 +81,23 @@ library TickMap {
         ILimitPoolStructs.TickMap storage tickMap,
         int24 tick,
         int16 tickSpacing,
-        bool roundedUp
+        bool inclusive
     ) internal view returns (
         int24 previousTick
     ) {
         unchecked {
             // rounds up to ensure relative position
-            if ((tick % (tickSpacing / 2) != 0 || roundedUp)
-                 && tick < round(TickMath.MAX_TICK, tickSpacing)) tick += tickSpacing / 2;
-            // rounds up to ensure relative position
-            // if (tick % (tickSpacing / 2) != 0) tick += tickSpacing;
+            if (tick % (tickSpacing / 2) != 0 || inclusive) {
+                if (tick < (ConstantProduct.maxTick(tickSpacing) - tickSpacing / 2)) {
+                    /// @dev - ensures we cross when tick >= 0
+                    if (tick >= 0) {
+                        tick += tickSpacing / 2;
+                    } else if (inclusive && tick % (tickSpacing / 2) == 0) {
+                    /// @dev - ensures we cross when tick == tickAtPrice
+                        tick += tickSpacing / 2;
+                    }
+                }
+            }
             (
               uint256 tickIndex,
               uint256 wordIndex,
@@ -94,11 +124,22 @@ library TickMap {
     function next(
         ILimitPoolStructs.TickMap storage tickMap,
         int24 tick,
-        int16 tickSpacing
+        int16 tickSpacing,
+        bool inclusive
     ) internal view returns (
         int24 nextTick
     ) {
         unchecked {
+            /// @dev - handles tickAtPrice being past tickSpacing / 2
+            if (inclusive && tick % tickSpacing != 0) {
+                tick -= 1;
+            }
+            /// @dev - handles negative ticks rounding up
+            if (tick % (tickSpacing / 2) != 0) {
+                if (tick < 0)
+                    if (tick > (ConstantProduct.minTick(tickSpacing) + tickSpacing / 2))
+                        tick -= tickSpacing / 2;
+            }
             (
               uint256 tickIndex,
               uint256 wordIndex,
@@ -136,11 +177,11 @@ library TickMap {
         )
     {
         unchecked {
-            if (tick > TickMath.MAX_TICK) require(false, ' TickIndexOverflow()');
-            if (tick < TickMath.MIN_TICK) require(false, 'TickIndexUnderflow()');
+            if (tick > ConstantProduct.MAX_TICK) require(false, ' TickIndexOverflow()');
+            if (tick < ConstantProduct.MIN_TICK) require(false, 'TickIndexUnderflow()');
             if (tick % (tickSpacing / 2) != 0) tick = round(tick, tickSpacing / 2);
             tickIndex = uint256(int256((round(tick, tickSpacing / 2) 
-                                        - round(TickMath.MIN_TICK, tickSpacing / 2)) 
+                                        - round(ConstantProduct.MIN_TICK, tickSpacing / 2)) 
                                         / (tickSpacing / 2)));
             wordIndex = tickIndex >> 8;   // 2^8 ticks per word
             blockIndex = tickIndex >> 16; // 2^8 words per block
@@ -148,30 +189,7 @@ library TickMap {
         }
     }
 
-    function _set(
-        ILimitPoolStructs.TickMap storage tickMap,
-        int24 tick,
-        int24 tickSpacing
-    ) internal returns (
-        bool exists
-    ) {
-        (
-            uint256 tickIndex,
-            uint256 wordIndex,
-            uint256 blockIndex
-        ) = getIndices(tick, tickSpacing);
 
-        // check if bit is already set
-        uint256 word = tickMap.ticks[wordIndex] | 1 << (tickIndex & 0xFF);
-        if (word == tickMap.ticks[wordIndex]) {
-            return true;
-        }
-
-        tickMap.ticks[wordIndex]     = word; 
-        tickMap.words[blockIndex]   |= 1 << (wordIndex & 0xFF); // same as modulus 255
-        tickMap.blocks              |= 1 << blockIndex;
-        return false;
-    }
 
     function _tick (
         uint256 tickIndex,
@@ -180,9 +198,9 @@ library TickMap {
         int24 tick
     ) {
         unchecked {
-            if (tickIndex > uint24(round(TickMath.MAX_TICK, tickSpacing) * 2) * 2) 
+            if (tickIndex > uint24(round(ConstantProduct.MAX_TICK, tickSpacing) * 2) * 2) 
                 require(false, 'TickIndexOverflow()');
-            tick = int24(int256(tickIndex) * (tickSpacing / 2) + round(TickMath.MIN_TICK, tickSpacing / 2));
+            tick = int24(int256(tickIndex) * (tickSpacing / 2) + round(ConstantProduct.MIN_TICK, tickSpacing / 2));
         }
     }
 
@@ -281,6 +299,38 @@ library TickMap {
         return tick / tickSpacing * tickSpacing;
     }
 
+    function roundHalf(
+        int24 tick,
+        ILimitPoolStructs.Immutables memory constants,
+        uint256 price
+    ) internal pure returns (
+        int24 roundedTick,
+        uint160 roundedTickPrice
+    ) {
+        //pool.tickAtPrice -99.5
+        //pool.tickAtPrice -100
+        //-105
+        //-95
+        roundedTick = tick / constants.tickSpacing * constants.tickSpacing;
+        roundedTickPrice = ConstantProduct.getPriceAtTick(roundedTick, constants);
+        if (price == roundedTickPrice)
+            return (roundedTick, roundedTickPrice);
+        if (roundedTick > 0) {
+            roundedTick += constants.tickSpacing / 2;
+        } else if (roundedTick < 0) {
+            if (roundedTickPrice < price)
+                roundedTick += constants.tickSpacing / 2;
+            else
+                roundedTick -= constants.tickSpacing / 2;
+        } else {
+            if (price > roundedTickPrice) {
+                roundedTick += constants.tickSpacing / 2;
+            } else if (price < roundedTickPrice) {
+                roundedTick -= constants.tickSpacing / 2;
+            }
+        }
+    }
+
     function roundAhead(
         int24 tick,
         ILimitPoolStructs.Immutables memory constants,
@@ -290,16 +340,23 @@ library TickMap {
         int24 roundedTick
     ) {
         roundedTick = tick / constants.tickSpacing * constants.tickSpacing;
-        if (price == ConstantProduct.getPriceAtTick(roundedTick, constants))
+        uint160 roundedTickPrice = ConstantProduct.getPriceAtTick(roundedTick, constants);
+        if (price == roundedTickPrice)
             return roundedTick;
-
         if (zeroForOne) {
             // round up if positive
-            if (roundedTick > 0 || (roundedTick == 0 && tick > 0))
+            if (roundedTick > 0 || (roundedTick == 0 && tick >= 0))
                 roundedTick += constants.tickSpacing;
+            else if (tick % constants.tickSpacing == 0) {
+                // handle price at -99.5 and tickAtPrice == -100
+                if (tick < 0 && roundedTickPrice < price) {
+                    roundedTick += constants.tickSpacing;
+                }
+            }
         } else {
             // round down if negative
             if (roundedTick < 0 || (roundedTick == 0 && tick < 0))
+            /// @dev - strictly less due to TickMath always rounding to lesser values
                 roundedTick -= constants.tickSpacing;
         }
     }
@@ -313,7 +370,8 @@ library TickMap {
         int24 roundedTick
     ) {
         roundedTick = tick / constants.tickSpacing * constants.tickSpacing;
-        if (price == ConstantProduct.getPriceAtTick(roundedTick, constants))
+        uint160 roundedTickPrice = ConstantProduct.getPriceAtTick(roundedTick, constants);
+        if (price == roundedTickPrice)
             return roundedTick;
         if (zeroForOne) {
             // round down if negative
@@ -321,8 +379,14 @@ library TickMap {
                 roundedTick -= constants.tickSpacing;
         } else {
             // round up if positive
-            if (roundedTick > 0 || (roundedTick == 0 && tick > 0))
+            if (roundedTick > 0 || (roundedTick == 0 && tick >= 0))
                 roundedTick += constants.tickSpacing;
+            else if (tick % constants.tickSpacing == 0) {
+                // handle price at -99.5 and tickAtPrice == -100
+                if (tick < 0 && roundedTickPrice < price) {
+                    roundedTick += constants.tickSpacing;
+                }
+            }
         }
     }
 }

@@ -8,11 +8,11 @@ jobs:
             - run: yarn install
             - run: npx hardhat compile
             - run: npx hardhat test
-            # - run: npx hardhat coverage
-            # - uses: codecov/codecov-action@v3
-            #   with:
-            #       token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
-            #       # flags: contracttests # optional
-            #       name: range-contract-tests # optional
-            #       fail_ci_if_error: true # optional (default = false)
-            #       verbose: true # optional (default = false)
+            - run: npx hardhat coverage
+            - uses: codecov/codecov-action@v3
+              with:
+                  token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
+                  # flags: contracttests # optional
+                  name: limit-contract-tests # optional
+                  fail_ci_if_error: true # optional (default = false)
+                  verbose: true # optional (default = false)

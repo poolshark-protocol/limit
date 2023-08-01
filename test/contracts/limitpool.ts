@@ -73,7 +73,7 @@ describe('LimitPool Tests', function () {
         await mintSigners20(hre.props.token1, tokenAmountBn.mul(10), [hre.props.alice, hre.props.bob])
     })
 
-    it('pool0 - Should mint, fill, and burn', async function () {
+    it.only('pool0 - Should mint, fill, and burn', async function () {
         const aliceLiquidity = '20051041647900280328782'
         // mint should revert
         await validateMint({

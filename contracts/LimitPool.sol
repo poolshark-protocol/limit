@@ -195,7 +195,11 @@ contract LimitPool is
         uint16 protocolFee0,
         uint16 protocolFee1,
         bool setFees
-    ) external override ownerOnly canoncialOnly returns (
+    ) external override
+        ownerOnly
+        nonReentrant
+        canoncialOnly 
+    returns (
         uint128 token0Fees,
         uint128 token1Fees
     ) {

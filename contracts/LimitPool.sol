@@ -67,7 +67,7 @@ contract LimitPool is
         globalState = cache.state;
     }
 
-    function getResizedTicks(
+    function getResizedTicksForMint(
         MintParams memory params
     ) external returns (int24 lower, int24 upper, bool positionCreated){
         MintCache memory cache;
@@ -117,6 +117,31 @@ contract LimitPool is
             pool1 = cache.pool;
         }
         globalState = cache.state;
+    }
+
+    function getResizedTicksForBurn(
+        BurnParams memory params
+    ) external lock returns (int24 lower, int24 upper, bool positionExists){
+        if (params.to == address(0)) revert CollectToZeroAddress();
+        BurnCache memory cache = BurnCache({
+            state: globalState,
+            position: params.zeroForOne ? positions0[params.to][params.lower][params.upper]
+                                        : positions1[params.to][params.lower][params.upper],
+            constants: immutables(),
+            pool: params.zeroForOne ? pool0 : pool1
+        });
+
+        try BurnCall.getResizedTicks(
+           params, 
+            cache, 
+            tickMap,
+            params.zeroForOne ? ticks0 : ticks1,
+            params.zeroForOne ? positions0 : positions1
+        ) {
+        } catch (bytes memory data) {
+            (, lower, upper, positionExists) = abi.decode(abi.encodePacked(bytes28(0), data),(bytes32,int24,int24,bool));
+        }
+
     }
 
     function swap(

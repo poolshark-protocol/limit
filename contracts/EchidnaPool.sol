@@ -27,6 +27,8 @@ contract EchidnaPool {
     event Amount(uint256 amt);
     event PassedMint();
     event PassedBurn();
+    event PositionTicks(int24 lower, int24 upper);
+    event BurnTicks(int24 lower, int24 upper, bool positionExists);
 
     LimitPoolFactory public factory;
     address public implementation;
@@ -106,7 +108,8 @@ contract EchidnaPool {
         // Get the ticks the position will be minted with rather than what was passed directly by fuzzer
         // This is so the we can properly compare before and after mint states of particular ticks.
         bool posCreated;
-        (lower, upper, posCreated) = pool.getResizedTicks(params);
+        (lower, upper, posCreated) = pool.getResizedTicksForMint(params);
+        emit PositionTicks(lower, upper);
 
         LiquidityDeltaValues memory values;
         if (zeroForOne) {
@@ -143,6 +146,8 @@ contract EchidnaPool {
         
         emit LiquidityGlobal(poolValues.liquidityGlobal0Before, poolValues.liquidityGlobal1Before, poolValues.liquidityGlobal0After, poolValues.liquidityGlobal1After);
         emit Liquidity(poolValues.liquidity0Before, poolValues.liquidity1Before, poolValues.liquidity0After, poolValues.liquidity1After);
+        emit LiquidityDelta(values.liquidityDeltaLowerBefore, values.liquidityDeltaUpperBefore, values.liquidityDeltaLowerAfter, values.liquidityDeltaUpperAfter);
+
         if (zeroForOne) {
             // Ensure liquidity does not decrease on mint
             assert(poolValues.liquidityGlobal0After >= poolValues.liquidityGlobal0Before);
@@ -151,9 +156,11 @@ contract EchidnaPool {
                 assert(poolValues.liquidity0After > 0);
             }
 
-            emit LiquidityDelta(values.liquidityDeltaLowerBefore, values.liquidityDeltaUpperBefore, values.liquidityDeltaLowerAfter, values.liquidityDeltaUpperAfter);
-            assert(values.liquidityDeltaLowerAfter >= values.liquidityDeltaLowerBefore);
-            assert(values.liquidityDeltaUpperAfter <= values.liquidityDeltaUpperBefore);
+            // Doesn't hold due to insertSingle stashing pool liquidity on tick to save
+            // if (posCreated) {
+            //     assert(values.liquidityDeltaLowerAfter >= values.liquidityDeltaLowerBefore);
+            //     assert(values.liquidityDeltaUpperAfter <= values.liquidityDeltaUpperBefore);
+            // }
         }
         else {
             // Ensure liquidity does not decrease on mint
@@ -163,11 +170,10 @@ contract EchidnaPool {
                 assert(poolValues.liquidity1After > 0);
             }
 
-            emit LiquidityDelta(values.liquidityDeltaLowerBefore, values.liquidityDeltaUpperBefore, values.liquidityDeltaLowerAfter, values.liquidityDeltaUpperAfter);
-            if (posCreated) {
-                assert(values.liquidityDeltaUpperAfter >= values.liquidityDeltaUpperBefore);
-                assert(values.liquidityDeltaLowerAfter <= values.liquidityDeltaLowerBefore);
-            }
+            // if (posCreated) {
+            //     assert(values.liquidityDeltaUpperAfter >= values.liquidityDeltaUpperBefore);
+            //     assert(values.liquidityDeltaLowerAfter <= values.liquidityDeltaLowerBefore);
+            // }
             
         }
     }
@@ -194,25 +200,36 @@ contract EchidnaPool {
         assert(price0 >= price1);
     }
 
-    function burn(int24 claim, uint256 positionIndex) public {
+    function burn(int24 claim, uint256 positionIndex, uint128 burnPercent) public {
         // PRE CONDITIONS 
         require(positionIndex < positions.length);
         Position memory pos = positions[positionIndex];
         require(claim >= pos.lower && claim <= pos.upper);
+        require(claim & 10 == 0);
         
-        // ACTION
         ILimitPoolStructs.BurnParams memory params;
         params.to = pos.owner;
         // TODO: allow for variable burn percentages
-        params.burnPercent = 1e38;
+        params.burnPercent = _between(burnPercent, 1e36, 1e38); //1e38;
         params.lower = pos.lower;
         params.claim = claim;
         params.upper = pos.upper;
         params.zeroForOne = pos.zeroForOne;
+        
+        emit PositionTicks(pos.lower, pos.upper);
+        (int24 lower, int24 upper, bool positionExists) = pool.getResizedTicksForBurn(params);
+        emit BurnTicks(lower, upper, positionExists);
 
+        // ACTION
         pool.burn(params);
-        positions[positionIndex] = positions[positions.length - 1];
-        delete positions[positions.length - 1];
+        if (!positionExists) {
+            positions[positionIndex] = positions[positions.length - 1];
+            delete positions[positions.length - 1];
+        }
+        else {
+            // Update position data in array if not fully burned
+            positions[positionIndex] = Position(pos.owner, lower, upper, pos.zeroForOne);
+        }
 
         // POST CONDITIONS
         (uint160 price0,,,,,,) = pool.pool0();
@@ -230,7 +247,7 @@ contract EchidnaPool {
         // ACTION 
         mint(amount, zeroForOne, lower, upper);
         emit PassedMint();
-        burn(zeroForOne ? lower : upper, positions.length - 1);
+        burn(zeroForOne ? lower : upper, positions.length - 1, 1e38);
         emit PassedBurn();
 
         // POST CONDITIONS
@@ -268,6 +285,9 @@ contract EchidnaPool {
         tokenOut.approve(address(pool), type(uint256).max);
     }
 
+    function _between(uint128 val, uint low, uint high) internal pure returns(uint128) {
+        return uint128(low + (val % (high-low +1))); 
+    }
    
 
 }

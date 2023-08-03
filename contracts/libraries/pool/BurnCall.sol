@@ -48,7 +48,7 @@ library BurnCall {
                 cache.state,
                 cache.pool,
                 ILimitPoolStructs.UpdateParams(
-                    msg.sender,
+                    params.to,
                     params.to,
                     params.burnPercent,
                     params.lower,
@@ -66,7 +66,7 @@ library BurnCall {
                 tickMap,
                 cache.pool,
                 ILimitPoolStructs.UpdateParams(
-                    msg.sender,
+                    params.to,
                     params.to,
                     params.burnPercent,
                     params.lower,

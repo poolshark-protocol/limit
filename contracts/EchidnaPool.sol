@@ -87,10 +87,10 @@ contract EchidnaPool {
         factory = new LimitPoolFactory(address(manager));
         implementation = address(new LimitPool(address(factory)));
         manager.enableImplementation(bytes32(0x0), address(implementation));
-
+        tickSpacing = 10;
         tokenIn = new Token20("IN", "IN", 18);
         tokenOut = new Token20("OUT", "OUT", 18);
-        pool =  LimitPool(factory.createLimitPool(bytes32(0x0), address(tokenIn), address(tokenOut), 10, 79228162514264337593543950336));
+        pool =  LimitPool(factory.createLimitPool(bytes32(0x0), address(tokenIn), address(tokenOut), tickSpacing, 79228162514264337593543950336));
     }
 
     function mint(uint128 amount, bool zeroForOne, int24 lower, int24 upper) public tickPreconditions(lower, upper) {

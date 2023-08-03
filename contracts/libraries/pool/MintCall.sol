@@ -36,7 +36,6 @@ library MintCall {
     ) internal returns (ILimitPoolStructs.MintCache memory) {
         // bump swapPool in case user is trying to undercut
         // this avoids trimming positions unnecessarily
-        assert(false);
         if (cache.swapPool.liquidity == 0) {
             (cache, cache.swapPool) = Ticks.unlock(cache, cache.swapPool, swapTicks, tickMap, !params.zeroForOne);
         }

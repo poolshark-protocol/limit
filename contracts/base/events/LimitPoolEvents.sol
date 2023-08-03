@@ -5,7 +5,13 @@ abstract contract LimitPoolEvents {
     event Initialize(
         int24 minTick,
         int24 maxTick,
-        uint160 startPrice
+        uint160 startPrice,
+        int24 startTick
+    );
+
+    event Sync(
+        uint160 price,
+        uint128 liquidity
     );
 
     event MintLimit(
@@ -16,7 +22,9 @@ abstract contract LimitPoolEvents {
         uint32 epochLast,
         uint128 amountIn,
         uint128 amountFilled,
-        uint128 liquidityMinted
+        uint128 liquidityMinted,
+        uint128 poolLiquidity,
+        uint160 poolPrice
     );
 
     event BurnLimit(

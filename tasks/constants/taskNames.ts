@@ -7,8 +7,8 @@ export const COVERAGE_TEST_ARG = 'coverage'
 export const VERIFY_CONTRACTS = 'verify-contracts'
 
 /* Deploy */
-export const DEPLOY_COVERPOOLS = 'deploy-coverpools'
-export const DEPLOY_COVERPOOL  = 'deploy-pool'
+export const DEPLOY_LIMITPOOLS = 'deploy-limitpools'
+export const DEPLOY_LIMITPOOL  = 'deploy-pool'
 export const INCREASE_SAMPLES  = 'increase-samples'
 export const ADD_VOLATILITY_TIER = 'add-tier'
 

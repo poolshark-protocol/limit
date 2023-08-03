@@ -26,7 +26,8 @@ library Ticks {
     event Initialize(
         int24 minTick,
         int24 maxTick,
-        uint160 startPrice
+        uint160 startPrice,
+        int24 startTick
     );
 
     event Swap(
@@ -77,7 +78,8 @@ library Ticks {
         emit Initialize(
             ConstantProduct.minTick(constants.tickSpacing),
             ConstantProduct.maxTick(constants.tickSpacing),
-            pool0.price
+            pool0.price,
+            pool0.tickAtPrice
         );
 
         return state;

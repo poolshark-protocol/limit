@@ -1,7 +1,7 @@
 import { SUPPORTED_NETWORKS } from './scripts/constants/supportedNetworks'
 import {
-    DEPLOY_COVERPOOL,
-    DEPLOY_COVERPOOLS,
+    DEPLOY_LIMITPOOL,
+    DEPLOY_LIMITPOOLS,
     INCREASE_SAMPLES,
     MINT_POSITION,
     MINT_TOKENS,
@@ -19,12 +19,12 @@ function handleLimitPoolTasks() {
     //     hre.masterNetwork = MASTER_NETWORKS[network];
     //     break;
     // }
-    if (process.argv.includes(DEPLOY_COVERPOOLS)) {
-        import('./tasks/deploy/deploy-coverpools')
-        logTask(DEPLOY_COVERPOOLS)
-    } else if (process.argv.includes(DEPLOY_COVERPOOL)) {
-        import('./tasks/deploy/deploy-coverpool')
-        logTask(DEPLOY_COVERPOOL)
+    if (process.argv.includes(DEPLOY_LIMITPOOLS)) {
+        import('./tasks/deploy/deploy-limitpools')
+        logTask(DEPLOY_LIMITPOOLS)
+    } else if (process.argv.includes(DEPLOY_LIMITPOOL)) {
+        import('./tasks/deploy/deploy-limitpool')
+        logTask(DEPLOY_LIMITPOOL)
     } else if (process.argv.includes(INCREASE_SAMPLES)) {
         import('./tasks/deploy/increase-samples')
         logTask(INCREASE_SAMPLES)

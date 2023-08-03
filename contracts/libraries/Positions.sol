@@ -377,6 +377,8 @@ library Positions {
         if (params.zeroForOne ? params.claim == params.upper
                               : params.claim == params.lower) {
             pool.liquidityGlobal -= cache.position.liquidity;
+            // set params.amount for BurnLimit event
+            params.amount = cache.position.liquidity;
             cache.position.liquidity = 0;
         }
         // clear out old position

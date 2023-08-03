@@ -1,5 +1,5 @@
 import { BigNumber } from 'ethers'
-import { BN_ZERO, getLatestTick, getLiquidity, getPrice, validateBurn, validateMint, validateSwap, validateSync } from '../../../test/utils/contracts/limitpool'
+import { BN_ZERO, getLiquidity, getPrice, validateBurn, validateMint, validateSwap, } from '../../../test/utils/contracts/limitpool'
 import { InitialSetup } from '../../../test/utils/setup/initialSetup'
 import { mintSigners20 } from '../../../test/utils/token'
 import { getNonce } from '../../utils'
@@ -33,26 +33,24 @@ export class MintPosition {
         await mintSigners20(hre.props.token0, token0Amount.mul(10), [hre.props.alice])
         await mintSigners20(hre.props.token1, token1Amount.mul(10), [hre.props.alice])
 
-        const liquidityAmount = BigNumber.from('199760153929825488153727')
-
-        await getLatestTick(true)
+        const liquidityAmount = '199760153929825488153727'
 
         // await getPrice(true)
     // 0x34e800D1456d87A5F62B774AD98cea54a3A40048
     // 0x1DcF623EDf118E4B21b4C5Dc263bb735E170F9B8
-        // await validateMint({
-        //     signer: hre.props.alice,
-        //     recipient: hre.props.alice.address,
-        //     lower: '60',
-        //     upper: '100',
-        //     amount: token1Amount,
-        //     zeroForOne: false,
-        //     balanceInDecrease: token1Amount,
-        //     liquidityIncrease: liquidityAmount,
-        //     upperTickCleared: false,
-        //     lowerTickCleared: false,
-        //     revertMessage: '',
-        // })
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '60',
+            upper: '100',
+            amount: token1Amount,
+            zeroForOne: false,
+            balanceInDecrease: token1Amount,
+            liquidityIncrease: liquidityAmount,
+            upperTickCleared: false,
+            lowerTickCleared: true,
+            revertMessage: '',
+        })
 
         //         await validateSwap({
         // signer: hre.props.alice,
@@ -65,25 +63,24 @@ export class MintPosition {
         // revertMessage:''
         // })
 
-        await validateBurn({
-            signer: hre.props.alice,
-            lower: '60',
-            claim: '60',
-            upper: '100',
-            liquidityPercent: ethers.utils.parseUnits('1', 38),
-            zeroForOne: false,
-            balanceInIncrease: BN_ZERO,
-            balanceOutIncrease: token1Amount.sub(1),
-            lowerTickCleared: false,
-            upperTickCleared: false,
-            revertMessage: '',
-        })
+        // await validateBurn({
+        //     signer: hre.props.alice,
+        //     lower: '60',
+        //     claim: '60',
+        //     upper: '100',
+        //     liquidityPercent: ethers.utils.parseUnits('1', 38),
+        //     zeroForOne: false,
+        //     balanceInIncrease: BN_ZERO,
+        //     balanceOutIncrease: token1Amount.sub(1),
+        //     lowerTickCleared: false,
+        //     upperTickCleared: false,
+        //     revertMessage: '',
+        // })
 
         // await validateSync(60)
 
         await getPrice(false, true)
         await getLiquidity(false, true)
-        await getLatestTick(true)
 
         console.log('position minted')
     }

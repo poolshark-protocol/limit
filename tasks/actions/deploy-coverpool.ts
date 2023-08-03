@@ -1,6 +1,6 @@
 import { task } from 'hardhat/config'
 import { GetBeforeEach } from '../../test/utils/setup/beforeEachProps'
-import { DEPLOY_COVERPOOL } from '../constants/taskNames'
+import { DEPLOY_LIMITPOOL } from '../constants/taskNames'
 import { DeployLimitPool } from '../deploy/utils/deployLimitPool'
 
 class DeployLimitPoolTask {
@@ -14,7 +14,7 @@ class DeployLimitPoolTask {
     }
 }
 
-task(DEPLOY_COVERPOOL)
+task(DEPLOY_LIMITPOOL)
     .setDescription('Deploys Cover Pool')
     .setAction(async function ({ ethers }) {
         const deployLimitPool: DeployLimitPoolTask = new DeployLimitPoolTask()
@@ -27,5 +27,5 @@ task(DEPLOY_COVERPOOL)
 
         await deployLimitPool.deployLimitPool.postDeployment()
 
-        console.log('Cover pool deployment complete.\n')
+        console.log('Li pool deployment complete.\n')
     })

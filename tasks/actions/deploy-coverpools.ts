@@ -1,6 +1,6 @@
 import { task } from 'hardhat/config'
 import { GetBeforeEach } from '../../test/utils/setup/beforeEachProps'
-import { DEPLOY_COVERPOOLS } from '../constants/taskNames'
+import { DEPLOY_LIMITPOOLS } from '../constants/taskNames'
 import { DeployLimitPools } from '../deploy/utils/deployLimitPools'
 
 class DeployLimitPoolsTask {
@@ -14,7 +14,7 @@ class DeployLimitPoolsTask {
     }
 }
 
-task(DEPLOY_COVERPOOLS)
+task(DEPLOY_LIMITPOOLS)
     .setDescription('Deploys Hedge Pools')
     .setAction(async function ({ ethers }) {
         const deployLimitPools: DeployLimitPoolsTask = new DeployLimitPoolsTask()

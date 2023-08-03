@@ -17,6 +17,11 @@ library MintCall {
         uint128 liquidityMinted
     );
 
+    event Sync(
+        uint160 price,
+        uint128 liquidity
+    );
+
     function perform(
         ILimitPoolStructs.MintParams memory params,
         ILimitPoolStructs.MintCache memory cache,
@@ -89,6 +94,7 @@ library MintCall {
                     // set epoch on start tick to signify position being crossed into
                     /// @auditor - this is safe assuming we have swapped at least this far on the other side
                     EpochMap.set(params.lower, cache.pool.swapEpoch, tickMap, cache.constants);
+                    emit Sync(cache.pool.price, cache.pool.liquidity);
                 }
             } else {
                 uint160 priceUpper = ConstantProduct.getPriceAtTick(params.upper, cache.constants);
@@ -104,6 +110,7 @@ library MintCall {
                     // set epoch on start tick to signify position being crossed into
                     /// @auditor - this is safe assuming we have swapped at least this far on the other side
                     EpochMap.set(params.upper, cache.pool.swapEpoch, tickMap, cache.constants);
+                    emit Sync(cache.pool.price, cache.pool.liquidity);
                 }
             }
             // save lp side for safe reentrancy

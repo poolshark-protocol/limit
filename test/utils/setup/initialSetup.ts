@@ -18,7 +18,6 @@ import {
 
 // import {abi as factoryAbi} from '../../../artifacts/contracts/LimitPoolFactory.sol/LimitPoolFactory.json'
 // import { keccak256 } from 'ethers/lib/utils'
-const constantProductString =  ethers.utils.formatBytes32String('CONSTANT-PRODUCT')
 
 export class InitialSetup {
     private token0Decimals = 18
@@ -26,11 +25,13 @@ export class InitialSetup {
     private deployAssist: DeployAssist
     private contractDeploymentsJson: ContractDeploymentsJson
     private contractDeploymentsKeys: ContractDeploymentsKeys
+    private constantProductString: string
 
     constructor() {
         this.deployAssist = new DeployAssist()
         this.contractDeploymentsJson = new ContractDeploymentsJson()
         this.contractDeploymentsKeys = new ContractDeploymentsKeys()
+        this.constantProductString = ethers.utils.formatBytes32String('CONSTANT-PRODUCT')
     }
 
     public async initialLimitPoolSetup(): Promise<number> {
@@ -203,7 +204,7 @@ export class InitialSetup {
         )
 
         const enableImplTxn = await hre.props.limitPoolManager.enableImplementation(
-            constantProductString,
+            this.constantProductString,
             hre.props.limitPoolImpl.address
         )
         await enableImplTxn.wait();
@@ -230,7 +231,7 @@ export class InitialSetup {
 
         // create first limit pool
         let createPoolTxn = await hre.props.limitPoolFactory.createLimitPool(
-            constantProductString,
+            this.constantProductString,
             hre.props.token0.address,
             hre.props.token1.address,
             '10',
@@ -241,7 +242,7 @@ export class InitialSetup {
         hre.nonce += 1
 
         let limitPoolAddress = await hre.props.limitPoolFactory.getLimitPool(
-            constantProductString,
+            this.constantProductString,
             hre.props.token0.address,
             hre.props.token1.address,
             '10'
@@ -254,7 +255,7 @@ export class InitialSetup {
             'limitPool',
             hre.props.limitPool,
             [
-                constantProductString,
+                this.constantProductString,
                 hre.props.token0.address,
                 hre.props.token1.address,
                 '10'
@@ -293,16 +294,6 @@ export class InitialSetup {
             )
         ).contractAddress
 
-        const uniswapV3PoolMockAddress = (
-            await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
-                {
-                    networkName: hre.network.name,
-                    objectName: 'uniswapV3PoolMock',
-                },
-                'readLimitPoolSetup'
-            )
-        ).contractAddress
-
         const limitPoolFactoryAddress = (
             await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
                 {
@@ -326,7 +317,7 @@ export class InitialSetup {
         await hre.props.limitPoolFactory
           .connect(hre.props.admin)
           .createLimitPool(
-            constantProductString,
+            this.constantProductString,
             hre.props.token0.address,
             hre.props.token1.address,
             '10',

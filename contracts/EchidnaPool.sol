@@ -29,6 +29,8 @@ contract EchidnaPool {
     event PassedBurn();
     event PositionTicks(int24 lower, int24 upper);
     event BurnTicks(int24 lower, int24 upper, bool positionExists);
+    event LiquidityMinted(uint256 amount, uint256 tokenAmount, bool zeroForOne);
+    event PositionCreated(bool isCreated);
 
     LimitPoolFactory public factory;
     address public implementation;
@@ -36,6 +38,7 @@ contract EchidnaPool {
     Token20 public tokenIn;
     Token20 public tokenOut;
     Position[] public positions;
+    int16 tickSpacing;
 
     struct LiquidityDeltaValues {
         int128 liquidityDeltaLowerBefore;
@@ -75,8 +78,8 @@ contract EchidnaPool {
         require(lower < upper);
         require(upper < 887272);
         require(lower > -887272);
-        require(lower % 10 == 0);
-        require(upper % 10 == 0);
+        require(lower % tickSpacing == 0);
+        require(upper % tickSpacing == 0);
         _;
     }
     constructor() {
@@ -84,7 +87,8 @@ contract EchidnaPool {
         factory = new LimitPoolFactory(msg.sender, implementation);
         tokenIn = new Token20("IN", "IN", 18);
         tokenOut = new Token20("OUT", "OUT", 18);
-        pool =  LimitPool(factory.createLimitPool(address(tokenIn), address(tokenOut), 10, 79228162514264337593543950336));
+        tickSpacing = 10;
+        pool =  LimitPool(factory.createLimitPool(address(tokenIn), address(tokenOut), tickSpacing, 79228162514264337593543950336));
     }
 
     function mint(uint128 amount, bool zeroForOne, int24 lower, int24 upper) public tickPreconditions(lower, upper) {
@@ -110,6 +114,7 @@ contract EchidnaPool {
         bool posCreated;
         (lower, upper, posCreated) = pool.getResizedTicksForMint(params);
         emit PositionTicks(lower, upper);
+        emit PositionCreated(posCreated);
 
         LiquidityDeltaValues memory values;
         if (zeroForOne) {
@@ -143,6 +148,13 @@ contract EchidnaPool {
 
         // Ensure prices have not crossed
         assert(poolValues.price0After >= poolValues.price1After);
+        if (posCreated) {
+            // Ensure positions ticks arent crossed
+            assert(lower < upper);
+            // Ensure minted ticks on proper tick spacing
+            assert((lower % tickSpacing == 0) && (upper % tickSpacing == 0));
+        }
+        
         
         emit LiquidityGlobal(poolValues.liquidityGlobal0Before, poolValues.liquidityGlobal1Before, poolValues.liquidityGlobal0After, poolValues.liquidityGlobal1After);
         emit Liquidity(poolValues.liquidity0Before, poolValues.liquidity1Before, poolValues.liquidity0After, poolValues.liquidity1After);
@@ -205,12 +217,12 @@ contract EchidnaPool {
         require(positionIndex < positions.length);
         Position memory pos = positions[positionIndex];
         require(claim >= pos.lower && claim <= pos.upper);
-        require(claim & 10 == 0);
+        require(claim % tickSpacing == 0);
         
         ILimitPoolStructs.BurnParams memory params;
         params.to = pos.owner;
         // TODO: allow for variable burn percentages
-        params.burnPercent = _between(burnPercent, 1e36, 1e38); //1e38;
+        params.burnPercent = burnPercent == 1e38 ? burnPercent : _between(burnPercent, 1e36, 1e38); //1e38;
         params.lower = pos.lower;
         params.claim = claim;
         params.upper = pos.upper;
@@ -229,6 +241,10 @@ contract EchidnaPool {
         else {
             // Update position data in array if not fully burned
             positions[positionIndex] = Position(pos.owner, lower, upper, pos.zeroForOne);
+            // Ensure positions ticks arent crossed
+            assert(lower < upper);
+            // Ensure minted ticks on proper tick spacing
+            assert((lower % tickSpacing == 0) && (upper % tickSpacing == 0));
         }
 
         // POST CONDITIONS
@@ -238,7 +254,7 @@ contract EchidnaPool {
         assert(price0 >= price1);
     }
 
-    function mintThenBurnZeroLiquidityChange(uint128 amount, bool zeroForOne, int24 lower, int24 upper) internal tickPreconditions(lower, upper) {
+    function mintThenBurnZeroLiquidityChange(uint128 amount, bool zeroForOne, int24 lower, int24 upper) public tickPreconditions(lower, upper) {
         // PRE CONDITIONS
         mintAndApprove();
         (uint160 price0Before,/*liquidity*/,uint128 liquidityGlobal0Before,,,,) = pool.pool0();
@@ -288,6 +304,47 @@ contract EchidnaPool {
     function _between(uint128 val, uint low, uint high) internal pure returns(uint128) {
         return uint128(low + (val % (high-low +1))); 
     }
+
+    function liquidityMintedBackcalculates(uint128 amount, bool zeroForOne, int24 lower, int24 upper) tickPreconditions(lower, upper) public {
+        require(amount > 1e5);
+        ILimitPoolStructs.Immutables memory immutables = pool.immutables();
+        uint256 priceLower = ConstantProduct.getPriceAtTick(lower, immutables);
+        uint256 priceUpper = ConstantProduct.getPriceAtTick(upper, immutables);
+
+        uint256 liquidityMinted = ConstantProduct.getLiquidityForAmounts(
+            priceLower,
+            priceUpper,
+            zeroForOne ? priceLower : priceUpper,
+            zeroForOne ? 0 : uint256(amount),
+            zeroForOne ? uint256(amount) : 0
+        );
+
+        (uint256 token0Amount, uint256 token1Amount) = ConstantProduct.getAmountsForLiquidity(
+            priceLower,
+            priceUpper,
+            zeroForOne ? priceLower : priceUpper,
+            liquidityMinted,
+            true
+        );
+
+        if(zeroForOne) {
+            emit LiquidityMinted(amount, token0Amount, zeroForOne);
+            assert(isEqualWithinPercentage(amount, token0Amount, 100));
+            
+        }
+        else {
+            emit LiquidityMinted(amount, token1Amount, zeroForOne);
+            assert(isEqualWithinPercentage(amount, token1Amount, 100));
+        }
+
+    }
+
+    function isEqualWithinPercentage(uint256 a, uint256 b, uint256 percentage) internal pure returns (bool) {
+        uint256 diff = a > b ? a - b : b - a;
+        uint256 maxDiff = a * percentage / 10000; // basis points 
+
+        return diff <= maxDiff;
+}
    
 
 }

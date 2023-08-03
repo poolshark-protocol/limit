@@ -22,6 +22,8 @@ contract LimitPool is
     LimitPoolFactoryStructs
 {
     event SimulateMint(bytes b);
+    event SimulateMint(bytes4 b);
+    event SimulateMint(bool b);
 
     modifier ownerOnly() {
         _onlyOwner();
@@ -89,7 +91,21 @@ contract LimitPool is
             params.zeroForOne ? positions0 : positions1
         ) {
         } catch (bytes memory data) {
-            (, lower, upper, positionCreated) = abi.decode(abi.encodePacked(bytes28(0), data),(bytes32,int24,int24,bool));
+            emit SimulateMint(data);
+            bytes4 sig;
+            assembly {
+                sig := mload(add(data, 0x20))
+            }
+            
+            // SimulateMint error
+            if (sig == hex"5cc1f67b") {
+                (, lower, upper, positionCreated) = abi.decode(abi.encodePacked(bytes28(0), data),(bytes32,int24,int24,bool));
+            }
+            else {
+                lower = -8388608;
+                upper = -8388608;
+                positionCreated = false;
+            }
         }
     }
 
@@ -139,7 +155,21 @@ contract LimitPool is
             params.zeroForOne ? positions0 : positions1
         ) {
         } catch (bytes memory data) {
-            (, lower, upper, positionExists) = abi.decode(abi.encodePacked(bytes28(0), data),(bytes32,int24,int24,bool));
+            bytes4 sig;
+            assembly {
+                sig := mload(add(data, 0x20))
+            }
+            // SimulateBurn error
+            if (sig == hex"97dd6e0a") {
+                (, lower, upper, positionExists) = abi.decode(abi.encodePacked(bytes28(0), data),(bytes32,int24,int24,bool));
+            }
+             else {
+                lower = -8388608;
+                upper = -8388608;
+                positionExists = false;
+            }
+
+            
         }
 
     }

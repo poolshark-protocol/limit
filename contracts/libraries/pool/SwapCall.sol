@@ -44,6 +44,10 @@ library SwapCall {
             cache.pool
         );
         save(cache.pool, poolState);
+        EchidnaAssertions.assertPoolBalanceExceeded(
+            (params.zeroForOne ? balance(cache.constants.token1) : balance(cache.constants.token0)), 
+            cache.output
+        );
         // transfer output amount
         SafeTransfers.transferOut(
             params.to, 
@@ -98,6 +102,22 @@ library SwapCall {
         ) = (params.zeroForOne ? cache.constants.token0
                                : cache.constants.token1)
                                .staticcall(
+                                    abi.encodeWithSelector(
+                                        IERC20Minimal.balanceOf.selector,
+                                        address(this)
+                                    )
+                                );
+        require(success && data.length >= 32);
+        return abi.decode(data, (uint256));
+    }
+
+    function balance(
+        address token
+    ) private view returns (uint256) {
+        (
+            bool success,
+            bytes memory data
+        ) = token.staticcall(
                                     abi.encodeWithSelector(
                                         IERC20Minimal.balanceOf.selector,
                                         address(this)

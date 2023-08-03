@@ -11,6 +11,7 @@ import './math/OverflowMath.sol';
 import './TickMap.sol';
 import './EpochMap.sol';
 import './utils/SafeCast.sol';
+import './EchidnaAssertions.sol';
 
 /// @notice Tick management library
 library Ticks {
@@ -359,6 +360,7 @@ library Ticks {
         }
 
         // increment pool liquidity
+        EchidnaAssertions.assertPositiveLiquidityOnUnlock(ticks[pool.tickAtPrice].liquidityDelta);
         pool.liquidity += uint128(ticks[pool.tickAtPrice].liquidityDelta);
         int24 tickToClear = pool.tickAtPrice;
         uint160 tickPriceAt = ticks[pool.tickAtPrice].priceAt;
@@ -393,7 +395,10 @@ library Ticks {
         int128 liquidityDelta = ticks[cache.crossTick].liquidityDelta;
 
         if (liquidityDelta > 0) cache.liquidity += uint128(liquidityDelta);
-        else cache.liquidity -= uint128(-liquidityDelta);
+        else {
+            EchidnaAssertions.assertLiquidityUnderflows(uint128(cache.liquidity), uint128(-liquidityDelta), "TK-1");
+            cache.liquidity -= uint128(-liquidityDelta);
+        }
         pool.tickAtPrice = cache.crossTick;
 
         // zero out liquidityDelta and priceAt

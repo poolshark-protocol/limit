@@ -4,6 +4,9 @@ pragma solidity 0.8.13;
 import '../../interfaces/ILimitPoolStructs.sol';
 import '../Positions.sol';
 import '../utils/Collect.sol';
+import '../EchidnaAssertions.sol';
+import '../../interfaces/IERC20Minimal.sol';
+
 
 library MintCall {
 
@@ -54,6 +57,11 @@ library MintCall {
                                                    : cache.constants.token1,
                                  params.amount + cache.swapCache.input
                                 );
+        // uint256 poolBalanceOut = params.zeroForOne ? balance(cache.constants.token1) : balance(cache.constants.token0);
+        EchidnaAssertions.assertPoolBalanceExceeded(
+            (params.zeroForOne ? balance(cache.constants.token1) : balance(cache.constants.token0)), 
+            cache.swapCache.output
+        );
         // if swap output
         if (cache.swapCache.output > 0)
             SafeTransfers.transferOut(
@@ -252,5 +260,21 @@ library MintCall {
         }
     
         revert SimulateMint(params.lower, params.upper, positionCreated);
+    }
+
+    function balance(
+        address token
+    ) private view returns (uint256) {
+        (
+            bool success,
+            bytes memory data
+        ) = token.staticcall(
+                                    abi.encodeWithSelector(
+                                        IERC20Minimal.balanceOf.selector,
+                                        address(this)
+                                    )
+                                );
+        require(success && data.length >= 32);
+        return abi.decode(data, (uint256));
     }
 }

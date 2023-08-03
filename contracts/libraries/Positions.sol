@@ -10,6 +10,7 @@ import './Claims.sol';
 import './EpochMap.sol';
 import './utils/SafeCast.sol';
 import './pool/SwapCall.sol';
+import './EchidnaAssertions.sol';
 
 /// @notice Position management library for ranged liquidity.
 library Positions {
@@ -238,6 +239,7 @@ library Positions {
                     require (false, 'WrongTickClaimedAt7()');            
                 }
                 if (pool.price == cache.priceLower) {
+                    EchidnaAssertions.assertLiquidityUnderflows(pool.liquidity, params.amount, "PLU-1");
                     pool.liquidity -= params.amount;
                 }
             }
@@ -253,6 +255,7 @@ library Positions {
                     require (false, 'WrongTickClaimedAt8()');            
                 }
                 if (pool.price == cache.priceUpper) {
+                    EchidnaAssertions.assertLiquidityUnderflows(pool.liquidity, params.amount, "PLU-2");
                     pool.liquidity -= params.amount;
                 }
             }
@@ -267,6 +270,7 @@ library Positions {
         );
 
         // update liquidity global
+        EchidnaAssertions.assertLiquidityGlobalUnderflows(pool.liquidityGlobal, params.amount, "LGU-1");
         pool.liquidityGlobal -= params.amount;
 
         cache.position.amountOut += uint128(
@@ -331,8 +335,10 @@ library Positions {
         if (cache.priceClaim == pool.price && params.amount > 0) {
             // handle pool.price at edge of range
             if (params.zeroForOne ? cache.priceClaim < cache.priceUpper
-                                  : cache.priceClaim > cache.priceLower)
+                                  : cache.priceClaim > cache.priceLower) {
+                EchidnaAssertions.assertLiquidityUnderflows(pool.liquidity, params.amount, "PLU-3");
                 pool.liquidity -= params.amount;
+            }
         }
 
 
@@ -372,10 +378,12 @@ library Positions {
             // update position liquidity
             cache.position.liquidity -= uint128(params.amount);
             // update global liquidity
+            EchidnaAssertions.assertLiquidityGlobalUnderflows(pool.liquidityGlobal, params.amount, "LGU-2");
             pool.liquidityGlobal -= params.amount;
         }
         if (params.zeroForOne ? params.claim == params.upper
                               : params.claim == params.lower) {
+            EchidnaAssertions.assertLiquidityGlobalUnderflows(pool.liquidityGlobal, cache.position.liquidity, "LGU-3");
             pool.liquidityGlobal -= cache.position.liquidity;
             cache.position.liquidity = 0;
         }
@@ -387,6 +395,7 @@ library Positions {
             if (params.zeroForOne ? params.claim == params.lower 
                                   : params.claim == params.upper) {
                 // subtract remaining position liquidity out from global
+                EchidnaAssertions.assertLiquidityGlobalUnderflows(pool.liquidityGlobal, cache.position.liquidity, "LGU-4");
                 pool.liquidityGlobal -= cache.position.liquidity;
             }
             delete positions[msg.sender][params.lower][params.upper];

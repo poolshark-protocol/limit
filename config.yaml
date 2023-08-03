@@ -1,6 +1,6 @@
 testMode: assertion
 corpusDir: corpus
 codeSize: 50000
-testLimit: 500000
+testLimit: 10000000
 deployContracts: [["0x1f", "MintCall"], ["0x2f", "BurnCall"]]
 cryticArgs: ["--compile-libraries=(MintCall,0x1f) --compile-libraries=(BurnCall,0x2f)"]

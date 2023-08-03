@@ -1,15 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.13;
 
-import './interfaces/ILimitPool.sol';
-import './interfaces/ILimitPoolManager.sol';
-import './interfaces/ILimitPoolStructs.sol';
-import './base/storage/LimitPoolStorage.sol';
-import './base/structs/LimitPoolFactoryStructs.sol';
-import './utils/LimitPoolErrors.sol';
-import './libraries/TickMap.sol';
+// import './interfaces/ILimitPool.sol';
+// import './interfaces/ILimitPoolManager.sol';
+// import './interfaces/ILimitPoolStructs.sol';
+// import './base/storage/LimitPoolStorage.sol';
 import './LimitPool.sol';
 import './LimitPoolFactory.sol';
+import './utils/LimitPoolManager.sol';
 import './test/Token20.sol';
 import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 import './libraries/utils/SafeTransfers.sol';
@@ -34,6 +32,7 @@ contract EchidnaPool {
 
     LimitPoolFactory public factory;
     address public implementation;
+    LimitPoolManager public manager;
     LimitPool public pool;
     Token20 public tokenIn;
     Token20 public tokenOut;
@@ -82,13 +81,16 @@ contract EchidnaPool {
         require(upper % tickSpacing == 0);
         _;
     }
+
     constructor() {
-        implementation = address(new LimitPool());
-        factory = new LimitPoolFactory(msg.sender, implementation);
+        manager = new LimitPoolManager();
+        factory = new LimitPoolFactory(address(manager));
+        implementation = address(new LimitPool(address(factory)));
+        manager.enableImplementation(bytes32(0x0), address(implementation));
+
         tokenIn = new Token20("IN", "IN", 18);
         tokenOut = new Token20("OUT", "OUT", 18);
-        tickSpacing = 10;
-        pool =  LimitPool(factory.createLimitPool(address(tokenIn), address(tokenOut), tickSpacing, 79228162514264337593543950336));
+        pool =  LimitPool(factory.createLimitPool(bytes32(0x0), address(tokenIn), address(tokenOut), 10, 79228162514264337593543950336));
     }
 
     function mint(uint128 amount, bool zeroForOne, int24 lower, int24 upper) public tickPreconditions(lower, upper) {
@@ -99,7 +101,7 @@ contract EchidnaPool {
         (poolValues.price0Before, poolValues.liquidity0Before, poolValues.liquidityGlobal0Before,,,,) = pool.pool0();
         (poolValues.price1Before, poolValues.liquidity1Before, poolValues.liquidityGlobal1Before,,,,) = pool.pool1();
         
-        
+            
         ILimitPoolStructs.MintParams memory params;
         params.to = msg.sender;
         params.refundTo = msg.sender;
@@ -190,7 +192,7 @@ contract EchidnaPool {
         }
     }
 
-    function swap(uint160 priceLimit, uint128 amount, bool exactIn, bool zeroForOne) public {
+    function swap(uint160 priceLimit, uint128 amount, bool exactIn, bool zeroForOne) internal {
         // PRE CONDITIONS
         mintAndApprove();
 
@@ -212,7 +214,7 @@ contract EchidnaPool {
         assert(price0 >= price1);
     }
 
-    function burn(int24 claim, uint256 positionIndex, uint128 burnPercent) public {
+    function burn(int24 claim, uint256 positionIndex, uint128 burnPercent) internal {
         // PRE CONDITIONS 
         require(positionIndex < positions.length);
         Position memory pos = positions[positionIndex];
@@ -254,7 +256,7 @@ contract EchidnaPool {
         assert(price0 >= price1);
     }
 
-    function mintThenBurnZeroLiquidityChange(uint128 amount, bool zeroForOne, int24 lower, int24 upper) public tickPreconditions(lower, upper) {
+    function mintThenBurnZeroLiquidityChange(uint128 amount, bool zeroForOne, int24 lower, int24 upper) internal tickPreconditions(lower, upper) {
         // PRE CONDITIONS
         mintAndApprove();
         (uint160 price0Before,/*liquidity*/,uint128 liquidityGlobal0Before,,,,) = pool.pool0();
@@ -305,7 +307,7 @@ contract EchidnaPool {
         return uint128(low + (val % (high-low +1))); 
     }
 
-    function liquidityMintedBackcalculates(uint128 amount, bool zeroForOne, int24 lower, int24 upper) tickPreconditions(lower, upper) public {
+    function liquidityMintedBackcalculates(uint128 amount, bool zeroForOne, int24 lower, int24 upper) tickPreconditions(lower, upper) internal {
         require(amount > 1e5);
         ILimitPoolStructs.Immutables memory immutables = pool.immutables();
         uint256 priceLower = ConstantProduct.getPriceAtTick(lower, immutables);

@@ -7,6 +7,7 @@ library EchidnaAssertions {
     event LiquidityUnderflow(uint128 liquidity, uint128 amount, string location);
     event LiquidityUnlock(int128 liquidity);
     event PoolBalanceExceeded(uint256 poolBalance, uint256 outputAmount);
+    event LiquidityDelta(int128 liquidityDelta);
 
     function assertLiquidityGlobalUnderflows(uint128 liquidityGlobal, uint128 amount, string memory location) internal {
         emit LiquidityGlobalUnderflow(liquidityGlobal, amount, location);
@@ -28,4 +29,8 @@ library EchidnaAssertions {
         assert(poolBalance >= outputAmount);
     }
 
+    function assertLiquidityDeltaZeroOnUnlock(int128 liquidity) internal {
+        emit LiquidityDelta(liquidity);
+        assert(liquidity == 0);
+    }
 }

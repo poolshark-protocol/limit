@@ -46,6 +46,7 @@ interface ILimitPoolStructs {
 
     struct Immutables {
         address owner;
+        address factory;
         ConstantProduct.PriceBounds bounds;
         address token0;
         address token1;

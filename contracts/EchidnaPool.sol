@@ -192,7 +192,7 @@ contract EchidnaPool {
         }
     }
 
-    function swap(uint160 priceLimit, uint128 amount, bool exactIn, bool zeroForOne) internal {
+    function swap(uint160 priceLimit, uint128 amount, bool exactIn, bool zeroForOne) public {
         // PRE CONDITIONS
         mintAndApprove();
 
@@ -214,7 +214,7 @@ contract EchidnaPool {
         assert(price0 >= price1);
     }
 
-    function burn(int24 claim, uint256 positionIndex, uint128 burnPercent) internal {
+    function burn(int24 claim, uint256 positionIndex, uint128 burnPercent) public {
         // PRE CONDITIONS 
         require(positionIndex < positions.length);
         Position memory pos = positions[positionIndex];
@@ -256,7 +256,7 @@ contract EchidnaPool {
         assert(price0 >= price1);
     }
 
-    function mintThenBurnZeroLiquidityChange(uint128 amount, bool zeroForOne, int24 lower, int24 upper) internal tickPreconditions(lower, upper) {
+    function mintThenBurnZeroLiquidityChange(uint128 amount, bool zeroForOne, int24 lower, int24 upper) public tickPreconditions(lower, upper) {
         // PRE CONDITIONS
         mintAndApprove();
         (uint160 price0Before,/*liquidity*/,uint128 liquidityGlobal0Before,,,,) = pool.pool0();

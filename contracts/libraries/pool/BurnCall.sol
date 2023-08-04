@@ -84,8 +84,8 @@ library BurnCall {
         if ((params.zeroForOne ? params.claim != params.upper
                                : params.claim != params.lower))
             params.zeroForOne
-                ? positions[msg.sender][params.claim][params.upper] = cache.position
-                : positions[msg.sender][params.lower][params.claim] = cache.position;
+                ? positions[params.to][params.claim][params.upper] = cache.position
+                : positions[params.to][params.lower][params.claim] = cache.position;
         return cache;
     }
 
@@ -156,8 +156,8 @@ library BurnCall {
         if ((params.zeroForOne ? params.claim != params.upper
                                : params.claim != params.lower)) {
             params.zeroForOne
-                ? positions[msg.sender][params.claim][params.upper] = cache.position
-                : positions[msg.sender][params.lower][params.claim] = cache.position;
+                ? positions[params.to][params.claim][params.upper] = cache.position
+                : positions[params.to][params.lower][params.claim] = cache.position;
 
             if (params.zeroForOne) {
                 revert SimulateBurn(params.claim, params.upper, positionExists);

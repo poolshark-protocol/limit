@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.13;
 
-import '../../interfaces/ILimitPoolStructs.sol';
+import '../../interfaces/limit/ILimitPoolStructs.sol';
 import '../../interfaces/callbacks/IPoolsharkSwapCallback.sol';
 import '../../interfaces/IERC20Minimal.sol';
-import '../Positions.sol';
-import '../Ticks.sol';
+import '../limit/Ticks.sol';
 import '../utils/Collect.sol';
 import '../utils/SafeTransfers.sol';
 
@@ -27,9 +26,9 @@ library SwapCall {
     );
 
     function perform(
-        ILimitPoolStructs.SwapParams memory params,
+        PoolsharkStructs.SwapParams memory params,
         ILimitPoolStructs.SwapCache memory cache,
-        ILimitPoolStructs.TickMap storage tickMap,
+        PoolsharkStructs.TickMap storage tickMap,
         ILimitPoolStructs.PoolState storage poolState,
         mapping(int24 => ILimitPoolStructs.Tick) storage ticks
     ) external returns (
@@ -89,7 +88,7 @@ library SwapCall {
     }
 
     function balance(
-        ILimitPoolStructs.SwapParams memory params,
+        PoolsharkStructs.SwapParams memory params,
         ILimitPoolStructs.SwapCache memory cache
     ) private view returns (uint256) {
         (

@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.13;
 
-import './interfaces/ILimitPool.sol';
-import './interfaces/ILimitPoolManager.sol';
+import './interfaces/limit/ILimitPool.sol';
+import './interfaces/limit/ILimitPoolManager.sol';
 import './base/storage/LimitPoolStorage.sol';
 import './base/storage/LimitPoolImmutables.sol';
 import './base/structs/LimitPoolFactoryStructs.sol';
 import './utils/LimitPoolErrors.sol';
 import './libraries/pool/SwapCall.sol';
 import './libraries/pool/QuoteCall.sol';
-import './libraries/pool/MintCall.sol';
-import './libraries/pool/BurnCall.sol';
+import './libraries/limit/pool/MintLimitCall.sol';
+import './libraries/limit/pool/BurnLimitCall.sol';
 import './libraries/math/ConstantProduct.sol';
 import './libraries/solady/LibClone.sol';
 import './external/openzeppelin/security/ReentrancyGuard.sol';
@@ -82,7 +82,7 @@ contract LimitPool is
             cache.pool = params.zeroForOne ? pool0 : pool1;
             cache.swapPool = params.zeroForOne ? pool1 : pool0;
         }
-        cache = MintCall.perform(
+        cache = MintLimitCall.perform(
             params,
             cache,
             tickMap,
@@ -109,7 +109,7 @@ contract LimitPool is
             constants: immutables(),
             pool: params.zeroForOne ? pool0 : pool1
         });
-        cache = BurnCall.perform(
+        cache = BurnLimitCall.perform(
             params, 
             cache, 
             tickMap,
@@ -221,14 +221,15 @@ contract LimitPool is
     }
 
     function immutables() public view returns (
-        Immutables memory
+        PoolsharkStructs.Immutables memory
     ) {
         return Immutables(
             owner(),
             factory,
-            ConstantProduct.PriceBounds(minPrice(), maxPrice()),
+            PriceBounds(minPrice(), maxPrice()),
             token0(),
             token1(),
+            0,
             tickSpacing()
         );
     }

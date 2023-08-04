@@ -2,8 +2,7 @@
 pragma solidity 0.8.13;
 
 import './math/ConstantProduct.sol';
-import '../interfaces/ILimitPool.sol';
-import '../interfaces/ILimitPoolStructs.sol';
+import '../base/structs/PoolsharkStructs.sol';
 
 library TickMap {
 
@@ -13,7 +12,7 @@ library TickMap {
     error BlockIndexOverflow();
 
     function get(
-        ILimitPoolStructs.TickMap storage tickMap,
+        PoolsharkStructs.TickMap storage tickMap,
         int24 tick,
         int24 tickSpacing
     ) internal view returns (
@@ -33,7 +32,7 @@ library TickMap {
     }
 
     function set(
-        ILimitPoolStructs.TickMap storage tickMap,
+        PoolsharkStructs.TickMap storage tickMap,
         int24 tick,
         int24 tickSpacing
     ) internal returns (
@@ -58,7 +57,7 @@ library TickMap {
     }
 
     function unset(
-        ILimitPoolStructs.TickMap storage tickMap,
+        PoolsharkStructs.TickMap storage tickMap,
         int24 tick,
         int16 tickSpacing
     ) internal {
@@ -78,7 +77,7 @@ library TickMap {
     }
 
     function previous(
-        ILimitPoolStructs.TickMap storage tickMap,
+        PoolsharkStructs.TickMap storage tickMap,
         int24 tick,
         int16 tickSpacing,
         bool inclusive
@@ -122,7 +121,7 @@ library TickMap {
     }
 
     function next(
-        ILimitPoolStructs.TickMap storage tickMap,
+        PoolsharkStructs.TickMap storage tickMap,
         int24 tick,
         int16 tickSpacing,
         bool inclusive
@@ -301,7 +300,7 @@ library TickMap {
 
     function roundHalf(
         int24 tick,
-        ILimitPoolStructs.Immutables memory constants,
+        PoolsharkStructs.Immutables memory constants,
         uint256 price
     ) internal pure returns (
         int24 roundedTick,
@@ -333,7 +332,7 @@ library TickMap {
 
     function roundAhead(
         int24 tick,
-        ILimitPoolStructs.Immutables memory constants,
+        PoolsharkStructs.Immutables memory constants,
         bool zeroForOne,
         uint256 price
     ) internal pure returns (
@@ -363,7 +362,7 @@ library TickMap {
 
     function roundBack(
         int24 tick,
-        ILimitPoolStructs.Immutables memory constants,
+        PoolsharkStructs.Immutables memory constants,
         bool zeroForOne,
         uint256 price
     ) internal pure returns (

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.13;
 
-import '../../interfaces/ILimitPoolStructs.sol';
+import '../../interfaces/limit/ILimitPoolStructs.sol';
 import '../../interfaces/IERC20Minimal.sol';
 
 library Checks {
@@ -17,7 +17,7 @@ library Checks {
     }
 
     function balance(
-        ILimitPoolStructs.SwapParams memory params,
+        PoolsharkStructs.SwapParams memory params,
         ILimitPoolStructs.SwapCache memory cache
     ) private view returns (uint256) {
         (

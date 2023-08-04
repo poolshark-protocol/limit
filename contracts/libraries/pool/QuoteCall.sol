@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.13;
 
-import '../../interfaces/ILimitPoolStructs.sol';
-import '../Ticks.sol';
+import '../../interfaces/limit/ILimitPoolStructs.sol';
+import '../limit/Ticks.sol';
 
 library QuoteCall {
     event Swap(
@@ -16,9 +16,9 @@ library QuoteCall {
     );
 
     function perform(
-        ILimitPoolStructs.QuoteParams memory params,
+        PoolsharkStructs.QuoteParams memory params,
         ILimitPoolStructs.SwapCache memory cache,
-        ILimitPoolStructs.TickMap storage tickMap,
+        PoolsharkStructs.TickMap storage tickMap,
         mapping(int24 => ILimitPoolStructs.Tick) storage ticks
     ) external view returns (
         uint256,

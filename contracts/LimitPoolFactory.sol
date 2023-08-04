@@ -2,7 +2,7 @@
 pragma solidity 0.8.13;
 
 import './LimitPool.sol';
-import './interfaces/ILimitPoolFactory.sol';
+import './interfaces/limit/ILimitPoolFactory.sol';
 import './base/events/LimitPoolFactoryEvents.sol';
 import './base/structs/PoolsharkStructs.sol';
 import './utils/LimitPoolErrors.sol';

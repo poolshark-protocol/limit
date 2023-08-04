@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: MIT
-
 pragma solidity ^0.8.0;
 
-import '../interfaces/ILimitPool.sol';
-import '../interfaces/ILimitPoolFactory.sol';
-import '../interfaces/ILimitPoolManager.sol';
+import '../interfaces/limit/ILimitPool.sol';
+import '../interfaces/limit/ILimitPoolFactory.sol';
+import '../interfaces/limit/ILimitPoolManager.sol';
 import '../base/events/LimitPoolManagerEvents.sol';
 
 /**

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.13;
 
-import '../../interfaces/ILimitPoolStructs.sol';
-import '../../interfaces/ILimitPoolFactory.sol';
+import '../../interfaces/limit/ILimitPoolStructs.sol';
+import '../../interfaces/limit/ILimitPoolFactory.sol';
 import '../../utils/LimitPoolErrors.sol';
 
-abstract contract LimitPoolStorage is ILimitPoolStructs, LimitPoolErrors {
+abstract contract LimitPoolStorage is ILimitPoolStructs, PoolsharkStructs, LimitPoolErrors {
     GlobalState public globalState;
     PoolState public pool0; /// @dev State for token0 as output
     PoolState public pool1; /// @dev State for token1 as output

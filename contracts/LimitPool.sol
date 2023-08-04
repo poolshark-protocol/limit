@@ -14,6 +14,7 @@ import './libraries/limit/pool/BurnLimitCall.sol';
 import './libraries/math/ConstantProduct.sol';
 import './libraries/solady/LibClone.sol';
 import './external/openzeppelin/security/ReentrancyGuard.sol';
+import 'hardhat/console.sol';
 
 
 /// @notice Poolshark Cover Pool Implementation
@@ -57,6 +58,7 @@ contract LimitPool is
         factoryOnly
         canoncialOnly
     {
+        console.log('initialize pool');
         // initialize state
         globalState = Ticks.initialize(
             tickMap,
@@ -66,6 +68,7 @@ contract LimitPool is
             immutables(),
             startPrice
         );
+        console.log('end of init function');
     }
 
     // limitSwap

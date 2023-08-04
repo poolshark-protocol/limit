@@ -194,10 +194,10 @@ export class InitialSetup {
                 hre.props.limitPoolFactory.address
             ],
             {
-                'contracts/libraries/Positions.sol:Positions': hre.props.positionsLib.address,
-                'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address,
-                'contracts/libraries/pool/MintCall.sol:MintCall': hre.props.mintCall.address,
-                'contracts/libraries/pool/BurnCall.sol:BurnCall': hre.props.burnCall.address,
+                'contracts/libraries/limit/Positions.sol:Positions': hre.props.positionsLib.address,
+                'contracts/libraries/limit/Ticks.sol:Ticks': hre.props.ticksLib.address,
+                'contracts/libraries/limit/pool/MintLimitCall.sol:MintLimitCall': hre.props.mintCall.address,
+                'contracts/libraries/limit/pool/BurnLimitCall.sol:BurnLimitCall': hre.props.burnCall.address,
                 'contracts/libraries/pool/SwapCall.sol:SwapCall': hre.props.swapCall.address,
                 'contracts/libraries/pool/QuoteCall.sol:QuoteCall': hre.props.quoteCall.address
             }

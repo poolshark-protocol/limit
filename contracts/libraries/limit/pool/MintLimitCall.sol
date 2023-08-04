@@ -2,7 +2,7 @@
 pragma solidity 0.8.13;
 
 import '../../../interfaces/limit/ILimitPoolStructs.sol';
-import '../Positions.sol';
+import '../PositionsLimit.sol';
 import '../../utils/Collect.sol';
 
 library MintLimitCall {

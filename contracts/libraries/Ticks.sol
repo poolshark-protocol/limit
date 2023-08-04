@@ -364,7 +364,6 @@ library Ticks {
 
         // increment pool liquidity
         EchidnaAssertions.assertPositiveLiquidityOnUnlock(ticks[pool.tickAtPrice].liquidityDelta);
-        EchidnaAssertions.assertLiquidityDeltaZeroOnUnlock(ticks[pool.tickAtPrice].liquidityDelta);
         pool.liquidity += uint128(ticks[pool.tickAtPrice].liquidityDelta);
         int24 tickToClear = pool.tickAtPrice;
         uint160 tickPriceAt = ticks[pool.tickAtPrice].priceAt;

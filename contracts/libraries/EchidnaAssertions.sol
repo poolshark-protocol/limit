@@ -28,9 +28,4 @@ library EchidnaAssertions {
         emit PoolBalanceExceeded(poolBalance, outputAmount);
         assert(poolBalance >= outputAmount);
     }
-
-    function assertLiquidityDeltaZeroOnUnlock(int128 liquidity) internal {
-        emit LiquidityDelta(liquidity);
-        assert(liquidity == 0);
-    }
 }

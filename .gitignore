@@ -6,4 +6,3 @@ artifacts
 cache
 typechain
 crytic-export
-corpus

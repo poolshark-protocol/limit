@@ -151,8 +151,6 @@ library Positions {
         // save swapCache
         cache.swapCache = swapCache;
 
-        console.log('amount left for position', params.amount);
-
         return (
             params,
             cache

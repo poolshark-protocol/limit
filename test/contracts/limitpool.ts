@@ -5293,7 +5293,7 @@ describe('LimitPool Tests', function () {
 
     })
 
-    it.only("Can claim at the current pool price even when it is not your claim tick", async () => {
+    it("Can claim at the current pool price even when it is not your claim tick", async () => {
         console.log("Mint #1");
 
         await validateMint({

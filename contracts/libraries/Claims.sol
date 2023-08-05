@@ -93,7 +93,7 @@ library Claims {
             int24 claimTickNext = params.zeroForOne
                 ? TickMap.next(tickMap, params.claim, constants.tickSpacing, false)
                 : TickMap.previous(tickMap, params.claim, constants.tickSpacing, false);
-            console.log('claim tick next check', uint24(claimTickNext));
+            console.log('claim tick next check', uint24(-claimTickNext));
             // if we cleared the final tick of their position, this is the wrong claim tick
             if (params.zeroForOne ? claimTickNext > params.upper
                                   : claimTickNext < params.lower) {

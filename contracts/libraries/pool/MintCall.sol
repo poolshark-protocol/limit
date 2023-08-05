@@ -22,7 +22,12 @@ library MintCall {
         uint128 amountFilled,
         uint128 liquidityMinted
     );
-    
+
+    event Sync(
+        uint160 price,
+        uint128 liquidity
+    );
+
     function perform(
         ILimitPoolStructs.MintParams memory params,
         ILimitPoolStructs.MintCache memory cache,
@@ -78,12 +83,7 @@ library MintCall {
         // mint position if amount is left
         if (params.amount > 0 && params.lower < params.upper) {
             /// @auditor not sure if the lower >= upper case is possible
-            (cache.pool, cache.position) = Positions.add(
-                cache,
-                ticks,
-                tickMap,
-                params
-            );
+
             if (params.zeroForOne) {
                 uint160 priceLower = ConstantProduct.getPriceAtTick(params.lower, cache.constants);
                 if (priceLower <= cache.pool.price) {
@@ -96,10 +96,11 @@ library MintCall {
                     /// @auditor - double check liquidity is set correctly for this in insertSingle
                     cache.pool.liquidity += uint128(cache.liquidityMinted);
                     cache.pool.swapEpoch += 1;
-                    cache.position.claimPriceLast = ConstantProduct.getPriceAtTick(params.lower, cache.constants);
+                    cache.position.crossedInto = true;
                     // set epoch on start tick to signify position being crossed into
                     /// @auditor - this is safe assuming we have swapped at least this far on the other side
                     EpochMap.set(params.lower, cache.pool.swapEpoch, tickMap, cache.constants);
+                    emit Sync(cache.pool.price, cache.pool.liquidity);
                 }
             } else {
                 uint160 priceUpper = ConstantProduct.getPriceAtTick(params.upper, cache.constants);
@@ -111,12 +112,19 @@ library MintCall {
                     cache.pool.tickAtPrice = params.upper;
                     cache.pool.liquidity += uint128(cache.liquidityMinted);
                     cache.pool.swapEpoch += 1;
-                    cache.position.claimPriceLast = ConstantProduct.getPriceAtTick(params.upper, cache.constants);
+                    cache.position.crossedInto = true;
                     // set epoch on start tick to signify position being crossed into
                     /// @auditor - this is safe assuming we have swapped at least this far on the other side
                     EpochMap.set(params.upper, cache.pool.swapEpoch, tickMap, cache.constants);
+                    emit Sync(cache.pool.price, cache.pool.liquidity);
                 }
             }
+            (cache.pool, cache.position) = Positions.add(
+                cache,
+                ticks,
+                tickMap,
+                params
+            );
             // save lp side for safe reentrancy
             save(cache.pool, pool);
 
@@ -174,7 +182,6 @@ library MintCall {
             tickMap,
             swapTicks
         );
-
         // save state for safe reentrancy
         save(cache.swapPool, swapPool);
         // load position given params
@@ -201,12 +208,7 @@ library MintCall {
         // mint position if amount is left
         if (params.amount > 0 && params.lower < params.upper) {
             /// @auditor not sure if the lower >= upper case is possible
-            (cache.pool, cache.position) = Positions.add(
-                cache,
-                ticks,
-                tickMap,
-                params
-            );
+
             if (params.zeroForOne) {
                 uint160 priceLower = ConstantProduct.getPriceAtTick(params.lower, cache.constants);
                 if (priceLower <= cache.pool.price) {
@@ -219,10 +221,11 @@ library MintCall {
                     /// @auditor - double check liquidity is set correctly for this in insertSingle
                     cache.pool.liquidity += uint128(cache.liquidityMinted);
                     cache.pool.swapEpoch += 1;
-                    cache.position.claimPriceLast = ConstantProduct.getPriceAtTick(params.lower, cache.constants);
+                    cache.position.crossedInto = true;
                     // set epoch on start tick to signify position being crossed into
                     /// @auditor - this is safe assuming we have swapped at least this far on the other side
                     EpochMap.set(params.lower, cache.pool.swapEpoch, tickMap, cache.constants);
+                    emit Sync(cache.pool.price, cache.pool.liquidity);
                 }
             } else {
                 uint160 priceUpper = ConstantProduct.getPriceAtTick(params.upper, cache.constants);
@@ -234,12 +237,19 @@ library MintCall {
                     cache.pool.tickAtPrice = params.upper;
                     cache.pool.liquidity += uint128(cache.liquidityMinted);
                     cache.pool.swapEpoch += 1;
-                    cache.position.claimPriceLast = ConstantProduct.getPriceAtTick(params.upper, cache.constants);
+                    cache.position.crossedInto = true;
                     // set epoch on start tick to signify position being crossed into
                     /// @auditor - this is safe assuming we have swapped at least this far on the other side
                     EpochMap.set(params.upper, cache.pool.swapEpoch, tickMap, cache.constants);
+                    emit Sync(cache.pool.price, cache.pool.liquidity);
                 }
             }
+            (cache.pool, cache.position) = Positions.add(
+                cache,
+                ticks,
+                tickMap,
+                params
+            );
             // save lp side for safe reentrancy
             save(cache.pool, pool);
 

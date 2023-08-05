@@ -152,6 +152,8 @@ library Positions {
         // save swapCache
         cache.swapCache = swapCache;
 
+        console.log('amount left for position', params.amount);
+
         return (
             params,
             cache
@@ -385,6 +387,8 @@ library Positions {
                               : params.claim == params.lower) {
             EchidnaAssertions.assertLiquidityGlobalUnderflows(pool.liquidityGlobal, cache.position.liquidity, "LGU-3");
             pool.liquidityGlobal -= cache.position.liquidity;
+            // set params.amount for BurnLimit event
+            params.amount = cache.position.liquidity;
             cache.position.liquidity = 0;
         }
         // clear out old position
@@ -403,7 +407,7 @@ library Positions {
         // clear position if empty
         if (cache.position.liquidity == 0) {
             cache.position.epochLast = 0;
-            cache.position.claimPriceLast = 0;
+            cache.position.crossedInto = false;
         }
 
         // round back claim tick for storage
@@ -461,7 +465,7 @@ library Positions {
         // clear position values if empty
         if (cache.position.liquidity == 0) {
             cache.position.epochLast = 0;
-            cache.position.claimPriceLast = 0;
+            cache.position.crossedInto = false;
         }    
         return cache.position;
     }
@@ -474,7 +478,7 @@ library Positions {
     ) {
         // convert percentage to liquidity amount
         if (percent > 1e38) percent = 1e38;
-        if (liquidity == 0 && percent > 0) require (false, 'NotEnoughPositionLiquidity()');
+        if (liquidity == 0 && percent > 0) require (false, 'PositionNotFound()');
         return uint128(uint256(liquidity) * uint256(percent) / 1e38);
     }
 

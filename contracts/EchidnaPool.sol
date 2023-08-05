@@ -29,7 +29,8 @@ contract EchidnaPool {
     event BurnTicks(int24 lower, int24 upper, bool positionExists);
     event LiquidityMinted(uint256 amount, uint256 tokenAmount, bool zeroForOne);
     event PositionCreated(bool isCreated);
-
+    event liquidityDeltaAfterUndercut(bool zeroForOne, int128 liquidityDeltaBefore, int128 liquidityDeltaAfter);
+    
     LimitPoolFactory public factory;
     address public implementation;
     LimitPoolManager public manager;
@@ -93,6 +94,7 @@ contract EchidnaPool {
         pool =  LimitPool(factory.createLimitPool(bytes32(0x0), address(tokenIn), address(tokenOut), tickSpacing, 79228162514264337593543950336));
     }
 
+
     function mint(uint128 amount, bool zeroForOne, int24 lower, int24 upper) public tickPreconditions(lower, upper) {
         // PRE CONDITIONS
         mintAndApprove();
@@ -147,6 +149,19 @@ contract EchidnaPool {
         emit Prices(poolValues.price0After, poolValues.price1After);
 
         // POST CONDITIONS
+
+        // Ensure that liquidity delta is incremented when undercutting
+        if(zeroForOne){
+            if(poolValues.price0After <= poolValues.price0Before){
+                emit liquidityDeltaAfterUndercut(zeroForOne, values.liquidityDeltaLowerBefore, values.liquidityDeltaLowerAfter);
+                assert(values.liquidityDeltaLowerAfter >= values.liquidityDeltaLowerBefore);
+            }
+        } else {
+            if(poolValues.price1Before <= poolValues.price1After){
+                emit liquidityDeltaAfterUndercut(zeroForOne, values.liquidityDeltaUpperBefore, values.liquidityDeltaUpperAfter);
+                assert(values.liquidityDeltaUpperAfter >= values.liquidityDeltaUpperBefore);
+            }
+        }
 
         // Ensure prices have not crossed
         assert(poolValues.price0After >= poolValues.price1After);

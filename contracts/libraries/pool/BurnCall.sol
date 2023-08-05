@@ -30,7 +30,7 @@ library BurnCall {
     ) internal returns (ILimitPoolStructs.BurnCache memory) {
         if (params.lower >= params.upper) require (false, 'InvalidPositionBounds()');
         if (cache.position.epochLast == 0) require(false, 'PositionNotFound()');
-        if (cache.position.claimPriceLast > 0
+        if (cache.position.crossedInto
             || params.claim != (params.zeroForOne ? params.lower : params.upper)
             || cache.position.epochLast < (params.zeroForOne ? EpochMap.get(params.lower, tickMap, cache.constants)
                                                              : EpochMap.get(params.upper, tickMap, cache.constants)))
@@ -99,7 +99,7 @@ library BurnCall {
             storage positions
     ) external {
         if (cache.position.epochLast == 0) require(false, 'PositionNotFound()');
-        if (cache.position.claimPriceLast > 0
+        if (cache.position.crossedInto
             || params.claim != (params.zeroForOne ? params.lower : params.upper)
             || cache.position.epochLast < (params.zeroForOne ? EpochMap.get(params.lower, tickMap, cache.constants)
                                                              : EpochMap.get(params.upper, tickMap, cache.constants)))

@@ -109,17 +109,18 @@ library Claims {
                 require (false, 'WrongTickClaimedAt5()');
             }
         }
+        /// @dev - start tick does not overwrite position and final tick clears position
         if (params.claim != params.upper && params.claim != params.lower) {
             // check epochLast on claim tick
             if (claimTickEpoch <= cache.position.epochLast)
                 require (false, 'WrongTickClaimedAt6()');
             // prevent position overwriting at claim tick
             if (params.zeroForOne) {
-                if (positions[params.owner][params.lower][params.claim].liquidity > 0) {
-                    require (false, string.concat('UpdatePositionFirstAt(', String.from(params.lower), ', ', String.from(params.claim), ')'));
+                if (positions[params.owner][params.claim][params.upper].liquidity > 0) {
+                    require (false, string.concat('UpdatePositionFirstAt(', String.from(params.claim), ', ', String.from(params.upper), ')'));
                 }
             } else {
-                if (positions[params.owner][params.claim][params.upper].liquidity > 0) {
+                if (positions[params.owner][params.lower][params.claim].liquidity > 0) {
                     require (false, string.concat('UpdatePositionFirstAt(', String.from(params.lower), ', ', String.from(params.claim), ')'));
                 }
             }

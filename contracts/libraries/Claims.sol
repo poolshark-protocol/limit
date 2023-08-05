@@ -32,8 +32,7 @@ library Claims {
         }
 
         // if the position has not been crossed into at all
-        else if (cache.position.claimPriceLast == 0 &&
-                 (params.zeroForOne ? (params.claim == params.lower &&
+        else if ((params.zeroForOne ? (params.claim == params.lower &&
                                         EpochMap.get(params.lower, tickMap, constants) <= cache.position.epochLast)
                                     : (params.claim == params.upper &&
                                         EpochMap.get(params.upper, tickMap, constants) <= cache.position.epochLast))
@@ -146,10 +145,6 @@ library Claims {
     ) {
         // if half tick priceAt > 0 add amountOut to amountOutClaimed
         // set claimPriceLast if zero
-        if (cache.position.claimPriceLast == 0) {
-            cache.position.claimPriceLast = params.zeroForOne ? cache.priceLower
-                                                              : cache.priceUpper;
-        }
         ILimitPoolStructs.GetDeltasLocals memory locals;
 
         if (params.claim % constants.tickSpacing != 0)
@@ -164,7 +159,6 @@ library Claims {
             // claim amounts up to latest full tick crossed
             cache.position.amountIn += uint128(params.zeroForOne ? ConstantProduct.getDy(cache.position.liquidity, cache.priceLower, locals.pricePrevious, false)
                                                                  : ConstantProduct.getDx(cache.position.liquidity, locals.pricePrevious, cache.priceUpper, false));
-            cache.position.claimPriceLast = locals.pricePrevious.toUint160();
         }
         if (params.amount > 0) {
            // if tick hasn't been set back calculate amountIn

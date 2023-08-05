@@ -398,7 +398,6 @@ library Positions {
         // clear position if empty
         if (cache.position.liquidity == 0) {
             cache.position.epochLast = 0;
-            cache.position.claimPriceLast = 0;
         }
 
         // round back claim tick for storage
@@ -456,8 +455,8 @@ library Positions {
         // clear position values if empty
         if (cache.position.liquidity == 0) {
             cache.position.epochLast = 0;
-            cache.position.claimPriceLast = 0;
         }    
+
         return cache.position;
     }
 

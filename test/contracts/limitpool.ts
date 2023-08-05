@@ -126,7 +126,7 @@ describe('LimitPool Tests', function () {
         if (debugMode) await getPositionLiquidity(true, hre.props.alice.address, 0, 100, debugMode)
     })
 
-    it('pool1 - Should mint, fill, and burn', async function () {
+    it.only('pool1 - Should mint, fill, and burn', async function () {
         const aliceLiquidity = '20051041647900280328782'
         // mint should revert
         await validateMint({

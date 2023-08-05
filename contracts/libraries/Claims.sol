@@ -7,7 +7,7 @@ import './EpochMap.sol';
 import './TickMap.sol';
 import './utils/String.sol';
 import './utils/SafeCast.sol';
-
+import 'hardhat/console.sol';
 library Claims {
 
     using SafeCast for uint256;
@@ -93,6 +93,7 @@ library Claims {
             int24 claimTickNext = params.zeroForOne
                 ? TickMap.next(tickMap, params.claim, constants.tickSpacing, false)
                 : TickMap.previous(tickMap, params.claim, constants.tickSpacing, false);
+            console.log('claim tick next check', uint24(claimTickNext));
             // if we cleared the final tick of their position, this is the wrong claim tick
             if (params.zeroForOne ? claimTickNext > params.upper
                                   : claimTickNext < params.lower) {
@@ -102,6 +103,7 @@ library Claims {
             /// @dev - if the next tick was crossed after position creation, the claim tick is incorrect
             /// @dev - we can cycle to find the right claim tick for the user
             uint32 claimTickNextAccumEpoch = EpochMap.get(claimTickNext, tickMap, constants);
+            console.log('claim tick epoch check', claimTickNextAccumEpoch, cache.position.epochLast);
             ///@dev - next swapEpoch should not be greater
             if (claimTickNextAccumEpoch > cache.position.epochLast) {
                 require (false, 'WrongTickClaimedAt5()');

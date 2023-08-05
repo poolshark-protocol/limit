@@ -5134,4 +5134,115 @@ describe('LimitPool Tests', function () {
             console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
         }
       });
+
+      it.only("Can claim at the current pool price even when it is not your claim tick", async () => {
+        console.log("Mint #1");
+
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '-100000',
+            upper: '184550',
+            amount: "66907882939022685020",
+            zeroForOne: true,
+            balanceInDecrease: "66907882939022685020",
+            liquidityIncrease: "450934779961490414",
+            upperTickCleared: false,
+            lowerTickCleared: true,
+            revertMessage: '',
+        });
+
+        console.log("Mint #2");
+
+        await getPrice(true, true)
+        await getPrice(false, true)
+
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '-15180',
+            upper: '29790',
+            amount: "1000977696770293932",
+            zeroForOne: false,
+            balanceInDecrease: "1000977696770293932",
+            balanceOutIncrease: "66705398633370612078",
+            liquidityIncrease: "0",
+            upperTickCleared: true,
+            lowerTickCleared: false,
+            revertMessage: '',
+        });
+
+        await getPrice(true, true)
+        await getPrice(false, true)
+
+        console.log("Mint #3");
+
+        expect(await getTickAtPrice(true)).to.eq(16009);
+
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '-50',
+            upper: '60',
+            amount: "2",
+            zeroForOne: true,
+            balanceInDecrease: "2",
+            balanceOutIncrease: "0",
+            liquidityIncrease: "363",
+            upperTickCleared: false,
+            lowerTickCleared: true,
+            revertMessage: '',
+        });
+
+        await getPrice(true, true)
+        await getPrice(false, true)
+
+        console.log("Mint #4");
+
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '0',
+            upper: '10',
+            amount: "1",
+            zeroForOne: false,
+            balanceInDecrease: "1",
+            balanceOutIncrease: "0",
+            liquidityIncrease: "0",
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+        });
+
+        await getPrice(true, true)
+        await getPrice(false, true)
+
+        expect(await getTickAtPrice(true)).to.eq(0);
+
+        console.log("--------------- Burn #5 ---------------");
+
+        // The issue here is that I was able to claim at the current pool price, even though I should
+        // have been claiming at a much higher tick.
+        // My liquidity is not active at the current pool price because it was previously stashed on an undercut.
+        // Therefore, we will try to subtract my position liquidity from the pool liquidity and encounter an underflow.
+        // In this case we got an underflow but in many cases this will lead to immense loss of assets for other users in the pool as
+        // I can remove their liquidity from the current pool liquidity, and then they cannot exit as they experience the revert.
+        // Among other catastrophic things.
+        // ACTUAL CLAIM TICK: 16005
+        await getTick(true, 16005, true)
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-100000',
+            upper: '184550',
+            claim: '0', // Claim at current pool price even though my position has been filled at a much higher tick and my liquidity is not active
+            liquidityPercent: ethers.utils.parseUnits("1", 38),
+            zeroForOne: true,
+            balanceInIncrease: '447895645676095087',
+            balanceOutIncrease: '0',
+            lowerTickCleared: true,
+            upperTickCleared: false,
+            revertMessage: 'WrongTickClaimedAt5()',
+        });
+
+    })
 })

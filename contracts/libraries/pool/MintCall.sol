@@ -72,12 +72,7 @@ library MintCall {
         // mint position if amount is left
         if (params.amount > 0 && params.lower < params.upper) {
             /// @auditor not sure if the lower >= upper case is possible
-            (cache.pool, cache.position) = Positions.add(
-                cache,
-                ticks,
-                tickMap,
-                params
-            );
+
             if (params.zeroForOne) {
                 uint160 priceLower = ConstantProduct.getPriceAtTick(params.lower, cache.constants);
                 if (priceLower <= cache.pool.price) {
@@ -113,6 +108,12 @@ library MintCall {
                     emit Sync(cache.pool.price, cache.pool.liquidity);
                 }
             }
+            (cache.pool, cache.position) = Positions.add(
+                cache,
+                ticks,
+                tickMap,
+                params
+            );
             // save lp side for safe reentrancy
             save(cache.pool, pool);
 

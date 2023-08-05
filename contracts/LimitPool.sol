@@ -245,7 +245,7 @@ contract LimitPool is
         // compute pool key
         bytes32 key = keccak256(abi.encode(original, token0(), token1(), tickSpacing()));
         
-        // computer canonical pool address
+        // compute canonical pool address
         address predictedAddress = LibClone.predictDeterministicAddress(
             original,
             abi.encodePacked(

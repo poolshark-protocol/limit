@@ -71,6 +71,9 @@ describe('LimitPool Tests', function () {
         await mintSigners20(hre.props.token0, tokenAmountBn.mul(10), [hre.props.alice, hre.props.bob])
 
         await mintSigners20(hre.props.token1, tokenAmountBn.mul(10), [hre.props.alice, hre.props.bob])
+
+        await getLiquidity(true, true)
+        await getLiquidity(false, true)
     })
 
     it('pool0 - Should mint, fill, and burn', async function () {
@@ -5135,7 +5138,7 @@ describe('LimitPool Tests', function () {
         }
       });
 
-      it("Can claim at the current pool price even when it is not your claim tick", async () => {
+      it("pool0 - Can claim at the current pool price even when it is not your claim tick", async () => {
         console.log("Mint #1");
 
         await validateMint({
@@ -5293,7 +5296,7 @@ describe('LimitPool Tests', function () {
 
     })
 
-    it("Can claim at the current pool price even when it is not your claim tick", async () => {
+    it("pool1 - Can claim at the current pool price even when it is not your claim tick", async () => {
         console.log("Mint #1");
 
         await validateMint({
@@ -5463,4 +5466,256 @@ describe('LimitPool Tests', function () {
             revertMessage: 'PositionNotFound()',
         });
     })
+
+    it("pool0 - overriding position when burning to the same lower/upper", async function () {
+
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: '0',
+            upper: '200',
+            amount: tokenAmount,
+            zeroForOne: true,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: "10050583320695160003177",
+            balanceOutIncrease: "0",
+            upperTickCleared: false,
+            lowerTickCleared: true,
+            revertMessage: '',
+        })
+
+        console.log("Mint #1 Completed");
+        console.log();
+
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: '100',
+            upper: '200',
+            amount: tokenAmount,
+            zeroForOne: true,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: "20151542874862585449132",
+            balanceOutIncrease: "0",
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
+
+        console.log("Mint #1 Completed");
+        console.log();
+
+
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: false,
+            amountIn: BigNumber.from("51000000000000000000"),
+            priceLimit: maxPrice,
+            balanceInDecrease: '51000000000000000000',
+            balanceOutIncrease: '50742541055238885256',
+            revertMessage: '',
+        })
+        console.log("SWAP #1 Completed");
+        console.log();
+
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: '0',
+            upper: '200',
+            claim: '100',
+            liquidityPercent: ethers.utils.parseUnits('0', 36),
+            zeroForOne: true,
+            balanceInIncrease: '50376233472265442777',
+            balanceOutIncrease: '0',
+            lowerTickCleared: true,
+            upperTickCleared: false,
+            revertMessage: 'UpdatePositionFirstAt(100, 200)',
+        })
+
+
+        console.log("BURN #1 Completed");
+        console.log();
+
+        expect(await getPositionLiquidity(true, bob.address, 100, 200)).to.eq("20151542874862585449132");
+
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: '100',
+            upper: '200',
+            claim: '100',
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: true,
+            balanceInIncrease: '416191159726890981',
+            balanceOutIncrease: '99587958272977177819',
+            lowerTickCleared: true,
+            upperTickCleared: false,
+            revertMessage: '',
+        })
+
+        console.log("BURN #2 Completed");
+        console.log();
+
+        // Bobs second position has 0 liquidity
+        expect(await getPositionLiquidity(true, bob.address, 100, 200)).to.eq("0");
+
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: '100',
+            upper: '200',
+            claim: '100',
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: true,
+            balanceInIncrease: '416191159726890981',
+            balanceOutIncrease: '49669500671783936925',
+            lowerTickCleared: true,
+            upperTickCleared: false,
+            revertMessage: "reverted with reason string 'PositionNotFound()'",
+        })
+
+        // expect(await hre.props.token0.balanceOf(hre.props.limitPool.address)).eq("49669500671783936925");
+        // expect(await hre.props.token1.balanceOf(hre.props.limitPool.address)).eq("50583808840273109019");
+
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: '0',
+            upper: '200',
+            claim: '100',
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: true,
+            balanceInIncrease: '50583808840273109017',
+            balanceOutIncrease: '49669500671783936923',
+            lowerTickCleared: true,
+            upperTickCleared: false,
+            revertMessage: "",
+        })
+
+        console.log("BURN #3 Completed");
+    });
+
+    it("pool1 - overriding position when burning to the same lower/upper", async function () {
+
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: '-200',
+            upper: '0',
+            amount: tokenAmount,
+            zeroForOne: false,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: "10050583320695160003177",
+            balanceOutIncrease: "0",
+            upperTickCleared: true,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
+
+        console.log("Mint #1 Completed");
+        console.log();
+
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: '-200',
+            upper: '-100',
+            amount: tokenAmount,
+            zeroForOne: false,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: "20151542874862585449132",
+            balanceOutIncrease: "0",
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
+
+        console.log("Mint #2 Completed");
+        console.log();
+
+
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: true,
+            amountIn: BigNumber.from("51000000000000000000"),
+            priceLimit: minPrice,
+            balanceInDecrease: '51000000000000000000',
+            balanceOutIncrease: '50742541055238885256',
+            revertMessage: '',
+        })
+        console.log("SWAP #1 Completed");
+        console.log();
+
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: '-200',
+            upper: '0',
+            claim: '-100',
+            liquidityPercent: ethers.utils.parseUnits('0', 36),
+            zeroForOne: false,
+            balanceInIncrease: '50376233472265442777',
+            balanceOutIncrease: '0',
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: 'UpdatePositionFirstAt(-200, -100)',
+        })
+
+
+        console.log("BURN #1 Completed");
+        console.log();
+
+        expect(await getPositionLiquidity(false, bob.address, -200, -100)).to.eq("20151542874862585449132");
+
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: '-200',
+            upper: '-100',
+            claim: '-100',
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: false,
+            balanceInIncrease: '416191159726890981',
+            balanceOutIncrease: '99587958272977177819',
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: '',
+        })
+
+        console.log("BURN #2 Completed");
+        console.log();
+
+        // Bobs second position has 0 liquidity
+        expect(await getPositionLiquidity(false, bob.address, -200, -100)).to.eq("0");
+
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: '-200',
+            upper: '-100',
+            claim: '-100',
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: false,
+            balanceInIncrease: '416191159726890981',
+            balanceOutIncrease: '49669500671783936925',
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: "reverted with reason string 'PositionNotFound()'",
+        })
+  
+        // expect(await hre.props.token1.balanceOf(hre.props.limitPool.address)).eq("49669500671783936925");
+        // expect(await hre.props.token0.balanceOf(hre.props.limitPool.address)).eq("50583808840273109019");
+
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: '-200',
+            upper: '0',
+            claim: '-100',
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: false,
+            balanceInIncrease: '50583808840273109017',
+            balanceOutIncrease: '49669500671783936923',
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: "",
+        })
+
+        console.log("BURN #3 Completed");
+    });
 })

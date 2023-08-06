@@ -450,7 +450,17 @@ library LimitTicks {
         // check if adding liquidity necessary
         if (!params.zeroForOne || cache.priceLower > cache.pool.price) {
             // sets bit in map
-            TickMap.set(tickMap, params.lower, cache.constants.tickSpacing);
+            if(!TickMap.set(tickMap, params.lower, cache.constants.tickSpacing)){
+                // inherit epoch 
+                int24 tickAhead;
+                if (params.zeroForOne) {
+                    tickAhead  = TickMap.next(tickMap, params.lower, cache.constants.tickSpacing, false);
+                } else {
+                    tickAhead  = TickMap.previous(tickMap, params.lower, cache.constants.tickSpacing, false);
+                }
+                uint32 epochAhead = EpochMap.get(tickAhead, tickMap, cache.constants);
+                EpochMap.set(params.lower, epochAhead, tickMap, cache.constants);
+            }
             ILimitPoolStructs.Tick memory tickLower = ticks[params.lower];
             if (params.zeroForOne) {
                 tickLower.liquidityDelta += int128(liquidityMinted);
@@ -458,10 +468,24 @@ library LimitTicks {
                 tickLower.liquidityDelta -= int128(liquidityMinted);
             }
             ticks[params.lower] = tickLower;
+        } else {
+            /// @dev - i.e. if zeroForOne && cache.priceLower <= cache.pool.price
+            cache.pool.swapEpoch += 1;
+            // mark epoch on undercut tick
+            EpochMap.set(params.lower, cache.pool.swapEpoch, tickMap, cache.constants);
         }
 
         if (params.zeroForOne || cache.priceUpper < cache.pool.price) {
-            TickMap.set(tickMap, params.upper, cache.constants.tickSpacing);
+            if(!TickMap.set(tickMap, params.upper, cache.constants.tickSpacing)) {
+                int24 tickAhead;
+                if (params.zeroForOne) {
+                    tickAhead  = TickMap.next(tickMap, params.upper, cache.constants.tickSpacing, false);
+                } else {
+                    tickAhead  = TickMap.previous(tickMap, params.upper, cache.constants.tickSpacing, false);
+                }
+                uint32 epochAhead = EpochMap.get(tickAhead, tickMap, cache.constants);
+                EpochMap.set(params.upper, epochAhead, tickMap, cache.constants);
+            }
             ILimitPoolStructs.Tick memory tickUpper = ticks[params.upper];
             if (params.zeroForOne) {
                 tickUpper.liquidityDelta -= int128(liquidityMinted);
@@ -469,6 +493,11 @@ library LimitTicks {
                 tickUpper.liquidityDelta += int128(liquidityMinted);
             }
             ticks[params.upper] = tickUpper;
+        } else {
+            /// @dev - i.e. if !zeroForOne && cache.priceUpper >= cache.pool.price
+            cache.pool.swapEpoch += 1;
+            // mark epoch on undercut tick
+            EpochMap.set(params.upper, cache.pool.swapEpoch, tickMap, cache.constants);
         }
     }
 
@@ -487,7 +516,6 @@ library LimitTicks {
             int24 tickToSave,
             uint160 roundedPrice
         ) = TickMap.roundHalf(pool.tickAtPrice, constants, pool.price);
-
         // update tick to save
         ILimitPoolStructs.Tick memory tick = ticks[tickToSave];
         /// @auditor - tick.priceAt will be zero for tick % tickSpacing == 0
@@ -504,6 +532,7 @@ library LimitTicks {
                 tick.priceAt = pool.price;
             }
             else {
+                //TODO: set in tickMap for safety
                 // we need to blend the two partial fills into a single tick
                 ILimitPoolStructs.InsertSingleLocals memory locals;
                 if (params.zeroForOne) {

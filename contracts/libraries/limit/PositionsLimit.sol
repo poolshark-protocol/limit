@@ -394,7 +394,7 @@ library LimitPositions {
         // clear position if empty
         if (cache.position.liquidity == 0) {
             cache.position.epochLast = 0;
-            cache.position.claimPriceLast = 0;
+            cache.position.crossedInto = false;
         }
 
         // round back claim tick for storage
@@ -452,7 +452,7 @@ library LimitPositions {
         // clear position values if empty
         if (cache.position.liquidity == 0) {
             cache.position.epochLast = 0;
-            cache.position.claimPriceLast = 0;
+            cache.position.crossedInto = false;
         }    
         return cache.position;
     }
@@ -465,7 +465,7 @@ library LimitPositions {
     ) {
         // convert percentage to liquidity amount
         if (percent > 1e38) percent = 1e38;
-        if (liquidity == 0 && percent > 0) require (false, 'NotEnoughPositionLiquidity()');
+        if (liquidity == 0 && percent > 0) require (false, 'PositionNotFound()');
         return uint128(uint256(liquidity) * uint256(percent) / 1e38);
     }
 

@@ -71,6 +71,9 @@ describe('LimitPool Tests', function () {
         await mintSigners20(hre.props.token0, tokenAmountBn.mul(10), [hre.props.alice, hre.props.bob])
 
         await mintSigners20(hre.props.token1, tokenAmountBn.mul(10), [hre.props.alice, hre.props.bob])
+
+        await getLiquidity(true, true)
+        await getLiquidity(false, true)
     })
 
     it.only('pool0 - Should mint, fill, and burn', async function () {
@@ -5134,4 +5137,585 @@ describe('LimitPool Tests', function () {
             console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
         }
       });
+
+      it("pool0 - Can claim at the current pool price even when it is not your claim tick", async () => {
+        console.log("Mint #1");
+
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '-100000',
+            upper: '184550',
+            amount: "66907882939022685020",
+            zeroForOne: true,
+            balanceInDecrease: "66907882939022685020",
+            liquidityIncrease: "450934779961490414",
+            upperTickCleared: false,
+            lowerTickCleared: true,
+            revertMessage: '',
+        });
+
+        console.log("Mint #2");
+
+        await getPrice(true, true)
+        await getPrice(false, true)
+
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '-15180',
+            upper: '29790',
+            amount: "1000977696770293932",
+            zeroForOne: false,
+            balanceInDecrease: "1000977696770293932",
+            balanceOutIncrease: "66705398633370612078",
+            liquidityIncrease: "0",
+            upperTickCleared: true,
+            lowerTickCleared: false,
+            revertMessage: '',
+        });
+
+        await getPrice(true, true)
+        await getPrice(false, true)
+
+        console.log("Mint #3");
+
+        expect(await getTickAtPrice(true)).to.eq(16009);
+
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '-50',
+            upper: '60',
+            amount: "2",
+            zeroForOne: true,
+            balanceInDecrease: "2",
+            balanceOutIncrease: "0",
+            liquidityIncrease: "363",
+            upperTickCleared: false,
+            lowerTickCleared: true,
+            revertMessage: '',
+        });
+
+        await getPrice(true, true)
+        await getPrice(false, true)
+
+        console.log("Mint #4");
+
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '0',
+            upper: '10',
+            amount: "1",
+            zeroForOne: false,
+            balanceInDecrease: "1",
+            balanceOutIncrease: "0",
+            liquidityIncrease: "0",
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+        });
+
+        await getPrice(true, true)
+        await getPrice(false, true)
+
+        expect(await getTickAtPrice(true)).to.eq(0);
+
+        console.log("--------------- Burn #5 ---------------");
+
+        // The issue here is that I was able to claim at the current pool price, even though I should
+        // have been claiming at a much higher tick.
+        // My liquidity is not active at the current pool price because it was previously stashed on an undercut.
+        // Therefore, we will try to subtract my position liquidity from the pool liquidity and encounter an underflow.
+        // In this case we got an underflow but in many cases this will lead to immense loss of assets for other users in the pool as
+        // I can remove their liquidity from the current pool liquidity, and then they cannot exit as they experience the revert.
+        // Among other catastrophic things.
+        // ACTUAL CLAIM TICK: 16005
+        await getTick(true, 16005, true)
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-100000',
+            upper: '184550',
+            claim: '0', // Claim at current pool price even though my position has been filled at a much higher tick and my liquidity is not active
+            liquidityPercent: ethers.utils.parseUnits("1", 38),
+            zeroForOne: true,
+            balanceInIncrease: '447895645676095087',
+            balanceOutIncrease: '0',
+            lowerTickCleared: true,
+            upperTickCleared: false,
+            revertMessage: 'WrongTickClaimedAt5()',
+        });
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-100000',
+            upper: '184550',
+            claim: '16005', // Claim at current pool price even though my position has been filled at a much higher tick and my liquidity is not active
+            expectedLower: '16005',
+            liquidityPercent: ethers.utils.parseUnits("1", 38),
+            zeroForOne: true,
+            balanceInIncrease: '1000977696770293931',
+            balanceOutIncrease: '202484305652072915',
+            lowerTickCleared: false,
+            upperTickCleared: false,
+            revertMessage: '',
+        });
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-50',
+            upper: '60',
+            claim: '0', // Claim at current pool price even though my position has been filled at a much higher tick and my liquidity is not active
+            expectedLower: '16005',
+            liquidityPercent: ethers.utils.parseUnits("1", 38),
+            zeroForOne: true,
+            balanceInIncrease: '0',
+            balanceOutIncrease: '1',
+            lowerTickCleared: true,
+            upperTickCleared: false,
+            revertMessage: '',
+        });
+
+
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-15180',
+            upper: '29790',
+            claim: '16005', // Claim at current pool price even though my position has been filled at a much higher tick and my liquidity is not active
+            expectedLower: '16005',
+            liquidityPercent: ethers.utils.parseUnits("1", 38),
+            zeroForOne: false,
+            balanceInIncrease: '0',
+            balanceOutIncrease: '1',
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: 'PositionNotFound()',
+        });
+
+    })
+
+    it("pool1 - Can claim at the current pool price even when it is not your claim tick", async () => {
+        console.log("Mint #1");
+
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '-184550',
+            upper: '100000',
+            amount: "66907882939022685020",
+            zeroForOne: false,
+            balanceInDecrease: "66907882939022685020",
+            liquidityIncrease: "450934779961490414",
+            upperTickCleared: true,
+            lowerTickCleared: false,
+            revertMessage: '',
+        });
+
+        console.log("Mint #2");
+
+        await getPrice(true, true)
+        await getPrice(false, true)
+
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '-29790',
+            upper: '15180',
+            amount: "1000877696770293932",
+            zeroForOne: true,
+            balanceInDecrease: "1000877696770293932",
+            balanceOutIncrease: "66705378459522925380",
+            liquidityIncrease: "0",
+            upperTickCleared: false,
+            lowerTickCleared: true,
+            revertMessage: '',
+        });
+
+        await getPrice(true, true)
+        await getPrice(false, true)
+
+        console.log("Mint #3");
+
+        expect(await getTickAtPrice(false)).to.eq(-16008);
+
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '-60',
+            upper: '50',
+            amount: "2",
+            zeroForOne: false,
+            balanceInDecrease: "2",
+            balanceOutIncrease: "0",
+            liquidityIncrease: "363",
+            upperTickCleared: true,
+            lowerTickCleared: false,
+            revertMessage: '',
+        });
+
+        await getPrice(true, true)
+        await getPrice(false, true)
+
+        console.log("Mint #4");
+
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '-10',
+            upper: '0',
+            amount: "1",
+            zeroForOne: true,
+            balanceInDecrease: "1",
+            balanceOutIncrease: "0",
+            liquidityIncrease: "0",
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+        });
+
+        await getPrice(true, true)
+        await getPrice(false, true)
+
+        expect(await getTickAtPrice(false)).to.eq(0);
+
+        console.log("--------------- Burn #5 ---------------");
+
+        // The issue here is that I was able to claim at the current pool price, even though I should
+        // have been claiming at a much higher tick.
+        // My liquidity is not active at the current pool price because it was previously stashed on an undercut.
+        // Therefore, we will try to subtract my position liquidity from the pool liquidity and encounter an underflow.
+        // In this case we got an underflow but in many cases this will lead to immense loss of assets for other users in the pool as
+        // I can remove their liquidity from the current pool liquidity, and then they cannot exit as they experience the revert.
+        // Among other catastrophic things.
+        // ACTUAL CLAIM TICK: 16005
+        await getTick(false, -16005, true)
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-184550',
+            upper: '100000',
+            claim: '0', // Claim at current pool price even though my position has been filled at a much higher tick and my liquidity is not active
+            liquidityPercent: ethers.utils.parseUnits("1", 38),
+            zeroForOne: false,
+            balanceInIncrease: '447895645676095087',
+            balanceOutIncrease: '0',
+            lowerTickCleared: true,
+            upperTickCleared: false,
+            revertMessage: 'WrongTickClaimedAt5()',
+        });
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-184550',
+            upper: '100000',
+            claim: '-16005', // Claim at current pool price even though my position has been filled at a much higher tick and my liquidity is not active
+            expectedUpper: '-16005',
+            expectedPositionUpper: '-16000',
+            liquidityPercent: ethers.utils.parseUnits("5", 37),
+            zeroForOne: false,
+            balanceInIncrease: '1000686115948161293',
+            balanceOutIncrease: '101252239749879806',
+            lowerTickCleared: false,
+            upperTickCleared: false,
+            revertMessage: '',
+        });
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-184550',
+            upper: '-16000',
+            claim: '-16005', // Claim at current pool price even though my position has been filled at a much higher tick and my liquidity is not active
+            expectedUpper: '-16005',
+            liquidityPercent: ethers.utils.parseUnits("1", 38),
+            zeroForOne: false,
+            balanceInIncrease: '191580822132637',
+            balanceOutIncrease: '101252239749879806',
+            lowerTickCleared: false,
+            upperTickCleared: false,
+            revertMessage: '',
+        });
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-60',
+            upper: '50',
+            claim: '0', // Claim at current pool price even though my position has been filled at a much higher tick and my liquidity is not active
+            liquidityPercent: ethers.utils.parseUnits("1", 38),
+            zeroForOne: false,
+            balanceInIncrease: '0',
+            balanceOutIncrease: '1',
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: '',
+        });
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-29790',
+            upper: '15180',
+            claim: '-16005', // Claim at current pool price even though my position has been filled at a much higher tick and my liquidity is not active
+            expectedLower: '16005',
+            liquidityPercent: ethers.utils.parseUnits("1", 38),
+            zeroForOne: false,
+            balanceInIncrease: '0',
+            balanceOutIncrease: '1',
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: 'PositionNotFound()',
+        });
+    })
+
+    it("pool0 - overriding position when burning to the same lower/upper", async function () {
+
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: '0',
+            upper: '200',
+            amount: tokenAmount,
+            zeroForOne: true,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: "10050583320695160003177",
+            balanceOutIncrease: "0",
+            upperTickCleared: false,
+            lowerTickCleared: true,
+            revertMessage: '',
+        })
+
+        console.log("Mint #1 Completed");
+        console.log();
+
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: '100',
+            upper: '200',
+            amount: tokenAmount,
+            zeroForOne: true,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: "20151542874862585449132",
+            balanceOutIncrease: "0",
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
+
+        console.log("Mint #1 Completed");
+        console.log();
+
+
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: false,
+            amountIn: BigNumber.from("51000000000000000000"),
+            priceLimit: maxPrice,
+            balanceInDecrease: '51000000000000000000',
+            balanceOutIncrease: '50742541055238885256',
+            revertMessage: '',
+        })
+        console.log("SWAP #1 Completed");
+        console.log();
+
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: '0',
+            upper: '200',
+            claim: '100',
+            liquidityPercent: ethers.utils.parseUnits('0', 36),
+            zeroForOne: true,
+            balanceInIncrease: '50376233472265442777',
+            balanceOutIncrease: '0',
+            lowerTickCleared: true,
+            upperTickCleared: false,
+            revertMessage: 'UpdatePositionFirstAt(100, 200)',
+        })
+
+
+        console.log("BURN #1 Completed");
+        console.log();
+
+        expect(await getPositionLiquidity(true, bob.address, 100, 200)).to.eq("20151542874862585449132");
+
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: '100',
+            upper: '200',
+            claim: '100',
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: true,
+            balanceInIncrease: '416191159726890981',
+            balanceOutIncrease: '99587958272977177819',
+            lowerTickCleared: true,
+            upperTickCleared: false,
+            revertMessage: '',
+        })
+
+        console.log("BURN #2 Completed");
+        console.log();
+
+        // Bobs second position has 0 liquidity
+        expect(await getPositionLiquidity(true, bob.address, 100, 200)).to.eq("0");
+
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: '100',
+            upper: '200',
+            claim: '100',
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: true,
+            balanceInIncrease: '416191159726890981',
+            balanceOutIncrease: '49669500671783936925',
+            lowerTickCleared: true,
+            upperTickCleared: false,
+            revertMessage: "reverted with reason string 'PositionNotFound()'",
+        })
+
+        // expect(await hre.props.token0.balanceOf(hre.props.limitPool.address)).eq("49669500671783936925");
+        // expect(await hre.props.token1.balanceOf(hre.props.limitPool.address)).eq("50583808840273109019");
+
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: '0',
+            upper: '200',
+            claim: '100',
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: true,
+            balanceInIncrease: '50583808840273109017',
+            balanceOutIncrease: '49669500671783936923',
+            lowerTickCleared: true,
+            upperTickCleared: false,
+            revertMessage: "",
+        })
+
+        console.log("BURN #3 Completed");
+    });
+
+    it("pool1 - overriding position when burning to the same lower/upper", async function () {
+
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: '-200',
+            upper: '0',
+            amount: tokenAmount,
+            zeroForOne: false,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: "10050583320695160003177",
+            balanceOutIncrease: "0",
+            upperTickCleared: true,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
+
+        console.log("Mint #1 Completed");
+        console.log();
+
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: '-200',
+            upper: '-100',
+            amount: tokenAmount,
+            zeroForOne: false,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: "20151542874862585449132",
+            balanceOutIncrease: "0",
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
+
+        console.log("Mint #2 Completed");
+        console.log();
+
+
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: true,
+            amountIn: BigNumber.from("51000000000000000000"),
+            priceLimit: minPrice,
+            balanceInDecrease: '51000000000000000000',
+            balanceOutIncrease: '50742541055238885256',
+            revertMessage: '',
+        })
+        console.log("SWAP #1 Completed");
+        console.log();
+
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: '-200',
+            upper: '0',
+            claim: '-100',
+            liquidityPercent: ethers.utils.parseUnits('0', 36),
+            zeroForOne: false,
+            balanceInIncrease: '50376233472265442777',
+            balanceOutIncrease: '0',
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: 'UpdatePositionFirstAt(-200, -100)',
+        })
+
+
+        console.log("BURN #1 Completed");
+        console.log();
+
+        expect(await getPositionLiquidity(false, bob.address, -200, -100)).to.eq("20151542874862585449132");
+
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: '-200',
+            upper: '-100',
+            claim: '-100',
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: false,
+            balanceInIncrease: '416191159726890981',
+            balanceOutIncrease: '99587958272977177819',
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: '',
+        })
+
+        console.log("BURN #2 Completed");
+        console.log();
+
+        // Bobs second position has 0 liquidity
+        expect(await getPositionLiquidity(false, bob.address, -200, -100)).to.eq("0");
+
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: '-200',
+            upper: '-100',
+            claim: '-100',
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: false,
+            balanceInIncrease: '416191159726890981',
+            balanceOutIncrease: '49669500671783936925',
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: "reverted with reason string 'PositionNotFound()'",
+        })
+  
+        // expect(await hre.props.token1.balanceOf(hre.props.limitPool.address)).eq("49669500671783936925");
+        // expect(await hre.props.token0.balanceOf(hre.props.limitPool.address)).eq("50583808840273109019");
+
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: '-200',
+            upper: '0',
+            claim: '-100',
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: false,
+            balanceInIncrease: '50583808840273109017',
+            balanceOutIncrease: '49669500671783936923',
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: "",
+        })
+
+        console.log("BURN #3 Completed");
+    });
 })

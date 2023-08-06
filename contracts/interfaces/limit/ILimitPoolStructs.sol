@@ -24,11 +24,11 @@ interface ILimitPoolStructs {
     }
 
     struct Position {
-        uint160 claimPriceLast; // highest price claimed at
-        uint128 liquidity; // expected amount to be used not actual
         uint128 amountIn; // token amount already claimed; balance
         uint128 amountOut; // necessary for non-custodial positions
-        uint32  epochLast;  // last epoch this position was updated at
+        uint128 liquidity; // expected amount to be used not actual
+        uint32 epochLast;  // epoch when this position was created at
+        bool crossedInto; // whether the position was crossed into already
     }
 
     struct MintParams {

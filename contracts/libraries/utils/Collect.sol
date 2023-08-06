@@ -7,10 +7,10 @@ import '../utils/SafeTransfers.sol';
 
 library Collect {
     function burnLimit(
-        ILimitPoolStructs.BurnCache memory cache,
-        ILimitPoolStructs.BurnParams memory params
+        ILimitPoolStructs.BurnLimitCache memory cache,
+        ILimitPoolStructs.BurnLimitParams memory params
     ) internal returns (
-        ILimitPoolStructs.BurnCache memory
+        ILimitPoolStructs.BurnLimitCache memory
     )    
     {
         // store amounts for transferOut

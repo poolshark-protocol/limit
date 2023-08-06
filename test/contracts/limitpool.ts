@@ -75,6 +75,15 @@ describe('LimitPool Tests', function () {
         await getLiquidity(true, true)
         await getLiquidity(false, true)
     })
+    // 1. implement range pool calls
+    // 2. implement swap/quote
+    // - find active liquidity
+    // - find next price between range and limit
+    // store flag of which pools are active (uint8)
+    // better yet just store liquidity for limit and range (tells which are active)
+    // calculate fee growth off the range liquidity amount
+    // cross tick and know which ticks to clear out based on active liquidity
+    // pass global state instead of swapPool for MintLimit
 
     it('pool0 - Should mint, fill, and burn', async function () {
         const aliceLiquidity = '20051041647900280328782'

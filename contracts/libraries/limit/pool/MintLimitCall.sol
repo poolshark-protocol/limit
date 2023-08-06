@@ -23,8 +23,8 @@ library MintLimitCall {
     );
 
     function perform(
-        ILimitPoolStructs.MintParams memory params,
-        ILimitPoolStructs.MintCache memory cache,
+        ILimitPoolStructs.MintLimitParams memory params,
+        ILimitPoolStructs.MintLimitCache memory cache,
         PoolsharkStructs.TickMap storage tickMap,
         ILimitPoolStructs.PoolState storage pool,
         ILimitPoolStructs.PoolState storage swapPool,
@@ -32,7 +32,7 @@ library MintLimitCall {
         mapping(int24 => ILimitPoolStructs.Tick) storage swapTicks,
         mapping(address => mapping(int24 => mapping(int24 => ILimitPoolStructs.Position)))
             storage positions
-    ) external returns (ILimitPoolStructs.MintCache memory) {
+    ) external returns (ILimitPoolStructs.MintLimitCache memory) {
         // bump swapPool in case user is trying to undercut
         // this avoids trimming positions unnecessarily
         if (cache.swapPool.liquidity == 0) {

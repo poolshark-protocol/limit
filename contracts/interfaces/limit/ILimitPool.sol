@@ -9,12 +9,12 @@ interface ILimitPool is ILimitPoolStructs, PoolsharkStructs {
         uint160 startPrice
     ) external;
 
-    function mint(
-        MintParams memory params
+    function mintLimit(
+        MintLimitParams memory params
     ) external;
 
-    function burn(
-        BurnParams memory params
+    function burnLimit(
+        BurnLimitParams memory params
     ) external;
 
     function swap(
@@ -32,8 +32,8 @@ interface ILimitPool is ILimitPoolStructs, PoolsharkStructs {
         uint256 priceAfter
     );
 
-    function snapshot(
-        SnapshotParams memory params
+    function snapshotLimit(
+        SnapshotLimitParams memory params
     ) external view returns (
         Position memory
     );

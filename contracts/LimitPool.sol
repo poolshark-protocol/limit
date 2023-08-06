@@ -72,13 +72,13 @@ contract LimitPool is
     }
 
     // limitSwap
-    function mint(
-        MintParams memory params
+    function mintLimit(
+        MintLimitParams memory params
     ) external override
         nonReentrant
         canoncialOnly
     {
-        MintCache memory cache;
+        MintLimitCache memory cache;
         {
             cache.state = globalState;
             cache.constants = immutables();
@@ -98,14 +98,14 @@ contract LimitPool is
         globalState = cache.state;
     }
 
-    function burn(
-        BurnParams memory params
-    ) external override 
+    function burnLimit(
+        BurnLimitParams memory params
+    ) external override
         nonReentrant
         canoncialOnly
     {
         if (params.to == address(0)) revert CollectToZeroAddress();
-        BurnCache memory cache = BurnCache({
+        BurnLimitCache memory cache = BurnLimitCache({
             state: globalState,
             position: params.zeroForOne ? positions0[msg.sender][params.lower][params.upper]
                                         : positions1[msg.sender][params.lower][params.upper],
@@ -170,8 +170,8 @@ contract LimitPool is
         );
     }
 
-    function snapshot(
-       SnapshotParams memory params 
+    function snapshotLimit(
+       SnapshotLimitParams memory params 
     ) external view override canoncialOnly returns (
         Position memory
     ) {

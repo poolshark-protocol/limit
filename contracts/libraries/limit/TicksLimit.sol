@@ -13,7 +13,7 @@ import './EpochMap.sol';
 import '../utils/SafeCast.sol';
 import 'hardhat/console.sol';
 
-/// @notice Tick management library
+/// @notice Tick management library for limit pools
 library TicksLimit {
     error LiquidityOverflow();
     error LiquidityUnderflow();
@@ -53,7 +53,6 @@ library TicksLimit {
     ) external returns (
         ILimitPoolStructs.GlobalState memory
     ) {
-        console.log('inside init function');
         // state should only be initialized once
         if (pool0.price > 0) require (false, 'PoolAlreadyInitialized()');
 
@@ -338,13 +337,13 @@ library TicksLimit {
     }
 
     function unlock(
-        ILimitPoolStructs.MintCache memory cache,
+        ILimitPoolStructs.MintLimitCache memory cache,
         ILimitPoolStructs.PoolState memory pool,
         mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
         bool zeroForOne
     ) internal returns (
-        ILimitPoolStructs.MintCache memory,
+        ILimitPoolStructs.MintLimitCache memory,
         ILimitPoolStructs.PoolState memory
     )
     {
@@ -438,8 +437,8 @@ library TicksLimit {
     function insert(
         mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
-        ILimitPoolStructs.MintCache memory cache,
-        ILimitPoolStructs.MintParams memory params
+        ILimitPoolStructs.MintLimitCache memory cache,
+        ILimitPoolStructs.MintLimitParams memory params
     ) internal {
         /// @auditor - validation of ticks is in Positions.validate
         if (cache.liquidityMinted > (uint128(type(int128).max) - cache.pool.liquidityGlobal) )
@@ -502,10 +501,10 @@ library TicksLimit {
     }
 
     function insertSingle(
-        ILimitPoolStructs.MintParams memory params,
+        ILimitPoolStructs.MintLimitParams memory params,
         mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
-        ILimitPoolStructs.MintCache memory cache,
+        ILimitPoolStructs.MintLimitCache memory cache,
         ILimitPoolStructs.PoolState memory pool,
         PoolsharkStructs.Immutables memory constants
     ) internal returns (

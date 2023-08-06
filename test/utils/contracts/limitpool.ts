@@ -7,11 +7,11 @@ const { mine } = require("@nomicfoundation/hardhat-network-helpers");
 export const Q64x96 = BigNumber.from('2').pow(96)
 export const BN_ZERO = BigNumber.from('0')
 export interface Position {
-    liquidity: BigNumber
-    epochLast: number
-    claimPriceLast: BigNumber
     amountIn: BigNumber
     amountOut: BigNumber
+    liquidity: BigNumber
+    epochLast: number
+    crossedInto: boolean
 }
 
 export interface GlobalState {
@@ -311,9 +311,8 @@ export async function validateMint(params: ValidateMintParams) {
     if (revertMessage == '') {
         const txn = await hre.props.limitPool
             .connect(params.signer)
-            .mint({
+            .mintLimit({
                 to: recipient,
-                refundTo: recipient,
                 amount: amountDesired,
                 lower: lower,
                 upper: upper,
@@ -325,9 +324,8 @@ export async function validateMint(params: ValidateMintParams) {
         await expect(
             hre.props.limitPool
                 .connect(params.signer)
-                .mint({
+                .mintLimit({
                     to: params.signer.address,
-                    refundTo: recipient,
                     lower: lower,
                     upper: upper,
                     amount: amountDesired,
@@ -461,7 +459,7 @@ export async function validateBurn(params: ValidateBurnParams) {
         liquidityAmount = liquidityPercent.mul(positionBefore.liquidity).div(ethers.utils.parseUnits("1",38))
     }
     if (revertMessage == '') {
-        positionSnapshot = await hre.props.limitPool.snapshot({
+        positionSnapshot = await hre.props.limitPool.snapshotLimit({
             owner: signer.address,
             lower: lower,
             claim: claim,
@@ -471,7 +469,7 @@ export async function validateBurn(params: ValidateBurnParams) {
         })
         const burnTxn = await hre.props.limitPool
             .connect(signer)
-            .burn({
+            .burnLimit({
                 to: signer.address,
                 lower: lower,
                 claim: claim,
@@ -484,7 +482,7 @@ export async function validateBurn(params: ValidateBurnParams) {
         await expect(
             hre.props.limitPool
                 .connect(signer)
-                .burn({
+                .burnLimit({
                     to: signer.address,
                     lower: lower,
                     claim: claim,

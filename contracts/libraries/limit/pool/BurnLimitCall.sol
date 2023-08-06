@@ -18,13 +18,13 @@ library BurnLimitCall {
     );
 
     function perform(
-        ILimitPoolStructs.BurnParams memory params,
-        ILimitPoolStructs.BurnCache memory cache,
+        ILimitPoolStructs.BurnLimitParams memory params,
+        ILimitPoolStructs.BurnLimitCache memory cache,
         PoolsharkStructs.TickMap storage tickMap,
         mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
         mapping(address => mapping(int24 => mapping(int24 => ILimitPoolStructs.Position)))
             storage positions
-    ) external returns (ILimitPoolStructs.BurnCache memory) {
+    ) external returns (ILimitPoolStructs.BurnLimitCache memory) {
         if (params.lower >= params.upper) require (false, 'InvalidPositionBounds()');
         if (cache.position.epochLast == 0) require(false, 'PositionNotFound()');
         if (cache.position.crossedInto

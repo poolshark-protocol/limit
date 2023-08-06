@@ -10,6 +10,7 @@ import '../utils/SafeCast.sol';
 import '../pool/SwapCall.sol';
 
 /// @notice Position management library for ranged liquidity.
+/// @notice Position management library for ranged liquidity.
 library PositionsLimit {
     using SafeCast for uint256;
 
@@ -25,13 +26,13 @@ library PositionsLimit {
     );
 
     function resize(
-        ILimitPoolStructs.MintParams memory params,
-        ILimitPoolStructs.MintCache memory cache,
+        ILimitPoolStructs.MintLimitParams memory params,
+        ILimitPoolStructs.MintLimitCache memory cache,
         PoolsharkStructs.TickMap storage tickMap,
         mapping(int24 => ILimitPoolStructs.Tick) storage swapTicks
     ) internal returns (
-        ILimitPoolStructs.MintParams memory,
-        ILimitPoolStructs.MintCache memory
+        ILimitPoolStructs.MintLimitParams memory,
+        ILimitPoolStructs.MintLimitCache memory
     )
     {
         ConstantProduct.checkTicks(params.lower, params.upper, cache.constants.tickSpacing);
@@ -156,10 +157,10 @@ library PositionsLimit {
     }
 
     function add(
-        ILimitPoolStructs.MintCache memory cache,
+        ILimitPoolStructs.MintLimitCache memory cache,
         mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
-        ILimitPoolStructs.MintParams memory params
+        ILimitPoolStructs.MintLimitParams memory params
     ) internal returns (
         ILimitPoolStructs.PoolState memory,
         ILimitPoolStructs.Position memory

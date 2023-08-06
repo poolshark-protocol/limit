@@ -21,6 +21,8 @@ interface ILimitPoolStructs {
     struct Tick {
         uint160 priceAt;
         int128 liquidityDelta;
+        //liquidityDelta0
+        //liquidityDelta1
     }
 
     struct Position {
@@ -31,9 +33,8 @@ interface ILimitPoolStructs {
         bool crossedInto; // whether the position was crossed into already
     }
 
-    struct MintParams {
+    struct MintLimitParams {
         address to;
-        address refundTo;
         uint128 amount;
         uint96 mintPercent;
         int24 lower;
@@ -41,7 +42,7 @@ interface ILimitPoolStructs {
         bool zeroForOne;
     }
 
-    struct BurnParams {
+    struct BurnLimitParams {
         address to;
         uint128 burnPercent;
         int24 lower;
@@ -50,7 +51,7 @@ interface ILimitPoolStructs {
         bool zeroForOne;
     }
 
-    struct SnapshotParams {
+    struct SnapshotLimitParams {
         address owner;
         uint128 burnPercent;
         int24 lower;
@@ -69,7 +70,7 @@ interface ILimitPoolStructs {
         bool zeroForOne;
     }
 
-    struct MintCache {
+    struct MintLimitCache {
         GlobalState state;
         Position position;
         PoolsharkStructs.Immutables constants;
@@ -86,7 +87,7 @@ interface ILimitPoolStructs {
         int24 tickLimit;
     }
 
-    struct BurnCache {
+    struct BurnLimitCache {
         GlobalState state;
         Position position;
         PoolsharkStructs.Immutables constants;

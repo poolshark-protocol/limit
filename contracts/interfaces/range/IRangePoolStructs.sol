@@ -26,25 +26,6 @@ interface IRangePoolStructs {
         uint16  lengthNext;
     }
 
-    struct Tick {
-        int128  liquidityDelta;
-        uint200 feeGrowthOutside0; // Per unit of liquidity.
-        uint200 feeGrowthOutside1;
-        int56   tickSecondsAccumOutside;
-        uint160 secondsPerLiquidityAccumOutside;
-    }
-
-    struct TickMap {
-        uint256 blocks;                     /// @dev - sets of words
-        mapping(uint256 => uint256) words;  /// @dev - sets to words
-        mapping(uint256 => uint256) ticks;  /// @dev - words to ticks
-    }
-
-    struct TickParams {
-        TickMap tickMap;
-        mapping(int24 => Tick) ticks;
-    }
-
     struct Position {
         uint128 liquidity;
         uint128 amount0;

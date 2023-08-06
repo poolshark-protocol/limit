@@ -162,8 +162,8 @@ library PositionsLimit {
         PoolsharkStructs.TickMap storage tickMap,
         ILimitPoolStructs.MintLimitParams memory params
     ) internal returns (
-        ILimitPoolStructs.PoolState memory,
-        ILimitPoolStructs.Position memory
+        PoolsharkStructs.LimitPoolState memory,
+        ILimitPoolStructs.PositionLimit memory
     ) {
         if (cache.liquidityMinted == 0) return (cache.pool, cache.position);
 
@@ -199,17 +199,19 @@ library PositionsLimit {
         return (cache.pool, cache.position);
     }
 
+    //Limitxxx would be easier
+
     function remove(
-        mapping(address => mapping(int24 => mapping(int24 => ILimitPoolStructs.Position)))
+        mapping(address => mapping(int24 => mapping(int24 => ILimitPoolStructs.PositionLimit)))
             storage positions,
         mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
-        ILimitPoolStructs.PoolState memory pool,
-        ILimitPoolStructs.UpdateParams memory params,
+        PoolsharkStructs.LimitPoolState memory pool,
+        ILimitPoolStructs.UpdateLimitParams memory params,
         PoolsharkStructs.Immutables memory constants
     ) internal returns (
-        ILimitPoolStructs.PoolState memory,
-        ILimitPoolStructs.Position memory
+        ILimitPoolStructs.LimitPoolState memory,
+        ILimitPoolStructs.PositionLimit memory
     ) {
         // initialize cache
         ILimitPoolStructs.UpdateCache memory cache;
@@ -293,7 +295,7 @@ library PositionsLimit {
     }
 
     function update(
-        mapping(address => mapping(int24 => mapping(int24 => ILimitPoolStructs.Position)))
+        mapping(address => mapping(int24 => mapping(int24 => ILimitPoolStructs.PositionLimit)))
             storage positions,
         mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,

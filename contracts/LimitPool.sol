@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.13;
 
+import './interfaces/range/IRangePool.sol';
 import './interfaces/limit/ILimitPool.sol';
 import './interfaces/limit/ILimitPoolManager.sol';
 import './base/storage/LimitPoolStorage.sol';
@@ -9,6 +10,7 @@ import './base/structs/LimitPoolFactoryStructs.sol';
 import './utils/LimitPoolErrors.sol';
 import './libraries/pool/SwapCall.sol';
 import './libraries/pool/QuoteCall.sol';
+import './libraries/range/pool/MintCall.sol';
 import './libraries/limit/pool/MintLimitCall.sol';
 import './libraries/limit/pool/BurnLimitCall.sol';
 import './libraries/math/ConstantProduct.sol';
@@ -20,6 +22,7 @@ import 'hardhat/console.sol';
 /// @notice Poolshark Cover Pool Implementation
 contract LimitPool is
     ILimitPool,
+    IRangePool,
     LimitPoolStorage,
     LimitPoolImmutables,
     LimitPoolFactoryStructs,
@@ -71,7 +74,24 @@ contract LimitPool is
         console.log('end of init function');
     }
 
-    // limitSwap
+    function mint(
+        MintParams memory params
+    ) external override
+        nonReentrant
+        canoncialOnly
+    {
+        MintCache memory cache = MintCache({
+            pool: poolState,
+            position: positions[params.lower][params.upper],
+            constants: immutables(),
+            liquidityMinted: 0
+        });
+        cache = MintCall.perform(params, cache, tickMap, ticks, samples);
+        poolState = cache.pool; 
+        positions[params.lower][params.upper] = cache.position;
+    }
+
+    //limitSwap
     function mintLimit(
         MintLimitParams memory params
     ) external override

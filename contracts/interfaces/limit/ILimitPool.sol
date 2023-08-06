@@ -4,7 +4,7 @@ pragma solidity 0.8.13;
 import './ILimitPoolStructs.sol';
 import '../../base/structs/LimitPoolFactoryStructs.sol';
 
-interface ILimitPool is ILimitPoolStructs, PoolsharkStructs {
+interface ILimitPool is ILimitPoolStructs {
     function initialize(
         uint160 startPrice
     ) external;
@@ -35,7 +35,7 @@ interface ILimitPool is ILimitPoolStructs, PoolsharkStructs {
     function snapshotLimit(
         SnapshotLimitParams memory params
     ) external view returns (
-        Position memory
+        PositionLimit memory
     );
 
     function fees(

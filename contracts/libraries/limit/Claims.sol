@@ -12,17 +12,17 @@ library Claims {
     using SafeCast for uint256;
 
     function validate(
-        mapping(address => mapping(int24 => mapping(int24 => ILimitPoolStructs.Position)))
+        mapping(address => mapping(int24 => mapping(int24 => ILimitPoolStructs.PositionLimit)))
             storage positions,
         mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
-        ILimitPoolStructs.PoolState memory pool,
-        ILimitPoolStructs.UpdateParams memory params,
-        ILimitPoolStructs.UpdateCache memory cache,
+        ILimitPoolStructs.LimitPoolState memory pool,
+        ILimitPoolStructs.UpdateLimitParams memory params,
+        ILimitPoolStructs.UpdateLimitCache memory cache,
         PoolsharkStructs.Immutables memory constants
     ) internal view returns (
-        ILimitPoolStructs.UpdateParams memory,
-        ILimitPoolStructs.UpdateCache memory
+        ILimitPoolStructs.UpdateLimitParams memory,
+        ILimitPoolStructs.UpdateLimitCache memory
     ) {
         // validate position liquidity
         if (params.amount > cache.position.liquidity) require (false, 'NotEnoughPositionLiquidity()');
@@ -39,13 +39,13 @@ library Claims {
                 if (pool.price <= cache.priceUpper) {
                     cache.priceClaim = pool.price;
                     params.claim = TickMap.roundBack(pool.tickAtPrice, constants, params.zeroForOne, cache.priceClaim);
-                    claimTickEpoch = pool.swapEpoch;
+                    claimTickEpoch = cache.state.epoch;
                 } else {
                     cache.priceClaim = cache.priceUpper;
                     params.claim = params.upper;
                     cache.claimTick = ticks[params.upper];
                 }
-                claimTickEpoch = pool.swapEpoch;
+                claimTickEpoch = cache.state.epoch;
             } else if (params.claim % constants.tickSpacing != 0) {
                 if (cache.claimTick.priceAt == 0) {
                     require (false, 'WrongTickClaimedAt1()');
@@ -57,13 +57,13 @@ library Claims {
                 if (pool.price >= cache.priceLower) {
                     cache.priceClaim = pool.price;
                     params.claim = TickMap.roundBack(pool.tickAtPrice, constants, params.zeroForOne, cache.priceClaim);
-                    claimTickEpoch = pool.swapEpoch;
+                    claimTickEpoch = cache.state.epoch;
                 } else {
                     cache.priceClaim = cache.priceLower;
                     params.claim = params.lower;
                     cache.claimTick = ticks[params.upper];
                 }
-                claimTickEpoch = pool.swapEpoch;
+                claimTickEpoch = cache.state.epoch;
             } else if (params.claim % constants.tickSpacing != 0) {
                 if (cache.claimTick.priceAt == 0) {
                     require (false, 'WrongTickClaimedAt2()');
@@ -124,11 +124,11 @@ library Claims {
     }
 
     function getDeltas(
-        ILimitPoolStructs.UpdateCache memory cache,
-        ILimitPoolStructs.UpdateParams memory params,
+        ILimitPoolStructs.UpdateLimitCache memory cache,
+        ILimitPoolStructs.UpdateLimitParams memory params,
         PoolsharkStructs.Immutables memory constants
     ) internal pure returns (
-        ILimitPoolStructs.UpdateCache memory
+        ILimitPoolStructs.UpdateLimitCache memory
     ) {
         // if half tick priceAt > 0 add amountOut to amountOutClaimed
         // set claimPriceLast if zero

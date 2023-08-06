@@ -1,31 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.13;
 
-import '../../libraries/math/ConstantProduct.sol';
+import '../../base/structs/PoolsharkStructs.sol';
 
-interface ILimitPoolStructs {
-    struct GlobalState {
-        uint8   unlocked;
-    }
+interface ILimitPoolStructs is PoolsharkStructs {
 
-    struct PoolState {
-        uint160 price; /// @dev Starting price current
-        uint128 liquidity; /// @dev Liquidity currently active
-        uint128 liquidityGlobal;
-        uint128 protocolFees;
-        uint32  swapEpoch;
-        uint16 protocolFee;
-        int24 tickAtPrice;
-    }
-
-    struct Tick {
-        uint160 priceAt;
-        int128 liquidityDelta;
-        //liquidityDelta0
-        //liquidityDelta1
-    }
-
-    struct Position {
+    struct PositionLimit {
         uint128 amountIn; // token amount already claimed; balance
         uint128 amountOut; // necessary for non-custodial positions
         uint128 liquidity; // expected amount to be used not actual
@@ -60,7 +40,7 @@ interface ILimitPoolStructs {
         bool zeroForOne;
     }
 
-    struct UpdateParams {
+    struct UpdateLimitParams {
         address owner;
         address to;
         uint128 amount;
@@ -72,10 +52,10 @@ interface ILimitPoolStructs {
 
     struct MintLimitCache {
         GlobalState state;
-        Position position;
-        PoolsharkStructs.Immutables constants;
-        PoolState pool;
-        PoolState swapPool;
+        PositionLimit position;
+        Immutables constants;
+        LimitPoolState pool;
+        LimitPoolState swapPool;
         SwapCache swapCache;
         uint256 liquidityMinted;
         uint256 mintSize;
@@ -89,15 +69,15 @@ interface ILimitPoolStructs {
 
     struct BurnLimitCache {
         GlobalState state;
-        Position position;
+        PositionLimit position;
         PoolsharkStructs.Immutables constants;
-        PoolState pool;
+        LimitPoolState pool;
     }
 
     struct SwapCache {
         GlobalState state;
         PoolsharkStructs.Immutables constants;
-        PoolState pool;
+        LimitPoolState pool;
         uint256 price;
         uint256 liquidity;
         uint256 amountLeft;
@@ -109,10 +89,11 @@ interface ILimitPoolStructs {
         bool cross;
     }
 
-    struct UpdateCache {
-        PoolState pool;
+    struct UpdateLimitCache {
+        GlobalState state;
+        LimitPoolState pool;
         Tick claimTick;
-        Position position;
+        PositionLimit position;
         uint160 priceLower;
         uint160 priceClaim;
         uint160 priceUpper;

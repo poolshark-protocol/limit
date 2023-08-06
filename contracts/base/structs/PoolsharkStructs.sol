@@ -2,6 +2,52 @@
 pragma solidity 0.8.13;
 
 interface PoolsharkStructs {
+
+    struct GlobalState {
+        RangePoolState pool;
+        LimitPoolState pool0;
+        LimitPoolState pool1;
+        uint128 liquidityGlobal;
+        uint32  epoch;
+        uint8   unlocked;
+    }
+
+    struct LimitPoolState {
+        uint160 price; /// @dev Starting price current
+        uint128 liquidity; /// @dev Liquidity currently active
+        uint128 protocolFees;
+        uint16 protocolFee;
+        int24 tickAtPrice;
+    }
+
+    struct RangePoolState {
+        SampleState  samples;
+        uint200 feeGrowthGlobal0;
+        uint200 feeGrowthGlobal1;
+        uint160 secondsPerLiquidityAccum;
+        uint160 price;               /// @dev Starting price current
+        uint128 liquidity;           /// @dev Liquidity currently active
+        int56   tickSecondsAccum;
+        int24   tickAtPrice;
+    }
+
+    struct Tick {
+        uint200 feeGrowthOutside0;                   // RangePool
+        uint200 feeGrowthOutside1;                   // RangePool
+        uint160 priceAt;                             // LimitPool
+        uint160 secondsPerLiquidityAccumOutside;     // RangePool
+        int128 liquidityDelta0;                      // LimitPool
+        int128 liquidityDelta1;                      // LimitPool
+        int128 liquidityDelta;                       // RangePool
+        int56 tickSecondsAccumOutside;               // RangePool
+    }
+
+    struct SampleState {
+        uint16  index;
+        uint16  length;
+        uint16  lengthNext;
+    }
+
     struct SwapParams {
         address to;
         uint160 priceLimit;

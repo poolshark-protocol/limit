@@ -14,7 +14,7 @@ import '../utils/SafeCast.sol';
 import 'hardhat/console.sol';
 
 /// @notice Tick management library
-library LimitTicks {
+library TicksLimit {
     error LiquidityOverflow();
     error LiquidityUnderflow();
     error InvalidLowerTick();
@@ -381,7 +381,7 @@ library LimitTicks {
 
         // zero out tick
         ticks[tickToClear].liquidityDelta = 0;
-        Ticks.clear(ticks, cache.constants, tickMap, tickToClear);
+        TicksLimit.clear(ticks, cache.constants, tickMap, tickToClear);
 
         return (cache, pool);
     }

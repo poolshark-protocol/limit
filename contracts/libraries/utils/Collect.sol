@@ -2,7 +2,7 @@
 pragma solidity 0.8.13;
 
 import '../../interfaces/limit/ILimitPoolStructs.sol';
-import '../limit/Positions.sol';
+import '../limit/PositionsLimit.sol';
 import '../utils/SafeTransfers.sol';
 
 library Collect {

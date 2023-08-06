@@ -3,12 +3,14 @@ import { getNonce } from '../../../tasks/utils'
 import {
     LimitPool,
     LimitPoolFactory,
-    Positions,
-    Ticks,
     Token20,
     LimitPoolManager,
     TickMap,
     PoolRouter,
+    Positions,
+    PositionsLimit,
+    Ticks,
+    TicksLimit,
 } from '../../../typechain'
 import { InitialSetup } from './initialSetup'
 import { MintCall } from '../../../typechain'
@@ -24,8 +26,8 @@ export interface BeforeEachProps {
     limitPoolFactory: LimitPoolFactory
     poolRouter: PoolRouter
     tickMapLib: TickMap
-    ticksLib: Ticks
-    positionsLib: Positions
+    ticksLib: TicksLimit
+    positionsLib: PositionsLimit
     mintCall: MintCall
     burnCall: BurnCall
     swapCall: SwapCall
@@ -70,8 +72,8 @@ export class GetBeforeEach {
         let limitPoolFactory: LimitPoolFactory
         let poolRouter: PoolRouter
         let tickMapLib: TickMap
-        let ticksLib: Ticks
-        let positionsLib: Positions
+        let ticksLib: TicksLimit
+        let positionsLib: PositionsLimit
         let mintCall: MintCall
         let burnCall: BurnCall
         let swapCall: SwapCall

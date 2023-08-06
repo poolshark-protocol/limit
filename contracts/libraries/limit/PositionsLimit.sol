@@ -10,7 +10,7 @@ import '../utils/SafeCast.sol';
 import '../pool/SwapCall.sol';
 
 /// @notice Position management library for ranged liquidity.
-library LimitPositions {
+library PositionsLimit {
     using SafeCast for uint256;
 
     event BurnLimit(
@@ -79,7 +79,7 @@ library LimitPositions {
         if (params.zeroForOne ? cache.priceLimit < cache.swapPool.price
                               : cache.priceLimit > cache.swapPool.price) {
             // swap and save the pool state
-            (cache.swapPool, swapCache) = Ticks.swap(
+            (cache.swapPool, swapCache) = TicksLimit.swap(
                 swapTicks,
                 tickMap,
                 PoolsharkStructs.SwapParams({
@@ -183,7 +183,7 @@ library LimitPositions {
         }
         
         // add liquidity to ticks
-        Ticks.insert(
+        TicksLimit.insert(
             ticks,
             tickMap,
             cache,
@@ -256,7 +256,7 @@ library LimitPositions {
             }
         }
 
-        Ticks.remove(
+        TicksLimit.remove(
             ticks,
             tickMap,
             cache,
@@ -360,7 +360,7 @@ library LimitPositions {
                             cache.pool.price > cache.priceClaim)
                     cache.removeUpper = true;
             }
-            Ticks.remove(
+            TicksLimit.remove(
                 ticks,
                 tickMap,
                 cache,

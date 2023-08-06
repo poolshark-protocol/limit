@@ -76,7 +76,7 @@ describe('LimitPool Tests', function () {
         await getLiquidity(false, true)
     })
 
-    it.only('pool0 - Should mint, fill, and burn', async function () {
+    it('pool0 - Should mint, fill, and burn', async function () {
         const aliceLiquidity = '20051041647900280328782'
         // mint should revert
         await validateMint({

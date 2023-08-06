@@ -38,7 +38,7 @@ library BurnLimitCall {
                 cache.pool,
                 cache.position,
                 params.claim
-            ) = Positions.update(
+            ) = PositionsLimit.update(
                 positions,
                 ticks,
                 tickMap,
@@ -57,7 +57,7 @@ library BurnLimitCall {
             );
         } else {
             // position has not been crossed into
-            (cache.pool, cache.position) = Positions.remove(
+            (cache.pool, cache.position) = PositionsLimit.remove(
                 positions,
                 ticks,
                 tickMap,

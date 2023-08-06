@@ -2,7 +2,7 @@
 pragma solidity 0.8.13;
 
 import '../../interfaces/limit/ILimitPoolStructs.sol';
-import '../limit/Ticks.sol';
+import '../limit/TicksLimit.sol';
 
 library QuoteCall {
     event Swap(
@@ -25,7 +25,7 @@ library QuoteCall {
         uint256,
         uint160
     ) {
-        return Ticks.quote(
+        return TicksLimit.quote(
             ticks,
             tickMap,
             params,

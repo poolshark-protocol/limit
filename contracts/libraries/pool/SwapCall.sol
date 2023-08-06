@@ -4,7 +4,7 @@ pragma solidity 0.8.13;
 import '../../interfaces/limit/ILimitPoolStructs.sol';
 import '../../interfaces/callbacks/IPoolsharkSwapCallback.sol';
 import '../../interfaces/IERC20Minimal.sol';
-import '../limit/Ticks.sol';
+import '../limit/TicksLimit.sol';
 import '../utils/Collect.sol';
 import '../utils/SafeTransfers.sol';
 
@@ -35,7 +35,7 @@ library SwapCall {
         int256,
         int256
     ) {
-        (cache.pool, cache) = Ticks.swap(
+        (cache.pool, cache) = TicksLimit.swap(
             ticks,
             tickMap,
             params,

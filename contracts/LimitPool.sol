@@ -60,7 +60,7 @@ contract LimitPool is
     {
         console.log('initialize pool');
         // initialize state
-        globalState = Ticks.initialize(
+        globalState = TicksLimit.initialize(
             tickMap,
             pool0,
             pool1,
@@ -175,7 +175,7 @@ contract LimitPool is
     ) external view override canoncialOnly returns (
         Position memory
     ) {
-        return Positions.snapshot(
+        return PositionsLimit.snapshot(
             params.zeroForOne ? positions0 : positions1,
             params.zeroForOne ? ticks0 : ticks1,
             tickMap,

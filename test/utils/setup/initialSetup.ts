@@ -2,7 +2,7 @@ import { SUPPORTED_NETWORKS } from '../../../scripts/constants/supportedNetworks
 import { DeployAssist } from '../../../scripts/util/deployAssist'
 import { ContractDeploymentsKeys } from '../../../scripts/util/files/contractDeploymentKeys'
 import { ContractDeploymentsJson } from '../../../scripts/util/files/contractDeploymentsJson'
-import { LimitPool__factory, QuoteCall__factory } from '../../../typechain'
+import { BurnLimitCall__factory, LimitPool__factory, MintLimitCall__factory, PositionsLimit__factory, QuoteCall__factory, TicksLimit__factory } from '../../../typechain'
 import { BurnCall__factory } from '../../../typechain'
 import { SwapCall__factory } from '../../../typechain'
 import { MintCall__factory } from '../../../typechain'
@@ -122,7 +122,7 @@ export class InitialSetup {
         await this.deployAssist.deployContractWithRetry(
             network,
             // @ts-ignore
-            Ticks__factory,
+            TicksLimit__factory,
             'ticksLib',
             [],
         )
@@ -130,7 +130,7 @@ export class InitialSetup {
         await this.deployAssist.deployContractWithRetry(
             network,
             // @ts-ignore
-            Positions__factory,
+            PositionsLimit__factory,
             'positionsLib',
             [],
         )
@@ -164,7 +164,7 @@ export class InitialSetup {
         await this.deployAssist.deployContractWithRetry(
             network,
             // @ts-ignore
-            MintCall__factory,
+            MintLimitCall__factory,
             'mintCall',
             [],
         )
@@ -172,7 +172,7 @@ export class InitialSetup {
         await this.deployAssist.deployContractWithRetry(
             network,
             // @ts-ignore
-            BurnCall__factory,
+            BurnLimitCall__factory,
             'burnCall',
             []
         )
@@ -194,8 +194,8 @@ export class InitialSetup {
                 hre.props.limitPoolFactory.address
             ],
             {
-                'contracts/libraries/limit/Positions.sol:Positions': hre.props.positionsLib.address,
-                'contracts/libraries/limit/Ticks.sol:Ticks': hre.props.ticksLib.address,
+                'contracts/libraries/limit/PositionsLimit.sol:PositionsLimit': hre.props.positionsLib.address,
+                'contracts/libraries/limit/TicksLimit.sol:TicksLimit': hre.props.ticksLib.address,
                 'contracts/libraries/limit/pool/MintLimitCall.sol:MintLimitCall': hre.props.mintCall.address,
                 'contracts/libraries/limit/pool/BurnLimitCall.sol:BurnLimitCall': hre.props.burnCall.address,
                 'contracts/libraries/pool/SwapCall.sol:SwapCall': hre.props.swapCall.address,

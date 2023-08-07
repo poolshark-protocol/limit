@@ -5718,4 +5718,110 @@ describe('LimitPool Tests', function () {
 
         console.log("BURN #3 Completed");
     });
+
+    it.skip("Pool State Unsaved Leading To Underflow", async function () {
+
+        console.log("Mint #1");
+
+        await validateMint({
+          signer: hre.props.bob,
+          recipient: hre.props.bob.address,
+          lower: "120",
+          upper: "510",
+          amount: "847",
+          zeroForOne: true,
+          balanceInDecrease: "847",
+          liquidityIncrease: "44126",
+          balanceOutIncrease: "0",
+          upperTickCleared: false,
+          lowerTickCleared: true,
+          revertMessage: "",
+        });
+
+
+
+        console.log("Mint #2");
+
+        await validateMint({
+          signer: hre.props.bob,
+          recipient: hre.props.bob.address,
+          lower: "0",
+          upper: "10",
+          amount: "1",
+          zeroForOne: false,
+          balanceInDecrease: "1",
+          liquidityIncrease: "1999",
+          balanceOutIncrease: "0",
+          upperTickCleared: true,
+          lowerTickCleared: true,
+          revertMessage: "",
+        });
+
+
+        console.log("Mint #3");
+
+        await validateMint({
+          signer: hre.props.bob,
+          recipient: hre.props.bob.address,
+          lower: "0",
+          upper: "20",
+          amount: "1",
+          zeroForOne: false,
+          balanceInDecrease: "1",
+          liquidityIncrease: "2998",
+          positionLiquidityChange: "999",
+          balanceOutIncrease: "0",
+          upperTickCleared: true,
+          lowerTickCleared: true,
+          revertMessage: "",
+        });
+
+        console.log("Burn #1");
+
+        await validateBurn({
+          signer: hre.props.bob,
+          lower: "0",
+          upper: "20",
+          claim: "20",
+          liquidityPercent: ethers.utils.parseUnits("1", 38),
+          zeroForOne: false,
+          balanceInIncrease: "0",
+          balanceOutIncrease: "0",
+          lowerTickCleared: false,
+          upperTickCleared: true,
+          revertMessage: "",
+        });
+
+        console.log("Mint #4");
+
+
+        await validateMint({
+          signer: hre.props.bob,
+          recipient: hre.props.bob.address,
+          lower: "-20",
+          upper: "107510",
+          amount: "504",
+          zeroForOne: false,
+          expectedUpper: '340',
+          balanceInDecrease: "504",
+          liquidityIncrease: "0",
+          balanceOutIncrease: "492",
+          upperTickCleared: true,
+          lowerTickCleared: false,
+          revertMessage: "",
+        });
+        return
+        console.log("SWAP #1");
+
+        await validateSwap({
+          signer: hre.props.bob,
+          recipient: hre.props.bob.address,
+          zeroForOne: true,
+          amountIn: BigNumber.from("1000000000"),
+          priceLimit: BigNumber.from("256"),
+          balanceInDecrease: "0",
+          balanceOutIncrease: BigNumber.from("0").toString(),
+          revertMessage: 'reverted with panic code 0x11 (Arithmetic operation underflowed or overflowed outside of an unchecked block)',
+        });
+      });
 })

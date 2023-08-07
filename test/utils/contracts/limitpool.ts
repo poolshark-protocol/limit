@@ -9,7 +9,6 @@ export const BN_ZERO = BigNumber.from('0')
 export interface Position {
     liquidity: BigNumber
     epochLast: number
-    claimPriceLast: BigNumber
     amountIn: BigNumber
     amountOut: BigNumber
 }

@@ -4,7 +4,6 @@ pragma solidity 0.8.13;
 import '../../interfaces/ILimitPoolStructs.sol';
 import '../Positions.sol';
 import '../utils/Collect.sol';
-import 'hardhat/console.sol';
 
 library BurnCall {
     event BurnLimit(

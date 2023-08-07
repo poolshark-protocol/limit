@@ -6,8 +6,8 @@ import '../../interfaces/IERC20Minimal.sol';
 
 library Checks {
     function save(
-        ILimitPoolStructs.PoolState memory pool,
-        ILimitPoolStructs.PoolState storage poolState
+        PoolsharkStructs.LimitPoolState memory pool,
+        PoolsharkStructs.LimitPoolState storage poolState
     ) internal {
         poolState.price = pool.price;
         poolState.liquidity = pool.liquidity;

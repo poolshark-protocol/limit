@@ -26,8 +26,8 @@ library MintLimitCall {
         ILimitPoolStructs.MintLimitParams memory params,
         ILimitPoolStructs.MintLimitCache memory cache,
         PoolsharkStructs.TickMap storage tickMap,
-        ILimitPoolStructs.PoolState storage pool,
-        ILimitPoolStructs.PoolState storage swapPool,
+        PoolsharkStructs.LimitPoolState storage pool,
+        PoolsharkStructs.LimitPoolState storage swapPool,
         mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
         mapping(int24 => ILimitPoolStructs.Tick) storage swapTicks,
         mapping(address => mapping(int24 => mapping(int24 => ILimitPoolStructs.Position)))
@@ -46,10 +46,10 @@ library MintLimitCall {
             tickMap,
             swapTicks
         );
+
         // save state for safe reentrancy
         save(cache.swapPool, swapPool);
-        // load position given params
-        cache.position = positions[params.to][params.lower][params.upper];
+
         // transfer in token amount
         SafeTransfers.transferIn(
                                  params.zeroForOne ? cache.constants.token0 
@@ -64,14 +64,17 @@ library MintLimitCall {
                                   : cache.constants.token0,
                 cache.swapCache.output
             );
-        // bump to the next tick if there is no liquidity
-        if (cache.pool.liquidity == 0) {
-            /// @dev - this makes sure to have liquidity unlocked if undercutting
-            (cache, cache.pool) = TicksLimit.unlock(cache, cache.pool, ticks, tickMap, params.zeroForOne);
-        }
+
         // mint position if amount is left
         if (params.amount > 0 && params.lower < params.upper) {
-            /// @auditor not sure if the lower >= upper case is possible
+            // load position given params
+            cache.position = positions[params.to][params.lower][params.upper];
+            
+            // bump to the next tick if there is no liquidity
+            if (cache.pool.liquidity == 0) {
+                /// @dev - this makes sure to have liquidity unlocked if undercutting
+                (cache, cache.pool) = Ticks.unlock(cache, cache.pool, ticks, tickMap, params.zeroForOne);
+            }
 
             if (params.zeroForOne) {
                 uint160 priceLower = ConstantProduct.getPriceAtTick(params.lower, cache.constants);
@@ -110,8 +113,6 @@ library MintLimitCall {
                 tickMap,
                 params
             );
-            // save lp side for safe reentrancy
-            save(cache.pool, pool);
 
             // save position to storage
             positions[params.to][params.lower][params.upper] = cache.position;
@@ -127,12 +128,16 @@ library MintLimitCall {
                 uint128(cache.liquidityMinted)
             );
         }
+
+        // save lp side for safe reentrancy
+        save(cache.pool, pool);
+
         return cache;
     }
 
     function save(
-        ILimitPoolStructs.PoolState memory pool,
-        ILimitPoolStructs.PoolState storage poolState
+        PoolsharkStructs.LimitPoolState memory pool,
+        PoolsharkStructs.LimitPoolState storage poolState
     ) internal {
         poolState.price = pool.price;
         poolState.liquidity = pool.liquidity;

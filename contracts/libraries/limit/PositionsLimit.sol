@@ -300,12 +300,12 @@ library PositionsLimit {
         mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
         ILimitPoolStructs.GlobalState memory state,
-        ILimitPoolStructs.PoolState memory pool,
+        PoolsharkStructs.LimitPoolState memory pool,
         ILimitPoolStructs.UpdateParams memory params,
         PoolsharkStructs.Immutables memory constants
     ) internal returns (
         ILimitPoolStructs.GlobalState memory,
-        ILimitPoolStructs.PoolState memory,
+        PoolsharkStructs.LimitPoolState memory,
         ILimitPoolStructs.Position memory,
         int24
     )
@@ -424,7 +424,7 @@ library PositionsLimit {
         mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
         ILimitPoolStructs.GlobalState memory state,
-        ILimitPoolStructs.PoolState memory pool,
+        PoolsharkStructs.LimitPoolState memory pool,
         ILimitPoolStructs.UpdateParams memory params,
         PoolsharkStructs.Immutables memory constants
     ) external view returns (
@@ -478,7 +478,7 @@ library PositionsLimit {
         mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
         ILimitPoolStructs.GlobalState memory state,
-        ILimitPoolStructs.PoolState memory pool,
+        PoolsharkStructs.LimitPoolState memory pool,
         ILimitPoolStructs.UpdateParams memory params,
         PoolsharkStructs.Immutables memory constants
     ) internal view returns (

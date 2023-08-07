@@ -29,7 +29,7 @@ library SwapCall {
         PoolsharkStructs.SwapParams memory params,
         ILimitPoolStructs.SwapCache memory cache,
         PoolsharkStructs.TickMap storage tickMap,
-        ILimitPoolStructs.PoolState storage poolState,
+        PoolsharkStructs.LimitPoolState storage poolState,
         mapping(int24 => ILimitPoolStructs.Tick) storage ticks
     ) external returns (
         int256,
@@ -77,8 +77,8 @@ library SwapCall {
     }
 
     function save(
-        ILimitPoolStructs.PoolState memory pool,
-        ILimitPoolStructs.PoolState storage poolState
+        PoolsharkStructs.LimitPoolState memory pool,
+        PoolsharkStructs.LimitPoolState storage poolState
     ) internal {
         poolState.price = pool.price;
         poolState.liquidity = pool.liquidity;

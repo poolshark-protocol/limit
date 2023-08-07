@@ -45,8 +45,8 @@ library TicksLimit {
 
     function initialize(
         PoolsharkStructs.TickMap storage tickMap,
-        ILimitPoolStructs.PoolState storage pool0,
-        ILimitPoolStructs.PoolState storage pool1,
+        PoolsharkStructs.LimitPoolState storage pool0,
+        PoolsharkStructs.LimitPoolState storage pool1,
         ILimitPoolStructs.GlobalState memory state,
         PoolsharkStructs.Immutables memory constants,
         uint160 startPrice
@@ -103,9 +103,9 @@ library TicksLimit {
         PoolsharkStructs.TickMap storage tickMap,
         PoolsharkStructs.SwapParams memory params,
         ILimitPoolStructs.SwapCache memory cache,
-        ILimitPoolStructs.PoolState memory pool
+        PoolsharkStructs.LimitPoolState memory pool
     ) internal returns (
-            ILimitPoolStructs.PoolState memory,
+            PoolsharkStructs.LimitPoolState memory,
             ILimitPoolStructs.SwapCache memory
         )
     {
@@ -177,7 +177,7 @@ library TicksLimit {
         PoolsharkStructs.TickMap storage tickMap,
         PoolsharkStructs.QuoteParams memory params,
         ILimitPoolStructs.SwapCache memory cache,
-        ILimitPoolStructs.PoolState memory pool
+        PoolsharkStructs.LimitPoolState memory pool
     ) internal view returns (
         uint256,
         uint256,
@@ -229,12 +229,12 @@ library TicksLimit {
     }
 
     function _quoteSingle(
-        ILimitPoolStructs.PoolState memory pool,
+        PoolsharkStructs.LimitPoolState memory pool,
         ILimitPoolStructs.SwapCache memory cache,
         uint160 priceLimit,
         bool zeroForOne
     ) internal pure returns (
-        ILimitPoolStructs.PoolState memory,
+        PoolsharkStructs.LimitPoolState memory,
         ILimitPoolStructs.SwapCache memory
     ) {
         if ((zeroForOne ? priceLimit >= cache.price
@@ -338,13 +338,13 @@ library TicksLimit {
 
     function unlock(
         ILimitPoolStructs.MintLimitCache memory cache,
-        ILimitPoolStructs.PoolState memory pool,
+        PoolsharkStructs.LimitPoolState memory pool,
         mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
         bool zeroForOne
     ) internal returns (
         ILimitPoolStructs.MintLimitCache memory,
-        ILimitPoolStructs.PoolState memory
+        PoolsharkStructs.LimitPoolState memory
     )
     {
         if (pool.liquidity > 0) return (cache, pool);
@@ -388,11 +388,11 @@ library TicksLimit {
     function _cross(
         mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
-        ILimitPoolStructs.PoolState memory pool,
+        PoolsharkStructs.LimitPoolState memory pool,
         ILimitPoolStructs.SwapCache memory cache,
         bool zeroForOne
     ) internal returns (
-        ILimitPoolStructs.PoolState memory,
+        PoolsharkStructs.LimitPoolState memory,
         ILimitPoolStructs.SwapCache memory
     ) {
         EpochMap.set(cache.crossTick, cache.pool.swapEpoch, tickMap, cache.constants);
@@ -416,11 +416,11 @@ library TicksLimit {
     function _pass(
         mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
-        ILimitPoolStructs.PoolState memory pool,
+        PoolsharkStructs.LimitPoolState memory pool,
         ILimitPoolStructs.SwapCache memory cache,
         bool zeroForOne
     ) internal view returns (
-        ILimitPoolStructs.PoolState memory,
+        PoolsharkStructs.LimitPoolState memory,
         ILimitPoolStructs.SwapCache memory
     ) {
         int128 liquidityDelta = ticks[cache.crossTick].liquidityDelta;
@@ -505,10 +505,10 @@ library TicksLimit {
         mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
         ILimitPoolStructs.MintLimitCache memory cache,
-        ILimitPoolStructs.PoolState memory pool,
+        PoolsharkStructs.LimitPoolState memory pool,
         PoolsharkStructs.Immutables memory constants
     ) internal returns (
-        ILimitPoolStructs.PoolState memory
+        PoolsharkStructs.LimitPoolState memory
     ){
         /// @auditor - would be smart to protect against the case of epochs crossing
         (

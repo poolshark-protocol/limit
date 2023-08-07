@@ -252,7 +252,7 @@ contract LimitPool is
 
     function snapshot(
        SnapshotParams memory params 
-    ) external view override canoncialOnly returns (
+    ) external override canoncialOnly returns (
         Position memory
     ) {
         return Positions.snapshot(

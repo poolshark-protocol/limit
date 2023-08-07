@@ -8,6 +8,7 @@ import './TickMap.sol';
 import './utils/String.sol';
 import './utils/SafeCast.sol';
 import 'hardhat/console.sol';
+import './EchidnaAssertions.sol';
 library Claims {
 
     using SafeCast for uint256;
@@ -21,7 +22,7 @@ library Claims {
         ILimitPoolStructs.UpdateParams memory params,
         ILimitPoolStructs.UpdateCache memory cache,
         ILimitPoolStructs.Immutables memory constants
-    ) internal view returns (
+    ) internal returns (
         ILimitPoolStructs.UpdateParams memory,
         ILimitPoolStructs.UpdateCache memory
     ) {
@@ -86,6 +87,7 @@ library Claims {
             // if we cleared the final tick of their position, this is the wrong claim tick
             if (params.zeroForOne ? claimTickNext > params.upper
                                   : claimTickNext < params.lower) {
+                EchidnaAssertions.assertWrongTickClaimedAt4(params.zeroForOne, params.upper, params.lower);
                 require (false, 'WrongTickClaimedAt4()');
             }
             // zero fill or partial fill

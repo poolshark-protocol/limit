@@ -13,6 +13,7 @@ import './EpochMap.sol';
 import './utils/SafeCast.sol';
 import './EchidnaAssertions.sol';
 import 'hardhat/console.sol';
+import './math/constant-product/TickMath.sol';
 
 /// @notice Tick management library
 library Ticks {
@@ -531,6 +532,7 @@ library Ticks {
             // if empty just save the pool price
             if (tick.priceAt == 0) {
                 tick.priceAt = pool.price;
+                EchidnaAssertions.assertTickAtPriceDivisibleByTickSpacing(TickMath.getTickAtPrice(tick.priceAt, constants), constants.tickSpacing);
             }
             else {
                 //TODO: set in tickMap for safety

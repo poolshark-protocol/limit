@@ -52,10 +52,10 @@ library MintCall {
             tickMap,
             swapTicks
         );
+
         // save state for safe reentrancy
         save(cache.swapPool, swapPool);
-        // load position given params
-        cache.position = positions[params.to][params.lower][params.upper];
+
         // transfer in token amount
         SafeTransfers.transferIn(
                                  params.zeroForOne ? cache.constants.token0 
@@ -75,14 +75,17 @@ library MintCall {
                                   : cache.constants.token0,
                 cache.swapCache.output
             );
-        // bump to the next tick if there is no liquidity
-        if (cache.pool.liquidity == 0) {
-            /// @dev - this makes sure to have liquidity unlocked if undercutting
-            (cache, cache.pool) = Ticks.unlock(cache, cache.pool, ticks, tickMap, params.zeroForOne);
-        }
+
         // mint position if amount is left
         if (params.amount > 0 && params.lower < params.upper) {
-            /// @auditor not sure if the lower >= upper case is possible
+            // load position given params
+            cache.position = positions[params.to][params.lower][params.upper];
+            
+            // bump to the next tick if there is no liquidity
+            if (cache.pool.liquidity == 0) {
+                /// @dev - this makes sure to have liquidity unlocked if undercutting
+                (cache, cache.pool) = Ticks.unlock(cache, cache.pool, ticks, tickMap, params.zeroForOne);
+            }
 
             if (params.zeroForOne) {
                 uint160 priceLower = ConstantProduct.getPriceAtTick(params.lower, cache.constants);
@@ -95,11 +98,9 @@ library MintCall {
                     cache.pool.tickAtPrice = params.lower;
                     /// @auditor - double check liquidity is set correctly for this in insertSingle
                     cache.pool.liquidity += uint128(cache.liquidityMinted);
-                    cache.pool.swapEpoch += 1;
                     cache.position.crossedInto = true;
                     // set epoch on start tick to signify position being crossed into
                     /// @auditor - this is safe assuming we have swapped at least this far on the other side
-                    EpochMap.set(params.lower, cache.pool.swapEpoch, tickMap, cache.constants);
                     emit Sync(cache.pool.price, cache.pool.liquidity);
                 }
             } else {
@@ -111,11 +112,9 @@ library MintCall {
                     cache.pool.price = priceUpper;
                     cache.pool.tickAtPrice = params.upper;
                     cache.pool.liquidity += uint128(cache.liquidityMinted);
-                    cache.pool.swapEpoch += 1;
                     cache.position.crossedInto = true;
                     // set epoch on start tick to signify position being crossed into
                     /// @auditor - this is safe assuming we have swapped at least this far on the other side
-                    EpochMap.set(params.upper, cache.pool.swapEpoch, tickMap, cache.constants);
                     emit Sync(cache.pool.price, cache.pool.liquidity);
                 }
             }
@@ -125,8 +124,6 @@ library MintCall {
                 tickMap,
                 params
             );
-            // save lp side for safe reentrancy
-            save(cache.pool, pool);
 
             // save position to storage
             positions[params.to][params.lower][params.upper] = cache.position;
@@ -142,6 +139,10 @@ library MintCall {
                 uint128(cache.liquidityMinted)
             );
         }
+
+        // save lp side for safe reentrancy
+        save(cache.pool, pool);
+
         return cache;
     }
 
@@ -155,6 +156,7 @@ library MintCall {
         poolState.swapEpoch = pool.swapEpoch;
         poolState.tickAtPrice = pool.tickAtPrice;
     }
+
 
     // Echidna funcs
     function getResizedTicks(
@@ -182,10 +184,10 @@ library MintCall {
             tickMap,
             swapTicks
         );
+
         // save state for safe reentrancy
         save(cache.swapPool, swapPool);
-        // load position given params
-        cache.position = positions[params.to][params.lower][params.upper];
+
         // transfer in token amount
         SafeTransfers.transferIn(
                                  params.zeroForOne ? cache.constants.token0 
@@ -200,14 +202,17 @@ library MintCall {
                                   : cache.constants.token0,
                 cache.swapCache.output
             );
-        // bump to the next tick if there is no liquidity
-        if (cache.pool.liquidity == 0) {
-            /// @dev - this makes sure to have liquidity unlocked if undercutting
-            (cache, cache.pool) = Ticks.unlock(cache, cache.pool, ticks, tickMap, params.zeroForOne);
-        }
+
         // mint position if amount is left
         if (params.amount > 0 && params.lower < params.upper) {
-            /// @auditor not sure if the lower >= upper case is possible
+            // load position given params
+            cache.position = positions[params.to][params.lower][params.upper];
+            
+            // bump to the next tick if there is no liquidity
+            if (cache.pool.liquidity == 0) {
+                /// @dev - this makes sure to have liquidity unlocked if undercutting
+                (cache, cache.pool) = Ticks.unlock(cache, cache.pool, ticks, tickMap, params.zeroForOne);
+            }
 
             if (params.zeroForOne) {
                 uint160 priceLower = ConstantProduct.getPriceAtTick(params.lower, cache.constants);
@@ -220,11 +225,9 @@ library MintCall {
                     cache.pool.tickAtPrice = params.lower;
                     /// @auditor - double check liquidity is set correctly for this in insertSingle
                     cache.pool.liquidity += uint128(cache.liquidityMinted);
-                    cache.pool.swapEpoch += 1;
                     cache.position.crossedInto = true;
                     // set epoch on start tick to signify position being crossed into
                     /// @auditor - this is safe assuming we have swapped at least this far on the other side
-                    EpochMap.set(params.lower, cache.pool.swapEpoch, tickMap, cache.constants);
                     emit Sync(cache.pool.price, cache.pool.liquidity);
                 }
             } else {
@@ -236,11 +239,9 @@ library MintCall {
                     cache.pool.price = priceUpper;
                     cache.pool.tickAtPrice = params.upper;
                     cache.pool.liquidity += uint128(cache.liquidityMinted);
-                    cache.pool.swapEpoch += 1;
                     cache.position.crossedInto = true;
                     // set epoch on start tick to signify position being crossed into
                     /// @auditor - this is safe assuming we have swapped at least this far on the other side
-                    EpochMap.set(params.upper, cache.pool.swapEpoch, tickMap, cache.constants);
                     emit Sync(cache.pool.price, cache.pool.liquidity);
                 }
             }
@@ -250,8 +251,6 @@ library MintCall {
                 tickMap,
                 params
             );
-            // save lp side for safe reentrancy
-            save(cache.pool, pool);
 
             // save position to storage
             positionCreated = true;
@@ -268,6 +267,9 @@ library MintCall {
                 uint128(cache.liquidityMinted)
             );
         }
+
+        // save lp side for safe reentrancy
+        save(cache.pool, pool);
     
         revert SimulateMint(params.lower, params.upper, positionCreated);
     }

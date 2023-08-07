@@ -437,7 +437,7 @@ library Positions {
         ILimitPoolStructs.PoolState memory pool,
         ILimitPoolStructs.UpdateParams memory params,
         ILimitPoolStructs.Immutables memory constants
-    ) internal view returns (
+    ) internal returns (
         ILimitPoolStructs.Position memory
     ) {
         ILimitPoolStructs.UpdateCache memory cache;
@@ -491,7 +491,7 @@ library Positions {
         ILimitPoolStructs.PoolState memory pool,
         ILimitPoolStructs.UpdateParams memory params,
         ILimitPoolStructs.Immutables memory constants
-    ) internal view returns (
+    ) internal returns (
         ILimitPoolStructs.UpdateParams memory,
         ILimitPoolStructs.UpdateCache memory,
         ILimitPoolStructs.GlobalState memory

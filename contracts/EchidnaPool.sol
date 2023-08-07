@@ -61,6 +61,20 @@ contract EchidnaPool {
         uint128 liquidity1After;
         uint128 liquidityGlobal1After;
         
+        uint160 priceAt0LowerBefore;
+        uint160 priceAt0UpperBefore;
+        uint160 priceAt0LowerAfter;
+        uint160 priceAt0UpperAfter;
+        uint160 priceAt1LowerBefore;
+        uint160 priceAt1UpperBefore;
+        uint160 priceAt1LowerAfter;
+        uint160 priceAt1UpperAfter;
+
+        int128 liquidityDeltaAtPrice0Before;
+        int128 liquidityDeltaAtPrice1Before;
+
+        int128 liquidityDeltaAtPrice0After;
+        int128 liquidityDeltaAtPrice1After;
     }
 
     struct SwapCallbackData {
@@ -103,7 +117,10 @@ contract EchidnaPool {
         (poolValues.price0Before, poolValues.liquidity0Before, poolValues.liquidityGlobal0Before,,,,) = pool.pool0();
         (poolValues.price1Before, poolValues.liquidity1Before, poolValues.liquidityGlobal1Before,,,,) = pool.pool1();
         
-            
+        int24 tickAtPrice0Before = ConstantProduct.getTickAtPrice(poolValues.price0Before, pool.immutables());
+        int24 tickAtPrice1Before = ConstantProduct.getTickAtPrice(poolValues.price1Before, pool.immutables());
+
+
         ILimitPoolStructs.MintParams memory params;
         params.to = msg.sender;
         params.refundTo = msg.sender;
@@ -121,13 +138,17 @@ contract EchidnaPool {
         emit PositionCreated(posCreated);
 
         LiquidityDeltaValues memory values;
+        // pool.liquidity0 == sum(liquidityDelta(all ticks for pool 0))
         if (zeroForOne) {
-            (,values.liquidityDeltaLowerBefore) = pool.ticks0(lower);
-            (,values.liquidityDeltaUpperBefore) = pool.ticks0(upper);
+            (,poolValues.liquidityDeltaAtPrice0Before) = pool.ticks0(tickAtPrice0Before);
+            (,poolValues.liquidityDeltaAtPrice1Before) = pool.ticks0(tickAtPrice1Before);
+
+            (poolValues.priceAt0LowerBefore, values.liquidityDeltaLowerBefore) = pool.ticks0(lower);
+            (poolValues.priceAt0UpperBefore, values.liquidityDeltaUpperBefore) = pool.ticks0(upper);
         }
         else {
-            (,values.liquidityDeltaLowerBefore) = pool.ticks1(lower);
-            (,values.liquidityDeltaUpperBefore) = pool.ticks1(upper);
+            (poolValues.priceAt1LowerBefore, values.liquidityDeltaLowerBefore) = pool.ticks1(lower);
+            (poolValues.priceAt1UpperBefore, values.liquidityDeltaUpperBefore) = pool.ticks1(upper);
         }
 
         // ACTION 

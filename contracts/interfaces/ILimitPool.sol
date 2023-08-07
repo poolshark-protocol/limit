@@ -34,7 +34,7 @@ interface ILimitPool is ILimitPoolStructs {
 
     function snapshot(
         SnapshotParams memory params
-    ) external view returns (
+    ) external returns (
         Position memory
     );
 

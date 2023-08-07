@@ -72,8 +72,8 @@ describe('LimitPool Tests', function () {
 
         await mintSigners20(hre.props.token1, tokenAmountBn.mul(10), [hre.props.alice, hre.props.bob])
 
-        await getLiquidity(true, true)
-        await getLiquidity(false, true)
+        if (debugMode) await getLiquidity(true, true)
+        if (debugMode) await getLiquidity(false, true)
     })
 
     it('pool0 - Should mint, fill, and burn', async function () {
@@ -5139,7 +5139,7 @@ describe('LimitPool Tests', function () {
       });
 
       it("pool0 - Can claim at the current pool price even when it is not your claim tick", async () => {
-        console.log("Mint #1");
+        if (debugMode) console.log("Mint #1");
 
         await validateMint({
             signer: hre.props.alice,
@@ -5155,10 +5155,10 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         });
 
-        console.log("Mint #2");
+        if (debugMode) console.log("Mint #2");
 
-        await getPrice(true, true)
-        await getPrice(false, true)
+        if (debugMode) await getPrice(true, true)
+        if (debugMode) await getPrice(false, true)
 
         await validateMint({
             signer: hre.props.alice,
@@ -5175,10 +5175,10 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         });
 
-        await getPrice(true, true)
-        await getPrice(false, true)
+        if (debugMode) await getPrice(true, true)
+        if (debugMode) await getPrice(false, true)
 
-        console.log("Mint #3");
+        if (debugMode) console.log("Mint #3");
 
         expect(await getTickAtPrice(true)).to.eq(16009);
 
@@ -5197,10 +5197,10 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         });
 
-        await getPrice(true, true)
-        await getPrice(false, true)
+        if (debugMode) await getPrice(true, true)
+        if (debugMode) await getPrice(false, true)
 
-        console.log("Mint #4");
+        if (debugMode) console.log("Mint #4");
 
         await validateMint({
             signer: hre.props.alice,
@@ -5217,12 +5217,12 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         });
 
-        await getPrice(true, true)
-        await getPrice(false, true)
+        if (debugMode) await getPrice(true, true)
+        if (debugMode) await getPrice(false, true)
 
         expect(await getTickAtPrice(true)).to.eq(0);
 
-        console.log("--------------- Burn #5 ---------------");
+        if (debugMode) console.log("--------------- Burn #5 ---------------");
 
         // The issue here is that I was able to claim at the current pool price, even though I should
         // have been claiming at a much higher tick.
@@ -5232,7 +5232,7 @@ describe('LimitPool Tests', function () {
         // I can remove their liquidity from the current pool liquidity, and then they cannot exit as they experience the revert.
         // Among other catastrophic things.
         // ACTUAL CLAIM TICK: 16005
-        await getTick(true, 16005, true)
+        if (debugMode) await getTick(true, 16005, true)
         await validateBurn({
             signer: hre.props.alice,
             lower: '-100000',
@@ -5297,7 +5297,7 @@ describe('LimitPool Tests', function () {
     })
 
     it("pool1 - Can claim at the current pool price even when it is not your claim tick", async () => {
-        console.log("Mint #1");
+        if (debugMode) console.log("Mint #1");
 
         await validateMint({
             signer: hre.props.alice,
@@ -5313,10 +5313,10 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         });
 
-        console.log("Mint #2");
+        if (debugMode) console.log("Mint #2");
 
-        await getPrice(true, true)
-        await getPrice(false, true)
+        if (debugMode) await getPrice(true, true)
+        if (debugMode) await getPrice(false, true)
 
         await validateMint({
             signer: hre.props.alice,
@@ -5333,10 +5333,10 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         });
 
-        await getPrice(true, true)
-        await getPrice(false, true)
+        if (debugMode) await getPrice(true, true)
+        if (debugMode) await getPrice(false, true)
 
-        console.log("Mint #3");
+        if (debugMode) console.log("Mint #3");
 
         expect(await getTickAtPrice(false)).to.eq(-16008);
 
@@ -5355,10 +5355,10 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         });
 
-        await getPrice(true, true)
-        await getPrice(false, true)
+        if (debugMode) await getPrice(true, true)
+        if (debugMode) await getPrice(false, true)
 
-        console.log("Mint #4");
+        if (debugMode) console.log("Mint #4");
 
         await validateMint({
             signer: hre.props.alice,
@@ -5375,12 +5375,12 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         });
 
-        await getPrice(true, true)
-        await getPrice(false, true)
+        if (debugMode) await getPrice(true, true)
+        if (debugMode) await getPrice(false, true)
 
         expect(await getTickAtPrice(false)).to.eq(0);
 
-        console.log("--------------- Burn #5 ---------------");
+        if (debugMode) console.log("--------------- Burn #5 ---------------");
 
         // The issue here is that I was able to claim at the current pool price, even though I should
         // have been claiming at a much higher tick.
@@ -5390,7 +5390,7 @@ describe('LimitPool Tests', function () {
         // I can remove their liquidity from the current pool liquidity, and then they cannot exit as they experience the revert.
         // Among other catastrophic things.
         // ACTUAL CLAIM TICK: 16005
-        await getTick(false, -16005, true)
+        if (debugMode) await getTick(false, -16005, true)
 
         await validateBurn({
             signer: hre.props.alice,
@@ -5484,8 +5484,8 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
 
-        console.log("Mint #1 Completed");
-        console.log();
+        if (debugMode) console.log("Mint #1 Completed");
+        if (debugMode) console.log();
 
         await validateMint({
             signer: hre.props.bob,
@@ -5502,8 +5502,8 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
 
-        console.log("Mint #1 Completed");
-        console.log();
+        if (debugMode) console.log("Mint #1 Completed");
+        if (debugMode) console.log();
 
 
         await validateSwap({
@@ -5516,8 +5516,8 @@ describe('LimitPool Tests', function () {
             balanceOutIncrease: '50742541055238885256',
             revertMessage: '',
         })
-        console.log("SWAP #1 Completed");
-        console.log();
+        if (debugMode) console.log("SWAP #1 Completed");
+        if (debugMode) console.log();
 
         await validateBurn({
             signer: hre.props.bob,
@@ -5534,8 +5534,8 @@ describe('LimitPool Tests', function () {
         })
 
 
-        console.log("BURN #1 Completed");
-        console.log();
+        if (debugMode) console.log("BURN #1 Completed");
+        if (debugMode) console.log();
 
         expect(await getPositionLiquidity(true, bob.address, 100, 200)).to.eq("20151542874862585449132");
 
@@ -5553,8 +5553,8 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
 
-        console.log("BURN #2 Completed");
-        console.log();
+        if (debugMode) console.log("BURN #2 Completed");
+        if (debugMode) console.log();
 
         // Bobs second position has 0 liquidity
         expect(await getPositionLiquidity(true, bob.address, 100, 200)).to.eq("0");
@@ -5590,7 +5590,7 @@ describe('LimitPool Tests', function () {
             revertMessage: "",
         })
 
-        console.log("BURN #3 Completed");
+        if (debugMode) console.log("BURN #3 Completed");
     });
 
     it("pool1 - overriding position when burning to the same lower/upper", async function () {
@@ -5610,8 +5610,7 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
 
-        console.log("Mint #1 Completed");
-        console.log();
+        if (debugMode) console.log("Mint #1 Completed");
 
         await validateMint({
             signer: hre.props.bob,
@@ -5628,8 +5627,7 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
 
-        console.log("Mint #2 Completed");
-        console.log();
+        if (debugMode) console.log("Mint #2 Completed");
 
 
         await validateSwap({
@@ -5642,8 +5640,7 @@ describe('LimitPool Tests', function () {
             balanceOutIncrease: '50742541055238885256',
             revertMessage: '',
         })
-        console.log("SWAP #1 Completed");
-        console.log();
+        if (debugMode) console.log("SWAP #1 Completed");
 
         await validateBurn({
             signer: hre.props.bob,
@@ -5660,8 +5657,7 @@ describe('LimitPool Tests', function () {
         })
 
 
-        console.log("BURN #1 Completed");
-        console.log();
+        if (debugMode) console.log("BURN #1 Completed");
 
         expect(await getPositionLiquidity(false, bob.address, -200, -100)).to.eq("20151542874862585449132");
 
@@ -5679,8 +5675,7 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
 
-        console.log("BURN #2 Completed");
-        console.log();
+        if (debugMode) console.log("BURN #2 Completed");
 
         // Bobs second position has 0 liquidity
         expect(await getPositionLiquidity(false, bob.address, -200, -100)).to.eq("0");
@@ -5716,12 +5711,12 @@ describe('LimitPool Tests', function () {
             revertMessage: "",
         })
 
-        console.log("BURN #3 Completed");
+        if (debugMode) console.log("BURN #3 Completed");
     });
 
-    it.skip("Pool State Unsaved Leading To Underflow", async function () {
+    it("pool0 - Pool State Unsaved Leading To Underflow", async function () {
 
-        console.log("Mint #1");
+        if (debugMode) console.log("Mint #1");
 
         await validateMint({
           signer: hre.props.bob,
@@ -5738,9 +5733,7 @@ describe('LimitPool Tests', function () {
           revertMessage: "",
         });
 
-
-
-        console.log("Mint #2");
+        if (debugMode) console.log("Mint #2");
 
         await validateMint({
           signer: hre.props.bob,
@@ -5753,12 +5746,12 @@ describe('LimitPool Tests', function () {
           liquidityIncrease: "1999",
           balanceOutIncrease: "0",
           upperTickCleared: true,
-          lowerTickCleared: true,
+          lowerTickCleared: false,
           revertMessage: "",
         });
 
 
-        console.log("Mint #3");
+        if (debugMode) console.log("Mint #3");
 
         await validateMint({
           signer: hre.props.bob,
@@ -5768,16 +5761,17 @@ describe('LimitPool Tests', function () {
           amount: "1",
           zeroForOne: false,
           balanceInDecrease: "1",
-          liquidityIncrease: "2998",
+          liquidityIncrease: "999",
           positionLiquidityChange: "999",
           balanceOutIncrease: "0",
           upperTickCleared: true,
-          lowerTickCleared: true,
+          lowerTickCleared: false,
           revertMessage: "",
         });
 
-        console.log("Burn #1");
+        if (debugMode) console.log("Burn #1");
 
+        // burn position 3
         await validateBurn({
           signer: hre.props.bob,
           lower: "0",
@@ -5792,9 +5786,9 @@ describe('LimitPool Tests', function () {
           revertMessage: "",
         });
 
-        console.log("Mint #4");
+        if (debugMode) console.log("Mint #4");
 
-
+        // no liquidity minted
         await validateMint({
           signer: hre.props.bob,
           recipient: hre.props.bob.address,
@@ -5810,18 +5804,195 @@ describe('LimitPool Tests', function () {
           lowerTickCleared: false,
           revertMessage: "",
         });
-        return
-        console.log("SWAP #1");
 
+        if (debugMode) console.log("SWAP #1");
+
+        // only bob's 0-10 position is left with token amount of 1
         await validateSwap({
           signer: hre.props.bob,
           recipient: hre.props.bob.address,
           zeroForOne: true,
           amountIn: BigNumber.from("1000000000"),
           priceLimit: BigNumber.from("256"),
-          balanceInDecrease: "0",
+          balanceInDecrease: "1",
           balanceOutIncrease: BigNumber.from("0").toString(),
-          revertMessage: 'reverted with panic code 0x11 (Arithmetic operation underflowed or overflowed outside of an unchecked block)',
+          revertMessage: '',
         });
-      });
+
+        // burn position 2
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: "0",
+            upper: "10",
+            claim: "10",
+            liquidityPercent: ethers.utils.parseUnits("1", 38),
+            zeroForOne: false,
+            balanceInIncrease: "0",
+            balanceOutIncrease: "0",
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: "",
+        });
+
+        // burn position 1
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: "120",
+            upper: "510",
+            claim: "340",
+            liquidityPercent: ethers.utils.parseUnits("1", 38),
+            zeroForOne: true,
+            balanceInIncrease: "503",
+            balanceOutIncrease: "354",
+            lowerTickCleared: true,
+            upperTickCleared: false,
+            revertMessage: "",
+        });
+        
+
+        if (balanceCheck) {
+            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
+            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
+        }        
+    });
+
+    it("pool1 - Pool State Unsaved Leading To Underflow", async function () {
+
+        if (debugMode) console.log("Mint #1");
+
+        await validateMint({
+          signer: hre.props.bob,
+          recipient: hre.props.bob.address,
+          lower: "-510",
+          upper: "-120",
+          amount: "847",
+          zeroForOne: false,
+          balanceInDecrease: "847",
+          liquidityIncrease: "44126",
+          balanceOutIncrease: "0",
+          upperTickCleared: true,
+          lowerTickCleared: false,
+          revertMessage: "",
+        });
+
+        if (debugMode) console.log("Mint #2");
+
+        await validateMint({
+          signer: hre.props.bob,
+          recipient: hre.props.bob.address,
+          lower: "-10",
+          upper: "0",
+          amount: "1",
+          zeroForOne: true,
+          balanceInDecrease: "1",
+          liquidityIncrease: "1999",
+          balanceOutIncrease: "0",
+          upperTickCleared: false,
+          lowerTickCleared: true,
+          revertMessage: "",
+        });
+
+
+        if (debugMode) console.log("Mint #3");
+
+        await validateMint({
+          signer: hre.props.bob,
+          recipient: hre.props.bob.address,
+          lower: "-20",
+          upper: "0",
+          amount: "1",
+          zeroForOne: true,
+          balanceInDecrease: "1",
+          liquidityIncrease: "999",
+          positionLiquidityChange: "999",
+          balanceOutIncrease: "0",
+          upperTickCleared: false,
+          lowerTickCleared: true,
+          revertMessage: "",
+        });
+
+        if (debugMode) console.log("Burn #1");
+        // burn position 3
+        await validateBurn({
+          signer: hre.props.bob,
+          lower: "-20",
+          upper: "0",
+          claim: "-20",
+          liquidityPercent: ethers.utils.parseUnits("1", 38),
+          zeroForOne: true,
+          balanceInIncrease: "0",
+          balanceOutIncrease: "0",
+          lowerTickCleared: true,
+          upperTickCleared: false,
+          revertMessage: "",
+        });
+
+        if (debugMode) console.log("Mint #4");
+
+        await validateMint({
+          signer: hre.props.bob,
+          recipient: hre.props.bob.address,
+          lower: "-107510",
+          upper: "20",
+          amount: "504",
+          zeroForOne: true,
+          expectedLower: '-340',
+          balanceInDecrease: "504",
+          liquidityIncrease: "0",
+          balanceOutIncrease: "492",
+          upperTickCleared: false,
+          lowerTickCleared: true,
+          revertMessage: "",
+        });
+
+        if (debugMode) console.log("SWAP #1");
+
+        if (debugMode) await getPrice(false, true)
+
+        // only bob's 0-10 position is left with token amount of 1
+        await validateSwap({
+          signer: hre.props.bob,
+          recipient: hre.props.bob.address,
+          zeroForOne: false,
+          amountIn: BigNumber.from("1000000000"),
+          priceLimit: maxPrice,
+          balanceInDecrease: "1",
+          balanceOutIncrease: BigNumber.from("0").toString(),
+          revertMessage: '',
+        });
+        // burn position 2
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: "-10",
+            upper: "0",
+            claim: "-10",
+            liquidityPercent: ethers.utils.parseUnits("1", 38),
+            zeroForOne: true,
+            balanceInIncrease: "0",
+            balanceOutIncrease: "0",
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: "",
+        });
+
+        // burn position 2
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: "-510",
+            upper: "-120",
+            claim: "-340",
+            liquidityPercent: ethers.utils.parseUnits("1", 38),
+            zeroForOne: false,
+            balanceInIncrease: "503",
+            balanceOutIncrease: "354",
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: "",
+        });
+
+        if (balanceCheck) {
+            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
+            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
+        }
+    });
 })

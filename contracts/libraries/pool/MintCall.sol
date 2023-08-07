@@ -46,7 +46,7 @@ library MintCall {
             tickMap,
             swapTicks
         );
-        console.log('position bounds', uint24(-params.lower), uint24(params.upper));
+
         // save state for safe reentrancy
         save(cache.swapPool, swapPool);
 
@@ -67,9 +67,9 @@ library MintCall {
 
         // mint position if amount is left
         if (params.amount > 0 && params.lower < params.upper) {
-            console.log('minting position');
             // load position given params
             cache.position = positions[params.to][params.lower][params.upper];
+            
             // bump to the next tick if there is no liquidity
             if (cache.pool.liquidity == 0) {
                 /// @dev - this makes sure to have liquidity unlocked if undercutting

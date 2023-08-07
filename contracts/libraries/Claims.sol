@@ -7,7 +7,7 @@ import './EpochMap.sol';
 import './TickMap.sol';
 import './utils/String.sol';
 import './utils/SafeCast.sol';
-import 'hardhat/console.sol';
+
 library Claims {
 
     using SafeCast for uint256;

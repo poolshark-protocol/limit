@@ -162,11 +162,11 @@ export async function validateSwap(params: ValidateSwapParams) {
     if (zeroForOne) {
         balanceInBefore = await hre.props.token0.balanceOf(signer.address)
         balanceOutBefore = await hre.props.token1.balanceOf(signer.address)
-        await hre.props.token0.approve(hre.props.poolRouter.address, amountIn)
+        await hre.props.token0.connect(signer).approve(hre.props.poolRouter.address, amountIn)
     } else {
         balanceInBefore = await hre.props.token1.balanceOf(signer.address)
         balanceOutBefore = await hre.props.token0.balanceOf(signer.address)
-        await hre.props.token1.approve(hre.props.poolRouter.address, amountIn)
+        await hre.props.token1.connect(signer).approve(hre.props.poolRouter.address, amountIn)
     }
 
     const poolBefore: PoolState = zeroForOne

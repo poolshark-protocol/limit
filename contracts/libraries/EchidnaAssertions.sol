@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.13;
 
+import '../interfaces/ILimitPoolStructs.sol';
+
 library EchidnaAssertions {
 
     event LiquidityGlobalUnderflow(uint128 liquidityGlobal, uint128 amount, string location);
@@ -9,7 +11,7 @@ library EchidnaAssertions {
     event PoolBalanceExceeded(uint256 poolBalance, uint256 outputAmount);
     event LiquidityDelta(int128 liquidityDelta);
     event WrongTickClaimedAt4(bool zeroForOne, int24 upper, int24 lower);
-    event TickAtPriceDivisibleByTickSpacing(int24 tick, int16 tickSpacing);
+    event TickAtPriceDivisibleByTickSpacing(int24 tick, uint160 priceAt, int16 tickSpacing);
 
     function assertLiquidityGlobalUnderflows(uint128 liquidityGlobal, uint128 amount, string memory location) internal {
         emit LiquidityGlobalUnderflow(liquidityGlobal, amount, location);
@@ -36,8 +38,8 @@ library EchidnaAssertions {
         assert(false);
     }
 
-    function assertTickAtPriceDivisibleByTickSpacing(int24 tick, int16 tickSpacing) internal {
-        emit TickAtPriceDivisibleByTickSpacing(tick, tickSpacing);
-        assert(tick % tickSpacing != 0);
+    function assertTickAtPriceDivisibleByTickSpacing(int24 tick, uint160 priceAt, int16 tickSpacing) internal {
+        emit TickAtPriceDivisibleByTickSpacing(tick, priceAt, tickSpacing);
+        if(tick % tickSpacing == 0) assert(priceAt == 0);
     }
 }

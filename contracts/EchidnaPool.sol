@@ -31,13 +31,13 @@ contract EchidnaPool {
     event PositionCreated(bool isCreated);
     event liquidityDeltaAfterUndercut(bool zeroForOne, int128 liquidityDeltaBefore, int128 liquidityDeltaAfter);
     
-    LimitPoolFactory public factory;
-    address public implementation;
-    LimitPoolManager public manager;
-    LimitPool public pool;
-    Token20 public tokenIn;
-    Token20 public tokenOut;
-    Position[] public positions;
+    LimitPoolFactory private factory;
+    address private implementation;
+    LimitPoolManager private manager;
+    LimitPool private pool;
+    Token20 private tokenIn;
+    Token20 private tokenOut;
+    Position[] private positions;
     int16 tickSpacing;
 
     struct LiquidityDeltaValues {
@@ -250,19 +250,22 @@ contract EchidnaPool {
         assert(price0 >= price1);
     }
 
-    function burn(int24 claim, uint256 positionIndex, uint128 burnPercent) public {
+    function burn(int24 claimAt, uint256 positionIndex, uint128 burnPercent) public {
         // PRE CONDITIONS 
         require(positionIndex < positions.length);
         Position memory pos = positions[positionIndex];
-        require(claim >= pos.lower && claim <= pos.upper);
-        require(claim % tickSpacing == 0);
-        
+        require(claimAt >= pos.lower && claimAt <= pos.upper);
+        require(claimAt % tickSpacing == 0);
+
+        (,/*liquidity*/,uint128 liquidityGlobal0Before,,,,) = pool.pool0();
+        (,/*liquidity*/,uint128 liquidityGlobal1Before,,,,) = pool.pool1();
+
         ILimitPoolStructs.BurnParams memory params;
         params.to = pos.owner;
         // TODO: allow for variable burn percentages
         params.burnPercent = burnPercent == 1e38 ? burnPercent : _between(burnPercent, 1e36, 1e38); //1e38;
         params.lower = pos.lower;
-        params.claim = claim;
+        params.claim = claimAt;
         params.upper = pos.upper;
         params.zeroForOne = pos.zeroForOne;
         
@@ -286,10 +289,73 @@ contract EchidnaPool {
         }
 
         // POST CONDITIONS
-        (uint160 price0,,,,,,) = pool.pool0();
-        (uint160 price1,,,,,,) = pool.pool1();
+        (uint160 price0,/*liquidity*/,uint128 liquidityGlobal0After,,,,) = pool.pool0();
+        (uint160 price1,/*liquidity*/,uint128 liquidityGlobal1After,,,,) = pool.pool1();
         emit Prices(price0, price1);
         assert(price0 >= price1);
+
+        if(pos.zeroForOne) {
+            emit LiquidityGlobal(liquidityGlobal0Before, liquidityGlobal1Before, liquidityGlobal0After, liquidityGlobal1After);
+            assert((liquidityGlobal0After < liquidityGlobal0Before));
+        }
+        else {
+            emit LiquidityGlobal(liquidityGlobal0Before, liquidityGlobal1Before, liquidityGlobal0After, liquidityGlobal1After);
+            assert((liquidityGlobal1After < liquidityGlobal1Before));
+        }
+    }
+
+    function claim(int24 claimAt, uint256 positionIndex) public {
+        // PRE CONDITIONS 
+        require(positionIndex < positions.length);
+        Position memory pos = positions[positionIndex];
+        require(claimAt >= pos.lower && claimAt <= pos.upper);
+        require(claimAt % tickSpacing == 0);
+
+        (,/*liquidity*/,uint128 liquidityGlobal0Before,,,,) = pool.pool0();
+        (,/*liquidity*/,uint128 liquidityGlobal1Before,,,,) = pool.pool1();
+
+        ILimitPoolStructs.BurnParams memory params;
+        params.to = pos.owner;
+        // TODO: allow for variable burn percentages
+        params.burnPercent = 0;
+        params.lower = pos.lower;
+        params.claim = claimAt;
+        params.upper = pos.upper;
+        params.zeroForOne = pos.zeroForOne;
+        
+        emit PositionTicks(pos.lower, pos.upper);
+        (int24 lower, int24 upper, bool positionExists) = pool.getResizedTicksForBurn(params);
+        emit BurnTicks(lower, upper, positionExists);
+
+        // ACTION
+        pool.burn(params);
+        if (!positionExists) {
+            positions[positionIndex] = positions[positions.length - 1];
+            delete positions[positions.length - 1];
+        }
+        else {
+            // Update position data in array if not fully burned
+            positions[positionIndex] = Position(pos.owner, lower, upper, pos.zeroForOne);
+            // Ensure positions ticks arent crossed
+            assert(lower < upper);
+            // Ensure minted ticks on proper tick spacing
+            assert((lower % tickSpacing == 0) && (upper % tickSpacing == 0));
+        }
+
+        // POST CONDITIONS
+        (uint160 price0,/*liquidity*/,uint128 liquidityGlobal0After,,,,) = pool.pool0();
+        (uint160 price1,/*liquidity*/,uint128 liquidityGlobal1After,,,,) = pool.pool1();
+        emit Prices(price0, price1);
+        assert(price0 >= price1);
+
+        if(pos.zeroForOne) {
+            emit LiquidityGlobal(liquidityGlobal0Before, liquidityGlobal1Before, liquidityGlobal0After, liquidityGlobal1After);
+            assert((liquidityGlobal0After == liquidityGlobal0Before));
+        }
+        else {
+            emit LiquidityGlobal(liquidityGlobal0Before, liquidityGlobal1Before, liquidityGlobal0After, liquidityGlobal1After);
+            assert((liquidityGlobal1After == liquidityGlobal1Before));
+        }
     }
 
     function mintThenBurnZeroLiquidityChange(uint128 amount, bool zeroForOne, int24 lower, int24 upper) public tickPreconditions(lower, upper) {
@@ -313,7 +379,31 @@ contract EchidnaPool {
         assert((liquidityGlobal0After == liquidityGlobal0Before) && (liquidityGlobal1After == liquidityGlobal1Before));
     }
 
-     function poolsharkSwapCallback(
+    function mintThenPartialBurnTwiceLiquidityChange(uint128 amount, bool zeroForOne, int24 lower, int24 upper, uint128 percent) public tickPreconditions(lower, upper) {
+        // PRE CONDITIONS
+        require(percent > 0 && percent < 1e38);
+        mintAndApprove();
+        (uint160 price0Before,/*liquidity*/,uint128 liquidityGlobal0Before,,,,) = pool.pool0();
+        (uint160 price1Before,/*liquidity*/,uint128 liquidityGlobal1Before,,,,) = pool.pool1();
+
+        // ACTION 
+        mint(amount, zeroForOne, lower, upper);
+        emit PassedMint();
+        burn(zeroForOne ? lower : upper, positions.length - 1, percent);
+        emit PassedBurn();
+        burn(zeroForOne ? lower : upper, positions.length - 1, 1e38);
+        emit PassedBurn();
+
+        // POST CONDITIONS
+        (uint160 price0After,/*liquidity*/,uint128 liquidityGlobal0After,,,,) = pool.pool0();
+        (uint160 price1After,/*liquidity*/,uint128 liquidityGlobal1After,,,,) = pool.pool1();
+        emit Prices(price0After, price1After);
+        assert(price0After >= price1After);
+        emit LiquidityGlobal(liquidityGlobal0Before, liquidityGlobal1Before, liquidityGlobal0After, liquidityGlobal1After);
+        assert((liquidityGlobal0After == liquidityGlobal0Before) && (liquidityGlobal1After == liquidityGlobal1Before));
+    }
+
+    function poolsharkSwapCallback(
         int256 amount0Delta,
         int256 amount1Delta,
         bytes calldata data

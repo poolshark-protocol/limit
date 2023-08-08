@@ -535,7 +535,7 @@ library Ticks {
             // if empty just save the pool price
             if (tick.priceAt == 0) {
                 tick.priceAt = pool.price;
-                EchidnaAssertions.assertTickAtPriceDivisibleByTickSpacing(TickMath.getTickAtPrice(tick.priceAt, constants), constants.tickSpacing);
+                EchidnaAssertions.assertTickAtPriceDivisibleByTickSpacing(tickToSave, ticks[tickToSave].priceAt, constants.tickSpacing);
             }
             else {
                 //TODO: set in tickMap for safety

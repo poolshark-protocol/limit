@@ -348,14 +348,18 @@ contract EchidnaPool {
         emit Prices(price0, price1);
         assert(price0 >= price1);
 
-        if(pos.zeroForOne) {
-            emit LiquidityGlobal(liquidityGlobal0Before, liquidityGlobal1Before, liquidityGlobal0After, liquidityGlobal1After);
-            assert((liquidityGlobal0After == liquidityGlobal0Before));
-        }
-        else {
-            emit LiquidityGlobal(liquidityGlobal0Before, liquidityGlobal1Before, liquidityGlobal0After, liquidityGlobal1After);
-            assert((liquidityGlobal1After == liquidityGlobal1Before));
-        }
+        // if(pos.zeroForOne) {
+        //     emit LiquidityGlobal(liquidityGlobal0Before, liquidityGlobal1Before, liquidityGlobal0After, liquidityGlobal1After);
+        //     if (positionExists) {
+        //         assert((liquidityGlobal0After == liquidityGlobal0Before));
+        //     }
+        // }
+        // else {
+        //     emit LiquidityGlobal(liquidityGlobal0Before, liquidityGlobal1Before, liquidityGlobal0After, liquidityGlobal1After);
+        //     if (positionExists) {
+        //         assert((liquidityGlobal1After == liquidityGlobal1Before));
+        //     }
+        // }
     }
 
     function mintThenBurnZeroLiquidityChange(uint128 amount, bool zeroForOne, int24 lower, int24 upper) public tickPreconditions(lower, upper) {

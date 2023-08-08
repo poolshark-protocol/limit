@@ -457,7 +457,6 @@ library Ticks {
             // sets bit in map
             if(!TickMap.set(tickMap, params.lower, cache.constants.tickSpacing)){
                 // inherit epoch 
-                console.log('lower tick being set first time', params.zeroForOne, uint24(-params.lower));
                 int24 tickAhead;
                 if (params.zeroForOne) {
                     tickAhead  = TickMap.next(tickMap, params.lower, cache.constants.tickSpacing, false);
@@ -465,7 +464,6 @@ library Ticks {
                     tickAhead  = TickMap.previous(tickMap, params.lower, cache.constants.tickSpacing, false);
                 }
                 uint32 epochAhead = EpochMap.get(tickAhead, tickMap, cache.constants);
-                console.log('setting epoch', epochAhead, uint24(-tickAhead), TickMap.get(tickMap, -16005, cache.constants.tickSpacing));
                 EpochMap.set(params.lower, epochAhead, tickMap, cache.constants);
             }
             ILimitPoolStructs.Tick memory tickLower = ticks[params.lower];
@@ -475,11 +473,15 @@ library Ticks {
                 tickLower.liquidityDelta -= int128(liquidityMinted);
             }
             ticks[params.lower] = tickLower;
+        } else {
+            /// @dev - i.e. if zeroForOne && cache.priceLower <= cache.pool.price
+            cache.pool.swapEpoch += 1;
+            // mark epoch on undercut tick
+            EpochMap.set(params.lower, cache.pool.swapEpoch, tickMap, cache.constants);
         }
 
         if (params.zeroForOne || cache.priceUpper < cache.pool.price) {
             if(!TickMap.set(tickMap, params.upper, cache.constants.tickSpacing)) {
-                console.log('upper tick being set first time');
                 int24 tickAhead;
                 if (params.zeroForOne) {
                     tickAhead  = TickMap.next(tickMap, params.upper, cache.constants.tickSpacing, false);
@@ -487,7 +489,6 @@ library Ticks {
                     tickAhead  = TickMap.previous(tickMap, params.upper, cache.constants.tickSpacing, false);
                 }
                 uint32 epochAhead = EpochMap.get(tickAhead, tickMap, cache.constants);
-                console.log('setting epoch', epochAhead, uint24(tickAhead), TickMap.get(tickMap, 16005, cache.constants.tickSpacing));
                 EpochMap.set(params.upper, epochAhead, tickMap, cache.constants);
             }
             ILimitPoolStructs.Tick memory tickUpper = ticks[params.upper];
@@ -497,6 +498,11 @@ library Ticks {
                 tickUpper.liquidityDelta += int128(liquidityMinted);
             }
             ticks[params.upper] = tickUpper;
+        } else {
+            /// @dev - i.e. if !zeroForOne && cache.priceUpper >= cache.pool.price
+            cache.pool.swapEpoch += 1;
+            // mark epoch on undercut tick
+            EpochMap.set(params.upper, cache.pool.swapEpoch, tickMap, cache.constants);
         }
     }
 
@@ -515,15 +521,12 @@ library Ticks {
             int24 tickToSave,
             uint160 roundedPrice
         ) = TickMap.roundHalf(pool.tickAtPrice, constants, pool.price);
-        console.log('tick to save', uint24(-tickToSave));
         // update tick to save
         ILimitPoolStructs.Tick memory tick = ticks[tickToSave];
         /// @auditor - tick.priceAt will be zero for tick % tickSpacing == 0
         if (tick.priceAt == 0) {
             if (pool.price != (params.zeroForOne ? cache.priceLower : cache.priceUpper)) {
-                console.log('setting in tick map', TickMap.get(tickMap, -16005, cache.constants.tickSpacing));
                 TickMap.set(tickMap, tickToSave, constants.tickSpacing);
-                console.log('setting in tick map', TickMap.get(tickMap, -16005, cache.constants.tickSpacing));
             }
             EpochMap.set(tickToSave, pool.swapEpoch, tickMap, constants);
         }

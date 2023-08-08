@@ -311,7 +311,6 @@ contract EchidnaPool {
         assert(price0After >= price1After);
         emit LiquidityGlobal(liquidityGlobal0Before, liquidityGlobal1Before, liquidityGlobal0After, liquidityGlobal1After);
         assert((liquidityGlobal0After == liquidityGlobal0Before) && (liquidityGlobal1After == liquidityGlobal1Before));
-        
     }
 
      function poolsharkSwapCallback(

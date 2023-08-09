@@ -6,12 +6,16 @@ const { mine } = require("@nomicfoundation/hardhat-network-helpers");
 
 export const Q64x96 = BigNumber.from('2').pow(96)
 export const BN_ZERO = BigNumber.from('0')
-export interface Position {
-<<<<<<< HEAD
-=======
+
+export interface RangePosition {
+    feeGrowthInside0Last: BigNumber
+    feeGrowthInside1Last: BigNumber
     liquidity: BigNumber
-    epochLast: number
->>>>>>> master
+    amount0: BigNumber
+    amount1: BigNumber
+}
+
+export interface LimitPosition {
     amountIn: BigNumber
     amountOut: BigNumber
     liquidity: BigNumber

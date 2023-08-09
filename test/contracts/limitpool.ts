@@ -3987,7 +3987,7 @@ describe('LimitPool Tests', function () {
 
         // Alice has a position that spans 0 ticks but still has liquidity on it
         expect(await getPositionLiquidity(false, alice.address, 0, 0)).to.eq("0");
-        expect((await hre.props.limitPool.pool1()).liquidityGlobal).to.eq("0")
+        expect((await hre.props.limitPool.globalState).pool1()).liquidityGlobal).to.eq("0")
 
         expect(await getTickAtPrice(false)).to.eq(-887270);
         expect((await hre.props.limitPool.pool1()).liquidity).to.eq("0")

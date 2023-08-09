@@ -28,7 +28,7 @@ library Samples {
         PoolsharkStructs.RangePoolState memory
     )
     {
-        samples[0] = IRangePoolStructs.Sample({
+        samples[0] = PoolsharkStructs.Sample({
             blockTimestamp: uint32(block.timestamp),
             tickSecondsAccum: 0,
             secondsPerLiquidityAccum: 0
@@ -150,7 +150,7 @@ library Samples {
             uint160 liquidityPerSecondsAccum
         ) = pool.samples(sampleIndex);
 
-        return IRangePoolStructs.Sample(
+        return PoolsharkStructs.Sample(
             blockTimestamp,
             tickSecondsAccum,
             liquidityPerSecondsAccum
@@ -257,8 +257,7 @@ library Samples {
     ) {
         int56 timeDelta = int56(uint56(blockTimestamp - newSample.blockTimestamp));
         return
-        //(sample1.tickSecondsAccum - sample2.tickSecondsAccum) / (time2 - time1)
-            IRangePoolStructs.Sample({
+            PoolsharkStructs.Sample({
                 blockTimestamp: blockTimestamp,
                 tickSecondsAccum: newSample.tickSecondsAccum + int56(tick) * int32(timeDelta),
                 secondsPerLiquidityAccum: newSample.secondsPerLiquidityAccum +
@@ -314,7 +313,7 @@ library Samples {
     ) {
         if (_lte(firstSample.blockTimestamp, targetTime)) {
             if (firstSample.blockTimestamp == targetTime) {
-                return (firstSample, IRangePoolStructs.Sample(0,0,0));
+                return (firstSample, PoolsharkStructs.Sample(0,0,0));
             } else {
                 return (firstSample, _build(firstSample, targetTime, params.tick, params.liquidity));
             }

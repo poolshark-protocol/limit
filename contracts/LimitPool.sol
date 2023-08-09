@@ -65,7 +65,9 @@ contract LimitPool is
         console.log('initialize pool');
         // initialize state
         globalState = TicksLimit.initialize(
+            rangeTickMap,
             limitTickMap,
+            samples,
             globalState,
             immutables(),
             startPrice

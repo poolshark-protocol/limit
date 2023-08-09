@@ -49,6 +49,12 @@ interface PoolsharkStructs {
         int56 tickSecondsAccumOutside;               // RangePool
     }
 
+    struct Sample {
+        uint32  blockTimestamp;
+        int56   tickSecondsAccum;
+        uint160 secondsPerLiquidityAccum;
+    }
+
     struct SampleState {
         uint16  index;
         uint16  length;

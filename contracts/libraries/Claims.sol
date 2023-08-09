@@ -100,8 +100,8 @@ library Claims {
             }
 
             uint32 endTickAccumEpoch = EpochMap.get(params.zeroForOne ? params.upper : params.lower, tickMap, constants);
-            if (claimTickNextAccumEpoch > cache.position.epochLast) {
-               require (false, 'WrongTickClaimedAt5()');
+            if (endTickAccumEpoch > cache.position.epochLast) {
+                require (false, 'WrongTickClaimedAt5()');
             }
         }
         /// @dev - start tick does not overwrite position and final tick clears position

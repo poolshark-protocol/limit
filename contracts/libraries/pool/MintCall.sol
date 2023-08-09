@@ -75,7 +75,6 @@ library MintCall {
                                   : cache.constants.token0,
                 cache.swapCache.output
             );
-
         // mint position if amount is left
         if (params.amount > 0 && params.lower < params.upper) {
             // load position given params
@@ -157,7 +156,6 @@ library MintCall {
         poolState.tickAtPrice = pool.tickAtPrice;
     }
 
-
     // Echidna funcs
     function getResizedTicks(
        ILimitPoolStructs.MintParams memory params,
@@ -202,7 +200,6 @@ library MintCall {
                                   : cache.constants.token0,
                 cache.swapCache.output
             );
-
         // mint position if amount is left
         if (params.amount > 0 && params.lower < params.upper) {
             // load position given params

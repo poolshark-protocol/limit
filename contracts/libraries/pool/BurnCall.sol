@@ -98,6 +98,7 @@ library BurnCall {
         mapping(address => mapping(int24 => mapping(int24 => ILimitPoolStructs.Position)))
             storage positions
     ) external {
+        if (params.lower >= params.upper) require (false, 'InvalidPositionBounds()');
         if (cache.position.epochLast == 0) require(false, 'PositionNotFound()');
         if (cache.position.crossedInto
             || params.claim != (params.zeroForOne ? params.lower : params.upper)

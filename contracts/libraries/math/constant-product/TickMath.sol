@@ -14,53 +14,12 @@ library TickMath {
     int24 internal constant MAX_TICK = -MIN_TICK;
     uint256 private constant Q96 = 0x1000000000000000000000000;
 
-    function minTick(
-        int16 tickSpacing
-    ) internal pure returns (
-        int24 tick
-    ) {
-        return MIN_TICK / tickSpacing * tickSpacing;
-    }
-
     function maxTick(
         int16 tickSpacing
     ) internal pure returns (
         int24 tick
     ) {
         return MAX_TICK / tickSpacing * tickSpacing;
-    }
-
-    function minPrice(
-        int16 tickSpacing
-    ) internal pure returns (
-        uint160 price
-    ) {
-        ILimitPoolStructs.Immutables memory constants;
-        constants.tickSpacing = tickSpacing;
-        return getPriceAtTick(minTick(tickSpacing), constants);
-    }
-
-    function maxPrice(
-        int16 tickSpacing
-    ) internal pure returns (
-        uint160 price
-    ) {
-        ILimitPoolStructs.Immutables memory constants;
-        constants.tickSpacing = tickSpacing;
-        return getPriceAtTick(maxTick(tickSpacing), constants);
-    }
-
-    function checkTicks(
-        int24 lower,
-        int24 upper,
-        int16 tickSpacing
-    ) internal pure
-    {
-        if (lower < minTick(tickSpacing)) require (false, 'LowerTickOutOfBounds()');
-        if (upper > maxTick(tickSpacing)) require (false, 'UpperTickOutOfBounds()');
-        if (lower % tickSpacing != 0) require (false, 'LowerTickOutsideTickSpacing()');
-        if (upper % tickSpacing != 0) require (false, 'UpperTickOutsideTickSpacing()');
-        if (lower >= upper) require (false, 'LowerUpperTickOrderInvalid()');
     }
 
     function checkPrice(

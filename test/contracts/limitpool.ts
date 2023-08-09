@@ -6,6 +6,7 @@ import { BigNumber } from 'ethers'
 import { mintSigners20 } from '../utils/token'
 import {
     BN_ZERO,
+    LimitPoolState,
     PoolState,
     getLiquidity,
     getPositionLiquidity,
@@ -49,7 +50,7 @@ describe('LimitPool Tests', function () {
     before(async function () {
         await gBefore()
         let currentBlock = await ethers.provider.getBlockNumber()
-        const pool0: PoolState = await hre.props.limitPool.pool0()
+        const pool0: LimitPoolState = (await hre.props.limitPool.globalState()).pool0
         const liquidity = pool0.liquidity
         const globalState = await hre.props.limitPool.globalState()
         const price = pool0.price
@@ -3987,13 +3988,13 @@ describe('LimitPool Tests', function () {
 
         // Alice has a position that spans 0 ticks but still has liquidity on it
         expect(await getPositionLiquidity(false, alice.address, 0, 0)).to.eq("0");
-        expect((await hre.props.limitPool.globalState).pool1()).liquidityGlobal).to.eq("0")
+        expect((await hre.props.limitPool.globalState()).liquidityGlobal).to.eq("0")
 
         expect(await getTickAtPrice(false)).to.eq(-887270);
-        expect((await hre.props.limitPool.pool1()).liquidity).to.eq("0")
+        expect((await hre.props.limitPool.globalState()).pool1.liquidity).to.eq("0")
 
         expect(await getTickAtPrice(true)).to.eq(887270);
-        expect((await hre.props.limitPool.pool0()).liquidity).to.eq("0")
+        expect((await hre.props.limitPool.globalState()).pool0.liquidity).to.eq("0")
 
         await validateMint({
             signer: hre.props.bob,
@@ -4028,7 +4029,7 @@ describe('LimitPool Tests', function () {
             upperTickCleared: false,
             revertMessage: 'InvalidPositionBounds()',
         });
-        expect((await hre.props.limitPool.pool1()).liquidityGlobal).to.eq("19951041647900280328782");
+        expect((await hre.props.limitPool.globalState()).liquidityGlobal).to.eq("19951041647900280328782");
 
         // So now we swap to get to these ticks and see that the pool is now bricked past this point
         // This is catastrophic as anyone can create these positions and intentionally put the pool in this
@@ -4228,13 +4229,13 @@ describe('LimitPool Tests', function () {
 
         // Alice has a position that spans 0 ticks but still has liquidity on it
         expect(await getPositionLiquidity(true, alice.address, 0, 0)).to.eq("0");
-        expect((await hre.props.limitPool.pool0()).liquidityGlobal).to.eq("0")
+        expect((await hre.props.limitPool.globalState()).liquidityGlobal).to.eq("0").to.eq("0")
 
         expect(await getTickAtPrice(true)).to.eq(887270);
-        expect((await hre.props.limitPool.pool0()).liquidity).to.eq("0")
+        expect((await hre.props.limitPool.globalState()).pool0.liquidity).to.eq("0")
 
         expect(await getTickAtPrice(false)).to.eq(-887270);
-        expect((await hre.props.limitPool.pool1()).liquidity).to.eq("0")
+        expect((await hre.props.limitPool.globalState()).pool1.liquidity).to.eq("0")
 
         await validateMint({
             signer: hre.props.bob,
@@ -4270,7 +4271,7 @@ describe('LimitPool Tests', function () {
             revertMessage: 'InvalidPositionBounds()',
         });
 
-        expect((await hre.props.limitPool.pool0()).liquidityGlobal).to.eq("19951041647900280328782");
+        expect((await hre.props.limitPool.globalState()).liquidityGlobal).to.eq("0").to.eq("19951041647900280328782");
 
         // So now we swap to get to these ticks and see that the pool is now bricked past this point
         // This is catastrophic as anyone can create these positions and intentionally put the pool in this
@@ -4414,7 +4415,7 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         });
 
-        expect((await hre.props.limitPool.pool0()).liquidityGlobal).to.be.equal(aliceLiquidity)
+        expect((await hre.props.limitPool.globalState()).liquidityGlobal).to.eq("0").to.be.equal(aliceLiquidity)
 
         await validateBurn({
             signer: hre.props.alice,
@@ -4431,7 +4432,7 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         });
 
-        expect((await hre.props.limitPool.pool0()).liquidityGlobal).to.be.equal(BN_ZERO)
+        expect((await hre.props.limitPool.globalState()).liquidityGlobal).to.eq("0").to.be.equal(BN_ZERO)
     })
 
     it('pool1 - Should decrement liquidityGlobal if params.amount is zero', async function () {
@@ -4463,7 +4464,7 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         });
 
-        expect((await hre.props.limitPool.pool1()).liquidityGlobal).to.be.equal(aliceLiquidity)
+        expect((await hre.props.limitPool.globalState()).liquidityGlobal).to.be.equal(aliceLiquidity)
 
         await validateBurn({
             signer: hre.props.alice,
@@ -4480,7 +4481,7 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         });
 
-        expect((await hre.props.limitPool.pool1()).liquidityGlobal).to.be.equal(BN_ZERO)
+        expect((await hre.props.limitPool.globalState()).liquidityGlobal).to.be.equal(BN_ZERO)
     })
 
     it('pool0 - Should unlock next tick when tickAtPrice is negative', async function () {

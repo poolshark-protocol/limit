@@ -8,6 +8,7 @@ import './Claims.sol';
 import './EpochMap.sol';
 import '../utils/SafeCast.sol';
 import '../pool/SwapCall.sol';
+import 'hardhat/console.sol';
 
 /// @notice Position management library for ranged liquidity.
 /// @notice Position management library for ranged liquidity.
@@ -64,17 +65,45 @@ library PositionsLimit {
             cache.tickLimit = ConstantProduct.getTickAtPrice(cache.priceLimit.toUint160(), cache.constants);
             // round to nearest tick spacing
             cache.priceLimit = ConstantProduct.getPriceAtTick(cache.tickLimit, cache.constants);
+            console.log('tick limit', uint24(-cache.tickLimit));
         }
 
         PoolsharkStructs.SwapCache memory swapCache;
         swapCache.state = cache.state;
         swapCache.constants = cache.constants;
+        swapCache.price = cache.state.pool.price;
+
+        // swap zero if no liquidity near market price
+        if (cache.state.pool.liquidity == 0 && 
+            (params.zeroForOne ? swapCache.price > cache.priceLower
+                               : swapCache.price < cache.priceUpper)) {
+            console.log('price before', uint24(-cache.state.pool.tickAtPrice));
+            swapCache = TicksLimit.swap(
+                ticks,
+                rangeTickMap,
+                limitTickMap,
+                PoolsharkStructs.SwapParams({
+                    to: params.to,
+                    priceLimit: (params.zeroForOne ? cache.priceLower 
+                                                   : cache.priceUpper).toUint160(),
+                    amount: 0,
+                    //TODO: handle exactOut
+                    exactIn: true,
+                    zeroForOne: params.zeroForOne,
+                    callbackData: abi.encodePacked(bytes1(0x0))
+                }),
+                swapCache
+            );
+            console.log('price after', uint24(-cache.state.pool.tickAtPrice));
+        }
+
+        console.log('price check', cache.priceLimit, swapCache.price);
 
         // only swap if priceLimit is beyond current pool price
-        if (params.zeroForOne ? cache.priceLimit < cache.swapPool.price
-                              : cache.priceLimit > cache.swapPool.price) {
+        if (params.zeroForOne ? cache.priceLimit < swapCache.price
+                              : cache.priceLimit > swapCache.price) {
             // swap and save the pool state
-            cache.swapCache = TicksLimit.swap(
+            swapCache = TicksLimit.swap(
                 ticks,
                 rangeTickMap,
                 limitTickMap,
@@ -91,41 +120,53 @@ library PositionsLimit {
             );
             // subtract from remaining input amount
             params.amount -= uint128(swapCache.input);
+
         }
+        // save to cache
+        cache.swapCache = swapCache;
+        cache.state = swapCache.state;
+
+        console.log('input output check', swapCache.input, swapCache.output, uint24(-swapCache.state.pool.tickAtPrice));
 
         if (params.amount < cache.mintSize) params.amount = 0;
         // move start tick based on amount filled in swap
         if ((params.amount > 0 && swapCache.input > 0) ||
-            (params.zeroForOne ? cache.priceLower < cache.swapPool.price
-                               : cache.priceUpper > cache.swapPool.price)
+            (params.zeroForOne ? cache.priceLower < swapCache.price
+                               : cache.priceUpper > swapCache.price)
         ) {
             // move the tick limit based on pool.tickAtPrice
-            if (params.zeroForOne ? cache.priceLower < cache.swapPool.price
-                                  : cache.priceUpper > cache.swapPool.price) {
-                cache.tickLimit = cache.swapPool.tickAtPrice;
+            if (params.zeroForOne ? cache.priceLower < swapCache.price
+                                  : cache.priceUpper > swapCache.price) {
+                cache.tickLimit = swapCache.state.pool.tickAtPrice;
             }
             // round ahead tickLimit to avoid crossing epochs
-            cache.tickLimit = TickMap.roundAhead(cache.tickLimit, cache.constants, params.zeroForOne, cache.swapPool.price);
+            cache.tickLimit = TickMap.roundAhead(cache.tickLimit, cache.constants, params.zeroForOne, swapCache.price);
             if (params.zeroForOne) {
-                if (cache.priceLower < cache.swapPool.price) {
+                if (cache.priceLower < swapCache.price) {
                     // if rounding goes past limit trim position
                     /// @dev - if swap didn't go to limit user would be 100% filled
                     params.lower = cache.tickLimit;
                     cache.priceLower = ConstantProduct.getPriceAtTick(params.lower, cache.constants);
                 }
-                if (params.lower == params.upper && params.upper < ConstantProduct.maxTick(cache.constants.tickSpacing)) {
-                    params.upper += cache.constants.tickSpacing;
+                if (params.lower >= params.upper && 
+                    params.lower < ConstantProduct.maxTick(cache.constants.tickSpacing) &&
+                    params.upper < ConstantProduct.maxTick(cache.constants.tickSpacing)) {
+                    params.upper = cache.constants.tickSpacing;
                 }
                 cache.priceUpper = ConstantProduct.getPriceAtTick(params.upper, cache.constants);
             } else {
-                if (cache.priceUpper > cache.swapPool.price) {
+                console.log('position bounds 1 ', uint24(-params.lower), uint24(params.upper), uint24(-cache.tickLimit));
+                if (cache.priceUpper > swapCache.price) {
                     // if rounding goes past limit trim position
                     params.upper = cache.tickLimit;
                     cache.priceUpper = ConstantProduct.getPriceAtTick(params.upper, cache.constants);
                 }
-                if (params.upper == params.lower && params.lower > ConstantProduct.minTick(cache.constants.tickSpacing)) {
-                    params.lower -= cache.constants.tickSpacing;
+                if (params.upper <= params.lower && 
+                    params.lower > ConstantProduct.minTick(cache.constants.tickSpacing) &&
+                    params.upper > ConstantProduct.minTick(cache.constants.tickSpacing)) {
+                    params.lower = params.upper - cache.constants.tickSpacing;
                 }
+                console.log('position bounds 2', uint24(-params.lower), uint24(-params.upper));
                 cache.priceLower = ConstantProduct.getPriceAtTick(params.lower, cache.constants);
             }
             if (params.amount > 0 && params.lower < params.upper)
@@ -141,8 +182,12 @@ library PositionsLimit {
                 cache.liquidityMinted = 0;
             cache.state.epoch += 1;
         }
-        // save swapCache
-        cache.swapCache = swapCache;
+        console.log('position bounds end', uint24(params.lower), uint24(params.upper), uint24(cache.state.pool.tickAtPrice));
+
+
+        if (params.lower >= params.upper) {
+            params.amount = 0;
+        }
 
         return (
             params,

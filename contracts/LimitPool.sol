@@ -12,6 +12,7 @@ import './utils/LimitPoolErrors.sol';
 import './libraries/pool/SwapCall.sol';
 import './libraries/pool/QuoteCall.sol';
 import './libraries/range/pool/MintCall.sol';
+import './libraries/range/pool/BurnCall.sol';
 import './libraries/limit/pool/MintLimitCall.sol';
 import './libraries/limit/pool/BurnLimitCall.sol';
 import './libraries/math/ConstantProduct.sol';
@@ -89,6 +90,25 @@ contract LimitPool is
         });
         cache = MintCall.perform(params, cache, rangeTickMap, ticks, samples);
         globalState = cache.state; 
+        positions[params.lower][params.upper] = cache.position;
+    }
+
+    function burn(
+        BurnParams memory params
+    ) external override
+        nonReentrant
+        canoncialOnly
+    {
+        BurnCache memory cache = BurnCache({
+            state: globalState,
+            position: positions[params.lower][params.upper],
+            constants: immutables(),
+            amount0: 0,
+            amount1: 0,
+            tokenBurned: 0
+        });
+        cache = BurnCall.perform(params, cache, rangeTickMap, ticks, samples);
+        globalState = cache.state;
         positions[params.lower][params.upper] = cache.position;
     }
 
@@ -182,26 +202,16 @@ contract LimitPool is
         );
     }
 
-    function snapshotLimit(
-       SnapshotLimitParams memory params 
-    ) external view override canoncialOnly returns (
-        LimitPosition memory
-    ) {
-        return PositionsLimit.snapshot(
-            params.zeroForOne ? positions0 : positions1,
-            ticks,
-            limitTickMap,
-            globalState,
-            UpdateLimitParams(
-                params.owner,
-                params.owner,
-                params.burnPercent,
-                params.lower,
-                params.upper,
-                params.claim,
-                params.zeroForOne
-            ),
-            immutables()
+    function increaseSampleLength(
+        uint16 sampleLengthNext
+    ) external override
+        nonReentrant
+        canoncialOnly 
+    {
+        globalState.pool = Samples.expand(
+            samples,
+            globalState.pool,
+            sampleLengthNext
         );
     }
 

@@ -55,7 +55,6 @@ interface ILimitPoolStructs is PoolsharkStructs {
         LimitPosition position;
         Immutables constants;
         LimitPoolState pool;
-        LimitPoolState swapPool;
         SwapCache swapCache;
         uint256 liquidityMinted;
         uint256 mintSize;

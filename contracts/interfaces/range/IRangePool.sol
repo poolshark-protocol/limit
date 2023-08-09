@@ -9,6 +9,10 @@ interface IRangePool is IRangePoolStructs {
         MintParams memory mintParams
     ) external;
 
+    function burn(
+        BurnParams memory burnParams
+    ) external;
+
     function swap(
         SwapParams memory params
     ) external returns (
@@ -24,34 +28,7 @@ interface IRangePool is IRangePoolStructs {
         uint160 priceAfter
     );
 
-    // function burn(
-    //     BurnParams memory burnParams
-    // ) external;
-
-    // function sample(
-    //     uint32[] memory secondsAgo
-    // ) external view returns (
-    //     int56[]   memory tickSecondsAccum,
-    //     uint160[] memory secondsPerLiquidityAccum,
-    //     uint160 averagePrice,
-    //     uint128 averageLiquidity,
-    //     int24 averageTick
-    // );
-
-    // function snapshot(
-    //     SnapshotParams memory params
-    // ) external view returns(
-    //     int56   tickSecondsAccum,
-    //     uint160 secondsPerLiquidityAccum,
-    //     uint128 feesOwed0,
-    //     uint128 feesOwed1
-    // );
-
-    // function increaseSampleLength(
-    //     uint16 sampleLengthNext
-    // ) external;
-
-
-
-
+    function increaseSampleLength(
+        uint16 sampleLengthNext
+    ) external;
 }

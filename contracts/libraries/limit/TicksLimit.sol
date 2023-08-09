@@ -259,7 +259,7 @@ library TicksLimit {
                         : priceLimit <= cache.price) ||
             (zeroForOne && cache.price == cache.constants.bounds.min) ||
             (!zeroForOne && cache.price == cache.constants.bounds.max) ||
-            cache.amountLeft == 0)
+            (cache.amountLeft == 0 && cache.liquidity > 0))
         {
             cache.cross = false;
             return cache;
@@ -445,18 +445,16 @@ library TicksLimit {
             EpochMap.set(cache.crossTick, cache.state.epoch, limitTickMap, cache.constants);
             int128 liquidityDelta = ticks[cache.crossTick].limit.liquidityDelta;
 
-            if (liquidityDelta > 0) {
+            if (liquidityDelta >= 0) {
                 cache.liquidity += uint128(liquidityDelta);
                 if (params.zeroForOne) cache.state.pool1.liquidity += uint128(liquidityDelta);
                 else cache.state.pool0.liquidity += uint128(liquidityDelta);
-            } 
+            }
             else {
+                console.log('negative tick hit', uint24(cache.crossTick), cache.state.pool0.liquidity, uint128(-liquidityDelta));
                 cache.liquidity -= uint128(-liquidityDelta);
-                if (params.zeroForOne) {
-                    cache.state.pool1.liquidity -= uint128(-liquidityDelta);
-                } else {
-                    cache.state.pool0.liquidity -= uint128(-liquidityDelta);
-                }
+                if (params.zeroForOne) cache.state.pool1.liquidity -= uint128(-liquidityDelta);
+                else cache.state.pool0.liquidity -= uint128(-liquidityDelta);
             }
             // zero out liquidityDelta and priceAt
             ticks[cache.crossTick].limit = PoolsharkStructs.LimitTick(0,0);
@@ -471,6 +469,8 @@ library TicksLimit {
             if (liquidityDelta > 0) cache.liquidity += liquidityDelta;
         }
         cache = _iterate(ticks, rangeTickMap, limitTickMap, cache, params.zeroForOne, false);
+
+        console.log('tick liquidity check', cache.state.pool0.liquidity);
 
         return cache;
     }

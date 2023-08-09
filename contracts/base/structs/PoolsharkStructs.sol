@@ -39,6 +39,7 @@ interface PoolsharkStructs {
     struct LimitTick {
         uint160 priceAt;                             // LimitPool
         int128 liquidityDelta;                       // LimitPool
+        //add liquidityAbsolute
     }
 
     struct RangeTick {
@@ -46,6 +47,7 @@ interface PoolsharkStructs {
         uint200 feeGrowthOutside1;                   // RangePool
         uint160 secondsPerLiquidityAccumOutside;     // RangePool
         int128 liquidityDelta;                       // RangePool
+        // add liquidityAbsolute
         int56 tickSecondsAccumOutside;               // RangePool
     }
 

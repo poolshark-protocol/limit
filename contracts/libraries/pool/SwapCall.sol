@@ -43,7 +43,7 @@ library SwapCall {
             params,
             cache
         );
-        save(cache, globalState, !params.zeroForOne);
+        save(cache, globalState, params.zeroForOne);
         // transfer output amount
         SafeTransfers.transferOut(
             params.to, 

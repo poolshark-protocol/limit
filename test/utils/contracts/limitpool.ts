@@ -342,7 +342,7 @@ export async function validateMint(params: ValidateMintParams) {
     let upperTickBefore: LimitTick
     let positionBefore: LimitPosition
     if (zeroForOne) {
-        lowerTickBefore = (await hre.props.limitPool.ticks(lower)).limit
+        lowerTickBefore = (await hre.props.limitPool.ticks(expectedLower ? expectedLower : lower)).limit
         upperTickBefore = (await hre.props.limitPool.ticks(expectedUpper ? expectedUpper : upper)).limit
         positionBefore  = await hre.props.limitPool.positions0(
             recipient,
@@ -351,10 +351,10 @@ export async function validateMint(params: ValidateMintParams) {
         )
     } else {
         lowerTickBefore = (await hre.props.limitPool.ticks(expectedLower ? expectedLower : lower)).limit
-        upperTickBefore = (await hre.props.limitPool.ticks(upper)).limit
+        upperTickBefore = (await hre.props.limitPool.ticks(expectedUpper ? expectedUpper : upper)).limit
         positionBefore  = await hre.props.limitPool.positions1(
             recipient,
-            lower,
+            expectedLower ? expectedLower : lower,
             expectedUpper ? expectedUpper : upper
         )
     }
@@ -403,19 +403,19 @@ export async function validateMint(params: ValidateMintParams) {
     let upperTickAfter: LimitTick
     let positionAfter: LimitPosition
     if (zeroForOne) {
-        lowerTickAfter = (await hre.props.limitPool.ticks(lower)).limit
+        lowerTickAfter = (await hre.props.limitPool.ticks(expectedLower ? expectedLower : lower)).limit
         upperTickAfter = (await hre.props.limitPool.ticks(expectedUpper ? expectedUpper : upper)).limit
         positionAfter = await hre.props.limitPool.positions0(
             recipient,
             expectedLower ? expectedLower : lower,
-            upper
+            expectedUpper ? expectedUpper : upper
         )
     } else {
         lowerTickAfter = (await hre.props.limitPool.ticks(expectedLower ? expectedLower : lower)).limit
-        upperTickAfter = (await hre.props.limitPool.ticks(upper)).limit
+        upperTickAfter = (await hre.props.limitPool.ticks(expectedUpper ? expectedUpper : upper)).limit
         positionAfter = await hre.props.limitPool.positions1(
             recipient,
-            lower,
+            expectedLower ? expectedLower : lower,
             expectedUpper ? expectedUpper : upper
         )
     }
@@ -472,7 +472,7 @@ export async function validateBurn(params: ValidateBurnParams) {
     const expectedUpper = params.expectedUpper ? BigNumber.from(params.expectedUpper) : null
     const expectedLower = params.expectedLower ? BigNumber.from(params.expectedLower) : null
     const expectedPositionUpper = params.expectedPositionUpper ? BigNumber.from(params.expectedPositionUpper) : null
-    const compareSnapshot = params.compareSnapshot ? params.compareSnapshot : true
+    const compareSnapshot = params.compareSnapshot ? params.compareSnapshot : false
 
     let balanceInBefore
     let balanceOutBefore
@@ -510,14 +510,14 @@ export async function validateBurn(params: ValidateBurnParams) {
         liquidityAmount = liquidityPercent.mul(positionBefore.liquidity).div(ethers.utils.parseUnits("1",38))
     }
     if (revertMessage == '') {
-        positionSnapshot = await hre.props.limitPool.snapshotLimit({
-            owner: signer.address,
-            lower: lower,
-            claim: claim,
-            upper: upper,
-            zeroForOne: zeroForOne,
-            burnPercent: liquidityPercent
-        })
+        // positionSnapshot = await hre.props.limitPool.snapshotLimit({
+        //     owner: signer.address,
+        //     lower: lower,
+        //     claim: claim,
+        //     upper: upper,
+        //     zeroForOne: zeroForOne,
+        //     burnPercent: liquidityPercent
+        // })
         const burnTxn = await hre.props.limitPool
             .connect(signer)
             .burnLimit({

@@ -4,6 +4,7 @@ pragma solidity 0.8.13;
 import '../../../interfaces/limit/ILimitPoolStructs.sol';
 import '../PositionsLimit.sol';
 import '../../utils/Collect.sol';
+import 'hardhat/console.sol';
 
 library MintLimitCall {
     event MintLimit(
@@ -32,11 +33,6 @@ library MintLimitCall {
         ILimitPoolStructs.MintLimitParams memory params,
         ILimitPoolStructs.MintLimitCache memory cache
     ) external returns (ILimitPoolStructs.MintLimitCache memory) {
-        // bump swapPool in case user is trying to undercut
-        // this avoids trimming positions unnecessarily
-        if (cache.swapPool.liquidity == 0) {
-            (cache, cache.swapPool) = TicksLimit.unlock(cache, cache.swapPool, ticks, limitTickMap, !params.zeroForOne);
-        }
 
         // resize position if necessary
         (params, cache) = PositionsLimit.resize(
@@ -47,7 +43,7 @@ library MintLimitCall {
             cache
         );
 
-        // save state for safe reentrancy
+        // save state for reentrancy safety
         save(cache, globalState, !params.zeroForOne);
 
         // transfer in token amount
@@ -56,7 +52,7 @@ library MintLimitCall {
                                                    : cache.constants.token1,
                                  params.amount + cache.swapCache.input
                                 );
-        // if swap output
+        // transfer out if swap output 
         if (cache.swapCache.output > 0)
             SafeTransfers.transferOut(
                 params.to,
@@ -64,9 +60,10 @@ library MintLimitCall {
                                   : cache.constants.token0,
                 cache.swapCache.output
             );
-
+        console.log('amount check', params.amount, cache.swapCache.output);
         // mint position if amount is left
         if (params.amount > 0 && params.lower < params.upper) {
+            cache.pool = params.zeroForOne ? cache.state.pool0 : cache.state.pool1;
             // load position given params
             cache.position = positions[params.to][params.lower][params.upper];
             
@@ -117,6 +114,8 @@ library MintLimitCall {
             // save position to storage
             positions[params.to][params.lower][params.upper] = cache.position;
 
+            params.zeroForOne ? cache.state.pool0 = cache.pool : cache.state.pool1 = cache.pool;
+
             emit MintLimit(
                 params.to,
                 params.lower,
@@ -128,6 +127,7 @@ library MintLimitCall {
                 uint128(cache.liquidityMinted)
             );
         }
+        console.log('position liquidity check', cache.state.pool1.liquidity);
 
         // save lp side for safe reentrancy
         save(cache, globalState, params.zeroForOne);
@@ -141,12 +141,13 @@ library MintLimitCall {
         bool zeroForOne
     ) internal {
         globalState.epoch = cache.state.epoch;
+        globalState.liquidityGlobal = cache.state.liquidityGlobal;
         if (zeroForOne) {
             globalState.pool = cache.state.pool;
-            globalState.pool0 = cache.swapPool;
+            globalState.pool0 = cache.state.pool0;
         } else {
             globalState.pool = cache.state.pool;
-            globalState.pool1 = cache.swapPool;
+            globalState.pool1 = cache.state.pool1;
         }
     }
 }

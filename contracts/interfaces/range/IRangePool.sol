@@ -9,10 +9,6 @@ interface IRangePool is IRangePoolStructs {
         MintParams memory mintParams
     ) external;
 
-    function burn(
-        BurnParams memory burnParams
-    ) external;
-
     function swap(
         SwapParams memory params
     ) external returns (
@@ -28,83 +24,34 @@ interface IRangePool is IRangePoolStructs {
         uint160 priceAfter
     );
 
-    function sample(
-        uint32[] memory secondsAgo
-    ) external view returns (
-        int56[]   memory tickSecondsAccum,
-        uint160[] memory secondsPerLiquidityAccum,
-        uint160 averagePrice,
-        uint128 averageLiquidity,
-        int24 averageTick
-    );
+    // function burn(
+    //     BurnParams memory burnParams
+    // ) external;
 
-    function snapshot(
-        SnapshotParams memory params
-    ) external view returns(
-        int56   tickSecondsAccum,
-        uint160 secondsPerLiquidityAccum,
-        uint128 feesOwed0,
-        uint128 feesOwed1
-    );
+    // function sample(
+    //     uint32[] memory secondsAgo
+    // ) external view returns (
+    //     int56[]   memory tickSecondsAccum,
+    //     uint160[] memory secondsPerLiquidityAccum,
+    //     uint160 averagePrice,
+    //     uint128 averageLiquidity,
+    //     int24 averageTick
+    // );
 
-    function increaseSampleLength(
-        uint16 sampleLengthNext
-    ) external;
+    // function snapshot(
+    //     SnapshotParams memory params
+    // ) external view returns(
+    //     int56   tickSecondsAccum,
+    //     uint160 secondsPerLiquidityAccum,
+    //     uint128 feesOwed0,
+    //     uint128 feesOwed1
+    // );
 
-    function fees(
-        uint16 protocolFee,
-        bool setFee
-    ) external returns (
-        uint128 token0Fees,
-        uint128 token1Fees
-    );
+    // function increaseSampleLength(
+    //     uint16 sampleLengthNext
+    // ) external;
 
-    function owner() external view returns (
-        address
-    );
 
-    function tickSpacing() external view returns (
-        int16
-    );
 
-    function samples(uint256) external view returns (
-        uint32,
-        int56,
-        uint160
-    );
 
-    function poolState() external view returns (
-        uint8,
-        uint16,
-        int24,
-        int56,
-        uint160,
-        uint160,
-        uint128,
-        uint128,
-        uint200,
-        uint200,
-        SampleState memory,
-        ProtocolFees memory
-    );
-
-    function ticks(int24) external view returns (
-        int128,
-        uint200,
-        uint200,
-        int56,
-        uint160
-    );
-
-    function positions(int24, int24) external view returns (
-        uint128,
-        uint128,
-        uint128,
-        uint256,
-        uint256
-    );
-
-    function immutables() external view returns(
-        PoolsharkStructs.Immutables memory
-    );
 }

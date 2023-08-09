@@ -5,7 +5,7 @@ import '../../base/structs/PoolsharkStructs.sol';
 
 interface ILimitPoolStructs is PoolsharkStructs {
 
-    struct PositionLimit {
+    struct LimitPosition {
         uint128 amountIn; // token amount already claimed; balance
         uint128 amountOut; // necessary for non-custodial positions
         uint128 liquidity; // expected amount to be used not actual
@@ -52,7 +52,7 @@ interface ILimitPoolStructs is PoolsharkStructs {
 
     struct MintLimitCache {
         GlobalState state;
-        PositionLimit position;
+        LimitPosition position;
         Immutables constants;
         LimitPoolState pool;
         LimitPoolState swapPool;
@@ -69,31 +69,15 @@ interface ILimitPoolStructs is PoolsharkStructs {
 
     struct BurnLimitCache {
         GlobalState state;
-        PositionLimit position;
+        LimitPosition position;
         PoolsharkStructs.Immutables constants;
-        LimitPoolState pool;
     }
 
-    struct SwapCache {
-        GlobalState state;
-        PoolsharkStructs.Immutables constants;
-        LimitPoolState pool;
-        uint256 price;
-        uint256 liquidity;
-        uint256 amountLeft;
-        uint256 input;
-        uint256 output;
-        uint160 crossPrice;
-        int24 crossTick;
-        bool exactIn;
-        bool cross;
-    }
-
-    struct UpdateLimitCache {
+    struct UpdateCache {
         GlobalState state;
         LimitPoolState pool;
-        Tick claimTick;
-        PositionLimit position;
+        LimitTick claimTick;
+        LimitPosition position;
         uint160 priceLower;
         uint160 priceClaim;
         uint160 priceUpper;

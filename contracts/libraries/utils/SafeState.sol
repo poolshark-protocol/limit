@@ -4,21 +4,25 @@ pragma solidity 0.8.13;
 import '../../interfaces/limit/ILimitPoolStructs.sol';
 import '../../interfaces/IERC20Minimal.sol';
 
-library Checks {
-    function save(
+library SafeState {
+    function saveLimit(
         PoolsharkStructs.LimitPoolState memory pool,
-        PoolsharkStructs.LimitPoolState storage poolState
+        PoolsharkStructs.GlobalState storage globalState,
+        uint32 epoch,
+        bool isPool0
     ) internal {
-        poolState.price = pool.price;
-        poolState.liquidity = pool.liquidity;
-        poolState.liquidityGlobal = pool.liquidityGlobal;
-        poolState.swapEpoch = pool.swapEpoch;
-        poolState.tickAtPrice = pool.tickAtPrice;
+        if (isPool0) {
+            globalState.pool0 = pool;
+        } else {
+            globalState.pool1 = pool;
+        }
+        // save epoch
+        globalState.epoch = epoch;
     }
 
     function balance(
         PoolsharkStructs.SwapParams memory params,
-        ILimitPoolStructs.SwapCache memory cache
+        PoolsharkStructs.SwapCache memory cache
     ) private view returns (uint256) {
         (
             bool success,

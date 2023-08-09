@@ -12,17 +12,17 @@ library Claims {
     using SafeCast for uint256;
 
     function validate(
-        mapping(address => mapping(int24 => mapping(int24 => ILimitPoolStructs.PositionLimit)))
+        mapping(address => mapping(int24 => mapping(int24 => ILimitPoolStructs.LimitPosition)))
             storage positions,
         mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
         ILimitPoolStructs.LimitPoolState memory pool,
         ILimitPoolStructs.UpdateLimitParams memory params,
-        ILimitPoolStructs.UpdateLimitCache memory cache,
+        ILimitPoolStructs.UpdateCache memory cache,
         PoolsharkStructs.Immutables memory constants
     ) internal view returns (
         ILimitPoolStructs.UpdateLimitParams memory,
-        ILimitPoolStructs.UpdateLimitCache memory
+        ILimitPoolStructs.UpdateCache memory
     ) {
         // validate position liquidity
         if (params.amount > cache.position.liquidity) require (false, 'NotEnoughPositionLiquidity()');
@@ -43,7 +43,7 @@ library Claims {
                 } else {
                     cache.priceClaim = cache.priceUpper;
                     params.claim = params.upper;
-                    cache.claimTick = ticks[params.upper];
+                    cache.claimTick = ticks[params.upper].limit;
                 }
                 claimTickEpoch = cache.state.epoch;
             } else if (params.claim % constants.tickSpacing != 0) {
@@ -61,7 +61,7 @@ library Claims {
                 } else {
                     cache.priceClaim = cache.priceLower;
                     params.claim = params.lower;
-                    cache.claimTick = ticks[params.upper];
+                    cache.claimTick = ticks[params.upper].limit;
                 }
                 claimTickEpoch = cache.state.epoch;
             } else if (params.claim % constants.tickSpacing != 0) {
@@ -124,11 +124,11 @@ library Claims {
     }
 
     function getDeltas(
-        ILimitPoolStructs.UpdateLimitCache memory cache,
+        ILimitPoolStructs.UpdateCache memory cache,
         ILimitPoolStructs.UpdateLimitParams memory params,
         PoolsharkStructs.Immutables memory constants
     ) internal pure returns (
-        ILimitPoolStructs.UpdateLimitCache memory
+        ILimitPoolStructs.UpdateCache memory
     ) {
         // if half tick priceAt > 0 add amountOut to amountOutClaimed
         // set claimPriceLast if zero

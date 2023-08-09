@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPLv3
 pragma solidity 0.8.13;
 
+import '../../interfaces/IPool.sol';
 import '../../interfaces/range/IRangePoolStructs.sol';
 import '../math/ConstantProduct.sol';
 import './math/FeeMath.sol';
@@ -57,7 +58,7 @@ library Positions {
 
     function validate(
         IRangePoolStructs.MintParams memory params,
-        IRangePoolStructs.PoolState memory state,
+        PoolsharkStructs.GlobalState memory state,
         PoolsharkStructs.Immutables memory constants
     ) internal pure returns (IRangePoolStructs.MintParams memory, uint256 liquidityMinted) {
         Ticks.validate(params.lower, params.upper, constants.tickSpacing);
@@ -68,7 +69,7 @@ library Positions {
         liquidityMinted = ConstantProduct.getLiquidityForAmounts(
             priceLower,
             priceUpper,
-            state.price,
+            state.pool.price,
             params.amount1,
             params.amount0
         );
@@ -76,7 +77,7 @@ library Positions {
         (params.amount0, params.amount1) = ConstantProduct.getAmountsForLiquidity(
             priceLower,
             priceUpper,
-            state.price,
+            state.pool.price,
             liquidityMinted,
             true
         );
@@ -87,13 +88,13 @@ library Positions {
 
     function add(
         IRangePoolStructs.Position memory position,
-        mapping(int24 => IRangePoolStructs.Tick) storage ticks,
+        mapping(int24 => PoolsharkStructs.Tick) storage ticks,
         IRangePoolStructs.Sample[65535] storage samples,
         PoolsharkStructs.TickMap storage tickMap,
         IRangePoolStructs.AddParams memory params,
         PoolsharkStructs.Immutables memory constants
     ) internal returns (
-        IRangePoolStructs.PoolState memory,
+        PoolsharkStructs.GlobalState memory,
         IRangePoolStructs.Position memory,
         uint128
     ) {
@@ -123,8 +124,8 @@ library Positions {
             position.feeGrowthInside0Last,
             position.feeGrowthInside1Last
         ) = rangeFeeGrowth(
-            ticks[params.mint.lower],
-            ticks[params.mint.upper],
+            ticks[params.mint.lower].range,
+            ticks[params.mint.upper].range,
             params.state,
             params.mint.lower,
             params.mint.upper
@@ -164,14 +165,14 @@ library Positions {
 
     function remove(
         IRangePoolStructs.Position memory position,
-        mapping(int24 => IRangePoolStructs.Tick) storage ticks,
+        mapping(int24 => PoolsharkStructs.Tick) storage ticks,
         IRangePoolStructs.Sample[65535] storage samples,
         PoolsharkStructs.TickMap storage tickMap,
-        IRangePoolStructs.PoolState memory state,
+        PoolsharkStructs.GlobalState memory state,
         IRangePoolStructs.BurnParams memory params,
         IRangePoolStructs.RemoveParams memory removeParams
     ) internal returns (
-        IRangePoolStructs.PoolState memory,
+        PoolsharkStructs.GlobalState memory,
         IRangePoolStructs.Position memory,
         uint128,
         uint128
@@ -197,7 +198,7 @@ library Positions {
             (amount0Removed, amount1Removed) = ConstantProduct.getAmountsForLiquidity(
                 cache.priceLower,
                 cache.priceUpper,
-                state.price,
+                state.pool.price,
                 cache.liquidityAmount,
                 false
             );
@@ -237,13 +238,13 @@ library Positions {
 
     function compound(
         IRangePoolStructs.Position memory position,
-        mapping(int24 => IRangePoolStructs.Tick) storage ticks,
+        mapping(int24 => PoolsharkStructs.Tick) storage ticks,
         IRangePoolStructs.Sample[65535] storage samples,
         PoolsharkStructs.TickMap storage tickMap,
-        IRangePoolStructs.PoolState memory state,
+        PoolsharkStructs.GlobalState memory state,
         IRangePoolStructs.CompoundParams memory params,
         PoolsharkStructs.Immutables memory constants
-    ) internal returns (IRangePoolStructs.Position memory, IRangePoolStructs.PoolState memory) {
+    ) internal returns (IRangePoolStructs.Position memory, PoolsharkStructs.GlobalState memory) {
         IRangePoolStructs.PositionCache memory cache = IRangePoolStructs.PositionCache({
             priceLower: ConstantProduct.getPriceAtTick(params.lower, constants),
             priceUpper: ConstantProduct.getPriceAtTick(params.upper, constants),
@@ -257,7 +258,7 @@ library Positions {
         cache.liquidityAmount = ConstantProduct.getLiquidityForAmounts(
             cache.priceLower,
             cache.priceUpper,
-            state.price,
+            state.pool.price,
             position.amount1,
             position.amount0
         );
@@ -276,7 +277,7 @@ library Positions {
             (amount0, amount1) = ConstantProduct.getAmountsForLiquidity(
                 cache.priceLower,
                 cache.priceUpper,
-                state.price,
+                state.pool.price,
                 cache.liquidityAmount,
                 true
             );
@@ -295,9 +296,9 @@ library Positions {
     }
 
     function update(
-        mapping(int24 => IRangePoolStructs.Tick) storage ticks,
+        mapping(int24 => PoolsharkStructs.Tick) storage ticks,
         IRangePoolStructs.Position memory position,
-        IRangePoolStructs.PoolState memory state,
+        PoolsharkStructs.GlobalState memory state,
         IRangePoolStructs.UpdateParams memory params
     ) internal returns (
         IRangePoolStructs.Position memory,
@@ -315,8 +316,8 @@ library Positions {
         }
         
         (uint256 rangeFeeGrowth0, uint256 rangeFeeGrowth1) = rangeFeeGrowth(
-            ticks[params.lower],
-            ticks[params.upper],
+            ticks[params.lower].range,
+            ticks[params.upper].range,
             state,
             params.lower,
             params.upper
@@ -356,19 +357,19 @@ library Positions {
     }
 
     function rangeFeeGrowth(
-        IRangePoolStructs.Tick memory lowerTick,
-        IRangePoolStructs.Tick memory upperTick,
-        IRangePoolStructs.PoolState memory state,
+        PoolsharkStructs.RangeTick memory lowerTick,
+        PoolsharkStructs.RangeTick memory upperTick,
+        PoolsharkStructs.GlobalState memory state,
         int24 lower,
         int24 upper
     ) internal pure returns (uint256 feeGrowthInside0, uint256 feeGrowthInside1) {
 
-        uint256 feeGrowthGlobal0 = state.feeGrowthGlobal0;
-        uint256 feeGrowthGlobal1 = state.feeGrowthGlobal1;
+        uint256 feeGrowthGlobal0 = state.pool.feeGrowthGlobal0;
+        uint256 feeGrowthGlobal1 = state.pool.feeGrowthGlobal1;
 
         uint256 feeGrowthBelow0;
         uint256 feeGrowthBelow1;
-        if (state.tickAtPrice >= lower) {
+        if (state.pool.tickAtPrice >= lower) {
             feeGrowthBelow0 = lowerTick.feeGrowthOutside0;
             feeGrowthBelow1 = lowerTick.feeGrowthOutside1;
         } else {
@@ -378,7 +379,7 @@ library Positions {
 
         uint256 feeGrowthAbove0;
         uint256 feeGrowthAbove1;
-        if (state.tickAtPrice < upper) {
+        if (state.pool.tickAtPrice < upper) {
             feeGrowthAbove0 = upperTick.feeGrowthOutside0;
             feeGrowthAbove1 = upperTick.feeGrowthOutside1;
         } else {
@@ -397,53 +398,45 @@ library Positions {
         uint256 feeGrowthInside0,
         uint256 feeGrowthInside1
     ) {
-        Ticks.validate(lower, upper, IRangePool(pool).tickSpacing());
+        Ticks.validate(lower, upper, (IPool(pool).immutables()).tickSpacing);
         (
-            ,,
-            int24 currentTick,
-            ,,,,,
-            uint256 _feeGrowthGlobal0,
-            uint256 _feeGrowthGlobal1,
-            ,
-        ) = IRangePool(pool).poolState();
+            PoolsharkStructs.RangePoolState memory poolState,
+            ,,,,
+        ) = IPool(pool).globalState();
 
         (
-            ,
-            uint200 tickLowerFeeGrowthOutside0,
-            uint200 tickLowerFeeGrowthOutside1,
+            PoolsharkStructs.RangeTick memory tickLower
             ,
         )
-            = IRangePool(pool).ticks(lower);
+            = IPool(pool).ticks(lower);
         (
-            ,
-            uint200 tickUpperFeeGrowthOutside0,
-            uint200 tickUpperFeeGrowthOutside1,
+            PoolsharkStructs.RangeTick memory tickUpper
             ,
         )
-            = IRangePool(pool).ticks(upper);
+            = IPool(pool).ticks(upper);
 
         uint256 feeGrowthBelow0;
         uint256 feeGrowthBelow1;
         uint256 feeGrowthAbove0;
         uint256 feeGrowthAbove1;
 
-        if (lower <= currentTick) {
-            feeGrowthBelow0 = tickLowerFeeGrowthOutside0;
-            feeGrowthBelow1 = tickLowerFeeGrowthOutside1;
+        if (lower <= poolState.tickAtPrice) {
+            feeGrowthBelow0 = tickLower.feeGrowthOutside0;
+            feeGrowthBelow1 = tickLower.feeGrowthOutside1;
         } else {
-            feeGrowthBelow0 = _feeGrowthGlobal0 - tickLowerFeeGrowthOutside0;
-            feeGrowthBelow1 = _feeGrowthGlobal1 - tickLowerFeeGrowthOutside1;
+            feeGrowthBelow0 = poolState.feeGrowthGlobal0 - tickLower.feeGrowthOutside0;
+            feeGrowthBelow1 = poolState.feeGrowthGlobal1 - tickLower.feeGrowthOutside1;
         }
 
-        if (currentTick < upper) {
-            feeGrowthAbove0 = tickUpperFeeGrowthOutside0;
-            feeGrowthAbove1 = tickUpperFeeGrowthOutside1;
+        if (poolState.tickAtPrice < upper) {
+            feeGrowthAbove0 = tickUpper.feeGrowthOutside0;
+            feeGrowthAbove1 = tickUpper.feeGrowthOutside1;
         } else {
-            feeGrowthAbove0 = _feeGrowthGlobal0 - tickUpperFeeGrowthOutside0;
-            feeGrowthAbove1 = _feeGrowthGlobal1 - tickUpperFeeGrowthOutside1;
+            feeGrowthAbove0 = poolState.feeGrowthGlobal0 - tickUpper.feeGrowthOutside0;
+            feeGrowthAbove1 = poolState.feeGrowthGlobal1 - tickUpper.feeGrowthOutside1;
         }
-        feeGrowthInside0 = _feeGrowthGlobal0 - feeGrowthBelow0 - feeGrowthAbove0;
-        feeGrowthInside1 = _feeGrowthGlobal1 - feeGrowthBelow1 - feeGrowthAbove1;
+        feeGrowthInside0 = poolState.feeGrowthGlobal0 - feeGrowthBelow0 - feeGrowthAbove0;
+        feeGrowthInside1 = poolState.feeGrowthGlobal1 - feeGrowthBelow1 - feeGrowthAbove1;
     }
 
     function snapshot(
@@ -457,31 +450,42 @@ library Positions {
         uint128 feesOwed0,
         uint128 feesOwed1
     ) {
-        Ticks.validate(lower, upper, IRangePool(pool).tickSpacing());
+        Ticks.validate(lower, upper, (IPool(pool).immutables()).tickSpacing);
 
         IRangePoolStructs.SnapshotCache memory cache;
         (
-            ,
+            PoolsharkStructs.RangePoolState memory poolState,
             ,,,,
-            cache.price,
-            cache.liquidity,
-            ,,,
-            cache.samples,
-        ) = IRangePool(pool).poolState();
+        ) = IPool(pool).globalState();
+
+
+        cache.price = poolState.price;
+        cache.liquidity = poolState.liquidity;
+        cache.samples = poolState.samples;
+
         (
-            ,,,
-            cache.tickSecondsAccumLower,
-            cache.secondsPerLiquidityAccumLower
+            PoolsharkStructs.RangeTick memory tickLower
+            ,
         )
-            = IRangePool(pool).ticks(lower);
+            = IPool(pool).ticks(lower);
+        (
+            PoolsharkStructs.RangeTick memory tickUpper
+            ,
+        )
+            = IPool(pool).ticks(upper);
+
+        // (
+        //     ,,,
+        //     cache.tickSecondsAccumLower,
+        //     cache.secondsPerLiquidityAccumLower
+        // )
+        cache.tickSecondsAccumLower =  tickLower.tickSecondsAccumOutside;
+        cache.secondsPerLiquidityAccumLower = tickLower.secondsPerLiquidityAccumOutside;
 
         // if both have never been crossed into return 0
-        (
-            ,,,
-            cache.tickSecondsAccumUpper,
-            cache.secondsPerLiquidityAccumUpper
-        )
-            = IRangePool(pool).ticks(upper);
+        cache.tickSecondsAccumUpper = tickUpper.tickSecondsAccumOutside;
+        cache.secondsPerLiquidityAccumUpper = tickUpper.secondsPerLiquidityAccumOutside;
+
         (
             cache.position.liquidity,
             cache.position.amount0,
@@ -489,9 +493,9 @@ library Positions {
             cache.position.feeGrowthInside0Last,
             cache.position.feeGrowthInside1Last
         )
-            = IRangePool(pool).positions(lower, upper);
+            = IPool(pool).positions(lower, upper);
 
-        cache.constants = IRangePool(pool).immutables();
+        cache.constants = IPool(pool).immutables();
         
         cache.userBalance = Tokens.balanceOf(pool, owner, lower, upper);
         cache.totalSupply = Tokens.totalSupply(pool, lower, upper);
@@ -538,7 +542,7 @@ library Positions {
                 cache.tickSecondsAccum,
                 cache.secondsPerLiquidityAccum
             ) = Samples.getSingle(
-                IRangePool(address(this)), 
+                IPool(address(this)), 
                 IRangePoolStructs.SampleParams(
                     cache.samples.index,
                     cache.samples.length,

@@ -16,7 +16,7 @@ library SampleCall {
     );
 
     function perform(
-        IRangePoolStructs.PoolState memory state,
+        PoolsharkStructs.GlobalState memory state,
         PoolsharkStructs.Immutables memory constants,
         uint32[] memory secondsAgo
     ) external view returns (
@@ -29,12 +29,12 @@ library SampleCall {
         return Samples.get(
             address(this),
             IRangePoolStructs.SampleParams(
-                state.samples.index,
-                state.samples.length,
+                state.pool.samples.index,
+                state.pool.samples.length,
                 uint32(block.timestamp),
                 secondsAgo,
-                state.tickAtPrice,
-                state.liquidity,
+                state.pool.tickAtPrice,
+                state.pool.liquidity,
                 constants
             )
         );

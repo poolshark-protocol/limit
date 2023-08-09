@@ -16,10 +16,11 @@ library QuoteCall {
     );
 
     function perform(
+        mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
+        PoolsharkStructs.TickMap storage rangeTickMap,
+        PoolsharkStructs.TickMap storage limitTickMap,
         PoolsharkStructs.QuoteParams memory params,
-        ILimitPoolStructs.SwapCache memory cache,
-        PoolsharkStructs.TickMap storage tickMap,
-        mapping(int24 => ILimitPoolStructs.Tick) storage ticks
+        PoolsharkStructs.SwapCache memory cache
     ) external view returns (
         uint256,
         uint256,
@@ -27,10 +28,10 @@ library QuoteCall {
     ) {
         return TicksLimit.quote(
             ticks,
-            tickMap,
+            rangeTickMap,
+            limitTickMap,
             params,
-            cache,
-            cache.pool
+            cache
         );
     }
 }

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import '../interfaces/IPool.sol';
 import '../interfaces/limit/ILimitPool.sol';
 import '../interfaces/limit/ILimitPoolFactory.sol';
 import '../interfaces/limit/ILimitPoolManager.sol';
@@ -115,7 +116,7 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
         uint128[] memory token0Fees = new uint128[](collectPools.length);
         uint128[] memory token1Fees = new uint128[](collectPools.length);
         for (uint i; i < collectPools.length;) {
-            (token0Fees[i], token1Fees[i]) = ILimitPool(collectPools[i]).fees(0,0,false);
+            (token0Fees[i], token1Fees[i]) = IPool(collectPools[i]).fees(0,0,false);
             unchecked {
                 ++i;
             }
@@ -143,7 +144,7 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
             (
                 token0Fees[i],
                 token1Fees[i]
-            ) = ILimitPool(modifyPools[i]).fees(
+            ) = IPool(modifyPools[i]).fees(
                 syncFees[i],
                 fillFees[i],
                 setFees[i]

@@ -21,7 +21,7 @@ library BurnCall {
         IRangePoolStructs.BurnParams memory params,
         IRangePoolStructs.BurnCache memory cache,
         PoolsharkStructs.TickMap storage tickMap,
-        mapping(int24 => IRangePoolStructs.Tick) storage ticks,
+        mapping(int24 => PoolsharkStructs.Tick) storage ticks,
         IRangePoolStructs.Sample[65535] storage samples
     ) external returns (IRangePoolStructs.BurnCache memory) {
         if (params.burnPercent > 1e38) params.burnPercent = 1e38;
@@ -33,7 +33,7 @@ library BurnCall {
         ) = Positions.update(
                 ticks,
                 cache.position,
-                cache.pool,
+                cache.state,
                 IRangePoolStructs.UpdateParams(
                     params.lower,
                     params.upper,
@@ -41,7 +41,7 @@ library BurnCall {
                 )
         );
         (
-            cache.pool,
+            cache.state,
             cache.position,
             cache.amount0,
             cache.amount1
@@ -50,7 +50,7 @@ library BurnCall {
             ticks,
             samples,
             tickMap,
-            cache.pool,
+            cache.state,
             params,
             IRangePoolStructs.RemoveParams(
                 cache.amount0,
@@ -62,12 +62,12 @@ library BurnCall {
         cache.position.amount0 -= cache.amount0;
         cache.position.amount1 -= cache.amount1;
         if (cache.position.amount0 > 0 || cache.position.amount1 > 0) {
-            (cache.position, cache.pool) = Positions.compound(
+            (cache.position, cache.state) = Positions.compound(
                 cache.position,
                 ticks,
                 samples,
                 tickMap,
-                cache.pool,
+                cache.state,
                 IRangePoolStructs.CompoundParams(
                     params.lower,
                     params.upper

@@ -4,27 +4,21 @@ pragma solidity 0.8.13;
 import "./IRangePoolERC1155.sol";
 import '../../base/structs/PoolsharkStructs.sol';
 
-interface IRangePoolStructs {
-    struct PoolState {
-        uint8   unlocked;
-        uint16  protocolFee;
-        int24   tickAtPrice;
-        int56   tickSecondsAccum;
-        uint160 secondsPerLiquidityAccum;
-        uint160 price;               /// @dev Starting price current
-        uint128 liquidity;           /// @dev Liquidity currently active
-        uint128 liquidityGlobal;     /// @dev Globally deposited liquidity
-        uint200 feeGrowthGlobal0;
-        uint200 feeGrowthGlobal1;
-        SampleState  samples;
-        ProtocolFees protocolFees;
-    }
-
-    struct SampleState {
-        uint16  index;
-        uint16  length;
-        uint16  lengthNext;
-    }
+interface IRangePoolStructs is PoolsharkStructs {
+    // struct PoolState {
+    //     uint8   unlocked;
+    //     uint16  protocolFee;
+    //     int24   tickAtPrice;
+    //     int56   tickSecondsAccum;
+    //     uint160 secondsPerLiquidityAccum;
+    //     uint160 price;               /// @dev Starting price current
+    //     uint128 liquidity;           /// @dev Liquidity currently active
+    //     uint128 liquidityGlobal;     /// @dev Globally deposited liquidity
+    //     uint200 feeGrowthGlobal0;
+    //     uint200 feeGrowthGlobal1;
+    //     SampleState  samples;
+    //     ProtocolFees protocolFees;
+    // }
 
     struct Position {
         uint128 liquidity;
@@ -40,10 +34,10 @@ interface IRangePoolStructs {
         uint160 secondsPerLiquidityAccum;
     }
 
-    struct ProtocolFees {
-        uint128 token0;
-        uint128 token1;
-    }
+    // struct ProtocolFees {
+    //     uint128 token0;
+    //     uint128 token1;
+    // }
 
     struct MintParams {
         address to;
@@ -71,22 +65,6 @@ interface IRangePoolStructs {
         int24 upper;
     }
 
-    struct SwapParams {
-        address to;
-        uint160 priceLimit;
-        uint128  amount;
-        bool exactIn;
-        bool zeroForOne;
-        bytes callbackData;
-    }
-
-    struct QuoteParams {
-        uint160 priceLimit;
-        uint128 amount;
-        bool exactIn;
-        bool zeroForOne;
-    }
-
     struct SampleParams {
         uint16 sampleIndex;
         uint16 sampleLength;
@@ -98,7 +76,7 @@ interface IRangePoolStructs {
     }
 
     struct AddParams {
-        PoolState state;
+        GlobalState state;
         MintParams mint;
         uint128 amount;
         uint128 liquidity;
@@ -118,14 +96,14 @@ interface IRangePoolStructs {
     }
 
     struct MintCache {
-        PoolState pool;
+        GlobalState state;
         Position position;
         PoolsharkStructs.Immutables constants;
         uint256 liquidityMinted;
     }
 
     struct BurnCache {
-        PoolState pool;
+        GlobalState state;
         Position position;
         PoolsharkStructs.Immutables constants;
         uint128 amount0;
@@ -133,22 +111,22 @@ interface IRangePoolStructs {
         uint128 tokenBurned;
     }
 
-    struct SwapCache {
-        PoolsharkStructs.Immutables constants;
-        PoolState pool;
-        uint256 input;
-        uint256 output;
-        uint256 amountLeft;
-        uint160 price;
-        uint160 crossPrice;
-        uint160 secondsPerLiquidityAccum;
-        uint128 liquidity;
-        int56   tickSecondsAccum;
-        int24   crossTick;
-        uint16  protocolFee;
-        bool    exactIn;
-        bool    cross;
-    }
+    // struct SwapCache {
+    //     PoolsharkStructs.Immutables constants;
+    //     PoolState pool;
+    //     uint256 input;
+    //     uint256 output;
+    //     uint256 amountLeft;
+    //     uint160 price;
+    //     uint160 crossPrice;
+    //     uint160 secondsPerLiquidityAccum;
+    //     uint128 liquidity;
+    //     int56   tickSecondsAccum;
+    //     int24   crossTick;
+    //     uint16  protocolFee;
+    //     bool    exactIn;
+    //     bool    cross;
+    // }
 
     struct PositionCache {
         uint160 priceLower;

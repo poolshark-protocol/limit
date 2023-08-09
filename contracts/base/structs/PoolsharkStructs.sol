@@ -8,8 +8,8 @@ interface PoolsharkStructs {
         LimitPoolState pool0;
         LimitPoolState pool1;
         uint128 liquidityGlobal;
-        uint32  epoch;
-        uint8   unlocked;
+        uint32 epoch;
+        uint8 unlocked;
     }
 
     struct LimitPoolState {
@@ -32,12 +32,19 @@ interface PoolsharkStructs {
     }
 
     struct Tick {
+        RangeTick range;
+        LimitTick limit;
+    }
+
+    struct LimitTick {
+        uint160 priceAt;                             // LimitPool
+        int128 liquidityDelta;                       // LimitPool
+    }
+
+    struct RangeTick {
         uint200 feeGrowthOutside0;                   // RangePool
         uint200 feeGrowthOutside1;                   // RangePool
-        uint160 priceAt;                             // LimitPool
         uint160 secondsPerLiquidityAccumOutside;     // RangePool
-        int128 liquidityDelta0;                      // LimitPool
-        int128 liquidityDelta1;                      // LimitPool
         int128 liquidityDelta;                       // RangePool
         int56 tickSecondsAccumOutside;               // RangePool
     }
@@ -84,5 +91,35 @@ interface PoolsharkStructs {
         mapping(uint256 => uint256) words;  /// @dev - sets to words
         mapping(uint256 => uint256) ticks;  /// @dev - words to ticks
         mapping(uint256 => mapping(uint256 => mapping(uint256 => uint256))) epochs; /// @dev - ticks to epochs
+    }
+
+    struct SwapCache {
+        GlobalState state;
+        PoolsharkStructs.Immutables constants;
+        uint256 price;
+        uint256 liquidity;
+        uint256 amountLeft;
+        uint256 input;
+        uint256 output;
+        uint160 crossPrice;
+        uint160 secondsPerLiquidityAccum;
+        int56   tickSecondsAccum;
+        int24   crossTick;
+        uint8   crossStatus;
+        bool    limitActive;
+        bool    exactIn;
+        bool    cross;
+    }
+
+    // struct CrossState {
+    //     int24   tickAhead;
+    //     bool    limitPoolAhead;
+    //     bool    active;
+    // }    
+
+    enum CrossStatus {
+        RANGE,
+        LIMIT,
+        BOTH
     }
 }

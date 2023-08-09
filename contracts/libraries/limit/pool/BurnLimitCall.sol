@@ -22,7 +22,7 @@ library BurnLimitCall {
         ILimitPoolStructs.BurnLimitCache memory cache,
         PoolsharkStructs.TickMap storage tickMap,
         mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
-        mapping(address => mapping(int24 => mapping(int24 => ILimitPoolStructs.Position)))
+        mapping(address => mapping(int24 => mapping(int24 => ILimitPoolStructs.LimitPosition)))
             storage positions
     ) external returns (ILimitPoolStructs.BurnLimitCache memory) {
         if (params.lower >= params.upper) require (false, 'InvalidPositionBounds()');
@@ -35,7 +35,6 @@ library BurnLimitCall {
             // position has been crossed into
             (
                 cache.state,
-                cache.pool,
                 cache.position,
                 params.claim
             ) = PositionsLimit.update(
@@ -43,8 +42,7 @@ library BurnLimitCall {
                 ticks,
                 tickMap,
                 cache.state,
-                cache.pool,
-                ILimitPoolStructs.UpdateParams(
+                ILimitPoolStructs.UpdateLimitParams(
                     msg.sender,
                     params.to,
                     params.burnPercent,
@@ -57,12 +55,12 @@ library BurnLimitCall {
             );
         } else {
             // position has not been crossed into
-            (cache.pool, cache.position) = PositionsLimit.remove(
+            (cache.state, cache.position) = PositionsLimit.remove(
                 positions,
                 ticks,
                 tickMap,
-                cache.pool,
-                ILimitPoolStructs.UpdateParams(
+                cache.state,
+                ILimitPoolStructs.UpdateLimitParams(
                     msg.sender,
                     params.to,
                     params.burnPercent,

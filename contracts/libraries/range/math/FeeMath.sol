@@ -2,36 +2,43 @@
 pragma solidity 0.8.13;
 
 import "../../math/OverflowMath.sol";
+import '../../../base/structs/PoolsharkStructs.sol';
 import "../../../interfaces/range/IRangePoolStructs.sol";
 
 /// @notice Math library that facilitates fee handling.
 library FeeMath {
     uint256 internal constant Q128 = 0x100000000000000000000000000000000;
 
+    struct CalculateLocals {
+        uint256 feeAmount;
+        uint256 protocolFee;
+        uint256 amountOutRange;
+    }
+
     function calculate(
-        IRangePoolStructs.PoolState memory pool,
-        IRangePoolStructs.SwapCache memory cache,
+        PoolsharkStructs.SwapCache memory cache,
         uint256 amountOut,
         bool zeroForOne
     ) internal pure returns (
-        IRangePoolStructs.PoolState memory,
-        IRangePoolStructs.SwapCache memory
+        PoolsharkStructs.SwapCache memory
     )
     {
-        if (cache.liquidity == 0 ) return (pool, cache);
-        uint256 feeAmount = OverflowMath.mulDivRoundingUp(amountOut, cache.constants.swapFee, 1e6); 
-        uint256 protocolFee = OverflowMath.mulDivRoundingUp(feeAmount, cache.protocolFee, 1e6);
-        amountOut -= feeAmount;
-        feeAmount -= protocolFee;
+        if (cache.state.pool.liquidity == 0) return cache;
+        CalculateLocals memory locals;
+        locals.amountOutRange = OverflowMath.mulDiv(amountOut, cache.state.pool.liquidity, cache.liquidity);
+        locals.feeAmount = OverflowMath.mulDivRoundingUp(locals.amountOutRange, cache.constants.swapFee, 1e6); 
+        locals.protocolFee = OverflowMath.mulDivRoundingUp(locals.feeAmount, zeroForOne ? cache.state.pool0.protocolFee : cache.state.pool1.protocolFee, 1e6);
+        amountOut -= locals.feeAmount;
+        locals.feeAmount -= locals.protocolFee;
 
         if (zeroForOne) {
-           pool.protocolFees.token1 += uint128(protocolFee);
-           pool.feeGrowthGlobal1 += uint200(OverflowMath.mulDiv(feeAmount, Q128, cache.liquidity));
+           cache.state.pool0.protocolFees += uint128(locals.protocolFee);
+           cache.state.pool.feeGrowthGlobal1 += uint200(OverflowMath.mulDiv(locals.feeAmount, Q128, cache.state.pool.liquidity));
         } else {
-          pool.protocolFees.token0 += uint128(protocolFee);
-          pool.feeGrowthGlobal0 += uint200(OverflowMath.mulDiv(feeAmount, Q128, cache.liquidity));
+          cache.state.pool1.protocolFees += uint128(locals.protocolFee);
+          cache.state.pool.feeGrowthGlobal0 += uint200(OverflowMath.mulDiv(locals.feeAmount, Q128, cache.state.pool.liquidity));
         }
         cache.output += amountOut;
-        return (pool, cache);
+        return cache;
     }
 }

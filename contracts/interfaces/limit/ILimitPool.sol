@@ -17,30 +17,15 @@ interface ILimitPool is ILimitPoolStructs {
         BurnLimitParams memory params
     ) external;
 
-    function swap(
-        SwapParams memory params
-    ) external returns (
-        int256 amount0,
-        int256 amount1
-    );
-
-    function quote(
-        QuoteParams memory params
-    ) external view returns (
-        uint256 inAmount,
-        uint256 outAmount,
-        uint256 priceAfter
-    );
-
     function snapshotLimit(
         SnapshotLimitParams memory params
     ) external view returns (
-        PositionLimit memory
+        LimitPosition memory
     );
 
     function fees(
-        uint16 syncFee,
-        uint16 fillFee,
+        uint16 protocolFee0,
+        uint16 protocolFee1,
         bool setFees
     ) external returns (
         uint128 token0Fees,

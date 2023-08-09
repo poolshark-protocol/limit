@@ -21,7 +21,7 @@ library MintCall {
         IRangePoolStructs.MintParams memory params,
         IRangePoolStructs.MintCache memory cache,
         PoolsharkStructs.TickMap storage tickMap,
-        mapping(int24 => IRangePoolStructs.Tick) storage ticks,
+        mapping(int24 => PoolsharkStructs.Tick) storage ticks,
         IRangePoolStructs.Sample[65535] storage samples
     ) external returns (IRangePoolStructs.MintCache memory) {
         (
@@ -30,23 +30,23 @@ library MintCall {
         ) = Positions.update(
                 ticks,
                 cache.position,
-                cache.pool,
+                cache.state,
                 IRangePoolStructs.UpdateParams(
                     params.lower,
                     params.upper,
                     0
                 )
         );
-        (params, cache.liquidityMinted) = Positions.validate(params, cache.pool, cache.constants);
+        (params, cache.liquidityMinted) = Positions.validate(params, cache.state, cache.constants);
         if (params.amount0 > 0) SafeTransfers.transferIn(cache.constants.token0, params.amount0);
         if (params.amount1 > 0) SafeTransfers.transferIn(cache.constants.token1, params.amount1);
         if (cache.position.amount0 > 0 || cache.position.amount1 > 0) {
-            (cache.position, cache.pool) = Positions.compound(
+            (cache.position, cache.state) = Positions.compound(
                 cache.position,
                 ticks,
                 samples,
                 tickMap,
-                cache.pool,
+                cache.state,
                 IRangePoolStructs.CompoundParams( 
                     params.lower,
                     params.upper
@@ -55,13 +55,13 @@ library MintCall {
             );
         }
         // update position with latest fees accrued
-        (cache.pool, cache.position, cache.liquidityMinted) = Positions.add(
+        (cache.state, cache.position, cache.liquidityMinted) = Positions.add(
             cache.position,
             ticks,
             samples,
             tickMap,
             IRangePoolStructs.AddParams(
-                cache.pool, 
+                cache.state, 
                 params,
                 uint128(cache.liquidityMinted),
                 uint128(cache.liquidityMinted)

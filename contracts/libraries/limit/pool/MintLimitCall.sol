@@ -23,32 +23,32 @@ library MintLimitCall {
     );
 
     function perform(
-        ILimitPoolStructs.MintLimitParams memory params,
-        ILimitPoolStructs.MintLimitCache memory cache,
-        PoolsharkStructs.TickMap storage tickMap,
-        PoolsharkStructs.LimitPoolState storage pool,
-        PoolsharkStructs.LimitPoolState storage swapPool,
+        mapping(address => mapping(int24 => mapping(int24 => ILimitPoolStructs.LimitPosition)))
+            storage positions,
         mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
-        mapping(int24 => ILimitPoolStructs.Tick) storage swapTicks,
-        mapping(address => mapping(int24 => mapping(int24 => ILimitPoolStructs.Position)))
-            storage positions
+        PoolsharkStructs.TickMap storage rangeTickMap,
+        PoolsharkStructs.TickMap storage limitTickMap,
+        PoolsharkStructs.GlobalState storage globalState,
+        ILimitPoolStructs.MintLimitParams memory params,
+        ILimitPoolStructs.MintLimitCache memory cache
     ) external returns (ILimitPoolStructs.MintLimitCache memory) {
         // bump swapPool in case user is trying to undercut
         // this avoids trimming positions unnecessarily
         if (cache.swapPool.liquidity == 0) {
-            (cache, cache.swapPool) = TicksLimit.unlock(cache, cache.swapPool, swapTicks, tickMap, !params.zeroForOne);
+            (cache, cache.swapPool) = TicksLimit.unlock(cache, cache.swapPool, ticks, limitTickMap, !params.zeroForOne);
         }
 
         // resize position if necessary
         (params, cache) = PositionsLimit.resize(
+            ticks,
+            rangeTickMap,
+            limitTickMap,
             params,
-            cache,
-            tickMap,
-            swapTicks
+            cache
         );
 
         // save state for safe reentrancy
-        save(cache.swapPool, swapPool);
+        save(cache, globalState, !params.zeroForOne);
 
         // transfer in token amount
         SafeTransfers.transferIn(
@@ -73,7 +73,7 @@ library MintLimitCall {
             // bump to the next tick if there is no liquidity
             if (cache.pool.liquidity == 0) {
                 /// @dev - this makes sure to have liquidity unlocked if undercutting
-                (cache, cache.pool) = Ticks.unlock(cache, cache.pool, ticks, tickMap, params.zeroForOne);
+                (cache, cache.pool) = TicksLimit.unlock(cache, cache.pool, ticks, limitTickMap, params.zeroForOne);
             }
 
             if (params.zeroForOne) {
@@ -81,7 +81,7 @@ library MintLimitCall {
                 if (priceLower <= cache.pool.price) {
                     // save liquidity if active
                     if (cache.pool.liquidity > 0) {
-                        cache.pool = TicksLimit.insertSingle(params, ticks, tickMap, cache, cache.pool, cache.constants);
+                        cache.pool = TicksLimit.insertSingle(params, ticks, limitTickMap, cache, cache.pool, cache.constants);
                     }
                     cache.pool.price = priceLower;
                     cache.pool.tickAtPrice = params.lower;
@@ -96,7 +96,7 @@ library MintLimitCall {
                 uint160 priceUpper = ConstantProduct.getPriceAtTick(params.upper, cache.constants);
                 if (priceUpper >= cache.pool.price) {
                     if (cache.pool.liquidity > 0) {
-                        cache.pool = TicksLimit.insertSingle(params, ticks, tickMap, cache, cache.pool, cache.constants);
+                        cache.pool = TicksLimit.insertSingle(params, ticks, limitTickMap, cache, cache.pool, cache.constants);
                     }
                     cache.pool.price = priceUpper;
                     cache.pool.tickAtPrice = params.upper;
@@ -110,7 +110,7 @@ library MintLimitCall {
             (cache.pool, cache.position) = PositionsLimit.add(
                 cache,
                 ticks,
-                tickMap,
+                limitTickMap,
                 params
             );
 
@@ -130,19 +130,23 @@ library MintLimitCall {
         }
 
         // save lp side for safe reentrancy
-        save(cache.pool, pool);
+        save(cache, globalState, params.zeroForOne);
 
         return cache;
     }
 
     function save(
-        PoolsharkStructs.LimitPoolState memory pool,
-        PoolsharkStructs.LimitPoolState storage poolState
+        ILimitPoolStructs.MintLimitCache memory cache,
+        PoolsharkStructs.GlobalState storage globalState,
+        bool zeroForOne
     ) internal {
-        poolState.price = pool.price;
-        poolState.liquidity = pool.liquidity;
-        poolState.liquidityGlobal = pool.liquidityGlobal;
-        poolState.swapEpoch = pool.swapEpoch;
-        poolState.tickAtPrice = pool.tickAtPrice;
+        globalState.epoch = cache.state.epoch;
+        if (zeroForOne) {
+            globalState.pool = cache.state.pool;
+            globalState.pool0 = cache.swapPool;
+        } else {
+            globalState.pool = cache.state.pool;
+            globalState.pool1 = cache.swapPool;
+        }
     }
 }

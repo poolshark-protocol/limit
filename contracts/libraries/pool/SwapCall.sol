@@ -26,23 +26,24 @@ library SwapCall {
     );
 
     function perform(
+        mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
+        PoolsharkStructs.GlobalState storage globalState,
+        PoolsharkStructs.TickMap storage rangeTickMap,
+        PoolsharkStructs.TickMap storage limitTickMap,
         PoolsharkStructs.SwapParams memory params,
-        ILimitPoolStructs.SwapCache memory cache,
-        PoolsharkStructs.TickMap storage tickMap,
-        PoolsharkStructs.LimitPoolState storage poolState,
-        mapping(int24 => ILimitPoolStructs.Tick) storage ticks
+        PoolsharkStructs.SwapCache memory cache
     ) external returns (
         int256,
         int256
     ) {
-        (cache.pool, cache) = TicksLimit.swap(
+        cache = TicksLimit.swap(
             ticks,
-            tickMap,
+            rangeTickMap,
+            limitTickMap,
             params,
-            cache,
-            cache.pool
+            cache
         );
-        save(cache.pool, poolState);
+        save(cache, globalState, !params.zeroForOne);
         // transfer output amount
         SafeTransfers.transferOut(
             params.to, 
@@ -77,19 +78,21 @@ library SwapCall {
     }
 
     function save(
-        PoolsharkStructs.LimitPoolState memory pool,
-        PoolsharkStructs.LimitPoolState storage poolState
+        PoolsharkStructs.SwapCache memory cache,
+        PoolsharkStructs.GlobalState storage globalState,
+        bool zeroForOne
     ) internal {
-        poolState.price = pool.price;
-        poolState.liquidity = pool.liquidity;
-        poolState.liquidityGlobal = pool.liquidityGlobal;
-        poolState.swapEpoch = pool.swapEpoch;
-        poolState.tickAtPrice = pool.tickAtPrice;
+        globalState.epoch = cache.state.epoch;
+        globalState.pool = cache.state.pool;
+        if (zeroForOne)
+            globalState.pool1 = cache.state.pool1;
+        else
+            globalState.pool0 = cache.state.pool0;
     }
 
     function balance(
         PoolsharkStructs.SwapParams memory params,
-        ILimitPoolStructs.SwapCache memory cache
+        PoolsharkStructs.SwapCache memory cache
     ) private view returns (uint256) {
         (
             bool success,

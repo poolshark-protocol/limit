@@ -87,7 +87,7 @@ library Claims {
             // if we cleared the final tick of their position, this is the wrong claim tick
             if (params.zeroForOne ? claimTickNext > params.upper
                                   : claimTickNext < params.lower) {
-                EchidnaAssertions.assertWrongTickClaimedAt4(params.zeroForOne, params.upper, params.lower);
+                EchidnaAssertions.assertWrongTickClaimedAt4(params.zeroForOne, claimTickNext, params.upper, params.lower);
                 require (false, 'WrongTickClaimedAt4()');
             }
             // zero fill or partial fill

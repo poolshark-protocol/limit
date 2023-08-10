@@ -111,6 +111,7 @@ contract EchidnaPool {
 
     function mint(uint128 amount, bool zeroForOne, int24 lower, int24 upper) public tickPreconditions(lower, upper) {
         // PRE CONDITIONS
+        // NOTE: Do not use the exact inputs of this function for POCs, use the inputs after the input validation
         mintAndApprove();
         amount = amount + 1;
         PoolValues memory poolValues;
@@ -230,6 +231,7 @@ contract EchidnaPool {
 
     function swap(uint160 priceLimit, uint128 amount, bool exactIn, bool zeroForOne) public {
         // PRE CONDITIONS
+        // NOTE: Do not use the exact inputs of this function for POCs, use the inputs after the input validation
         mintAndApprove();
 
         // ACTION
@@ -252,9 +254,10 @@ contract EchidnaPool {
 
     function burn(int24 claimAt, uint256 positionIndex, uint128 burnPercent) public {
         // PRE CONDITIONS 
-        require(positionIndex < positions.length);
+        // NOTE: Do not use the exact inputs of this function for POCs, use the inputs after the input validation
+        positionIndex = positionIndex % positions.length;
         Position memory pos = positions[positionIndex];
-        require(claimAt >= pos.lower && claimAt <= pos.upper);
+        claimAt = pos.lower + (claimAt % (pos.upper - pos.lower));
         require(claimAt % tickSpacing == 0);
 
         (,/*liquidity*/,uint128 liquidityGlobal0Before,,,,) = pool.pool0();
@@ -305,10 +308,11 @@ contract EchidnaPool {
     }
 
     function claim(int24 claimAt, uint256 positionIndex) public {
-        // PRE CONDITIONS 
-        require(positionIndex < positions.length);
+        // PRE CONDITIONS
+        // NOTE: Do not use the exact inputs of this function for POCs, use the inputs after the input validation
+        positionIndex = positionIndex % positions.length;
         Position memory pos = positions[positionIndex];
-        require(claimAt >= pos.lower && claimAt <= pos.upper);
+        claimAt = pos.lower + (claimAt % (pos.upper - pos.lower));
         require(claimAt % tickSpacing == 0);
 
         (,/*liquidity*/,uint128 liquidityGlobal0Before,,,,) = pool.pool0();
@@ -364,6 +368,7 @@ contract EchidnaPool {
 
     function mintThenBurnZeroLiquidityChange(uint128 amount, bool zeroForOne, int24 lower, int24 upper) public tickPreconditions(lower, upper) {
         // PRE CONDITIONS
+        // NOTE: Do not use the exact inputs of this function for POCs, use the inputs after the input validation
         mintAndApprove();
         (uint160 price0Before,/*liquidity*/,uint128 liquidityGlobal0Before,,,,) = pool.pool0();
         (uint160 price1Before,/*liquidity*/,uint128 liquidityGlobal1Before,,,,) = pool.pool1();
@@ -385,6 +390,7 @@ contract EchidnaPool {
 
     function mintThenPartialBurnTwiceLiquidityChange(uint128 amount, bool zeroForOne, int24 lower, int24 upper, uint128 percent) public tickPreconditions(lower, upper) {
         // PRE CONDITIONS
+        // NOTE: Do not use the exact inputs of this function for POCs, use the inputs after the input validation
         percent = 1 + (percent % (1e38 - 1));
         mintAndApprove();
         (uint160 price0Before,/*liquidity*/,uint128 liquidityGlobal0Before,,,,) = pool.pool0();
@@ -437,6 +443,7 @@ contract EchidnaPool {
     }
 
     function liquidityMintedBackcalculates(uint128 amount, bool zeroForOne, int24 lower, int24 upper) tickPreconditions(lower, upper) internal {
+        // NOTE: Do not use the exact inputs of this function for POCs, use the inputs after the input validation
         amount = amount + 1e5 + 1;
         ILimitPoolStructs.Immutables memory immutables = pool.immutables();
         uint256 priceLower = ConstantProduct.getPriceAtTick(lower, immutables);

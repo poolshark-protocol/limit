@@ -100,7 +100,9 @@ export interface ValidateMintParams {
     liquidityIncrease: string
     positionLiquidityChange?: string
     upperTickCleared: boolean
+    upperTickCrossed?: boolean
     lowerTickCleared: boolean
+    lowerTickCrossed?: boolean
     revertMessage: string
     collectRevertMessage?: string
     expectedLower?: string
@@ -320,6 +322,9 @@ export async function validateMint(params: ValidateMintParams) {
     const expectedUpper = params.expectedUpper ? BigNumber.from(params.expectedUpper) : null
     const expectedLower = params.expectedLower ? BigNumber.from(params.expectedLower) : null
     const balanceOutIncrease = params.balanceOutIncrease ? BigNumber.from(params.balanceOutIncrease) : BN_ZERO
+    const lowerTickCrossed = params.lowerTickCrossed ? params.lowerTickCrossed : false
+    const upperTickCrossed = params.upperTickCrossed ? params.upperTickCrossed : false
+
     const mintPercent = params.mintPercent ? params.mintPercent : BN_ZERO
 
     let balanceInBefore
@@ -434,7 +439,8 @@ export async function validateMint(params: ValidateMintParams) {
                liquidityIncrease
             )
         } else {
-            expect(lowerTickAfter.liquidityDelta.sub(lowerTickBefore.liquidityDelta)).to.be.equal(BN_ZERO)
+            if (lowerTickCrossed) expect(lowerTickAfter.liquidityDelta).to.be.equal(BN_ZERO)
+            else expect(lowerTickAfter.liquidityDelta.sub(lowerTickBefore.liquidityDelta)).to.be.equal(BN_ZERO)
         }
     } else {
         if (!lowerTickCleared) {
@@ -449,7 +455,10 @@ export async function validateMint(params: ValidateMintParams) {
                 liquidityIncrease
             )
         } else {
-            expect(upperTickAfter.liquidityDelta.sub(upperTickBefore.liquidityDelta)).to.be.equal(BN_ZERO)
+            if (upperTickCrossed)
+                expect(upperTickAfter.liquidityDelta).to.be.equal(BN_ZERO)
+            else
+                expect(upperTickAfter.liquidityDelta.sub(upperTickBefore.liquidityDelta)).to.be.equal(BN_ZERO)
         }
     }
     const positionLiquidityChange = params.positionLiquidityChange ? BigNumber.from(params.positionLiquidityChange) : liquidityIncrease

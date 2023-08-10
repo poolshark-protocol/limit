@@ -20,6 +20,7 @@ import {
 } from '../utils/contracts/limitpool'
 import { gBefore } from '../utils/hooks.test'
 import { base58 } from 'ethers/lib/utils'
+import { debug } from 'console'
 
 alice: SignerWithAddress
 describe('LimitPool Tests', function () {
@@ -3857,7 +3858,7 @@ describe('LimitPool Tests', function () {
         // You can comment out the added section in Positions.sol to see the adjusted resizing.
     })
 
-    it.only("pool0 - can supply any claim tick :: GUARDIAN AUDITS", async () => {
+    it("pool0 - can supply any claim tick :: GUARDIAN AUDITS", async () => {
         const bobLiquidity = '20051041647900280328782'
         const aliceLiquidity = '20051041647900280328782'
         const alicePlusBobLiquidity = '40002083295800560657564'
@@ -4096,8 +4097,9 @@ describe('LimitPool Tests', function () {
     })
 
     it("pool1 - can supply any claim tick :: GUARDIAN AUDITS", async () => {
-        const bobLiquidity = '40152271099188026073753'
+        const bobLiquidity = '20051041647900280328782'
         const aliceLiquidity = '20051041647900280328782'
+        const alicePlusBobLiquidity = '40002083295800560657564'
         const aliceLiquidity2 = '19951041647900280328782'
         const aliceLiquidity3 = '22173370812928211327045'
 
@@ -4242,7 +4244,7 @@ describe('LimitPool Tests', function () {
 
         // Alice has a position that spans 0 ticks but still has liquidity on it
         expect(await getPositionLiquidity(true, alice.address, 0, 0)).to.eq("0");
-        expect((await hre.props.limitPool.globalState()).liquidityGlobal).to.eq("0").to.eq("0")
+        expect((await hre.props.limitPool.globalState()).liquidityGlobal).to.eq(bobLiquidity)
 
         expect(await getTickAtPrice(true)).to.eq(887270);
         expect((await hre.props.limitPool.globalState()).pool0.liquidity).to.eq("0")
@@ -4284,7 +4286,7 @@ describe('LimitPool Tests', function () {
             revertMessage: 'InvalidPositionBounds()',
         });
 
-        expect((await hre.props.limitPool.globalState()).liquidityGlobal).to.eq("0").to.eq("19951041647900280328782");
+        expect((await hre.props.limitPool.globalState()).liquidityGlobal).to.eq(alicePlusBobLiquidity);
 
         // So now we swap to get to these ticks and see that the pool is now bricked past this point
         // This is catastrophic as anyone can create these positions and intentionally put the pool in this
@@ -4428,7 +4430,7 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         });
 
-        expect((await hre.props.limitPool.globalState()).liquidityGlobal).to.eq("0").to.be.equal(aliceLiquidity)
+        expect((await hre.props.limitPool.globalState()).liquidityGlobal).to.be.equal(aliceLiquidity)
 
         await validateBurn({
             signer: hre.props.alice,
@@ -4445,7 +4447,7 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         });
 
-        expect((await hre.props.limitPool.globalState()).liquidityGlobal).to.eq("0").to.be.equal(BN_ZERO)
+        expect((await hre.props.limitPool.globalState()).liquidityGlobal).to.be.equal(BN_ZERO)
     })
 
     it('pool1 - Should decrement liquidityGlobal if params.amount is zero', async function () {
@@ -4504,6 +4506,7 @@ describe('LimitPool Tests', function () {
         const aliceLiquidity = '185871770591153141'
         const aliceLiquidity2 = '1998'
         const aliceLiquidityDiff = '-185871770591151142'
+        debugMode = true
 
         if (debugMode) console.log("Mint #1");
 
@@ -4574,7 +4577,7 @@ describe('LimitPool Tests', function () {
             balanceOutIncrease: '0',
             revertMessage: '',
         })
- 
+
         if (debugMode) console.log("Mint #3");
 
         expect(await getLiquidity(true)).to.be.equal(BigNumber.from("0"));
@@ -4591,10 +4594,11 @@ describe('LimitPool Tests', function () {
             balanceInDecrease: "1",
             liquidityIncrease: "2000",
             upperTickCleared: true,
+            upperTickCrossed: true,
             lowerTickCleared: false,
             revertMessage: '',
         });
-        if (debugMode) await getTick(true, 0, true)
+        if (debugMode) expect(await (await getTick(true, 0, true)).limit.liquidityDelta).to.be.equal(BN_ZERO)
 
 
         expect(await getLiquidity(true)).to.be.equal(BigNumber.from("185871770591153141"));
@@ -4730,12 +4734,12 @@ describe('LimitPool Tests', function () {
             balanceInDecrease: "1",
             liquidityIncrease: "2000",
             upperTickCleared: false,
+            lowerTickCrossed: true,
             lowerTickCleared: true,
             revertMessage: '',
         });
 
         if (debugMode) await getTick(true, 0, true)
-
 
         expect(await getLiquidity(false)).to.be.equal(BigNumber.from("185871770591153141"));
 

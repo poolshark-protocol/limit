@@ -149,9 +149,9 @@ library PositionsLimit {
                     cache.priceLower = ConstantProduct.getPriceAtTick(params.lower, cache.constants);
                 }
                 if (params.lower >= params.upper && 
-                    params.lower < ConstantProduct.maxTick(cache.constants.tickSpacing) &&
-                    params.upper < ConstantProduct.maxTick(cache.constants.tickSpacing)) {
-                    params.upper = cache.constants.tickSpacing;
+                    params.lower < ConstantProduct.maxTick(cache.constants.tickSpacing) - cache.constants.tickSpacing
+                ) {
+                    params.upper = params.lower + cache.constants.tickSpacing;
                 }
                 cache.priceUpper = ConstantProduct.getPriceAtTick(params.upper, cache.constants);
             } else {
@@ -162,8 +162,8 @@ library PositionsLimit {
                     cache.priceUpper = ConstantProduct.getPriceAtTick(params.upper, cache.constants);
                 }
                 if (params.upper <= params.lower && 
-                    params.lower > ConstantProduct.minTick(cache.constants.tickSpacing) &&
-                    params.upper > ConstantProduct.minTick(cache.constants.tickSpacing)) {
+                    params.lower > ConstantProduct.minTick(cache.constants.tickSpacing) + cache.constants.tickSpacing
+                ) {
                     params.lower = params.upper - cache.constants.tickSpacing;
                 }
                 console.log('position bounds 2', uint24(-params.lower), uint24(-params.upper));
@@ -182,7 +182,7 @@ library PositionsLimit {
                 cache.liquidityMinted = 0;
             cache.state.epoch += 1;
         }
-        console.log('position bounds end', uint24(params.lower), uint24(params.upper), uint24(cache.state.pool.tickAtPrice));
+        console.log('position bounds end', uint24(-params.lower), uint24(params.upper), uint24(cache.state.pool.tickAtPrice));
 
 
         if (params.lower >= params.upper) {

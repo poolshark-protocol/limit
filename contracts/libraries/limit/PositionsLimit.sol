@@ -7,7 +7,7 @@ import '../math/OverflowMath.sol';
 import './Claims.sol';
 import './EpochMap.sol';
 import '../utils/SafeCast.sol';
-import '../pool/SwapCall.sol';
+import '../Ticks.sol';
 import 'hardhat/console.sol';
 
 /// @notice Position management library for ranged liquidity.
@@ -78,7 +78,7 @@ library PositionsLimit {
             (params.zeroForOne ? swapCache.price > cache.priceLower
                                : swapCache.price < cache.priceUpper)) {
             console.log('price before', uint24(-cache.state.pool.tickAtPrice));
-            swapCache = TicksLimit.swap(
+            swapCache = Ticks.swap(
                 ticks,
                 rangeTickMap,
                 limitTickMap,
@@ -103,7 +103,7 @@ library PositionsLimit {
         if (params.zeroForOne ? cache.priceLimit < swapCache.price
                               : cache.priceLimit > swapCache.price) {
             // swap and save the pool state
-            swapCache = TicksLimit.swap(
+            swapCache = Ticks.swap(
                 ticks,
                 rangeTickMap,
                 limitTickMap,
@@ -183,7 +183,6 @@ library PositionsLimit {
             cache.state.epoch += 1;
         }
         console.log('position bounds end', uint24(-params.lower), uint24(params.upper), uint24(cache.state.pool.tickAtPrice));
-
 
         if (params.lower >= params.upper) {
             params.amount = 0;

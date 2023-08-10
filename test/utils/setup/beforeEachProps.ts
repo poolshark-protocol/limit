@@ -30,6 +30,7 @@ export interface BeforeEachProps {
     limitPoolFactory: LimitPoolFactory
     poolRouter: PoolRouter
     tickMapLib: TickMap
+    ticksLib: Ticks
     swapCall: SwapCall
     quoteCall: QuoteCall
     //range
@@ -41,8 +42,7 @@ export interface BeforeEachProps {
     burnLimitCall: BurnLimitCall
     mintLimitCall: MintLimitCall
     positionsLimitLib: PositionsLimit
-    //shared/limit
-    ticksLimitLib: TicksLimit
+    //shared
     tokenA: Token20
     tokenB: Token20
     token0: Token20
@@ -84,6 +84,7 @@ export class GetBeforeEach {
         let limitPoolFactory: LimitPoolFactory
         let poolRouter: PoolRouter
         let tickMapLib: TickMap
+        let ticksLib: Ticks
         let swapCall: SwapCall
         let quoteCall: QuoteCall
         //range
@@ -95,8 +96,7 @@ export class GetBeforeEach {
         let burnLimitCall: BurnLimitCall
         let mintLimitCall: MintLimitCall
         let positionsLimitLib: PositionsLimit
-        //shared/limit
-        let ticksLimitLib: TicksLimit
+        //shared
         let tokenA: Token20
         let tokenB: Token20
         let token0: Token20
@@ -116,6 +116,7 @@ export class GetBeforeEach {
             limitPoolFactory,
             poolRouter,
             tickMapLib,
+            ticksLib,
             swapCall,
             quoteCall,
             //range
@@ -127,8 +128,7 @@ export class GetBeforeEach {
             burnLimitCall,
             mintLimitCall,
             positionsLimitLib,
-            //shared/limit,
-            ticksLimitLib,
+            //shared
             tokenA,
             tokenB,
             token0,

@@ -6,7 +6,7 @@ import '../../interfaces/range/IRangePoolStructs.sol';
 import '../math/ConstantProduct.sol';
 import './math/FeeMath.sol';
 import '../math/OverflowMath.sol';
-import './Ticks.sol';
+import './TicksRange.sol';
 import './Tokens.sol';
 import './Samples.sol';
 
@@ -61,7 +61,7 @@ library Positions {
         PoolsharkStructs.GlobalState memory state,
         PoolsharkStructs.Immutables memory constants
     ) internal pure returns (IRangePoolStructs.MintParams memory, uint256 liquidityMinted) {
-        Ticks.validate(params.lower, params.upper, constants.tickSpacing);
+        TicksRange.validate(params.lower, params.upper, constants.tickSpacing);
         
         uint256 priceLower = uint256(ConstantProduct.getPriceAtTick(params.lower, constants));
         uint256 priceUpper = uint256(ConstantProduct.getPriceAtTick(params.upper, constants));
@@ -109,7 +109,7 @@ library Positions {
             tokenId: Tokens.id(params.mint.lower, params.mint.upper)
         });
 
-        params.state = Ticks.insert(
+        params.state = TicksRange.insert(
             ticks,
             samples,
             tickMap,
@@ -213,7 +213,7 @@ library Positions {
             position.feeGrowthInside0Last = 0;
             position.feeGrowthInside1Last = 0;
         }
-        state = Ticks.remove(
+        state = TicksRange.remove(
             ticks,
             samples,
             tickMap,
@@ -263,7 +263,7 @@ library Positions {
             position.amount0
         );
         if (cache.liquidityAmount > 0) {
-            state = Ticks.insert(
+            state = TicksRange.insert(
                 ticks,
                 samples,
                 tickMap,
@@ -399,7 +399,7 @@ library Positions {
         uint256 feeGrowthInside0,
         uint256 feeGrowthInside1
     ) {
-        Ticks.validate(lower, upper, (IPool(pool).immutables()).tickSpacing);
+        TicksRange.validate(lower, upper, (IPool(pool).immutables()).tickSpacing);
         (
             PoolsharkStructs.RangePoolState memory poolState,
             ,,,,
@@ -451,7 +451,7 @@ library Positions {
         uint128 feesOwed0,
         uint128 feesOwed1
     ) {
-        Ticks.validate(lower, upper, (IPool(pool).immutables()).tickSpacing);
+        TicksRange.validate(lower, upper, (IPool(pool).immutables()).tickSpacing);
 
         IRangePoolStructs.SnapshotCache memory cache;
         (
@@ -475,11 +475,6 @@ library Positions {
         )
             = IPool(pool).ticks(upper);
 
-        // (
-        //     ,,,
-        //     cache.tickSecondsAccumLower,
-        //     cache.secondsPerLiquidityAccumLower
-        // )
         cache.tickSecondsAccumLower =  tickLower.tickSecondsAccumOutside;
         cache.secondsPerLiquidityAccumLower = tickLower.secondsPerLiquidityAccumOutside;
 

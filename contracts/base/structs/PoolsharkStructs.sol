@@ -37,18 +37,18 @@ interface PoolsharkStructs {
     }
 
     struct LimitTick {
-        uint160 priceAt;                             // LimitPool
-        int128 liquidityDelta;                       // LimitPool
-        //add liquidityAbsolute
+        uint160 priceAt;
+        int128 liquidityDelta;
+        uint128 liquidityAbsolute;
     }
 
     struct RangeTick {
-        uint200 feeGrowthOutside0;                   // RangePool
-        uint200 feeGrowthOutside1;                   // RangePool
-        uint160 secondsPerLiquidityAccumOutside;     // RangePool
-        int128 liquidityDelta;                       // RangePool
-        // add liquidityAbsolute
-        int56 tickSecondsAccumOutside;               // RangePool
+        uint200 feeGrowthOutside0;
+        uint200 feeGrowthOutside1;
+        uint160 secondsPerLiquidityAccumOutside;
+        int128 liquidityDelta;
+        uint128 liquidityAbsolute;
+        int56 tickSecondsAccumOutside;
     }
 
     struct Sample {

@@ -123,8 +123,8 @@ export class InitialSetup {
         await this.deployAssist.deployContractWithRetry(
             network,
             // @ts-ignore
-            TicksLimit__factory,
-            'ticksLimitLib',
+            Ticks__factory,
+            'ticksLib',
             [],
         )
 
@@ -172,7 +172,7 @@ export class InitialSetup {
             'swapCall',
             [],
             {
-                'contracts/libraries/limit/TicksLimit.sol:TicksLimit': hre.props.ticksLimitLib.address,
+                'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address,
             }
         )
 
@@ -199,7 +199,7 @@ export class InitialSetup {
             'mintLimitCall',
             [],
             {
-                'contracts/libraries/limit/TicksLimit.sol:TicksLimit': hre.props.ticksLimitLib.address,
+                'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address,
             }
         )
 
@@ -229,7 +229,7 @@ export class InitialSetup {
             ],
             {
                 'contracts/libraries/limit/PositionsLimit.sol:PositionsLimit': hre.props.positionsLimitLib.address,
-                'contracts/libraries/limit/TicksLimit.sol:TicksLimit': hre.props.ticksLimitLib.address,
+                'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address,
                 'contracts/libraries/range/pool/MintCall.sol:MintCall': hre.props.mintCall.address,
                 'contracts/libraries/range/pool/BurnCall.sol:BurnCall': hre.props.burnCall.address,
                 'contracts/libraries/limit/pool/MintLimitCall.sol:MintLimitCall': hre.props.mintLimitCall.address,

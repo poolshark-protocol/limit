@@ -4,6 +4,7 @@ pragma solidity 0.8.13;
 
 import '../interfaces/IPool.sol';
 import "./RangePoolErrors.sol";
+import '../base/storage/RangePoolERC1155Immutables.sol';
 import "../interfaces/range/IRangePoolERC1155.sol";
 import "../libraries/range/Tokens.sol";
 import '../libraries/solady/LibClone.sol';
@@ -16,50 +17,21 @@ import '../libraries/solady/LibClone.sol';
 // emitting msg.sender will give the pool address
 // can verify the owner is the pool address designated based on immutables
 
-contract RangePoolERC1155 is IRangePoolERC1155, RangePoolERC1155Errors {
+contract RangePoolERC1155 is
+    IRangePoolERC1155,
+    RangePoolERC1155Immutables,
+    RangePoolERC1155Errors 
+{
     error OwnerOnly();
 
     address public immutable factory;
     address public immutable original;
-    address public immutable poolImpl;
 
     constructor(
-        address factory_,
-        address poolImpl_
+        address factory_
     ) {
         factory = factory_;
         original = address(this);
-        poolImpl = poolImpl_;
-    }
-
-    modifier onlyCanonicalClones() {
-        PoolsharkStructs.Immutables memory constants = IPool(msg.sender).immutables();
-        // generate key for pool
-        bytes32 key = keccak256(abi.encode(
-            poolImpl,
-            constants.token0,
-            constants.token1,
-            constants.swapFee
-        ));
-
-        // compute address
-        address predictedAddress = LibClone.predictDeterministicAddress(
-            poolImpl,
-            abi.encodePacked(
-                constants.owner,
-                constants.token0,
-                constants.token1,
-                constants.poolToken,
-                constants.bounds.min,
-                constants.bounds.max,
-                constants.tickSpacing,
-                constants.swapFee
-            ),
-            key,
-            factory
-        );
-        if (address(this) != msg.sender) revert OwnerOnly();
-        _;
     }
 
     /// @dev token id => owner => balance
@@ -73,6 +45,13 @@ contract RangePoolERC1155 is IRangePoolERC1155, RangePoolERC1155Errors {
 
     string private constant _NAME = "Poolshark Range LP";
     string private constant _SYMBOL = "PSHARK-RANGE-LP";
+
+    modifier onlyCanonicalClones(
+        PoolsharkStructs.Immutables memory constants
+    ) {
+        if(!_onlyCanonicalClones(constants)) require (false, 'CanoncialClonesOnly()');
+        _;
+    }
 
     modifier checkApproval(address _from, address _spender) {
         if (!_isApprovedForAll(_from, _spender)) revert SpenderNotApproved(_from, _spender);
@@ -95,39 +74,22 @@ contract RangePoolERC1155 is IRangePoolERC1155, RangePoolERC1155Errors {
         _;
     }
 
-    function name() public pure virtual override returns (string memory) {
-        return _NAME;
+    function mintFungible(
+        address _account,
+        uint256 _id,
+        uint256 _amount,
+        PoolsharkStructs.Immutables memory constants
+    ) external onlyCanonicalClones(constants) {
+        _mint(_account, _id, _amount);
     }
 
-    function symbol() public pure virtual override returns (string memory) {
-        return _SYMBOL;
-    }
-
-    function totalSupply(uint256 _id) public view virtual override returns (uint256) {
-        return _totalSupplyById[_id];
-    }
-
-    function balanceOf(address _account, uint256 _id) public view virtual override returns (uint256) {
-        return _tokenBalances[_id][_account];
-    }
-
-    function balanceOfBatch(
-        address[] calldata _accounts,
-        uint256[] calldata _ids
-    ) public view virtual override
-        checkLength(_accounts.length, _ids.length)
-        returns (uint256[] memory batchBalances)
-    {
-        batchBalances = new uint256[](_accounts.length);
-        unchecked {
-            for (uint256 i; i < _accounts.length; ++i) {
-                batchBalances[i] = balanceOf(_accounts[i], _ids[i]);
-            }
-        }
-    }
-
-    function isApprovedForAll(address _owner, address _spender) public view virtual override returns (bool) {
-        return _isApprovedForAll(_owner, _spender);
+    function burnFungible(
+        address _account,
+        uint256 _id,
+        uint256 _amount,
+        PoolsharkStructs.Immutables memory constants
+    ) external onlyCanonicalClones(constants) {
+        _burn(_account, _id, _amount);
     }
 
     function setApprovalForAll(address _spender, bool _approved) public virtual override {
@@ -168,9 +130,75 @@ contract RangePoolERC1155 is IRangePoolERC1155, RangePoolERC1155Errors {
         emit TransferBatch(msg.sender, _from, _to, _ids, _amounts);
     }
 
+    function isApprovedForAll(address _owner, address _spender) public view virtual override returns (bool) {
+        return _isApprovedForAll(_owner, _spender);
+    }
+
     function supportsInterface(bytes4 interfaceID) external pure returns (bool) {
       return  interfaceID == 0x01ffc9a7 ||    // ERC-165 support
               interfaceID == 0xd9b67a26;      // ERC-1155 support
+    }
+
+    function name() public pure virtual override returns (string memory) {
+        return _NAME;
+    }
+
+    function symbol() public pure virtual override returns (string memory) {
+        return _SYMBOL;
+    }
+
+    function totalSupply(uint256 _id) public view virtual override returns (uint256) {
+        return _totalSupplyById[_id];
+    }
+
+    function balanceOf(address _account, uint256 _id) public view virtual override returns (uint256) {
+        return _tokenBalances[_id][_account];
+    }
+
+    function balanceOfBatch(
+        address[] calldata _accounts,
+        uint256[] calldata _ids
+    ) public view virtual override
+        checkLength(_accounts.length, _ids.length)
+        returns (uint256[] memory batchBalances)
+    {
+        batchBalances = new uint256[](_accounts.length);
+        unchecked {
+            for (uint256 i; i < _accounts.length; ++i) {
+                batchBalances[i] = balanceOf(_accounts[i], _ids[i]);
+            }
+        }
+    }
+
+    function _mint(
+        address _account,
+        uint256 _id,
+        uint256 _amount
+    ) internal virtual {
+        if (_account == address(0)) revert MintToAddress0();
+        _beforeTokenTransfer(address(0), _account, _id, _amount);
+        _totalSupplyById[_id] += _amount;
+        uint256 _accountBalance = _tokenBalances[_id][_account];
+        unchecked {
+            _tokenBalances[_id][_account] = _accountBalance + _amount;
+        }
+        emit TransferSingle(msg.sender, address(0), _account, _id, _amount);
+    }
+
+    function _burn(
+        address _account,
+        uint256 _id,
+        uint256 _amount
+    ) internal virtual {
+        if (_account == address(0)) revert BurnFromAddress0();
+        uint256 _accountBalance = _tokenBalances[_id][_account];
+        if (_accountBalance < _amount) revert BurnExceedsBalance(_account, _id, _amount);
+        _beforeTokenTransfer(_account, address(0), _id, _amount);
+        unchecked {
+            _tokenBalances[_id][_account] = _accountBalance - _amount;
+            _totalSupplyById[_id] -= _amount;
+        }
+        emit TransferSingle(msg.sender, _account, address(0), _id, _amount);
     }
 
     function _transfer(
@@ -189,53 +217,6 @@ contract RangePoolERC1155 is IRangePoolERC1155, RangePoolERC1155Errors {
         unchecked {
             _tokenBalances[_id][_to] = _toBalance + _amount;
         }
-    }
-
-    function mintFungible(
-        address _account,
-        uint256 _id,
-        uint256 _amount
-    ) external onlyCanonicalClones() {
-        _mint(_account, _id, _amount);
-    }
-
-    function _mint(
-        address _account,
-        uint256 _id,
-        uint256 _amount
-    ) internal virtual {
-        if (_account == address(0)) revert MintToAddress0();
-        _beforeTokenTransfer(address(0), _account, _id, _amount);
-        _totalSupplyById[_id] += _amount;
-        uint256 _accountBalance = _tokenBalances[_id][_account];
-        unchecked {
-            _tokenBalances[_id][_account] = _accountBalance + _amount;
-        }
-        emit TransferSingle(msg.sender, address(0), _account, _id, _amount);
-    }
-
-    function burnFungible(
-        address _account,
-        uint256 _id,
-        uint256 _amount
-    ) external onlyCanonicalClones() {
-        _burn(_account, _id, _amount);
-    }
-
-    function _burn(
-        address _account,
-        uint256 _id,
-        uint256 _amount
-    ) internal virtual {
-        if (_account == address(0)) revert BurnFromAddress0();
-        uint256 _accountBalance = _tokenBalances[_id][_account];
-        if (_accountBalance < _amount) revert BurnExceedsBalance(_account, _id, _amount);
-        _beforeTokenTransfer(_account, address(0), _id, _amount);
-        unchecked {
-            _tokenBalances[_id][_account] = _accountBalance - _amount;
-            _totalSupplyById[_id] -= _amount;
-        }
-        emit TransferSingle(msg.sender, _account, address(0), _id, _amount);
     }
 
     function _setApprovalForAll(
@@ -259,6 +240,39 @@ contract RangePoolERC1155 is IRangePoolERC1155, RangePoolERC1155Errors {
         uint256 id,
         uint256 amount
     ) internal virtual {}
+
+    function _onlyCanonicalClones(
+        PoolsharkStructs.Immutables memory constants
+    ) private view returns (bool) {
+        // generate key for pool
+        bytes32 key = keccak256(abi.encode(
+            poolImpl(),
+            constants.token0,
+            constants.token1,
+            constants.swapFee
+        ));
+
+        // compute address
+        address predictedAddress = LibClone.predictDeterministicAddress(
+            poolImpl(),
+            abi.encodePacked(
+                constants.owner,
+                constants.token0,
+                constants.token1,
+                constants.poolToken,
+                constants.bounds.min,
+                constants.bounds.max,
+                constants.tickSpacing,
+                constants.swapFee
+            ),
+            key,
+            factory
+        );
+
+        if (predictedAddress != msg.sender) return false;
+
+        return true;
+    }
 
     /// @notice Return if the `_target` contract supports ERC-1155 interface
     /// @param _target The address of the contract

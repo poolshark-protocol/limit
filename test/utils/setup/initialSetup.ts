@@ -245,8 +245,7 @@ export class InitialSetup {
             RangePoolERC1155__factory,
             'rangePoolERC1155',
             [
-              hre.props.limitPoolFactory.address,
-              hre.props.limitPoolImpl.address
+              hre.props.limitPoolFactory.address
             ]
         )
 

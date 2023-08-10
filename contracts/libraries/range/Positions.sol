@@ -105,7 +105,7 @@ library Positions {
             priceUpper: ConstantProduct.getPriceAtTick(params.mint.upper, constants),
             liquidityOnPosition: 0,
             liquidityAmount: 0,
-            totalSupply: Tokens.totalSupply(address(this), params.mint.lower, params.mint.upper),
+            totalSupply: Tokens.totalSupply(constants.poolToken, params.mint.lower, params.mint.upper),
             tokenId: Tokens.id(params.mint.lower, params.mint.upper)
         });
 
@@ -149,7 +149,7 @@ library Positions {
                         (uint256(position.liquidity - params.amount) + cache.liquidityOnPosition));
             } /// @dev - if there are fees on the position we mint less positionToken
         }
-        IRangePoolERC1155(address(this)).mintFungible(params.mint.to, cache.tokenId, params.amount);
+        IRangePoolERC1155(constants.poolToken).mintFungible(params.mint.to, cache.tokenId, params.amount, constants);
         emit Mint(
             params.mint.to,
             params.mint.lower,
@@ -185,7 +185,7 @@ library Positions {
             totalSupply: 0,
             tokenId: Tokens.id(params.lower, params.upper)
         });
-        cache.totalSupply = Tokens.totalSupplyById(address(this), cache.tokenId);
+        cache.totalSupply = Tokens.totalSupplyById(removeParams.constants.poolToken, cache.tokenId);
         cache.liquidityAmount = params.burnPercent > 0 ? removeParams.tokenBurned * uint256(position.liquidity) 
                                                                        / (cache.totalSupply + removeParams.tokenBurned)
                                                                      : 0;
@@ -299,6 +299,7 @@ library Positions {
         mapping(int24 => PoolsharkStructs.Tick) storage ticks,
         IRangePoolStructs.Position memory position,
         PoolsharkStructs.GlobalState memory state,
+        PoolsharkStructs.Immutables memory constants,
         IRangePoolStructs.UpdateParams memory params
     ) internal returns (
         IRangePoolStructs.Position memory,
@@ -307,12 +308,12 @@ library Positions {
         uint128
     ) {
         IRangePoolStructs.UpdatePositionCache memory cache;
-        cache.totalSupply = Tokens.totalSupply(address(this), params.lower, params.upper);
+        cache.totalSupply = Tokens.totalSupply(constants.poolToken, params.lower, params.upper);
         /// @dev - only true if burn call
         if (params.burnPercent > 0) {
             uint256 tokenId = Tokens.id(params.lower, params.upper);
-            cache.tokenBurned = params.burnPercent * Tokens.balanceOf(address(this), msg.sender, params.lower, params.upper) / 1e38;
-            IRangePoolERC1155(address(this)).burnFungible(msg.sender, tokenId, cache.tokenBurned);
+            cache.tokenBurned = params.burnPercent * Tokens.balanceOf(constants.poolToken, msg.sender, params.lower, params.upper) / 1e38;
+            IRangePoolERC1155(constants.poolToken).burnFungible(msg.sender, tokenId, cache.tokenBurned, constants);
         }
         
         (uint256 rangeFeeGrowth0, uint256 rangeFeeGrowth1) = rangeFeeGrowth(
@@ -322,6 +323,7 @@ library Positions {
             params.lower,
             params.upper
         );
+
         uint128 amount0Fees = uint128(
             OverflowMath.mulDiv(
                 rangeFeeGrowth0 - position.feeGrowthInside0Last,
@@ -344,16 +346,15 @@ library Positions {
         position.amount0 += amount0Fees;
         position.amount1 += amount1Fees;
 
-        uint128 feesBurned0; uint128 feesBurned1;
         if (params.burnPercent > 0) {
-            feesBurned0 = uint128(
+            cache.feesBurned0 = uint128(
                 (uint256(position.amount0) * uint256(cache.tokenBurned)) / (cache.totalSupply)
             );
-            feesBurned1 = uint128(
+            cache.feesBurned1 = uint128(
                 (uint256(position.amount1) * uint256(cache.tokenBurned)) / (cache.totalSupply)
             );
         }
-        return (position, feesBurned0, feesBurned1, uint128(cache.tokenBurned));
+        return (position, cache.feesBurned0, cache.feesBurned1, uint128(cache.tokenBurned));
     }
 
     function rangeFeeGrowth(

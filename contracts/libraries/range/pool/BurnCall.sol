@@ -34,6 +34,7 @@ library BurnCall {
                 ticks,
                 cache.position,
                 cache.state,
+                cache.constants,
                 IRangePoolStructs.UpdateParams(
                     params.lower,
                     params.upper,

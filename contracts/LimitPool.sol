@@ -254,7 +254,7 @@ contract LimitPool is
             PriceBounds(minPrice(), maxPrice()),
             token0(),
             token1(),
-            tokenImpl(),
+            poolToken(),
             tickSpacing(),
             swapFee()
         );
@@ -279,7 +279,7 @@ contract LimitPool is
                 owner(),
                 token0(),
                 token1(),
-                tokenImpl(),
+                poolToken(),
                 minPrice(),
                 maxPrice(),
                 tickSpacing(),

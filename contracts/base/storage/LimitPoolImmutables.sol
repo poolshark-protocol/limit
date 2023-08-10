@@ -16,7 +16,7 @@ contract LimitPoolImmutables is Clone {
         return _getArgAddress(40);
     }
 
-    function tokenImpl() public pure returns (address) {
+    function poolToken() public pure returns (address) {
         return _getArgAddress(60);
     }
 

@@ -2,9 +2,10 @@
 
 pragma solidity 0.8.13;
 
+import '../../base/structs/PoolsharkStructs.sol';
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
-interface IRangePoolERC1155 is IERC165 {
+interface IRangePoolERC1155 is IERC165, PoolsharkStructs {
     event TransferSingle(
         address indexed sender,
         address indexed from,
@@ -49,13 +50,15 @@ interface IRangePoolERC1155 is IERC165 {
     function mintFungible(
         address account,
         uint256 id,
-        uint256 amount
+        uint256 amount,
+        PoolsharkStructs.Immutables memory constants
     ) external;
 
     function burnFungible(
         address account,
         uint256 id,
-        uint256 amount
+        uint256 amount,
+        PoolsharkStructs.Immutables memory constants
     ) external;
 
     function safeTransferFrom(

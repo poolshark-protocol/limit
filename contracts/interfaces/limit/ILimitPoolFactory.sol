@@ -7,14 +7,17 @@ abstract contract ILimitPoolFactory is LimitPoolFactoryStorage {
         bytes32 poolType,
         address tokenIn,
         address tokenOut,
-        int16  tickSpacing,
+        uint16  swapFee,
         uint160 startPrice
-    ) external virtual returns (address pool);
+    ) external virtual returns (
+        address pool,
+        address token
+    );
 
     function getLimitPool(
         bytes32 poolType,
         address tokenIn,
         address tokenOut,
-        int16  tickSpacing
+        uint16  swapFee
     ) external view virtual returns (address);
 }

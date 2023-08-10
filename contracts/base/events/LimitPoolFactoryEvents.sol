@@ -4,9 +4,12 @@ pragma solidity 0.8.13;
 abstract contract LimitPoolFactoryEvents {
     event PoolCreated(
         address pool,
-        address implementation,
+        address token,
+        address poolImpl,
+        address tokenImpl,
         address indexed token0,
         address indexed token1,
-        int16 indexed tickSpacing
+        uint16 indexed swapFee,
+        int16 tickSpacing
     );
 }

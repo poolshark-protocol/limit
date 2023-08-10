@@ -38,7 +38,7 @@ contract PoolRouter is
             implementation,
             constants.token0,
             constants.token1,
-            constants.tickSpacing
+            constants.swapFee
         ));
 
         // compute address
@@ -48,9 +48,11 @@ contract PoolRouter is
                 constants.owner,
                 constants.token0,
                 constants.token1,
+                constants.poolToken,
                 constants.bounds.min,
                 constants.bounds.max,
-                constants.tickSpacing
+                constants.tickSpacing,
+                constants.swapFee
             ),
             key,
             factory

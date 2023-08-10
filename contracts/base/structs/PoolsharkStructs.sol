@@ -85,8 +85,9 @@ interface PoolsharkStructs {
         PriceBounds bounds;
         address token0;
         address token1;
-        uint16 swapFee;
+        address poolToken;
         int16 tickSpacing;
+        uint16 swapFee;
     }
 
     struct PriceBounds {

@@ -48,7 +48,6 @@ abstract contract LimitPoolFactoryErrors {
     error InvalidTokenAddress();
     error PoolAlreadyExists();
     error FeeTierNotSupported();
-    error TickSpacingNotSupported();
     error PoolTypeNotSupported();
 }
 

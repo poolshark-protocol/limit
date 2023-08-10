@@ -254,8 +254,9 @@ contract LimitPool is
             PriceBounds(minPrice(), maxPrice()),
             token0(),
             token1(),
-            0,
-            tickSpacing()
+            tokenImpl(),
+            tickSpacing(),
+            swapFee()
         );
     }
 
@@ -269,7 +270,7 @@ contract LimitPool is
 
     function _onlyCanoncialClones() private view {
         // compute pool key
-        bytes32 key = keccak256(abi.encode(original, token0(), token1(), tickSpacing()));
+        bytes32 key = keccak256(abi.encode(original, token0(), token1(), swapFee()));
         
         // compute canonical pool address
         address predictedAddress = LibClone.predictDeterministicAddress(
@@ -278,9 +279,11 @@ contract LimitPool is
                 owner(),
                 token0(),
                 token1(),
+                tokenImpl(),
                 minPrice(),
                 maxPrice(),
-                tickSpacing()
+                tickSpacing(),
+                swapFee()
             ),
             key,
             factory

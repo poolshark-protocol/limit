@@ -2,7 +2,7 @@ import { SUPPORTED_NETWORKS } from '../../../scripts/constants/supportedNetworks
 import { DeployAssist } from '../../../scripts/util/deployAssist'
 import { ContractDeploymentsKeys } from '../../../scripts/util/files/contractDeploymentKeys'
 import { ContractDeploymentsJson } from '../../../scripts/util/files/contractDeploymentsJson'
-import { BurnLimitCall__factory, LimitPool__factory, MintLimitCall__factory, PositionsLimit__factory, QuoteCall__factory, TicksLimit__factory } from '../../../typechain'
+import { BurnLimitCall__factory, LimitPool__factory, MintLimitCall__factory, PositionsLimit__factory, QuoteCall__factory, RangePoolERC1155__factory, TicksLimit__factory } from '../../../typechain'
 import { BurnCall__factory } from '../../../typechain'
 import { SwapCall__factory } from '../../../typechain'
 import { MintCall__factory } from '../../../typechain'
@@ -239,9 +239,21 @@ export class InitialSetup {
             }
         )
 
+        await this.deployAssist.deployContractWithRetry(
+            network,
+            // @ts-ignore
+            RangePoolERC1155__factory,
+            'rangePoolERC1155',
+            [
+              hre.props.limitPoolFactory.address,
+              hre.props.limitPoolImpl.address
+            ]
+        )
+
         const enableImplTxn = await hre.props.limitPoolManager.enableImplementation(
             this.constantProductString,
-            hre.props.limitPoolImpl.address
+            hre.props.limitPoolImpl.address,
+            hre.props.rangePoolERC1155.address
         )
         await enableImplTxn.wait();
 
@@ -270,7 +282,7 @@ export class InitialSetup {
             this.constantProductString,
             hre.props.token0.address,
             hre.props.token1.address,
-            '10',
+            '500',
             '79228162514264337593543950336'
         )
         await createPoolTxn.wait()
@@ -281,7 +293,7 @@ export class InitialSetup {
             this.constantProductString,
             hre.props.token0.address,
             hre.props.token1.address,
-            '10'
+            '500'
         )
         hre.props.limitPool = await hre.ethers.getContractAt('LimitPool', limitPoolAddress)
 
@@ -294,7 +306,7 @@ export class InitialSetup {
                 this.constantProductString,
                 hre.props.token0.address,
                 hre.props.token1.address,
-                '10'
+                '500'
             ]
         )
 

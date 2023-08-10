@@ -8,11 +8,12 @@ interface ILimitPoolManager {
     function implementations(
         bytes32 poolType
     ) external view returns (
-        address
+        address poolImpl,
+        address tokenImpl
     );
-    function tickSpacings(
-        int16 tickSpacing
+    function feeTiers(
+        uint16 swapFee
     ) external view returns (
-        bool
+        int16 tickSpacing
     );
 }

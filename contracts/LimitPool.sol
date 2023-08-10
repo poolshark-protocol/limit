@@ -59,7 +59,7 @@ contract LimitPool is
     function initialize(
         uint160 startPrice
     ) external override 
-        nonReentrant
+        nonReentrant(globalState)
         factoryOnly
         canoncialOnly
     {
@@ -79,7 +79,7 @@ contract LimitPool is
     function mint(
         MintParams memory params
     ) external override
-        nonReentrant
+        nonReentrant(globalState)
         canoncialOnly
     {
         MintCache memory cache = MintCache({
@@ -96,7 +96,7 @@ contract LimitPool is
     function burn(
         BurnParams memory params
     ) external override
-        nonReentrant
+        nonReentrant(globalState)
         canoncialOnly
     {
         BurnCache memory cache = BurnCache({
@@ -116,7 +116,7 @@ contract LimitPool is
     function mintLimit(
         MintLimitParams memory params
     ) external override
-        nonReentrant
+        nonReentrant(globalState)
         canoncialOnly
     {
         MintLimitCache memory cache;
@@ -139,7 +139,7 @@ contract LimitPool is
     function burnLimit(
         BurnLimitParams memory params
     ) external override
-        nonReentrant
+        nonReentrant(globalState)
         canoncialOnly
     {
         if (params.to == address(0)) revert CollectToZeroAddress();
@@ -162,7 +162,7 @@ contract LimitPool is
     function swap(
         SwapParams memory params
     ) external override
-        nonReentrant
+        nonReentrant(globalState)
         canoncialOnly
     returns (
         int256,
@@ -205,7 +205,7 @@ contract LimitPool is
     function increaseSampleLength(
         uint16 sampleLengthNext
     ) external override
-        nonReentrant
+        nonReentrant(globalState)
         canoncialOnly 
     {
         globalState.pool = Samples.expand(
@@ -221,7 +221,7 @@ contract LimitPool is
         bool setFees
     ) external override
         ownerOnly
-        nonReentrant
+        nonReentrant(globalState)
         canoncialOnly 
     returns (
         uint128 token0Fees,

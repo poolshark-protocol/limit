@@ -112,7 +112,7 @@ contract EchidnaPool {
     function mint(uint128 amount, bool zeroForOne, int24 lower, int24 upper) public tickPreconditions(lower, upper) {
         // PRE CONDITIONS
         mintAndApprove();
-        require(amount > 0);
+        amount = amount + 1;
         PoolValues memory poolValues;
         (poolValues.price0Before, poolValues.liquidity0Before, poolValues.liquidityGlobal0Before,,,,) = pool.pool0();
         (poolValues.price1Before, poolValues.liquidity1Before, poolValues.liquidityGlobal1Before,,,,) = pool.pool1();
@@ -385,7 +385,7 @@ contract EchidnaPool {
 
     function mintThenPartialBurnTwiceLiquidityChange(uint128 amount, bool zeroForOne, int24 lower, int24 upper, uint128 percent) public tickPreconditions(lower, upper) {
         // PRE CONDITIONS
-        require(percent > 0 && percent < 1e38);
+        percent = 1 + (percent % (1e38 - 1));
         mintAndApprove();
         (uint160 price0Before,/*liquidity*/,uint128 liquidityGlobal0Before,,,,) = pool.pool0();
         (uint160 price1Before,/*liquidity*/,uint128 liquidityGlobal1Before,,,,) = pool.pool1();
@@ -437,7 +437,7 @@ contract EchidnaPool {
     }
 
     function liquidityMintedBackcalculates(uint128 amount, bool zeroForOne, int24 lower, int24 upper) tickPreconditions(lower, upper) internal {
-        require(amount > 1e5);
+        amount = amount + 1e5 + 1;
         ILimitPoolStructs.Immutables memory immutables = pool.immutables();
         uint256 priceLower = ConstantProduct.getPriceAtTick(lower, immutables);
         uint256 priceUpper = ConstantProduct.getPriceAtTick(upper, immutables);

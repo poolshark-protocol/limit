@@ -46,9 +46,9 @@ interface PoolsharkStructs {
         uint200 feeGrowthOutside0;
         uint200 feeGrowthOutside1;
         uint160 secondsPerLiquidityAccumOutside;
+        int56 tickSecondsAccumOutside;
         int128 liquidityDelta;
         uint128 liquidityAbsolute;
-        int56 tickSecondsAccumOutside;
     }
 
     struct Sample {
@@ -112,6 +112,7 @@ interface PoolsharkStructs {
         uint256 output;
         uint160 crossPrice;
         uint160 secondsPerLiquidityAccum;
+        uint128 feeAmount;
         int56   tickSecondsAccum;
         int24   crossTick;
         uint8   crossStatus;

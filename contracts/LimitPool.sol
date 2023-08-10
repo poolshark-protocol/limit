@@ -127,6 +127,7 @@ contract LimitPool is
         cache = MintLimitCall.perform(
             params.zeroForOne ? positions0 : positions1,
             ticks,
+            samples,
             rangeTickMap,
             limitTickMap,
             globalState,
@@ -176,6 +177,7 @@ contract LimitPool is
         return SwapCall.perform(
             ticks,
             globalState,
+            samples,
             rangeTickMap,
             limitTickMap,
             params,

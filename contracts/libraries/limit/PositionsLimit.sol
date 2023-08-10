@@ -2,13 +2,13 @@
 pragma solidity 0.8.13;
 
 import './TicksLimit.sol';
+import '../../interfaces/range/IRangePoolStructs.sol';
 import '../../interfaces/limit/ILimitPoolStructs.sol';
 import '../math/OverflowMath.sol';
 import './Claims.sol';
 import './EpochMap.sol';
 import '../utils/SafeCast.sol';
 import '../Ticks.sol';
-import 'hardhat/console.sol';
 
 /// @notice Position management library for ranged liquidity.
 /// @notice Position management library for ranged liquidity.
@@ -28,6 +28,7 @@ library PositionsLimit {
 
     function resize(
         mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
+        IRangePoolStructs.Sample[65535] storage samples,
         PoolsharkStructs.TickMap storage rangeTickMap,
         PoolsharkStructs.TickMap storage limitTickMap,
         ILimitPoolStructs.MintLimitParams memory params,
@@ -65,7 +66,6 @@ library PositionsLimit {
             cache.tickLimit = ConstantProduct.getTickAtPrice(cache.priceLimit.toUint160(), cache.constants);
             // round to nearest tick spacing
             cache.priceLimit = ConstantProduct.getPriceAtTick(cache.tickLimit, cache.constants);
-            console.log('tick limit', uint24(-cache.tickLimit));
         }
 
         PoolsharkStructs.SwapCache memory swapCache;
@@ -77,9 +77,9 @@ library PositionsLimit {
         if (cache.state.pool.liquidity == 0 && 
             (params.zeroForOne ? swapCache.price > cache.priceLower
                                : swapCache.price < cache.priceUpper)) {
-            console.log('price before', uint24(-cache.state.pool.tickAtPrice));
             swapCache = Ticks.swap(
                 ticks,
+                samples,
                 rangeTickMap,
                 limitTickMap,
                 PoolsharkStructs.SwapParams({
@@ -94,10 +94,7 @@ library PositionsLimit {
                 }),
                 swapCache
             );
-            console.log('price after', uint24(-cache.state.pool.tickAtPrice));
         }
-
-        console.log('price check', cache.priceLimit, swapCache.price);
 
         // only swap if priceLimit is beyond current pool price
         if (params.zeroForOne ? cache.priceLimit < swapCache.price
@@ -105,6 +102,7 @@ library PositionsLimit {
             // swap and save the pool state
             swapCache = Ticks.swap(
                 ticks,
+                samples,
                 rangeTickMap,
                 limitTickMap,
                 PoolsharkStructs.SwapParams({
@@ -125,8 +123,6 @@ library PositionsLimit {
         // save to cache
         cache.swapCache = swapCache;
         cache.state = swapCache.state;
-
-        console.log('input output check', swapCache.input, swapCache.output, uint24(-swapCache.state.pool.tickAtPrice));
 
         if (params.amount < cache.mintSize) params.amount = 0;
         // move start tick based on amount filled in swap
@@ -155,7 +151,6 @@ library PositionsLimit {
                 }
                 cache.priceUpper = ConstantProduct.getPriceAtTick(params.upper, cache.constants);
             } else {
-                console.log('position bounds 1 ', uint24(-params.lower), uint24(params.upper), uint24(-cache.tickLimit));
                 if (cache.priceUpper > swapCache.price) {
                     // if rounding goes past limit trim position
                     params.upper = cache.tickLimit;
@@ -166,7 +161,6 @@ library PositionsLimit {
                 ) {
                     params.lower = params.upper - cache.constants.tickSpacing;
                 }
-                console.log('position bounds 2', uint24(-params.lower), uint24(-params.upper));
                 cache.priceLower = ConstantProduct.getPriceAtTick(params.lower, cache.constants);
             }
             if (params.amount > 0 && params.lower < params.upper)
@@ -182,7 +176,7 @@ library PositionsLimit {
                 cache.liquidityMinted = 0;
             cache.state.epoch += 1;
         }
-        console.log('position bounds end', uint24(-params.lower), uint24(params.upper), uint24(cache.state.pool.tickAtPrice));
+        // console.log('position bounds end', uint24(-params.lower), uint24(params.upper), uint24(cache.state.pool.tickAtPrice));
 
         if (params.lower >= params.upper) {
             params.amount = 0;

@@ -43,28 +43,29 @@ library Samples {
 
     function save(
         IRangePoolStructs.Sample[65535] storage samples,
-        PoolsharkStructs.RangePoolState memory state,
+        PoolsharkStructs.SampleState memory sampleState,
+        uint128 startLiquidity, /// @dev - liquidity from start of block
         int24  tick
     ) internal returns (
         uint16 sampleIndexNew,
         uint16 sampleLengthNew
     ) {
         // grab the latest sample
-        IRangePoolStructs.Sample memory newSample = samples[state.samples.index];
+        IRangePoolStructs.Sample memory newSample = samples[sampleState.index];
 
         // early return if timestamp has not advanced 2 seconds
         if (newSample.blockTimestamp + 2 > uint32(block.timestamp))
-            return (state.samples.index, state.samples.length);
+            return (sampleState.index, sampleState.length);
 
-        if (state.samples.lengthNext > state.samples.length
-            && state.samples.index == (state.samples.length - 1)) {
+        if (sampleState.lengthNext > sampleState.length
+            && sampleState.index == (sampleState.length - 1)) {
             // increase sampleLengthNew if old size exceeded
-            sampleLengthNew = state.samples.lengthNext;
+            sampleLengthNew = sampleState.lengthNext;
         } else {
-            sampleLengthNew = state.samples.length;
+            sampleLengthNew = sampleState.length;
         }
-        sampleIndexNew = (state.samples.index + 1) % sampleLengthNew;
-        samples[sampleIndexNew] = _build(newSample, uint32(block.timestamp), tick, state.liquidity);
+        sampleIndexNew = (sampleState.index + 1) % sampleLengthNew;
+        samples[sampleIndexNew] = _build(newSample, uint32(block.timestamp), tick, startLiquidity);
 
         emit SampleRecorded(
             samples[sampleIndexNew].tickSecondsAccum,

@@ -27,6 +27,7 @@ library MintLimitCall {
         mapping(address => mapping(int24 => mapping(int24 => ILimitPoolStructs.LimitPosition)))
             storage positions,
         mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
+        IRangePoolStructs.Sample[65535] storage samples,
         PoolsharkStructs.TickMap storage rangeTickMap,
         PoolsharkStructs.TickMap storage limitTickMap,
         PoolsharkStructs.GlobalState storage globalState,
@@ -37,6 +38,7 @@ library MintLimitCall {
         // resize position if necessary
         (params, cache) = PositionsLimit.resize(
             ticks,
+            samples,
             rangeTickMap,
             limitTickMap,
             params,

@@ -71,6 +71,7 @@ library TicksLimit {
             } else {
                 tickLower.liquidityDelta -= int128(liquidityMinted);
             }
+            tickLower.liquidityAbsolute += cache.liquidityMinted.toUint128();
             ticks[params.lower].limit = tickLower;
         } else {
             /// @dev - i.e. if zeroForOne && cache.priceLower <= cache.pool.price
@@ -96,6 +97,7 @@ library TicksLimit {
             } else {
                 tickUpper.liquidityDelta += int128(liquidityMinted);
             }
+            tickUpper.liquidityAbsolute += cache.liquidityMinted.toUint128();
             ticks[params.upper].limit = tickUpper;
         } else {
             /// @dev - i.e. if !zeroForOne && cache.priceUpper >= cache.pool.price
@@ -136,7 +138,6 @@ library TicksLimit {
                 tick.priceAt = pool.price;
             }
             else {
-                //TODO: set in tickMap for safety
                 // we need to blend the two partial fills into a single tick
                 ILimitPoolStructs.InsertSingleLocals memory locals;
                 if (params.zeroForOne) {
@@ -174,6 +175,7 @@ library TicksLimit {
         // invariant => if we save liquidity to tick clear pool liquidity
         if ((tickToSave != (params.zeroForOne ? params.lower : params.upper))) {
             tick.liquidityDelta += int128(pool.liquidity);
+            tick.liquidityAbsolute += pool.liquidity;
             pool.liquidity = 0;
         }
         ticks[tickToSave].limit = tick;
@@ -199,6 +201,7 @@ library TicksLimit {
                 } else {
                     tickLower.liquidityDelta += int128(params.amount);
                 }
+                tickLower.liquidityAbsolute -= params.amount;
                 ticks[lower].limit = tickLower;
             }
             clear(ticks, constants, tickMap, lower);
@@ -211,6 +214,7 @@ library TicksLimit {
                 } else {
                     tickUpper.liquidityDelta -= int128(params.amount);
                 }
+                tickUpper.liquidityAbsolute -= params.amount;
                 ticks[upper].limit = tickUpper;
             }
             clear(ticks, constants, tickMap, upper);
@@ -261,13 +265,13 @@ library TicksLimit {
 
         // zero out tick
         ticks[tickToClear].limit.liquidityDelta = 0;
-        TicksLimit.clear(ticks, cache.constants, tickMap, tickToClear);
+        clear(ticks, cache.constants, tickMap, tickToClear);
 
         return (cache, pool);
     }
 
     function clear(
-        mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
+        mapping(int24 => PoolsharkStructs.Tick) storage ticks,
         PoolsharkStructs.Immutables memory constants,
         PoolsharkStructs.TickMap storage tickMap,
         int24 tickToClear
@@ -286,7 +290,7 @@ library TicksLimit {
     ) internal pure returns (
         bool
     ) {
-        if (tick.limit.liquidityDelta != 0) {
+        if (tick.limit.liquidityAbsolute != 0) {
             return false;
         }
         return true;

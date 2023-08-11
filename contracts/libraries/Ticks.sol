@@ -365,7 +365,6 @@ library Ticks {
                 cache.price = uint160(nextPrice);
             }
         }
-        //TODO: calculate fee based on rangepool liquidity
         cache = FeeMath.calculate(cache, amountOut, zeroForOne);
         return cache;
     }
@@ -379,6 +378,7 @@ library Ticks {
     ) internal returns (
         PoolsharkStructs.SwapCache memory
     ) {
+        // crossing range ticks
         if ((cache.crossStatus & RANGE_TICK) > 0) {
             PoolsharkStructs.RangeTick memory crossTick = ticks[cache.crossTick].range;
             crossTick.feeGrowthOutside0       = cache.state.pool.feeGrowthGlobal0 - crossTick.feeGrowthOutside0;
@@ -406,6 +406,7 @@ library Ticks {
             }
             /// @dev - price and tickAtPrice updated at end of loop
         }
+        // crossing limit tick
         if ((cache.crossStatus & LIMIT_TICK) > 0) {
             // cross limit tick
             EpochMap.set(cache.crossTick, cache.state.epoch, limitTickMap, cache.constants);
@@ -455,17 +456,17 @@ library Ticks {
             if (params.zeroForOne) {
                 unchecked {
                     if (liquidityDelta >= 0){
-                        cache.liquidity -= uint128(liquidityDelta);
+                        cache.state.pool.liquidity -= uint128(liquidityDelta);
                     } else {
-                        cache.liquidity += uint128(-liquidityDelta); 
+                        cache.state.pool.liquidity += uint128(-liquidityDelta);
                     }
                 }
             } else {
                 unchecked {
                     if (liquidityDelta >= 0) {
-                        cache.liquidity += uint128(liquidityDelta);
+                        cache.state.pool.liquidity += uint128(liquidityDelta);
                     } else {
-                        cache.liquidity -= uint128(-liquidityDelta);
+                        cache.state.pool.liquidity -= uint128(-liquidityDelta);
                     }
                 }
             }

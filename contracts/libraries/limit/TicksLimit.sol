@@ -203,8 +203,8 @@ library TicksLimit {
                 }
                 tickLower.liquidityAbsolute -= params.amount;
                 ticks[lower].limit = tickLower;
+                clear(ticks, constants, tickMap, lower);
             }
-            clear(ticks, constants, tickMap, lower);
         }
         {
             PoolsharkStructs.LimitTick memory tickUpper = ticks[upper].limit;
@@ -216,8 +216,8 @@ library TicksLimit {
                 }
                 tickUpper.liquidityAbsolute -= params.amount;
                 ticks[upper].limit = tickUpper;
+                clear(ticks, constants, tickMap, upper);
             }
-            clear(ticks, constants, tickMap, upper);
         }
     }
 
@@ -264,7 +264,7 @@ library TicksLimit {
         }
 
         // zero out tick
-        ticks[tickToClear].limit.liquidityDelta = 0;
+        ticks[tickToClear].limit = PoolsharkStructs.LimitTick(0,0,0);
         clear(ticks, cache.constants, tickMap, tickToClear);
 
         return (cache, pool);

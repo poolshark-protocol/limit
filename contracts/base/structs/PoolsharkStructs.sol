@@ -100,6 +100,7 @@ interface PoolsharkStructs {
         mapping(uint256 => uint256) words;  /// @dev - sets to words
         mapping(uint256 => uint256) ticks;  /// @dev - words to ticks
         mapping(uint256 => mapping(uint256 => mapping(uint256 => uint256))) epochs; /// @dev - ticks to epochs
+        //TODO: epochs0 and epochs1; zeroForOne param for EpochMap.get/set
     }
 
     struct SwapCache {

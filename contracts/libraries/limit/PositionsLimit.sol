@@ -409,6 +409,7 @@ library PositionsLimit {
             // update global liquidity
             state.liquidityGlobal -= params.amount;
         }
+        //TODO: set params.amount = 0 if end tick so correct value is emitted for event
         if (params.zeroForOne ? params.claim == params.upper
                               : params.claim == params.lower) {
             state.liquidityGlobal -= cache.position.liquidity;
@@ -526,7 +527,9 @@ library PositionsLimit {
             position: positions[params.owner][params.lower][params.upper],
             pool: params.zeroForOne ? state.pool0 : state.pool1,
             priceLower: ConstantProduct.getPriceAtTick(params.lower, constants),
-            priceClaim: ConstantProduct.getPriceAtTick(params.claim, constants),
+            //TODO: if half tick use priceAt for claim
+            priceClaim: ticks[params.claim].limit.priceAt == 0 ? ConstantProduct.getPriceAtTick(params.claim, constants)
+                                                               : ticks[params.claim].limit.priceAt,
             priceUpper: ConstantProduct.getPriceAtTick(params.upper, constants),
             claimTick: ticks[params.claim].limit,
             earlyReturn: false,

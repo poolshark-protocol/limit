@@ -35,7 +35,7 @@ contract LimitPoolFactory is
         uint160 startPrice
     ) external override returns (
         address pool,
-        address token
+        address poolToken
     ) {
 
         // validate token pair
@@ -115,7 +115,7 @@ contract LimitPoolFactory is
 
         emit PoolCreated(
             pool,
-            token,
+            poolToken,
             poolImpl,
             tokenImpl,
             constants.token0,
@@ -123,6 +123,8 @@ contract LimitPoolFactory is
             constants.swapFee,
             constants.tickSpacing
         );
+
+        return (pool, constants.poolToken);
     }
 
     function getLimitPool(
@@ -130,7 +132,10 @@ contract LimitPoolFactory is
         address tokenIn,
         address tokenOut,
         uint16 swapFee
-    ) external view override returns (address) {
+    ) external view override returns (
+        address pool,
+        address poolToken
+    ) {
         // set lexographical token address ordering
         address token0 = tokenIn < tokenOut ? tokenIn : tokenOut;
         address token1 = tokenIn < tokenOut ? tokenOut : tokenIn;
@@ -154,6 +159,17 @@ contract LimitPoolFactory is
             swapFee
         ));
 
-        return limitPools[key];
+        pool = limitPools[key];
+
+        poolToken = LibClone.predictDeterministicAddress(
+            tokenImpl,
+            abi.encodePacked(
+                poolImpl
+            ),
+            key,
+            address(this)
+        );
+
+        return (pool, poolToken);
     }
 }

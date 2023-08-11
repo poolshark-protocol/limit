@@ -282,19 +282,21 @@ export class InitialSetup {
             hre.props.token0.address,
             hre.props.token1.address,
             '500',
-            '79228162514264337593543950336'
+            '177159557114295710296101716160'
         )
         await createPoolTxn.wait()
 
         hre.nonce += 1
 
-        let limitPoolAddress = await hre.props.limitPoolFactory.getLimitPool(
+        let limitPoolAddress; let limitPoolTokenAddress;
+        [limitPoolAddress, limitPoolTokenAddress] = await hre.props.limitPoolFactory.getLimitPool(
             this.constantProductString,
             hre.props.token0.address,
             hre.props.token1.address,
             '500'
         )
         hre.props.limitPool = await hre.ethers.getContractAt('LimitPool', limitPoolAddress)
+        hre.props.limitPoolToken = await hre.ethers.getContractAt('RangePoolERC1155', limitPoolTokenAddress)
 
         await this.deployAssist.saveContractDeployment(
             network,

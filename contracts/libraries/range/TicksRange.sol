@@ -11,6 +11,7 @@ import '../math/OverflowMath.sol';
 import '../math/ConstantProduct.sol';
 import '../TickMap.sol';
 import './Samples.sol';
+import 'hardhat/console.sol';
 
 /// @notice Tick management library for range pools
 library TicksRange {
@@ -64,6 +65,7 @@ library TicksRange {
 
         if(TickMap.set(tickMap, lower, constants.tickSpacing)) {
             ticks[lower].range.liquidityDelta += int128(amount);
+            console.log(ticks[lower].range.liquidityAbsolute, amount);
             ticks[lower].range.liquidityAbsolute += amount;
         } else {
             if (lower <= tickAtPrice) {
@@ -93,6 +95,7 @@ library TicksRange {
                 );
             } else {
                 ticks[lower].range.liquidityDelta = int128(amount);
+                ticks[lower].range.liquidityAbsolute += amount;
             }
         }
 

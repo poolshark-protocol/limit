@@ -26,6 +26,7 @@ export interface BeforeEachProps {
     limitPool: LimitPool
     limitPool2: LimitPool
     limitPoolImpl: LimitPool
+    limitPoolToken: RangePoolERC1155
     limitPoolManager: LimitPoolManager
     limitPoolFactory: LimitPoolFactory
     poolRouter: PoolRouter
@@ -80,6 +81,7 @@ export class GetBeforeEach {
         let limitPool: LimitPool
         let limitPool2: LimitPool
         let limitPoolImpl: LimitPool
+        let limitPoolToken: RangePoolERC1155
         let limitPoolManager: LimitPoolManager
         let limitPoolFactory: LimitPoolFactory
         let poolRouter: PoolRouter
@@ -112,6 +114,7 @@ export class GetBeforeEach {
             limitPool,
             limitPool2,
             limitPoolImpl,
+            limitPoolToken,
             limitPoolManager,
             limitPoolFactory,
             poolRouter,

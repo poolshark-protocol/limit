@@ -154,6 +154,7 @@ library Ticks {
         // grab latest sample and store in cache for _cross
         while (cache.cross) {
             // handle price being at cross tick
+            console.log('swap cache check1', cache.input, cache.output);
             cache = _quoteSingle(cache, params.priceLimit, params.zeroForOne);
             if (cache.cross) {
                 cache = _cross(
@@ -165,6 +166,7 @@ library Ticks {
                 );
             }
         }
+                    console.log('swap cache check2', cache.input, cache.output);
         /// @dev - write oracle entry after start of block
         (
             cache.state.pool.samples.index,
@@ -246,6 +248,7 @@ library Ticks {
         if (!cache.exactIn) cache.amountLeft = OverflowMath.mulDivRoundingUp(uint256(params.amount), 1e6, (1e6 - cache.constants.swapFee));
         while (cache.cross) {
             cache = _quoteSingle(cache, params.priceLimit, params.zeroForOne);
+                    console.log('quote cache check1', cache.input, cache.output, params.priceLimit);
             if (cache.cross) {
                 cache = _pass(
                     ticks,
@@ -256,6 +259,7 @@ library Ticks {
                 );
             }
         }
+        console.log('cache check', cache.input, cache.output);
         return (
             cache.input,
             cache.output,

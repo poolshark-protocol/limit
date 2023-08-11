@@ -11,7 +11,7 @@ abstract contract ILimitPoolFactory is LimitPoolFactoryStorage {
         uint160 startPrice
     ) external virtual returns (
         address pool,
-        address token
+        address poolToken
     );
 
     function getLimitPool(
@@ -19,5 +19,8 @@ abstract contract ILimitPoolFactory is LimitPoolFactoryStorage {
         address tokenIn,
         address tokenOut,
         uint16  swapFee
-    ) external view virtual returns (address);
+    ) external view virtual returns (
+        address pool,
+        address poolToken
+    );
 }

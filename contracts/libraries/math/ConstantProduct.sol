@@ -87,18 +87,23 @@ library ConstantProduct {
         uint256 dx
     ) internal pure returns (uint256 liquidity) {
         unchecked {
-            if (priceUpper == currentPrice) {
+            if (priceUpper <= currentPrice) {
                 liquidity = OverflowMath.mulDiv(dy, Q96, priceUpper - priceLower);
-            } else if (currentPrice == priceLower) {
+            } else if (currentPrice <= priceLower) {
                 liquidity = OverflowMath.mulDiv(
                     dx,
                     OverflowMath.mulDiv(priceLower, priceUpper, Q96),
                     priceUpper - priceLower
                 );
             } else {
-                /// @dev - price should either be priceUpper or priceLower
-                require (false, 'PriceOutsideBounds()');
-            }  
+                uint256 liquidity0 = OverflowMath.mulDiv(
+                    dx,
+                    OverflowMath.mulDiv(priceUpper, currentPrice, Q96),
+                    priceUpper - currentPrice
+                );
+                uint256 liquidity1 = OverflowMath.mulDiv(dy, Q96, currentPrice - priceLower);
+                liquidity = liquidity0 < liquidity1 ? liquidity0 : liquidity1;
+            }
         }
     }
 
@@ -117,6 +122,8 @@ library ConstantProduct {
             token0amount = uint128(_getDx(liquidityAmount, currentPrice, priceUpper, roundUp));
             token1amount = uint128(_getDy(liquidityAmount, priceLower, currentPrice, roundUp));
         }
+        if (token0amount > uint128(type(int128).max)) require(false, 'AmountsOutOfBounds()');
+        if (token1amount > uint128(type(int128).max)) require(false, 'AmountsOutOfBounds()');
     }
 
     function getNewPrice(

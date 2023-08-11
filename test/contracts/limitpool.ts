@@ -87,7 +87,7 @@ describe('LimitPool Tests', function () {
     // cross tick and know which ticks to clear out based on active liquidity
     // pass global state instead of swapPool for MintLimit
 
-    it('pool0 - Should mint, fill, and burn 22', async function () {
+    it('pool0 - Should mint, fill, and burn 29', async function () {
         const aliceLiquidity = '20051041647900280328782'
         // mint should revert
         await validateMint({
@@ -138,7 +138,7 @@ describe('LimitPool Tests', function () {
         if (debugMode) await getPositionLiquidity(true, hre.props.alice.address, 0, 100, debugMode)
     })
 
-    it('pool1 - Should mint, fill, and burn 22', async function () {
+    it('pool1 - Should mint, fill, and burn 29', async function () {
         const aliceLiquidity = '20051041647900280328782'
         // mint should revert
         await validateMint({
@@ -200,7 +200,7 @@ describe('LimitPool Tests', function () {
         })
     })
 
-    it('pool0 - Should mint, partially fill, and burn 22', async function () {
+    it('pool0 - Should mint, partially fill, and burn 29', async function () {
         const aliceLiquidity = '20051041647900280328782'
         // mint should revert
         await validateMint({
@@ -247,7 +247,7 @@ describe('LimitPool Tests', function () {
         if (debugMode) await getTick(false, -100, true)
     })
 
-    it('pool1 - Should mint, partially fill, and burn 22', async function () {
+    it('pool1 - Should mint, partially fill, and burn 29', async function () {
         const aliceLiquidity = '20051041647900280328782'
         // mint should revert
         await validateMint({
@@ -295,7 +295,7 @@ describe('LimitPool Tests', function () {
         if (debugMode) await getTick(false, -100, true)
     })
 
-    it('pool0 - Should mint, partial fill, partial burn, fill leftover, and burn again 22', async function () {
+    it('pool0 - Should mint, partial fill, partial burn, fill leftover, and burn again 29', async function () {
         const aliceLiquidity = '20051041647900280328782'
         // mint should revert
         await validateMint({

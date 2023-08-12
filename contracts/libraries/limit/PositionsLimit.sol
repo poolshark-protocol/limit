@@ -412,12 +412,9 @@ library PositionsLimit {
             // update global liquidity
             state.liquidityGlobal -= params.amount;
         }
-        //TODO: set params.amount = 0 if end tick so correct value is emitted for event
         if (params.zeroForOne ? params.claim == params.upper
                               : params.claim == params.lower) {
             state.liquidityGlobal -= cache.position.liquidity;
-            // set params.amount for BurnLimit event
-            params.amount = cache.position.liquidity;
             cache.position.liquidity = 0;
         }
         // clear out old position

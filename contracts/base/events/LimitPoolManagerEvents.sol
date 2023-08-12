@@ -5,9 +5,11 @@ abstract contract LimitPoolManagerEvents {
     event FactoryChanged(address indexed previousFactory, address indexed newFactory);
     event ImplementationEnabled(
         bytes32 key,
-        address implementation
+        address poolImpl,
+        address tokenImpl
     );
-    event TickSpacingEnabled(
+    event FeeTierEnabled(
+        uint16 swapFee,
         int16 tickSpacing
     );
     event FeeToTransfer(address indexed previousFeeTo, address indexed newFeeTo);

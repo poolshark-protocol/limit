@@ -1,29 +1,27 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.13;
 
-import '../interfaces/ILimitPoolStructs.sol';
-import '../interfaces/modules/curves/ICurveMath.sol';
+import '../../interfaces/limit/ILimitPoolStructs.sol';
 import './EpochMap.sol';
-import './TickMap.sol';
-import './utils/String.sol';
-import './utils/SafeCast.sol';
-import 'hardhat/console.sol';
-import './EchidnaAssertions.sol';
+import '../TickMap.sol';
+import '../utils/String.sol';
+import '../utils/SafeCast.sol';
+
 library Claims {
 
     using SafeCast for uint256;
 
     function validate(
-        mapping(address => mapping(int24 => mapping(int24 => ILimitPoolStructs.Position)))
+        mapping(address => mapping(int24 => mapping(int24 => ILimitPoolStructs.LimitPosition)))
             storage positions,
         mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
-        ILimitPoolStructs.TickMap storage tickMap,
-        ILimitPoolStructs.PoolState memory pool,
-        ILimitPoolStructs.UpdateParams memory params,
+        PoolsharkStructs.TickMap storage tickMap,
+        ILimitPoolStructs.LimitPoolState memory pool,
+        ILimitPoolStructs.UpdateLimitParams memory params,
         ILimitPoolStructs.UpdateCache memory cache,
-        ILimitPoolStructs.Immutables memory constants
-    ) internal returns (
-        ILimitPoolStructs.UpdateParams memory,
+        PoolsharkStructs.Immutables memory constants
+    ) internal view returns (
+        ILimitPoolStructs.UpdateLimitParams memory,
         ILimitPoolStructs.UpdateCache memory
     ) {
         // validate position liquidity
@@ -34,20 +32,20 @@ library Claims {
         
         if (params.claim < params.lower || params.claim > params.upper) require (false, 'InvalidClaimTick()');
 
-        uint32 claimTickEpoch = EpochMap.get(params.claim, tickMap, constants);
+        uint32 claimTickEpoch = EpochMap.get(params.claim, params.zeroForOne, tickMap, constants);
 
         if (params.zeroForOne){
             if (pool.price >= cache.priceClaim) {
                 if (pool.price <= cache.priceUpper) {
                     cache.priceClaim = pool.price;
                     params.claim = TickMap.roundBack(pool.tickAtPrice, constants, params.zeroForOne, cache.priceClaim);
-                    claimTickEpoch = pool.swapEpoch;
+                    claimTickEpoch = cache.state.epoch;
                 } else {
                     cache.priceClaim = cache.priceUpper;
                     params.claim = params.upper;
-                    cache.claimTick = ticks[params.upper];
+                    cache.claimTick = ticks[params.upper].limit;
                 }
-                claimTickEpoch = pool.swapEpoch;
+                claimTickEpoch = cache.state.epoch;
             } else if (params.claim % constants.tickSpacing != 0) {
                 if (cache.claimTick.priceAt == 0) {
                     require (false, 'WrongTickClaimedAt1()');
@@ -59,13 +57,13 @@ library Claims {
                 if (pool.price >= cache.priceLower) {
                     cache.priceClaim = pool.price;
                     params.claim = TickMap.roundBack(pool.tickAtPrice, constants, params.zeroForOne, cache.priceClaim);
-                    claimTickEpoch = pool.swapEpoch;
+                    claimTickEpoch = cache.state.epoch;
                 } else {
                     cache.priceClaim = cache.priceLower;
                     params.claim = params.lower;
-                    cache.claimTick = ticks[params.upper];
+                    cache.claimTick = ticks[params.upper].limit;
                 }
-                claimTickEpoch = pool.swapEpoch;
+                claimTickEpoch = cache.state.epoch;
             } else if (params.claim % constants.tickSpacing != 0) {
                 if (cache.claimTick.priceAt == 0) {
                     require (false, 'WrongTickClaimedAt2()');
@@ -83,32 +81,41 @@ library Claims {
             int24 claimTickNext = params.zeroForOne
                 ? TickMap.next(tickMap, params.claim, constants.tickSpacing, false)
                 : TickMap.previous(tickMap, params.claim, constants.tickSpacing, false);
-            console.log('claim tick next check', uint24(-claimTickNext));
             // if we cleared the final tick of their position, this is the wrong claim tick
             if (params.zeroForOne ? claimTickNext > params.upper
                                   : claimTickNext < params.lower) {
-                EchidnaAssertions.assertWrongTickClaimedAt4(params.zeroForOne, claimTickNext, params.upper, params.lower);
                 require (false, 'WrongTickClaimedAt4()');
             }
             // zero fill or partial fill
             /// @dev - if the next tick was crossed after position creation, the claim tick is incorrect
             /// @dev - we can cycle to find the right claim tick for the user
-            uint32 claimTickNextAccumEpoch = EpochMap.get(claimTickNext, tickMap, constants);
+            uint32 claimTickNextAccumEpoch = EpochMap.get(claimTickNext, params.zeroForOne, tickMap, constants);
             ///@dev - next swapEpoch should not be greater
             if (claimTickNextAccumEpoch > cache.position.epochLast) {
                 require (false, 'WrongTickClaimedAt5()');
             }
-
-            uint32 endTickAccumEpoch = EpochMap.get(params.zeroForOne ? params.upper : params.lower, tickMap, constants);
-            if (endTickAccumEpoch > cache.position.epochLast) {
-                require (false, 'WrongTickClaimedAt5()');
+            if (params.zeroForOne) {
+                uint32 endTickAccumEpoch = EpochMap.get(params.upper, params.zeroForOne, tickMap, constants);
+                if (endTickAccumEpoch > cache.position.epochLast) {
+                    params.claim = params.upper;
+                    cache.priceClaim = cache.priceUpper;
+                    cache.claimTick = ticks[params.upper].limit;
+                }
+            } else {
+                uint32 endTickAccumEpoch = EpochMap.get(params.lower, params.zeroForOne, tickMap, constants);
+                if (endTickAccumEpoch > cache.position.epochLast) {
+                    params.claim = params.lower;
+                    cache.priceClaim = cache.priceLower;
+                    cache.claimTick = ticks[params.lower].limit;
+                }
             }
+
         }
         /// @dev - start tick does not overwrite position and final tick clears position
         if (params.claim != params.upper && params.claim != params.lower) {
             // check epochLast on claim tick
             if (claimTickEpoch <= cache.position.epochLast)
-                require (false, 'WrongTickClaimedAt6()');
+                require (false, 'WrongTickClaimedAt7()');
             // prevent position overwriting at claim tick
             if (params.zeroForOne) {
                 if (positions[params.owner][params.claim][params.upper].liquidity > 0) {
@@ -134,8 +141,8 @@ library Claims {
 
     function getDeltas(
         ILimitPoolStructs.UpdateCache memory cache,
-        ILimitPoolStructs.UpdateParams memory params,
-        ILimitPoolStructs.Immutables memory constants
+        ILimitPoolStructs.UpdateLimitParams memory params,
+        PoolsharkStructs.Immutables memory constants
     ) internal pure returns (
         ILimitPoolStructs.UpdateCache memory
     ) {

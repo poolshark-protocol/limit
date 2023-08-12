@@ -1,15 +1,16 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.13;
 
-import './math/ConstantProduct.sol';
-import '../interfaces/ILimitPoolStructs.sol';
+import '../math/ConstantProduct.sol';
+import '../../interfaces/limit/ILimitPoolStructs.sol';
 
 library EpochMap {
     function set(
         int24  tick,
+        bool zeroForOne,
         uint256 epoch,
-        ILimitPoolStructs.TickMap storage tickMap,
-        ILimitPoolStructs.Immutables memory constants
+        PoolsharkStructs.TickMap storage tickMap,
+        PoolsharkStructs.Immutables memory constants
     ) internal {
         (
             uint256 tickIndex,
@@ -18,38 +19,22 @@ library EpochMap {
             uint256 volumeIndex
         ) = getIndices(tick, constants);
         // assert epoch isn't bigger than max uint32
-        uint256 epochValue = tickMap.epochs[volumeIndex][blockIndex][wordIndex];
+        uint256 epochValue = zeroForOne ? tickMap.epochs0[volumeIndex][blockIndex][wordIndex]
+                                        : tickMap.epochs1[volumeIndex][blockIndex][wordIndex];
         // clear previous value
         epochValue &=  ~(((1 << 9) - 1) << ((tickIndex & 0x7) * 32));
         // add new value to word
         epochValue |= epoch << ((tickIndex & 0x7) * 32);
         // store word in map
-        tickMap.epochs[volumeIndex][blockIndex][wordIndex] = epochValue;
-    }
-
-    function unset(
-        int24 tick,
-        ILimitPoolStructs.TickMap storage tickMap,
-        ILimitPoolStructs.Immutables memory constants
-    ) internal {
-        (
-            uint256 tickIndex,
-            uint256 wordIndex,
-            uint256 blockIndex,
-            uint256 volumeIndex
-        ) = getIndices(tick, constants);
-
-        uint256 epochValue = tickMap.epochs[volumeIndex][blockIndex][wordIndex];
-        // clear previous value
-        epochValue &= ~(1 << (tickIndex & 0x7 * 32) - 1);
-        // store word in map
-        tickMap.epochs[volumeIndex][blockIndex][wordIndex] = epochValue;
+        zeroForOne ? tickMap.epochs0[volumeIndex][blockIndex][wordIndex] = epochValue
+                   : tickMap.epochs1[volumeIndex][blockIndex][wordIndex] = epochValue;
     }
 
     function get(
         int24 tick,
-        ILimitPoolStructs.TickMap storage tickMap,
-        ILimitPoolStructs.Immutables memory constants
+        bool zeroForOne,
+        PoolsharkStructs.TickMap storage tickMap,
+        PoolsharkStructs.Immutables memory constants
     ) internal view returns (
         uint32 epoch
     ) {
@@ -60,7 +45,8 @@ library EpochMap {
             uint256 volumeIndex
         ) = getIndices(tick, constants);
 
-        uint256 epochValue = tickMap.epochs[volumeIndex][blockIndex][wordIndex];
+        uint256 epochValue = zeroForOne ? tickMap.epochs0[volumeIndex][blockIndex][wordIndex]
+                                        : tickMap.epochs1[volumeIndex][blockIndex][wordIndex];
         // right shift so first 8 bits are epoch value
         epochValue >>= ((tickIndex & 0x7) * 32);
         // clear other bits
@@ -70,7 +56,7 @@ library EpochMap {
 
     function getIndices(
         int24 tick,
-        ILimitPoolStructs.Immutables memory constants
+        PoolsharkStructs.Immutables memory constants
     ) internal pure returns (
             uint256 tickIndex,
             uint256 wordIndex,
@@ -96,7 +82,7 @@ library EpochMap {
 
     function _tick (
         uint256 tickIndex,
-        ILimitPoolStructs.Immutables memory constants
+        PoolsharkStructs.Immutables memory constants
     ) internal pure returns (
         int24 tick
     ) {

@@ -49,7 +49,8 @@ contract RangePoolERC1155 is
     modifier onlyCanonicalClones(
         PoolsharkStructs.Immutables memory constants
     ) {
-        if(!_onlyCanonicalClones(constants)) require (false, 'CanoncialClonesOnly()');
+        if(!_onlyCanonicalPools(constants)) require (false, 'CanoncialPoolsOnly()');
+        if(!_onlyCanonicalPoolTokens(constants)) require (false, 'CanoncialPoolTokensOnly()');
         _;
     }
 
@@ -243,7 +244,33 @@ contract RangePoolERC1155 is
 
     //TODO: check address(this) for valid poolToken clone
 
-    function _onlyCanonicalClones(
+    function _onlyCanonicalPoolTokens(
+        PoolsharkStructs.Immutables memory constants
+    ) private view returns (bool) {
+        // generate key for pool
+        bytes32 key = keccak256(abi.encode(
+            poolImpl(),
+            constants.token0,
+            constants.token1,
+            constants.swapFee
+        ));
+
+        // compute address
+        address predictedAddress = LibClone.predictDeterministicAddress(
+            original,
+            abi.encodePacked(
+                poolImpl()
+            ),
+            key,
+            factory
+        );
+
+        if (predictedAddress != address(this)) return false;
+
+        return true;
+    }
+
+        function _onlyCanonicalPools(
         PoolsharkStructs.Immutables memory constants
     ) private view returns (bool) {
         // generate key for pool

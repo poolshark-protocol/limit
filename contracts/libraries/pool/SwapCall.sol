@@ -66,6 +66,8 @@ library SwapCall {
         if (balance(params, cache) < balanceStart + cache.input)
             require(false, 'SwapInputAmountTooLow()');
 
+        console.log('taking fees from swap', cache.feeAmount);
+
         return (
             params.zeroForOne ? 
                 (

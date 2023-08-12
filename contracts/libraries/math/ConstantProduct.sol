@@ -4,6 +4,7 @@ pragma solidity 0.8.13;
 import './OverflowMath.sol';
 import '../../interfaces/limit/ILimitPoolStructs.sol';
 import '../../base/structs/PoolsharkStructs.sol';
+import 'hardhat/console.sol';
 
 /// @notice Math library that facilitates ranged liquidity calculations.
 library ConstantProduct {
@@ -132,16 +133,16 @@ library ConstantProduct {
         uint256 amount,
         bool zeroForOne,
         bool exactIn
-    ) internal pure returns (
+    ) internal view returns (
         uint256 newPrice
     ) {
         if (exactIn) {
             if (zeroForOne) {
                 uint256 liquidityPadded = liquidity << 96;
                 newPrice = OverflowMath.mulDivRoundingUp(
-                                liquidityPadded,
-                                price,
-                                liquidityPadded + price * amount
+                        liquidityPadded,
+                        price,
+                        liquidityPadded + price * amount
                     );
             } else {
                 newPrice = price + (amount << 96) / liquidity;
@@ -150,6 +151,7 @@ library ConstantProduct {
             if (zeroForOne) {
                 newPrice = price - 
                         OverflowMath.divRoundingUp(amount << 96, liquidity);
+                        console.log('new price check', newPrice);
             } else {
                 uint256 liquidityPadded = uint256(liquidity) << 96;
                 newPrice = OverflowMath.mulDivRoundingUp(
@@ -286,7 +288,7 @@ library ConstantProduct {
         PoolsharkStructs.Immutables  memory constants
     ) internal pure returns (int24 tick) {
         // Second inequality must be < because the price can never reach the price at the max tick.
-        if (price < constants.bounds.min || price >= constants.bounds.max)
+        if (price < constants.bounds.min || price > constants.bounds.max)
             require (false, 'PriceOutOfBounds()');
         uint256 ratio = uint256(price) << 32;
 

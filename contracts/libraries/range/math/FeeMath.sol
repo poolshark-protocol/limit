@@ -5,6 +5,7 @@ import '../../utils/SafeCast.sol';
 import "../../math/OverflowMath.sol";
 import '../../../base/structs/PoolsharkStructs.sol';
 import "../../../interfaces/range/IRangePoolStructs.sol";
+import 'hardhat/console.sol';
 
 /// @notice Math library that facilitates fee handling.
 library FeeMath {
@@ -41,6 +42,7 @@ library FeeMath {
             // calculate fee
             locals.protocolFeesAccrued = OverflowMath.mulDivRoundingUp(locals.feeAmount, locals.protocolFee, 1e6);
             amountOut -= locals.feeAmount;
+            
             // fees for this swap step
             locals.feeAmount -= locals.protocolFeesAccrued;
             // add to total fees paid for swap

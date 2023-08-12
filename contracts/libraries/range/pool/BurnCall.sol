@@ -41,6 +41,7 @@ library BurnCall {
                     params.burnPercent
                 )
         );
+        // console.log('fees collected', cache.amount0, cache.amount1);
         (
             cache.state,
             cache.position,

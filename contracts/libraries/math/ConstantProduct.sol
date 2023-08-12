@@ -2,7 +2,8 @@
 pragma solidity 0.8.13;
 
 import './OverflowMath.sol';
-import '../../interfaces/ILimitPoolStructs.sol';
+import '../../interfaces/limit/ILimitPoolStructs.sol';
+import '../../base/structs/PoolsharkStructs.sol';
 
 /// @notice Math library that facilitates ranged liquidity calculations.
 library ConstantProduct {
@@ -86,18 +87,23 @@ library ConstantProduct {
         uint256 dx
     ) internal pure returns (uint256 liquidity) {
         unchecked {
-            if (priceUpper == currentPrice) {
+            if (priceUpper <= currentPrice) {
                 liquidity = OverflowMath.mulDiv(dy, Q96, priceUpper - priceLower);
-            } else if (currentPrice == priceLower) {
+            } else if (currentPrice <= priceLower) {
                 liquidity = OverflowMath.mulDiv(
                     dx,
                     OverflowMath.mulDiv(priceLower, priceUpper, Q96),
                     priceUpper - priceLower
                 );
             } else {
-                /// @dev - price should either be priceUpper or priceLower
-                require (false, 'PriceOutsideBounds()');
-            }  
+                uint256 liquidity0 = OverflowMath.mulDiv(
+                    dx,
+                    OverflowMath.mulDiv(priceUpper, currentPrice, Q96),
+                    priceUpper - currentPrice
+                );
+                uint256 liquidity1 = OverflowMath.mulDiv(dy, Q96, currentPrice - priceLower);
+                liquidity = liquidity0 < liquidity1 ? liquidity0 : liquidity1;
+            }
         }
     }
 
@@ -116,6 +122,8 @@ library ConstantProduct {
             token0amount = uint128(_getDx(liquidityAmount, currentPrice, priceUpper, roundUp));
             token1amount = uint128(_getDy(liquidityAmount, priceLower, currentPrice, roundUp));
         }
+        if (token0amount > uint128(type(int128).max)) require(false, 'AmountsOutOfBounds()');
+        if (token1amount > uint128(type(int128).max)) require(false, 'AmountsOutOfBounds()');
     }
 
     function getNewPrice(
@@ -190,7 +198,7 @@ library ConstantProduct {
     ) internal pure returns (
         uint160 price
     ) {
-        ILimitPoolStructs.Immutables memory constants;
+        PoolsharkStructs.Immutables  memory constants;
         constants.tickSpacing = tickSpacing;
         return getPriceAtTick(minTick(tickSpacing), constants);
     }
@@ -200,7 +208,7 @@ library ConstantProduct {
     ) internal pure returns (
         uint160 price
     ) {
-        ILimitPoolStructs.Immutables memory constants;
+        PoolsharkStructs.Immutables  memory constants;
         constants.tickSpacing = tickSpacing;
         return getPriceAtTick(maxTick(tickSpacing), constants);
     }
@@ -232,7 +240,7 @@ library ConstantProduct {
     /// at the given tick.
     function getPriceAtTick(
         int24 tick,
-        ILimitPoolStructs.Immutables memory constants
+        PoolsharkStructs.Immutables memory constants
     ) internal pure returns (
         uint160 price
     ) {
@@ -275,7 +283,7 @@ library ConstantProduct {
     /// @return tick The greatest tick for which the ratio is less than or equal to the input ratio.
     function getTickAtPrice(
         uint160 price,
-        ILimitPoolStructs.Immutables memory constants
+        PoolsharkStructs.Immutables  memory constants
     ) internal pure returns (int24 tick) {
         // Second inequality must be < because the price can never reach the price at the max tick.
         if (price < constants.bounds.min || price >= constants.bounds.max)

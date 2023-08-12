@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-
 pragma solidity ^0.8.0;
 
-import '../interfaces/ILimitPool.sol';
-import '../interfaces/ILimitPoolFactory.sol';
-import '../interfaces/ILimitPoolManager.sol';
+import '../interfaces/IPool.sol';
+import '../interfaces/limit/ILimitPool.sol';
+import '../interfaces/limit/ILimitPoolFactory.sol';
+import '../interfaces/limit/ILimitPoolManager.sol';
 import '../base/events/LimitPoolManagerEvents.sol';
 
 /**
@@ -16,9 +16,11 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
     address public factory;
     uint16  public constant MAX_PROTOCOL_FEE = 1e4; /// @dev - max protocol fee of 1%
     // tickSpacing => enabled
-    mapping(bytes32 => address) internal _implementations;
-    mapping(int16 => bool) internal _tickSpacings;
+    mapping(bytes32 => address) internal _poolImpls;
+    mapping(bytes32 => address) internal _tokenImpls;
+    mapping(uint16 => int16) internal _feeTiers;
 
+    error InvalidSwapFee();
     error InvalidTickSpacing();
     error TickSpacingAlreadyEnabled();
     error ImplementationAlreadyExists();
@@ -28,11 +30,11 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
         feeTo = msg.sender;
         emit OwnerTransfer(address(0), msg.sender);
 
-        // create supported tick spacings
-        _tickSpacings[10] = true;
-        _tickSpacings[20] = true;
-        emit TickSpacingEnabled(10);
-        emit TickSpacingEnabled(20);
+        // create initial fee tiers
+        _feeTiers[500] = 10;
+        _feeTiers[10000] = 100;
+        emit FeeTierEnabled(500, 10);
+        emit FeeTierEnabled(10000, 100);
     }
 
     /**
@@ -83,22 +85,27 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
     }
 
     function enableTickSpacing(
-        int16 tickSpacing
+        int16 tickSpacing,
+        uint16 swapFee
     ) external onlyOwner {
-        if (_tickSpacings[tickSpacing]) revert TickSpacingAlreadyEnabled();
+        if (_feeTiers[swapFee] != 0) revert TickSpacingAlreadyEnabled();
         if (tickSpacing <= 0) revert InvalidTickSpacing();
         if (tickSpacing % 2 != 0) revert InvalidTickSpacing();
-        _tickSpacings[tickSpacing] = true;
-        emit TickSpacingEnabled(tickSpacing);
+        if (swapFee == 0) revert InvalidSwapFee();
+        if (swapFee > 10000) revert InvalidSwapFee();
+        _feeTiers[swapFee] = tickSpacing;
+        emit FeeTierEnabled(swapFee, tickSpacing);
     }
 
     function enableImplementation(
         bytes32 poolType_,
-        address implementation_
+        address poolImpl_,
+        address tokenImpl_
     ) external onlyOwner {
-        if (_implementations[poolType_] != address(0)) revert ImplementationAlreadyExists();
-        _implementations[poolType_] = implementation_;
-        emit ImplementationEnabled(poolType_, implementation_);
+        if (_poolImpls[poolType_] != address(0)) revert ImplementationAlreadyExists();
+        _poolImpls[poolType_] = poolImpl_;
+        _tokenImpls[poolType_] = tokenImpl_;
+        emit ImplementationEnabled(poolType_, poolImpl_, tokenImpl_);
     }
 
     function setFactory(
@@ -116,7 +123,7 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
         uint128[] memory token0Fees = new uint128[](collectPools.length);
         uint128[] memory token1Fees = new uint128[](collectPools.length);
         for (uint i; i < collectPools.length;) {
-            (token0Fees[i], token1Fees[i]) = ILimitPool(collectPools[i]).fees(0,0,false);
+            (token0Fees[i], token1Fees[i]) = IPool(collectPools[i]).fees(0,0,false);
             unchecked {
                 ++i;
             }
@@ -144,7 +151,7 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
             (
                 token0Fees[i],
                 token1Fees[i]
-            ) = ILimitPool(modifyPools[i]).fees(
+            ) = IPool(modifyPools[i]).fees(
                 syncFees[i],
                 fillFees[i],
                 setFees[i]
@@ -159,17 +166,18 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
     function implementations(
         bytes32 key
     ) external view returns (
+        address,
         address
     ) {
-        return _implementations[key];
+        return (_poolImpls[key], _tokenImpls[key]);
     }
 
-    function tickSpacings(
-        int16 tickSpacing
+    function feeTiers(
+        uint16 swapFee
     ) external view returns (
-        bool
+        int16 tickSpacing
     ) {
-        return _tickSpacings[tickSpacing];
+        return _feeTiers[swapFee];
     }
     
     /**

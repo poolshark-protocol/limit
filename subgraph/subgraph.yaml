@@ -1,0 +1,105 @@
+specVersion: 0.0.4
+description: Poolshark is a Directional Liquidity AMM allowing LPs to capture directional strength.
+repository: https://github.com/poolsharks-protocol/poolshark-limit-pool
+schema:
+    file: ./schema.graphql
+dataSources:
+    - kind: ethereum/contract
+      name: LimitPoolFactory
+      network: arbitrum-goerli
+      source:
+          address: '0x64E92DB1F309F6A5455F331c0c8F3F0F96a9896C'
+          abi: LimitPoolFactory
+          startBlock: 32687100
+      mapping:
+          kind: ethereum/events
+          apiVersion: 0.0.6
+          language: wasm/assemblyscript
+          file: ./src/mappings/limitpoolfactory.ts
+          entities:
+              - Token
+              - LimitPool
+          abis:
+              - name: LimitPool
+                file: ./abis/LimitPool.json
+              - name: LimitPoolFactory
+                file: ./abis/LimitPoolFactory.json
+              - name: ERC20
+                file: ./abis/ERC20.json
+              - name: ERC20SymbolBytes
+                file: ./abis/ERC20SymbolBytes.json
+              - name: ERC20NameBytes
+                file: ./abis/ERC20NameBytes.json
+          eventHandlers:
+              - event: PoolCreated(address,address,indexed address,indexed address,indexed int16)
+                handler: handlePoolCreated
+    - kind: ethereum/contract
+      name: LimitPoolManager
+      network: arbitrum-goerli
+      source:
+          address: '0x42a1CAef9B0EFE5491Fc788616B65cfc72D1C067'
+          abi: LimitPoolManager
+          startBlock: 32687100
+      mapping:
+          kind: ethereum/events
+          apiVersion: 0.0.6
+          language: wasm/assemblyscript
+          file: ./src/mappings/limitpoolmanager.ts
+          entities:
+              - LimitPool
+              - LimitPoolFactory
+          abis:
+              - name: LimitPoolManager
+                file: ./abis/LimitPoolManager.json
+          eventHandlers:
+              - event: TickSpacingEnabled(int16)
+                handler: handleTickSpacingEnabled
+              - event: ImplementationEnabled(bytes32,address)
+                handler: handleImplementationEnabled
+              - event: FeeToTransfer(indexed address,indexed address)
+                handler: handleFeeToTransfer
+              - event: OwnerTransfer(indexed address,indexed address)
+                handler: handleOwnerTransfer
+              # - event: ProtocolFeeChanged(address[],uint128[],uint128[])
+              #   handler: handleProtocolFeeChanged
+              # - event: ProtocolFeesCollected(address[],uint128[],uint128[])
+              #   handler: handleProtocolFeeCollected
+              - event: FactoryChanged(indexed address,indexed address)
+                handler: handleFactoryChanged
+templates:
+    - kind: ethereum/contract
+      name: LimitPoolTemplate
+      network: arbitrum-goerli
+      source:
+          abi: LimitPool
+      mapping:
+          kind: ethereum/events
+          apiVersion: 0.0.6
+          language: wasm/assemblyscript
+          file: ./src/mappings/limitpool.ts
+          entities:
+              - Token
+              - LimitPool
+              - Position
+          abis:
+              - name: LimitPool
+                file: ./abis/LimitPool.json
+              - name: LimitPoolFactory
+                file: ./abis/LimitPoolFactory.json
+              - name: ERC20
+                file: ./abis/ERC20.json
+              - name: ERC20SymbolBytes
+                file: ./abis/ERC20SymbolBytes.json
+              - name: ERC20NameBytes
+                file: ./abis/ERC20NameBytes.json
+          eventHandlers:
+              - event: Initialize(int24,int24,uint160)
+                handler: handleInitialize
+              - event: MintLimit(indexed address,int24,int24,bool,uint32,uint128,uint128,uint128)
+                handler: handleMintLimit
+              - event: BurnLimit(indexed address,int24,int24,int24,bool,uint128,uint128,uint128)
+                handler: handleBurn
+              - event: Swap(indexed address,bool,uint256,uint256,uint160,uint128,int24)
+                handler: handleSwap
+
+

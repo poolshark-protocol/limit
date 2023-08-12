@@ -3,12 +3,17 @@ import { getNonce } from '../../../tasks/utils'
 import {
     LimitPool,
     LimitPoolFactory,
-    Positions,
-    Ticks,
     Token20,
     LimitPoolManager,
     TickMap,
     PoolRouter,
+    Positions,
+    PositionsLimit,
+    Ticks,
+    TicksLimit,
+    BurnLimitCall,
+    MintLimitCall,
+    RangePoolERC1155,
 } from '../../../typechain'
 import { InitialSetup } from './initialSetup'
 import { MintCall } from '../../../typechain'
@@ -17,19 +22,28 @@ import { SwapCall } from '../../../typechain'
 import { QuoteCall } from '../../../typechain'
 
 export interface BeforeEachProps {
+    //shared
     limitPool: LimitPool
     limitPool2: LimitPool
     limitPoolImpl: LimitPool
+    limitPoolToken: RangePoolERC1155
     limitPoolManager: LimitPoolManager
     limitPoolFactory: LimitPoolFactory
     poolRouter: PoolRouter
     tickMapLib: TickMap
     ticksLib: Ticks
-    positionsLib: Positions
-    mintCall: MintCall
-    burnCall: BurnCall
     swapCall: SwapCall
     quoteCall: QuoteCall
+    //range
+    burnCall: BurnCall
+    mintCall: MintCall
+    positionsLib: Positions
+    rangePoolERC1155: RangePoolERC1155
+    //limit
+    burnLimitCall: BurnLimitCall
+    mintLimitCall: MintLimitCall
+    positionsLimitLib: PositionsLimit
+    //shared
     tokenA: Token20
     tokenB: Token20
     token0: Token20
@@ -63,19 +77,28 @@ export class GetBeforeEach {
     }
 
     public retrieveProps(): BeforeEachProps {
+        //shared
         let limitPool: LimitPool
         let limitPool2: LimitPool
         let limitPoolImpl: LimitPool
+        let limitPoolToken: RangePoolERC1155
         let limitPoolManager: LimitPoolManager
         let limitPoolFactory: LimitPoolFactory
         let poolRouter: PoolRouter
         let tickMapLib: TickMap
         let ticksLib: Ticks
-        let positionsLib: Positions
-        let mintCall: MintCall
-        let burnCall: BurnCall
         let swapCall: SwapCall
         let quoteCall: QuoteCall
+        //range
+        let burnCall: BurnCall
+        let mintCall: MintCall
+        let positionsLib: Positions
+        let rangePoolERC1155: RangePoolERC1155
+        //limit
+        let burnLimitCall: BurnLimitCall
+        let mintLimitCall: MintLimitCall
+        let positionsLimitLib: PositionsLimit
+        //shared
         let tokenA: Token20
         let tokenB: Token20
         let token0: Token20
@@ -87,19 +110,28 @@ export class GetBeforeEach {
         let carol: SignerWithAddress
 
         return {
+            //shared
             limitPool,
             limitPool2,
             limitPoolImpl,
+            limitPoolToken,
             limitPoolManager,
             limitPoolFactory,
             poolRouter,
             tickMapLib,
             ticksLib,
-            positionsLib,
-            mintCall,
-            burnCall,
             swapCall,
             quoteCall,
+            //range
+            burnCall,
+            mintCall,
+            positionsLib,
+            rangePoolERC1155,
+            //limit
+            burnLimitCall,
+            mintLimitCall,
+            positionsLimitLib,
+            //shared
             tokenA,
             tokenB,
             token0,

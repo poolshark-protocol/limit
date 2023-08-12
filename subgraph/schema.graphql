@@ -1,0 +1,116 @@
+type LimitPoolFactory @entity {
+    # poolAddress
+    id: ID!
+    poolCount: BigInt!
+    txnCount: BigInt!
+    volumeUsdTotal: BigDecimal!
+    volumeEthTotal: BigDecimal!
+    feesUsdTotal: BigDecimal!
+    feesEthTotal: BigDecimal!
+    totalValueLockedUsd: BigDecimal!
+    totalValueLockedEth: BigDecimal!
+}
+
+type LimitPoolManager @entity {
+    id: ID!
+    owner: Bytes!
+    feeTo: Bytes!
+    # factory: LimitPoolFactory!
+    FeeTier: [FeeTier!]!
+}
+
+type BasePrice @entity {
+    id: ID!
+    ethUsd: BigDecimal!
+}
+
+type FeeTier @entity {
+    # fee amount + tick spread + twap length + auction length
+    id: ID!
+    feeAmount: BigInt!
+    tickSpacing: BigInt!
+
+    # creation stats
+    createdAtTimestamp: BigInt!
+    createdAtBlockNumber: BigInt!
+}
+
+type Token @entity {
+    # token address
+    id: ID!
+    name: String!
+    symbol: String!
+    decimals: BigInt!
+}
+
+type LimitPool @entity {
+    # poolAddress
+    id: ID!
+    token0: Token!
+    token1: Token!
+    # factory: LimitPoolFactory!
+
+    # pool setup
+    feeTier: FeeTier!
+    tickSpacing: BigInt!
+    genesisTime: BigInt!
+
+    liquidity: BigInt!
+    liquidityGlobal: BigInt!
+    epoch: BigInt!
+
+    pool0Price: BigInt!
+    pool1Price: BigInt!
+    pool0Liquidity: BigInt!
+    pool1Liquidity: BigInt!
+
+    price0: BigDecimal!
+    price1: BigDecimal!
+    volumeToken0: BigDecimal!
+    volumeToken1: BigDecimal!
+    volumeUsd: BigDecimal!
+    volumeEth: BigDecimal!
+    feesUsd: BigDecimal!
+    feesEth: BigDecimal!
+    txnCount: BigInt!
+
+    totalValueLocked0: BigDecimal!
+    totalValueLocked1: BigDecimal!
+    totalValueLockedUsd: BigDecimal!
+    totalValueLockedEth: BigDecimal!
+
+    # creation stats
+    createdAtTimestamp: BigInt!
+    createdAtBlockNumber: BigInt!
+    updatedAtTimestamp: BigInt!
+    updatedAtBlockNumber: BigInt!
+}
+
+type LimitPosition @entity {
+    # poolAddress + owner + lower + upper
+    id: ID!
+    pool: LimitPool!
+    txnHash: Bytes!
+    createdBy: Bytes!
+    createdAtTimestamp: BigInt!
+    epochLast: BigInt!
+    claimPriceLast: BigInt!
+    owner: Bytes!
+    lower: BigInt!
+    upper: BigInt!
+    liquidity: BigInt!
+    amountIn: BigInt!
+    amountFilled: BigInt!
+    tokenIn: Token!
+    tokenOut: Token!
+}
+
+type Tick @entity {
+    # poolAddress + index
+    id: ID!
+    pool: LimitPool!
+    index: BigInt!
+    price0: BigDecimal!
+    price1: BigDecimal!
+    epochLast: BigInt!
+}

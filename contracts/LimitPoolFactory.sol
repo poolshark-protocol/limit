@@ -2,7 +2,7 @@
 pragma solidity 0.8.13;
 
 import './LimitPool.sol';
-import './interfaces/ILimitPoolFactory.sol';
+import './interfaces/limit/ILimitPoolFactory.sol';
 import './base/events/LimitPoolFactoryEvents.sol';
 import './base/structs/PoolsharkStructs.sol';
 import './utils/LimitPoolErrors.sol';
@@ -31,9 +31,12 @@ contract LimitPoolFactory is
         bytes32 poolType,
         address tokenIn,
         address tokenOut,
-        int16  tickSpacing,
+        uint16  swapFee,
         uint160 startPrice
-    ) external override returns (address pool) {
+    ) external override returns (
+        address pool,
+        address poolToken
+    ) {
 
         // validate token pair
         if (tokenIn == tokenOut || tokenIn == address(0) || tokenOut == address(0)) {
@@ -46,18 +49,23 @@ contract LimitPoolFactory is
                                                                   : (tokenOut, tokenIn);
 
         // check if tick spacing supported
-        if (!ILimitPoolManager(owner).tickSpacings(tickSpacing)) revert TickSpacingNotSupported();
+        constants.swapFee = swapFee;
+        constants.tickSpacing = ILimitPoolManager(owner).feeTiers(swapFee);
+        if (constants.tickSpacing == 0) revert FeeTierNotSupported();
 
         // check if pool type supported
-        address implementation = ILimitPoolManager(owner).implementations(poolType);
-        if (implementation == address(0)) revert PoolTypeNotSupported();
+        (
+            address poolImpl,
+            address tokenImpl
+         ) = ILimitPoolManager(owner).implementations(poolType);
+        if (poolImpl == address(0) || tokenImpl == address(0)) revert PoolTypeNotSupported();
 
         // generate key for pool
         bytes32 key = keccak256(abi.encode(
-            implementation,
+            poolImpl,
             constants.token0,
             constants.token1,
-            tickSpacing
+            constants.swapFee
         ));
 
         // check if pool already exists
@@ -66,22 +74,36 @@ contract LimitPoolFactory is
         // set immutables
         constants.owner = owner;
         constants.factory = original;
-        constants.tickSpacing = tickSpacing;
         (
             constants.bounds.min,
             constants.bounds.max
-        ) = ILimitPool(implementation).priceBounds(constants.tickSpacing);
+        ) = ILimitPool(poolImpl).priceBounds(constants.tickSpacing);
+
+        // calculate token address
+
+        // pass this address into a clone of RangePoolERC1155
+
+        // take that ERC1155 contract address and pass that into pool
+        // launch pool token
+        constants.poolToken = tokenImpl.cloneDeterministic({
+            salt: key,
+            data: abi.encodePacked(
+                poolImpl
+            )
+        });
 
         // launch pool
-        pool = implementation.cloneDeterministic({
+        pool = poolImpl.cloneDeterministic({
             salt: key,
             data: abi.encodePacked(
                 constants.owner,
                 constants.token0,
                 constants.token1,
+                constants.poolToken,
                 constants.bounds.min,
                 constants.bounds.max,
-                constants.tickSpacing
+                constants.tickSpacing,
+                constants.swapFee
             )
         });
 
@@ -93,38 +115,61 @@ contract LimitPoolFactory is
 
         emit PoolCreated(
             pool,
-            implementation,
+            poolToken,
+            poolImpl,
+            tokenImpl,
             constants.token0,
             constants.token1,
-            tickSpacing
+            constants.swapFee,
+            constants.tickSpacing
         );
+
+        return (pool, constants.poolToken);
     }
 
     function getLimitPool(
         bytes32 poolType,
         address tokenIn,
         address tokenOut,
-        int16 tickSpacing
-    ) external view override returns (address) {
+        uint16 swapFee
+    ) external view override returns (
+        address pool,
+        address poolToken
+    ) {
         // set lexographical token address ordering
         address token0 = tokenIn < tokenOut ? tokenIn : tokenOut;
         address token1 = tokenIn < tokenOut ? tokenOut : tokenIn;
 
         // check if tick spacing supported
-        if (!ILimitPoolManager(owner).tickSpacings(tickSpacing)) revert TickSpacingNotSupported();
+        int16 tickSpacing = ILimitPoolManager(owner).feeTiers(swapFee);
+        if (tickSpacing == 0) revert FeeTierNotSupported();
 
         // check if pool type supported
-        address implementation = ILimitPoolManager(owner).implementations(poolType);
-        if (implementation == address(0)) revert PoolTypeNotSupported();
+        (
+            address poolImpl,
+            address tokenImpl
+         ) = ILimitPoolManager(owner).implementations(poolType);
+        if (poolImpl == address(0) || tokenImpl == address(0)) revert PoolTypeNotSupported();
 
         // generate key for pool
         bytes32 key = keccak256(abi.encode(
-            implementation,
+            poolImpl,
             token0,
             token1,
-            tickSpacing
+            swapFee
         ));
 
-        return limitPools[key];
+        pool = limitPools[key];
+
+        poolToken = LibClone.predictDeterministicAddress(
+            tokenImpl,
+            abi.encodePacked(
+                poolImpl
+            ),
+            key,
+            address(this)
+        );
+
+        return (pool, poolToken);
     }
 }

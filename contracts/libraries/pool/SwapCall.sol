@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.13;
 
-import '../../interfaces/ILimitPoolStructs.sol';
+import '../../interfaces/limit/ILimitPoolStructs.sol';
 import '../../interfaces/callbacks/IPoolsharkSwapCallback.sol';
 import '../../interfaces/IERC20Minimal.sol';
-import '../Positions.sol';
 import '../Ticks.sol';
 import '../utils/Collect.sol';
 import '../utils/SafeTransfers.sol';
@@ -27,23 +26,26 @@ library SwapCall {
     );
 
     function perform(
-        ILimitPoolStructs.SwapParams memory params,
-        ILimitPoolStructs.SwapCache memory cache,
-        ILimitPoolStructs.TickMap storage tickMap,
-        ILimitPoolStructs.PoolState storage poolState,
-        mapping(int24 => ILimitPoolStructs.Tick) storage ticks
+        mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
+        PoolsharkStructs.GlobalState storage globalState,
+        IRangePoolStructs.Sample[65535] storage samples,
+        PoolsharkStructs.TickMap storage rangeTickMap,
+        PoolsharkStructs.TickMap storage limitTickMap,
+        PoolsharkStructs.SwapParams memory params,
+        PoolsharkStructs.SwapCache memory cache
     ) external returns (
         int256,
         int256
     ) {
-        (cache.pool, cache) = Ticks.swap(
+        cache = Ticks.swap(
             ticks,
-            tickMap,
+            samples,
+            rangeTickMap,
+            limitTickMap,
             params,
-            cache,
-            cache.pool
+            cache
         );
-        save(cache.pool, poolState);
+        save(cache, globalState, params.zeroForOne);
         // transfer output amount
         SafeTransfers.transferOut(
             params.to, 
@@ -78,19 +80,21 @@ library SwapCall {
     }
 
     function save(
-        ILimitPoolStructs.PoolState memory pool,
-        ILimitPoolStructs.PoolState storage poolState
+        PoolsharkStructs.SwapCache memory cache,
+        PoolsharkStructs.GlobalState storage globalState,
+        bool zeroForOne
     ) internal {
-        poolState.price = pool.price;
-        poolState.liquidity = pool.liquidity;
-        poolState.liquidityGlobal = pool.liquidityGlobal;
-        poolState.swapEpoch = pool.swapEpoch;
-        poolState.tickAtPrice = pool.tickAtPrice;
+        globalState.epoch = cache.state.epoch;
+        globalState.pool = cache.state.pool;
+        if (zeroForOne)
+            globalState.pool1 = cache.state.pool1;
+        else
+            globalState.pool0 = cache.state.pool0;
     }
 
     function balance(
-        ILimitPoolStructs.SwapParams memory params,
-        ILimitPoolStructs.SwapCache memory cache
+        PoolsharkStructs.SwapParams memory params,
+        PoolsharkStructs.SwapCache memory cache
     ) private view returns (uint256) {
         (
             bool success,

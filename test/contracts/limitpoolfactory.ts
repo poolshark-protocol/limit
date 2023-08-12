@@ -49,7 +49,7 @@ describe('LimitPoolFactory Tests', function () {
                     constantProductString,
                     '0x0000000000000000000000000000000000000000',
                     '0x0000000000000000000000000000000000000000',
-                    '10',
+                    '500',
                     '396140812571321687967719751680'
                 )
         ).to.be.revertedWith('InvalidTokenAddress()')
@@ -63,7 +63,7 @@ describe('LimitPoolFactory Tests', function () {
                     constantProductString,
                     '0x0000000000000000000000000000000000000000',
                     hre.props.token0.address,
-                    '10',
+                    '500',
                     '396140812571321687967719751680'
                 )
         ).to.be.revertedWith('InvalidTokenAddress()')
@@ -75,7 +75,7 @@ describe('LimitPoolFactory Tests', function () {
                     constantProductString,
                     '0x0000000000000000000000000000000000000000',
                     hre.props.token0.address,
-                    '10',
+                    '500',
                     '396140812571321687967719751680'
                 )
         ).to.be.revertedWith('InvalidTokenAddress()')
@@ -90,13 +90,25 @@ describe('LimitPoolFactory Tests', function () {
                     constantProductString,
                     hre.props.token1.address,
                     hre.props.token0.address,
-                    '10',
+                    '500',
+                    '396140812571321687967719751680'
+                )
+        ).to.be.revertedWith('PoolAlreadyExists()')
+
+        await expect(
+            hre.props.limitPoolFactory
+                .connect(hre.props.admin)
+                .createLimitPool(
+                    constantProductString,
+                    hre.props.token0.address,
+                    hre.props.token1.address,
+                    '500',
                     '396140812571321687967719751680'
                 )
         ).to.be.revertedWith('PoolAlreadyExists()')
     })
 
-    it('Should not create pool if the tick spacing is not valid', async function () {
+    it('Should not create pool if the fee tier is not valid', async function () {
         await expect(
             hre.props.limitPoolFactory
                 .connect(hre.props.admin)
@@ -107,7 +119,7 @@ describe('LimitPoolFactory Tests', function () {
                     '5',
                     '396140812571321687967719751680'
                 )
-        ).to.be.revertedWith('TickSpacingNotSupported()')
+        ).to.be.revertedWith('FeeTierNotSupported()')
     })
 
     it('Should not create pool if the pool type is not valid', async function () {
@@ -118,7 +130,7 @@ describe('LimitPoolFactory Tests', function () {
                     constantSumString,
                     hre.props.token1.address,
                     hre.props.token0.address,
-                    '10',
+                    '500',
                     '396140812571321687967719751680'
                 )
         ).to.be.revertedWith('PoolTypeNotSupported()')

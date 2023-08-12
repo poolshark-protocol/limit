@@ -9,6 +9,7 @@ import './Claims.sol';
 import './EpochMap.sol';
 import '../utils/SafeCast.sol';
 import '../Ticks.sol';
+import 'hardhat/console.sol';
 
 /// @notice Position management library for ranged liquidity.
 /// @notice Position management library for ranged liquidity.
@@ -182,6 +183,8 @@ library PositionsLimit {
             params.amount = 0;
         }
 
+        console.log('position bounds', uint24(params.lower), uint24(params.upper));
+
         return (
             params,
             cache
@@ -205,9 +208,9 @@ library PositionsLimit {
             // safety check in case we somehow get here
             if (
                 params.zeroForOne
-                    ? EpochMap.get(params.lower, tickMap, cache.constants)
+                    ? EpochMap.get(params.lower, params.zeroForOne, tickMap, cache.constants)
                             > cache.position.epochLast
-                    : EpochMap.get(params.upper, tickMap, cache.constants)
+                    : EpochMap.get(params.upper, params.zeroForOne, tickMap, cache.constants)
                             > cache.position.epochLast
             ) {
                 require (false, string.concat('UpdatePositionFirstAt(', String.from(params.lower), ', ', String.from(params.upper), ')'));
@@ -263,11 +266,11 @@ library PositionsLimit {
         }
         /// @dev - validate position has not been crossed into
         if (params.zeroForOne) {
-            if (EpochMap.get(params.lower, tickMap, constants)
+            if (EpochMap.get(params.lower, params.zeroForOne, tickMap, constants)
                         > cache.position.epochLast) {
                 int24 nextTick = TickMap.next(tickMap, params.lower, constants.tickSpacing, false);
                 if (cache.pool.price > cache.priceLower ||
-                    EpochMap.get(nextTick, tickMap, constants)
+                    EpochMap.get(nextTick, params.zeroForOne, tickMap, constants)
                         > cache.position.epochLast) {
                     require (false, 'WrongTickClaimedAt7()');            
                 }
@@ -278,11 +281,11 @@ library PositionsLimit {
             // if pool price is further along
             // OR next tick has a greater epoch
         } else {
-            if (EpochMap.get(params.upper, tickMap, constants)
+            if (EpochMap.get(params.upper, params.zeroForOne, tickMap, constants)
                         > cache.position.epochLast) {
                 int24 previousTick = TickMap.previous(tickMap, params.upper, constants.tickSpacing, false);
                 if (cache.pool.price < cache.priceUpper ||
-                    EpochMap.get(previousTick, tickMap, constants)
+                    EpochMap.get(previousTick, params.zeroForOne, tickMap, constants)
                         > cache.position.epochLast) {
                     require (false, 'WrongTickClaimedAt8()');            
                 }
@@ -527,7 +530,6 @@ library PositionsLimit {
             position: positions[params.owner][params.lower][params.upper],
             pool: params.zeroForOne ? state.pool0 : state.pool1,
             priceLower: ConstantProduct.getPriceAtTick(params.lower, constants),
-            //TODO: if half tick use priceAt for claim
             priceClaim: ticks[params.claim].limit.priceAt == 0 ? ConstantProduct.getPriceAtTick(params.claim, constants)
                                                                : ticks[params.claim].limit.priceAt,
             priceUpper: ConstantProduct.getPriceAtTick(params.upper, constants),

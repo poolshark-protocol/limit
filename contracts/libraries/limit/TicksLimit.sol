@@ -62,8 +62,8 @@ library TicksLimit {
                 } else {
                     tickAhead  = TickMap.previous(tickMap, params.lower, cache.constants.tickSpacing, false);
                 }
-                uint32 epochAhead = EpochMap.get(tickAhead, tickMap, cache.constants);
-                EpochMap.set(params.lower, epochAhead, tickMap, cache.constants);
+                uint32 epochAhead = EpochMap.get(tickAhead, params.zeroForOne, tickMap, cache.constants);
+                EpochMap.set(params.lower, params.zeroForOne, epochAhead, tickMap, cache.constants);
             }
             PoolsharkStructs.LimitTick memory tickLower = ticks[params.lower].limit;
             if (params.zeroForOne) {
@@ -77,7 +77,7 @@ library TicksLimit {
             /// @dev - i.e. if zeroForOne && cache.priceLower <= cache.pool.price
             cache.state.epoch += 1;
             // mark epoch on undercut tick
-            EpochMap.set(params.lower, cache.state.epoch, tickMap, cache.constants);
+            EpochMap.set(params.lower, params.zeroForOne, cache.state.epoch, tickMap, cache.constants);
         }
 
         if (params.zeroForOne || cache.priceUpper < cache.pool.price) {
@@ -88,8 +88,8 @@ library TicksLimit {
                 } else {
                     tickAhead  = TickMap.previous(tickMap, params.upper, cache.constants.tickSpacing, false);
                 }
-                uint32 epochAhead = EpochMap.get(tickAhead, tickMap, cache.constants);
-                EpochMap.set(params.upper, epochAhead, tickMap, cache.constants);
+                uint32 epochAhead = EpochMap.get(tickAhead, params.zeroForOne, tickMap, cache.constants);
+                EpochMap.set(params.upper, params.zeroForOne, epochAhead, tickMap, cache.constants);
             }
             PoolsharkStructs.LimitTick memory tickUpper = ticks[params.upper].limit;
             if (params.zeroForOne) {
@@ -103,7 +103,7 @@ library TicksLimit {
             /// @dev - i.e. if !zeroForOne && cache.priceUpper >= cache.pool.price
             cache.state.epoch += 1;
             // mark epoch on undercut tick
-            EpochMap.set(params.upper, cache.state.epoch, tickMap, cache.constants);
+            EpochMap.set(params.upper, params.zeroForOne, cache.state.epoch, tickMap, cache.constants);
         }
     }
 
@@ -129,7 +129,7 @@ library TicksLimit {
             if (pool.price != (params.zeroForOne ? cache.priceLower : cache.priceUpper)) {
                 TickMap.set(tickMap, tickToSave, constants.tickSpacing);
             }
-            EpochMap.set(tickToSave, cache.state.epoch, tickMap, constants);
+            EpochMap.set(tickToSave, params.zeroForOne, cache.state.epoch, tickMap, constants);
         }
         // skip if we are at the nearest full tick
         if(pool.price != roundedPrice) {
@@ -155,7 +155,7 @@ library TicksLimit {
                     // advance price past closest full tick using amountOut filled
                     tick.priceAt = ConstantProduct.getNewPrice(uint256(locals.pricePrevious), combinedLiquidity, locals.amountOutExact, false, true).toUint160();
                     // dx to the next tick is less than before the tick blend
-                    EpochMap.set(tickToSave, cache.state.epoch, tickMap, constants);
+                    EpochMap.set(tickToSave, params.zeroForOne, cache.state.epoch, tickMap, constants);
                 } else {
                     // 0 -> 1 positions price moves up so nextFullTick is lesser
                     locals.previousFullTick = tickToSave + constants.tickSpacing / 2;
@@ -168,7 +168,7 @@ library TicksLimit {
                     // advance price past closest full tick using amountOut filled
                     tick.priceAt = ConstantProduct.getNewPrice(uint256(locals.pricePrevious), combinedLiquidity, locals.amountOutExact, true, true).toUint160();
                     // mark epoch for second partial fill positions
-                    EpochMap.set(tickToSave, cache.state.epoch, tickMap, constants);
+                    EpochMap.set(tickToSave, params.zeroForOne, cache.state.epoch, tickMap, constants);
                 }
             }
         }
@@ -239,13 +239,13 @@ library TicksLimit {
         if (zeroForOne) {
             pool.tickAtPrice = TickMap.next(tickMap, startTick, cache.constants.tickSpacing, true);
             if (pool.tickAtPrice < ConstantProduct.maxTick(cache.constants.tickSpacing)) {
-                EpochMap.set(pool.tickAtPrice, cache.state.epoch, tickMap, cache.constants);
+                EpochMap.set(pool.tickAtPrice, zeroForOne, cache.state.epoch, tickMap, cache.constants);
             }
         } else {
             /// @dev - roundedUp true since liquidity could be equal to the current pool tickAtPrice
             pool.tickAtPrice = TickMap.previous(tickMap, startTick, cache.constants.tickSpacing, true);
             if (pool.tickAtPrice > ConstantProduct.minTick(cache.constants.tickSpacing)) {
-                EpochMap.set(pool.tickAtPrice, cache.state.epoch, tickMap, cache.constants);
+                EpochMap.set(pool.tickAtPrice, zeroForOne, cache.state.epoch, tickMap, cache.constants);
             }
         }
 

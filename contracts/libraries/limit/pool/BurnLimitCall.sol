@@ -29,8 +29,8 @@ library BurnLimitCall {
         if (cache.position.epochLast == 0) require(false, 'PositionNotFound()');
         if (cache.position.crossedInto
             || params.claim != (params.zeroForOne ? params.lower : params.upper)
-            || cache.position.epochLast < (params.zeroForOne ? EpochMap.get(params.lower, tickMap, cache.constants)
-                                                             : EpochMap.get(params.upper, tickMap, cache.constants)))
+            || cache.position.epochLast < (params.zeroForOne ? EpochMap.get(params.lower, params.zeroForOne, tickMap, cache.constants)
+                                                             : EpochMap.get(params.upper, params.zeroForOne, tickMap, cache.constants)))
         {
             // position has been crossed into
             (

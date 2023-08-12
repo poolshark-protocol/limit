@@ -413,7 +413,7 @@ library Ticks {
         // crossing limit tick
         if ((cache.crossStatus & LIMIT_TICK) > 0) {
             // cross limit tick
-            EpochMap.set(cache.crossTick, cache.state.epoch, limitTickMap, cache.constants);
+            EpochMap.set(cache.crossTick, !params.zeroForOne, cache.state.epoch, limitTickMap, cache.constants);
             int128 liquidityDelta = ticks[cache.crossTick].limit.liquidityDelta;
 
             if (liquidityDelta >= 0) {

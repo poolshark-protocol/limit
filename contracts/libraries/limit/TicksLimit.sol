@@ -12,7 +12,6 @@ import '../TickMap.sol';
 import './EpochMap.sol';
 import '../range/Samples.sol';
 import '../utils/SafeCast.sol';
-import 'hardhat/console.sol';
 
 /// @notice Tick management library for limit pools
 library TicksLimit {

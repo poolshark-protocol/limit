@@ -4,9 +4,13 @@ pragma solidity 0.8.13;
 import '../../../interfaces/limit/ILimitPoolStructs.sol';
 import '../PositionsLimit.sol';
 import '../../utils/Collect.sol';
-import 'hardhat/console.sol';
+import '../../EchidnaAssertions.sol';
+import '../../../interfaces/IERC20Minimal.sol';
 
 library MintLimitCall {
+
+    error SimulateMint(int24 lower, int24 upper, bool positionCreated);
+
     event MintLimit(
         address indexed to,
         int24 lower,
@@ -33,7 +37,7 @@ library MintLimitCall {
         PoolsharkStructs.GlobalState storage globalState,
         ILimitPoolStructs.MintLimitParams memory params,
         ILimitPoolStructs.MintLimitCache memory cache
-    ) external returns (ILimitPoolStructs.MintLimitCache memory) {
+    ) internal returns (ILimitPoolStructs.MintLimitCache memory) {
 
         // resize position if necessary
         (params, cache) = PositionsLimit.resize(
@@ -62,7 +66,6 @@ library MintLimitCall {
                                   : cache.constants.token0,
                 cache.swapCache.output
             );
-        console.log('amount check', params.amount, cache.swapCache.output);
         // mint position if amount is left
         if (params.amount > 0 && params.lower < params.upper) {
             cache.pool = params.zeroForOne ? cache.state.pool0 : cache.state.pool1;
@@ -129,11 +132,10 @@ library MintLimitCall {
                 uint128(cache.liquidityMinted)
             );
         }
-        console.log('position liquidity check', cache.state.pool1.liquidity);
 
         // save lp side for safe reentrancy
         save(cache, globalState, params.zeroForOne);
-
+        assert(false);
         return cache;
     }
 
@@ -151,5 +153,134 @@ library MintLimitCall {
             globalState.pool = cache.state.pool;
             globalState.pool1 = cache.state.pool1;
         }
+    }
+
+    // Echidna funcs
+    function getResizedTicks(
+        mapping(address => mapping(int24 => mapping(int24 => ILimitPoolStructs.LimitPosition)))
+            storage positions,
+        mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
+        IRangePoolStructs.Sample[65535] storage samples,
+        PoolsharkStructs.TickMap storage rangeTickMap,
+        PoolsharkStructs.TickMap storage limitTickMap,
+        PoolsharkStructs.GlobalState storage globalState,
+        ILimitPoolStructs.MintLimitParams memory params,
+        ILimitPoolStructs.MintLimitCache memory cache
+    ) external {
+        bool positionCreated = false;
+        // resize position if necessary
+        (params, cache) = PositionsLimit.resize(
+            ticks,
+            samples,
+            rangeTickMap,
+            limitTickMap,
+            params,
+            cache
+        );
+
+        // save state for reentrancy safety
+        save(cache, globalState, !params.zeroForOne);
+
+        // transfer in token amount
+        SafeTransfers.transferIn(
+                                 params.zeroForOne ? cache.constants.token0 
+                                                   : cache.constants.token1,
+                                 params.amount + cache.swapCache.input
+                                );
+        // transfer out if swap output 
+        if (cache.swapCache.output > 0)
+            SafeTransfers.transferOut(
+                params.to,
+                params.zeroForOne ? cache.constants.token1 
+                                  : cache.constants.token0,
+                cache.swapCache.output
+            );
+        // mint position if amount is left
+        if (params.amount > 0 && params.lower < params.upper) {
+            cache.pool = params.zeroForOne ? cache.state.pool0 : cache.state.pool1;
+            // load position given params
+            cache.position = positions[params.to][params.lower][params.upper];
+            
+            // bump to the next tick if there is no liquidity
+            if (cache.pool.liquidity == 0) {
+                /// @dev - this makes sure to have liquidity unlocked if undercutting
+                (cache, cache.pool) = TicksLimit.unlock(cache, cache.pool, ticks, limitTickMap, params.zeroForOne);
+            }
+
+            if (params.zeroForOne) {
+                uint160 priceLower = ConstantProduct.getPriceAtTick(params.lower, cache.constants);
+                if (priceLower <= cache.pool.price) {
+                    // save liquidity if active
+                    if (cache.pool.liquidity > 0) {
+                        cache.pool = TicksLimit.insertSingle(params, ticks, limitTickMap, cache, cache.pool, cache.constants);
+                    }
+                    cache.pool.price = priceLower;
+                    cache.pool.tickAtPrice = params.lower;
+                    /// @auditor - double check liquidity is set correctly for this in insertSingle
+                    cache.pool.liquidity += uint128(cache.liquidityMinted);
+                    cache.position.crossedInto = true;
+                    // set epoch on start tick to signify position being crossed into
+                    /// @auditor - this is safe assuming we have swapped at least this far on the other side
+                    emit Sync(cache.pool.price, cache.pool.liquidity);
+                }
+            } else {
+                uint160 priceUpper = ConstantProduct.getPriceAtTick(params.upper, cache.constants);
+                if (priceUpper >= cache.pool.price) {
+                    if (cache.pool.liquidity > 0) {
+                        cache.pool = TicksLimit.insertSingle(params, ticks, limitTickMap, cache, cache.pool, cache.constants);
+                    }
+                    cache.pool.price = priceUpper;
+                    cache.pool.tickAtPrice = params.upper;
+                    cache.pool.liquidity += uint128(cache.liquidityMinted);
+                    cache.position.crossedInto = true;
+                    // set epoch on start tick to signify position being crossed into
+                    /// @auditor - this is safe assuming we have swapped at least this far on the other side
+                    emit Sync(cache.pool.price, cache.pool.liquidity);
+                }
+            }
+            (cache.pool, cache.position) = PositionsLimit.add(
+                cache,
+                ticks,
+                limitTickMap,
+                params
+            );
+
+            // save position to storage
+            positions[params.to][params.lower][params.upper] = cache.position;
+
+            params.zeroForOne ? cache.state.pool0 = cache.pool : cache.state.pool1 = cache.pool;
+
+            emit MintLimit(
+                params.to,
+                params.lower,
+                params.upper,
+                params.zeroForOne,
+                cache.position.epochLast,
+                uint128(params.amount + cache.swapCache.input),
+                uint128(cache.swapCache.output),
+                uint128(cache.liquidityMinted)
+            );
+        }
+
+        // save lp side for safe reentrancy
+        save(cache, globalState, params.zeroForOne);
+    
+        revert SimulateMint(params.lower, params.upper, positionCreated);
+    }
+
+    function balance(
+        address token
+    ) private view returns (uint256) {
+        (
+            bool success,
+            bytes memory data
+        ) = token.staticcall(
+                                    abi.encodeWithSelector(
+                                        IERC20Minimal.balanceOf.selector,
+                                        address(this)
+                                    )
+                                );
+        require(success && data.length >= 32);
+        return abi.decode(data, (uint256));
     }
 }

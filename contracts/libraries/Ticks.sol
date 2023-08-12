@@ -47,7 +47,7 @@ library Ticks {
         ILimitPoolStructs.GlobalState memory state,
         PoolsharkStructs.Immutables memory constants,
         uint160 startPrice
-    ) external returns (
+    ) internal returns (
         ILimitPoolStructs.GlobalState memory
     ) {
         // state should only be initialized once
@@ -98,7 +98,7 @@ library Ticks {
         PoolsharkStructs.TickMap storage limitTickMap,
         PoolsharkStructs.SwapParams memory params,
         PoolsharkStructs.SwapCache memory cache
-    ) external returns (
+    ) internal returns (
         PoolsharkStructs.SwapCache memory
     )
     {   
@@ -154,7 +154,6 @@ library Ticks {
         // grab latest sample and store in cache for _cross
         while (cache.cross) {
             // handle price being at cross tick
-            console.log('swap cache check1', cache.input, cache.output);
             cache = _quoteSingle(cache, params.priceLimit, params.zeroForOne);
             if (cache.cross) {
                 cache = _cross(
@@ -166,7 +165,6 @@ library Ticks {
                 );
             }
         }
-                    console.log('swap cache check2', cache.input, cache.output);
         /// @dev - write oracle entry after start of block
         (
             cache.state.pool.samples.index,
@@ -248,7 +246,6 @@ library Ticks {
         if (!cache.exactIn) cache.amountLeft = OverflowMath.mulDivRoundingUp(uint256(params.amount), 1e6, (1e6 - cache.constants.swapFee));
         while (cache.cross) {
             cache = _quoteSingle(cache, params.priceLimit, params.zeroForOne);
-                    console.log('quote cache check1', cache.input, cache.output, params.priceLimit);
             if (cache.cross) {
                 cache = _pass(
                     ticks,
@@ -259,7 +256,6 @@ library Ticks {
                 );
             }
         }
-        console.log('cache check', cache.input, cache.output);
         return (
             cache.input,
             cache.output,
@@ -422,7 +418,6 @@ library Ticks {
                 else cache.state.pool0.liquidity += uint128(liquidityDelta);
             }
             else {
-                console.log('negative tick hit', uint24(cache.crossTick), cache.state.pool0.liquidity, uint128(-liquidityDelta));
                 cache.liquidity -= uint128(-liquidityDelta);
                 if (params.zeroForOne) cache.state.pool1.liquidity -= uint128(-liquidityDelta);
                 else cache.state.pool0.liquidity -= uint128(-liquidityDelta);
@@ -440,8 +435,6 @@ library Ticks {
             if (liquidityDelta > 0) cache.liquidity += liquidityDelta;
         }
         cache = _iterate(ticks, rangeTickMap, limitTickMap, cache, params.zeroForOne, false);
-
-        console.log('tick liquidity check', cache.state.pool0.liquidity);
 
         return cache;
     }

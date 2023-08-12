@@ -18,7 +18,6 @@ import './libraries/limit/pool/BurnLimitCall.sol';
 import './libraries/math/ConstantProduct.sol';
 import './libraries/solady/LibClone.sol';
 import './external/openzeppelin/security/ReentrancyGuard.sol';
-import 'hardhat/console.sol';
 
 
 /// @notice Poolshark Limit Pool Implementation
@@ -30,6 +29,10 @@ contract LimitPool is
     LimitPoolFactoryStructs,
     ReentrancyGuard
 {
+
+    event SimulateMint(bytes b);
+    event SimulateMint(bytes4 b);
+    event SimulateMint(bool b);
 
     modifier ownerOnly() {
         _onlyOwner();
@@ -63,7 +66,6 @@ contract LimitPool is
         factoryOnly
         canoncialOnly
     {
-        console.log('initialize pool');
         // initialize state
         globalState = Ticks.initialize(
             rangeTickMap,
@@ -73,7 +75,6 @@ contract LimitPool is
             immutables(),
             startPrice
         );
-        console.log('end of init function');
     }
 
     function mint(
@@ -119,6 +120,7 @@ contract LimitPool is
         nonReentrant(globalState)
         canoncialOnly
     {
+        assert(false);
         MintLimitCache memory cache;
         {
             cache.state = globalState;
@@ -135,6 +137,44 @@ contract LimitPool is
             cache
         );
         globalState = cache.state;
+    }
+
+    function getResizedTicksForMint(
+        MintLimitParams memory params
+    ) external returns (int24 lower, int24 upper, bool positionCreated){
+        MintLimitCache memory cache;
+        {
+            cache.state = globalState;
+            cache.constants = immutables();
+        }
+
+        try MintLimitCall.getResizedTicks(
+            params.zeroForOne ? positions0 : positions1,
+            ticks,
+            samples,
+            rangeTickMap,
+            limitTickMap,
+            globalState,
+            params,
+            cache
+        ) {
+        } catch (bytes memory data) {
+            emit SimulateMint(data);
+            bytes4 sig;
+            assembly {
+                sig := mload(add(data, 0x20))
+            }
+            
+            // SimulateMint error
+            if (sig == hex"5cc1f67b") {
+                (, lower, upper, positionCreated) = abi.decode(abi.encodePacked(bytes28(0), data),(bytes32,int24,int24,bool));
+            }
+            else {
+                lower = -8388608;
+                upper = -8388608;
+                positionCreated = false;
+            }
+        }
     }
 
     function burnLimit(
@@ -158,6 +198,41 @@ contract LimitPool is
             params.zeroForOne ? positions0 : positions1
         );
         globalState = cache.state;
+    }
+
+    function getResizedTicksForBurn(
+        BurnLimitParams memory params
+    ) external returns (int24 lower, int24 upper, bool positionExists){
+        if (params.to == address(0)) revert CollectToZeroAddress();
+        BurnLimitCache memory cache = BurnLimitCache({
+            state: globalState,
+            position: params.zeroForOne ? positions0[params.to][params.lower][params.upper]
+                                        : positions1[params.to][params.lower][params.upper],
+            constants: immutables()
+        });
+
+        try BurnLimitCall.getResizedTicks(
+            params, 
+            cache, 
+            limitTickMap,
+            ticks,
+            params.zeroForOne ? positions0 : positions1
+        ) {
+        } catch (bytes memory data) {
+            bytes4 sig;
+            assembly {
+                sig := mload(add(data, 0x20))
+            }
+            // SimulateBurn error
+            if (sig == hex"97dd6e0a") {
+                (, lower, upper, positionExists) = abi.decode(abi.encodePacked(bytes28(0), data),(bytes32,int24,int24,bool));
+            }
+             else {
+                lower = -8388608;
+                upper = -8388608;
+                positionExists = false;
+            }
+        }
     }
 
     function swap(

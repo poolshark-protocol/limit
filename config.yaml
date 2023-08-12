@@ -1,6 +1,7 @@
 testMode: assertion
 corpusDir: corpus
-codeSize: 50000
-testLimit: 10000000
-deployContracts: [["0x1f", "MintCall"], ["0x2f", "BurnCall"]]
-cryticArgs: ["--compile-libraries=(MintCall,0x1f) --compile-libraries=(BurnCall,0x2f)"]
+codeSize: 100000
+testLimit: 100000000
+deployContracts: [["0x1f", "MintLimitCall"], ["0x2f", "BurnLimitCall"]]
+cryticArgs: ["--compile-libraries=(MintLimitCall,0x1f) --compile-libraries=(BurnLimitCall,0x2f)"]
+shrinkLimit: 750

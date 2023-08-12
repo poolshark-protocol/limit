@@ -17,6 +17,7 @@ contract LimitPoolFactory is
 {
     using LibClone for address;
 
+event Debug(uint a);
     address immutable public owner;
     address immutable public original;
 
@@ -37,6 +38,7 @@ contract LimitPoolFactory is
         address pool,
         address poolToken
     ) {
+        emit Debug(1);
 
         // validate token pair
         if (tokenIn == tokenOut || tokenIn == address(0) || tokenOut == address(0)) {
@@ -51,7 +53,10 @@ contract LimitPoolFactory is
         // check if tick spacing supported
         constants.swapFee = swapFee;
         constants.tickSpacing = ILimitPoolManager(owner).feeTiers(swapFee);
+                emit Debug(21);
+
         if (constants.tickSpacing == 0) revert FeeTierNotSupported();
+        emit Debug(11);
 
         // check if pool type supported
         (
@@ -78,7 +83,7 @@ contract LimitPoolFactory is
             constants.bounds.min,
             constants.bounds.max
         ) = ILimitPool(poolImpl).priceBounds(constants.tickSpacing);
-
+        emit Debug(2);
         // calculate token address
 
         // pass this address into a clone of RangePoolERC1155

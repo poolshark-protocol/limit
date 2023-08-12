@@ -9,7 +9,6 @@ import './Claims.sol';
 import './EpochMap.sol';
 import '../utils/SafeCast.sol';
 import '../Ticks.sol';
-import 'hardhat/console.sol';
 
 /// @notice Position management library for ranged liquidity.
 /// @notice Position management library for ranged liquidity.
@@ -182,8 +181,6 @@ library PositionsLimit {
         if (params.lower >= params.upper) {
             params.amount = 0;
         }
-
-        console.log('position bounds', uint24(params.lower), uint24(params.upper));
 
         return (
             params,
@@ -468,7 +465,7 @@ library PositionsLimit {
         ILimitPoolStructs.GlobalState memory state,
         ILimitPoolStructs.UpdateLimitParams memory params,
         PoolsharkStructs.Immutables memory constants
-    ) external view returns (
+    ) internal view returns (
         ILimitPoolStructs.LimitPosition memory
     ) {
         ILimitPoolStructs.UpdateCache memory cache;

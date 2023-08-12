@@ -445,7 +445,7 @@ library Positions {
         address owner,
         int24 lower,
         int24 upper
-    ) external view returns (
+    ) internal view returns (
         int56   tickSecondsAccum,
         uint160 secondsPerLiquidityAccum,
         uint128 feesOwed0,

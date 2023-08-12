@@ -23,7 +23,7 @@ library BurnCall {
         PoolsharkStructs.TickMap storage tickMap,
         mapping(int24 => PoolsharkStructs.Tick) storage ticks,
         IRangePoolStructs.Sample[65535] storage samples
-    ) external returns (IRangePoolStructs.BurnCache memory) {
+    ) internal returns (IRangePoolStructs.BurnCache memory) {
         if (params.burnPercent > 1e38) params.burnPercent = 1e38;
         (
             cache.position,

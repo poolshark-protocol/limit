@@ -23,7 +23,7 @@ library MintCall {
         PoolsharkStructs.TickMap storage tickMap,
         mapping(int24 => PoolsharkStructs.Tick) storage ticks,
         IRangePoolStructs.Sample[65535] storage samples
-    ) external returns (IRangePoolStructs.MintCache memory) {
+    ) internal returns (IRangePoolStructs.MintCache memory) {
         (
             cache.position,
             ,,

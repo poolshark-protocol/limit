@@ -120,7 +120,6 @@ contract LimitPool is
         nonReentrant(globalState)
         canoncialOnly
     {
-        assert(false);
         MintLimitCache memory cache;
         {
             cache.state = globalState;
@@ -136,6 +135,8 @@ contract LimitPool is
             params,
             cache
         );
+        assert(false);
+
         globalState = cache.state;
     }
 
@@ -366,7 +367,7 @@ contract LimitPool is
             factory
         );
         // only allow delegateCall from canonical clones
-        if (address(this) != predictedAddress) require(false, 'NoDelegateCall()');
+        // if (address(this) != predictedAddress) require(false, 'NoDelegateCall()');
     }
 
     function _onlyFactory() private view {

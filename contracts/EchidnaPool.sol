@@ -43,6 +43,7 @@ contract EchidnaPool {
     Token20 private tokenOut;
     Position[] private positions;
     int16 tickSpacing;
+    uint16 swapFee;
 
     struct LiquidityDeltaValues {
         int128 liquidityDeltaLowerBefore;
@@ -91,19 +92,18 @@ contract EchidnaPool {
         require(upper % tickSpacing == 0);
         _;
     }
-
     constructor() {
         manager = new LimitPoolManager();
         factory = new LimitPoolFactory(address(manager));
         implementation = address(new LimitPool(address(factory)));
         rangePool = new RangePoolERC1155(address(factory));
-        
-        manager.enableImplementation(bytes32(0x0), address(implementation), address(rangePool));
-        manager.enableTickSpacing(10,10);
+        swapFee = 500;
         tickSpacing = 10;
+
+        manager.enableImplementation(bytes32(0x0), address(implementation), address(rangePool));
         tokenIn = new Token20("IN", "IN", 18);
         tokenOut = new Token20("OUT", "OUT", 18);
-        (address poolAddr,) = factory.createLimitPool(bytes32(0x0), address(tokenIn), address(tokenOut), 10, 79228162514264337593543950336);
+        (address poolAddr,) = factory.createLimitPool(bytes32(0x0), address(tokenIn), address(tokenOut), swapFee, 79228162514264337593543950336);
         pool = new LimitPool(poolAddr);
     }
 

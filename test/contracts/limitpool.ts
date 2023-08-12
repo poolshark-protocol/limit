@@ -6022,4 +6022,404 @@ describe('LimitPool Tests', function () {
             console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
         }
     });
+
+    it("pool0 - Shared TickMap leads to ticks errantly unset", async function () {
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: "-510",
+            upper: "10000",
+            amount: "227",
+            zeroForOne: true,
+            balanceInDecrease: "227",
+            liquidityIncrease: "541",
+            balanceOutIncrease: "0",
+            upperTickCleared: false,
+            lowerTickCleared: true,
+            revertMessage: "",
+        });
+
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: "10",
+            upper: "107500",
+            expectedUpper: "93720",
+            amount: "10000000000000000",
+            zeroForOne: false,
+            balanceInDecrease: "10000000000000000",
+            liquidityIncrease: "93116165100287",
+            balanceOutIncrease: "226",
+            upperTickCleared: true,
+            lowerTickCleared: false,
+            revertMessage: "",
+        });
+
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: "-510",
+            upper: "10000",
+            amount: "227",
+            zeroForOne: false,
+            balanceInDecrease: "227",
+            liquidityIncrease: "336",
+            balanceOutIncrease: "0",
+            upperTickCleared: false,
+            lowerTickCleared: true,
+            revertMessage: '',
+        });
+
+        // When we do this zeroForOne burn we check if ticks0 has any liquidityDelta on tick 10,000
+        // before we clear it. There is 0 liquidityDelta on ticks0 tick 10,000, so it is cleared.
+        // However, there is nonzero liquidityDelta on tick 10,000 in ticks1 -- this liquidityDelta needs to be applied
+        // upon crossing during a swap, however tick 10,000 can never be the cross tick as it is no longer set
+        // in the TickMap.
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: "-510",
+            upper: "10000",
+            claim: "10000",
+            liquidityPercent: BigNumber.from("3619953732483784731740789722613948214"),
+            zeroForOne: true,
+            balanceInIncrease: "364",
+            positionLiquidityChange: "541",
+            balanceOutIncrease: "0",
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: "",
+        });
+
+        // When we do a swap we never cross tick 10,000 as it was unset in the TickMap.
+        // Leading to liquidity never getting kicked in and the accounting system becoming invalidated.
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: true,
+            amountIn: BigNumber.from("340282366920938463463374607431768211452"),
+            priceLimit: BigNumber.from("12"),
+            balanceInDecrease: "92210562188207",
+            balanceOutIncrease: "9999999999999810",
+            revertMessage: "",
+        });
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: "-510",
+            upper: "10000",
+            claim: "10000",
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: true,
+            balanceInIncrease: "364",
+            positionLiquidityChange: "541",
+            balanceOutIncrease: "0",
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: "PositionNotFound()",
+        });
+
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: "-510",
+            upper: "10000",
+            claim: "10000",
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: false,
+            balanceInIncrease: "140",
+            positionLiquidityChange: "336",
+            balanceOutIncrease: "0",
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: "",
+        });
+
+        await getPrice(false, true)
+
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: "10",
+            upper: "93720",
+            claim: "10000",
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: false,
+            balanceInIncrease: "92210562188065",
+            positionLiquidityChange: "93116165100287",
+            balanceOutIncrease: "0",
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: "",
+        });
+
+        if (true) {
+            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
+            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
+        } 
+    })
+
+    it.skip("pool1 - Shared TickMap leads to ticks errantly unset", async function () {
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: "-510",
+            upper: "10000",
+            amount: "227",
+            zeroForOne: true,
+            balanceInDecrease: "227",
+            liquidityIncrease: "541",
+            balanceOutIncrease: "0",
+            upperTickCleared: false,
+            lowerTickCleared: true,
+            revertMessage: "",
+        });
+
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: "10",
+            upper: "107500",
+            expectedUpper: "93720",
+            amount: "10000000000000000",
+            zeroForOne: false,
+            balanceInDecrease: "10000000000000000",
+            liquidityIncrease: "93116165100287",
+            balanceOutIncrease: "226",
+            upperTickCleared: true,
+            lowerTickCleared: false,
+            revertMessage: "",
+        });
+
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: "-510",
+            upper: "10000",
+            amount: "227",
+            zeroForOne: false,
+            balanceInDecrease: "227",
+            liquidityIncrease: "336",
+            balanceOutIncrease: "0",
+            upperTickCleared: false,
+            lowerTickCleared: true,
+            revertMessage: '',
+        });
+
+        // When we do this zeroForOne burn we check if ticks0 has any liquidityDelta on tick 10,000
+        // before we clear it. There is 0 liquidityDelta on ticks0 tick 10,000, so it is cleared.
+        // However, there is nonzero liquidityDelta on tick 10,000 in ticks1 -- this liquidityDelta needs to be applied
+        // upon crossing during a swap, however tick 10,000 can never be the cross tick as it is no longer set
+        // in the TickMap.
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: "-510",
+            upper: "10000",
+            claim: "10000",
+            liquidityPercent: BigNumber.from("3619953732483784731740789722613948214"),
+            zeroForOne: true,
+            balanceInIncrease: "364",
+            positionLiquidityChange: "541",
+            balanceOutIncrease: "0",
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: "",
+        });
+
+        // When we do a swap we never cross tick 10,000 as it was unset in the TickMap.
+        // Leading to liquidity never getting kicked in and the accounting system becoming invalidated.
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: true,
+            amountIn: BigNumber.from("340282366920938463463374607431768211452"),
+            priceLimit: BigNumber.from("12"),
+            balanceInDecrease: "92210562188207",
+            balanceOutIncrease: "9999999999999810",
+            revertMessage: "",
+        });
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: "-510",
+            upper: "10000",
+            claim: "10000",
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: true,
+            balanceInIncrease: "364",
+            positionLiquidityChange: "541",
+            balanceOutIncrease: "0",
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: "PositionNotFound()",
+        });
+
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: "-510",
+            upper: "10000",
+            claim: "10000",
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: false,
+            balanceInIncrease: "140",
+            positionLiquidityChange: "336",
+            balanceOutIncrease: "0",
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: "",
+        });
+
+        await getPrice(false, true)
+
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: "10",
+            upper: "93720",
+            claim: "10000",
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: false,
+            balanceInIncrease: "92210562188065",
+            positionLiquidityChange: "93116165100287",
+            balanceOutIncrease: "0",
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: "",
+        });
+
+        if (balanceCheck) {
+            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
+            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
+        } 
+    })
+
+    it("pool0 - Unsetting ticks leads to invalid claims", async function () {
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: "-510",
+            upper: "10000",
+            amount: "227",
+            zeroForOne: true,
+            balanceInDecrease: "227",
+            liquidityIncrease: "541",
+            balanceOutIncrease: "0",
+            upperTickCleared: false,
+            lowerTickCleared: true,
+            revertMessage: '',
+        });
+
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: "-20",
+            upper: "107510",
+            expectedUpper: "96880",
+            amount: "504",
+            zeroForOne: false,
+            balanceInDecrease: "504",
+            liquidityIncrease: "1",
+            balanceOutIncrease: "226",
+            upperTickCleared: true,
+            lowerTickCleared: false,
+            revertMessage: "",
+        });
+
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: "120",
+            upper: "510",
+            expectedLower: "320",
+            amount: "847",
+            zeroForOne: true,
+            balanceInDecrease: "847",
+            liquidityIncrease: "90923",
+            balanceOutIncrease: "125",
+            upperTickCleared: false,
+            lowerTickCleared: true,
+            revertMessage: "",
+        });
+
+        // This position should not be allowed to claim & burn a nonzero amount at 320, however they can.
+        // This is because the next tick, the end tick for the position tick 10,000 was unset during a prior swap & cross
+        // Therefore when doing the claims validation the next tick is the max tick which has an epoch of 0.
+        // The solution is to validate the position's end tick epoch in the EpochMap
+        // is not greater than the position's epoch as well.
+        // The solution is included in Claims.sol
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: "-510",
+            upper: "10000",
+            claim: "320",
+            expectedLower: "320",
+            liquidityPercent: BigNumber.from("13516316073012233858115514669384073923"),
+            positionLiquidityChange: '541',
+            zeroForOne: true,
+            balanceInIncrease: "364",
+            balanceOutIncrease: "0",
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: "",
+        });
+
+        // The effects of the invalid claim are realized
+        // The swap attempts to transfer out more than the contract has
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: false,
+            amountIn: BigNumber.from("866"),
+            priceLimit: BigNumber.from("34224716871635992872209592711164142668304641091"),
+            balanceInDecrease: "866",
+            balanceOutIncrease: "830",
+            revertMessage: "",
+        });
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: "-510",
+            upper: "10000",
+            claim: "320",
+            expectedLower: "320",
+            liquidityPercent: ethers.utils.parseUnits("1", 38),
+            positionLiquidityChange: '541',
+            zeroForOne: true,
+            balanceInIncrease: "364",
+            balanceOutIncrease: "0",
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: "PositionNotFound()",
+        });
+
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: "-20",
+            upper: "96880",
+            claim: "96880",
+            liquidityPercent: ethers.utils.parseUnits("1", 38),
+            positionLiquidityChange: '1',
+            zeroForOne: false,
+            balanceInIncrease: "0",
+            balanceOutIncrease: "0",
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: "",
+        });
+
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: "320",
+            upper: "510",
+            claim: "320",
+            liquidityPercent: ethers.utils.parseUnits("1", 38),
+            zeroForOne: true,
+            balanceInIncrease: "865",
+            balanceOutIncrease: "15",
+            lowerTickCleared: true,
+            upperTickCleared: false,
+            revertMessage: "",
+        });
+
+        if (balanceCheck) {
+            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
+            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
+        } 
+    });
 })

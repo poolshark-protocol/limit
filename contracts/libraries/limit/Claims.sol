@@ -94,12 +94,28 @@ library Claims {
             if (claimTickNextAccumEpoch > cache.position.epochLast) {
                 require (false, 'WrongTickClaimedAt5()');
             }
+            if (params.zeroForOne) {
+                uint32 endTickAccumEpoch = EpochMap.get(params.upper, tickMap, constants);
+                if (endTickAccumEpoch > cache.position.epochLast) {
+                    params.claim = params.upper;
+                    cache.priceClaim = cache.priceUpper;
+                    cache.claimTick = ticks[params.upper].limit;
+                }
+            } else {
+                uint32 endTickAccumEpoch = EpochMap.get(params.lower, tickMap, constants);
+                if (endTickAccumEpoch > cache.position.epochLast) {
+                    params.claim = params.lower;
+                    cache.priceClaim = cache.priceLower;
+                    cache.claimTick = ticks[params.lower].limit;
+                }
+            }
+
         }
         /// @dev - start tick does not overwrite position and final tick clears position
         if (params.claim != params.upper && params.claim != params.lower) {
             // check epochLast on claim tick
             if (claimTickEpoch <= cache.position.epochLast)
-                require (false, 'WrongTickClaimedAt6()');
+                require (false, 'WrongTickClaimedAt7()');
             // prevent position overwriting at claim tick
             if (params.zeroForOne) {
                 if (positions[params.owner][params.claim][params.upper].liquidity > 0) {

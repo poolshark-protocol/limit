@@ -126,7 +126,6 @@ describe('LimitPoolManager Tests', function () {
   //       .collectProtocolFees([hre.props.coverPool.address])
     
   //   // without protocol fees balances should not change
-  //   //TODO: validate erc-20 balance changes
 
   //   // anyone can send fees to the feeTo address
   //   hre.props.coverPoolManager

@@ -14,8 +14,6 @@ describe('DyDxMath Library Tests', function () {
     let bob: SignerWithAddress
     let carol: SignerWithAddress
 
-    //TODO: mint position and burn as if there were 100
-
     before(async function () {
         await gBefore()
     })
@@ -76,7 +74,6 @@ describe('DyDxMath Library Tests', function () {
     //             BigNumber.from('20')
     //         )
     //     ).to.be.revertedWith('PriceOutsideBounds()')
-    //     //TODO: wrong error is reported using hardhat
     //     // )).to.be.revertedWith("PriceOutsideOfBounds()");
     // })
 })

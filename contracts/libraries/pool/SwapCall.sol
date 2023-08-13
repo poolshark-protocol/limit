@@ -7,6 +7,7 @@ import '../../interfaces/IERC20Minimal.sol';
 import '../Ticks.sol';
 import '../utils/Collect.sol';
 import '../utils/SafeTransfers.sol';
+import 'hardhat/console.sol';
 
 library SwapCall {
     event SwapPool0(
@@ -37,6 +38,7 @@ library SwapCall {
         int256,
         int256
     ) {
+        console.log('price check', ConstantProduct.getPriceAtTick(1000, cache.constants),  ConstantProduct.getPriceAtTick(500, cache.constants));
         cache = Ticks.swap(
             ticks,
             samples,

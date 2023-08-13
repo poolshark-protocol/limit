@@ -519,7 +519,6 @@ library Positions {
                 Q128
             )
         );
-        //TODO: figure out why fees owed doesn't match range repo
         console.log('fee check',rangeFeeGrowth1, cache.position.feeGrowthInside1Last, cache.position.liquidity);
         if (cache.totalSupply > 0) {
             cache.position.amount0 = uint128(cache.position.amount0 * cache.userBalance / cache.totalSupply);

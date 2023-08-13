@@ -55,6 +55,7 @@ library TicksRange {
         uint128 amount
     ) internal returns (PoolsharkStructs.GlobalState memory) {
         validate(lower, upper, constants.tickSpacing);
+        console.log('adding liquidity');
         // check for amount to overflow liquidity delta & global
         if (amount == 0) return state;
         if (amount > uint128(type(int128).max)) require(false, 'LiquidityOverflow()');
@@ -196,6 +197,7 @@ library TicksRange {
                 state.pool.liquidity,
                 tickAtPrice
             );
+            console.log('pool liquidity', state.pool.liquidity);
             state.pool.liquidity -= amount;  
         }
         state.liquidityGlobal -= amount;

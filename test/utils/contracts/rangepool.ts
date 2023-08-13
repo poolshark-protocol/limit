@@ -381,11 +381,8 @@ export async function validateMint(params: ValidateMintParams) {
   balance0After = await hre.props.token0.balanceOf(params.signer.address)
   balance1After = await hre.props.token1.balanceOf(params.signer.address)
 
-  if (balanceCheck) {
-    expect(balance0Before.sub(balance0After)).to.be.equal(balance0Decrease)
-    expect(balance1Before.sub(balance1After)).to.be.equal(balance1Decrease)
-  }
-
+  expect(balance0Before.sub(balance0After)).to.be.equal(balance0Decrease)
+  expect(balance1Before.sub(balance1After)).to.be.equal(balance1Decrease)
 
   let lowerTickAfter: RangeTick
   let upperTickAfter: RangeTick

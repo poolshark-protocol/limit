@@ -1337,8 +1337,6 @@ describe('RangePool Exact Out Tests', function () {
     await mintSigners20(hre.props.token1, tokenAmount.mul(10), [hre.props.alice, hre.props.bob])
   })
 
-
-
   it('token1 - Should mint, swap, and burn 27', async function () {
     if (true) await getPrice()
     await validateSwap({

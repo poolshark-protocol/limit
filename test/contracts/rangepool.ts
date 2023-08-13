@@ -1304,12 +1304,18 @@ describe('RangePool Exact In Tests', function () {
       console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
     }
   })
-  //TODO:
-  // test adding liquidity when pool price is at tick price for lower
+
+  // tests adding liquidity when pool price is at tick price for lower
   // 1. move price to lower
   // 2. mint / burn / mint
   // 3. cross up on swap
   // 4. cross up to tick price at upper
+  // 5. remove liquidity
+    // tests adding liquidity when pool price is at tick price for upper
+  // 1. move price to upper
+  // 2. mint / burn / mint
+  // 3. cross down on swap
+  // 4. cross down to tick price at lower
   // 5. remove liquidity
   it.only('pool - Should skip crossing tick when swap ends on range tick 17', async function () {
     const pool: RangePoolState = (await hre.props.limitPool.globalState()).pool
@@ -1415,17 +1421,12 @@ describe('RangePool Exact In Tests', function () {
         await getTickLiquidity(1000)
     }
 
-    if (true) {
+    if (balanceCheck) {
       console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
       console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
     }
   })
-    // test adding liquidity when pool price is at tick price for upper
-  // 1. move price to upper
-  // 2. mint / burn / mint
-  // 3. cross down on swap
-  // 4. cross down to tick price at lower
-  // 5. remove liquidity
+
 
 })
 

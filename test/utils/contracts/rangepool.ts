@@ -93,6 +93,11 @@ export async function getPrice() {
   console.log('pool price:', poolPrice.toString())
 }
 
+export async function getRangeLiquidity() {
+  const poolLiquidity = (await hre.props.limitPool.globalState()).pool.liquidity
+  console.log('range pool liquidity:', poolLiquidity.toString())
+}
+
 export async function getRangeBalanceOf(owner: string, lower: number, upper: number): Promise<BigNumber> {
   const positionTokenId  = await hre.props.positionsLib.id(lower, upper);
   const balance = await hre.props.limitPoolToken.balanceOf(owner, positionTokenId)

@@ -262,6 +262,8 @@ export async function validateSwap(params: ValidateSwapParams) {
     return
   }
 
+  await getPrice()
+
   let balanceInAfter
   let balanceOutAfter
   if (zeroForOne) {
@@ -274,7 +276,7 @@ export async function validateSwap(params: ValidateSwapParams) {
 
   expect(balanceInBefore.sub(balanceInAfter)).to.be.equal(balanceInDecrease)
   expect(balanceOutAfter.sub(balanceOutBefore)).to.be.equal(balanceOutIncrease)
-//   expect(balanceInBefore.sub(balanceInAfter)).to.be.equal(inAmount)
+  expect(balanceInBefore.sub(balanceInAfter)).to.be.equal(inAmount)
   expect(balanceOutAfter.sub(balanceOutBefore)).to.be.equal(outAmount)
 
   const poolAfter: RangePoolState = (await hre.props.limitPool.globalState()).pool

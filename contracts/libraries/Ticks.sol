@@ -267,7 +267,7 @@ library Ticks {
         PoolsharkStructs.SwapCache memory cache,
         uint160 priceLimit,
         bool zeroForOne
-    ) internal view returns (
+    ) internal pure returns (
         PoolsharkStructs.SwapCache memory
     ) {
         if ((zeroForOne ? priceLimit >= cache.price
@@ -381,12 +381,8 @@ library Ticks {
             crossTick.feeGrowthOutside0       = cache.state.pool.feeGrowthGlobal0 - crossTick.feeGrowthOutside0;
             crossTick.feeGrowthOutside1       = cache.state.pool.feeGrowthGlobal1 - crossTick.feeGrowthOutside1;
             crossTick.tickSecondsAccumOutside = cache.tickSecondsAccum - crossTick.tickSecondsAccumOutside;
-            if (cache.crossTick == 1000) {
-                console.log('CROSSING 1000', crossTick.secondsPerLiquidityAccumOutside);
-            }
             crossTick.secondsPerLiquidityAccumOutside = cache.secondsPerLiquidityAccum - crossTick.secondsPerLiquidityAccumOutside;
             ticks[cache.crossTick].range = crossTick;
-            console.log('crossing', uint24(cache.crossTick), crossTick.secondsPerLiquidityAccumOutside);
             int128 liquidityDelta = crossTick.liquidityDelta;
             if (params.zeroForOne) {
                 unchecked {

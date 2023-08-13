@@ -133,8 +133,6 @@ library Positions {
         );
 
         position.liquidity += uint128(params.amount);
-
-        console.log('position liquidity increase', params.amount);
         
         // modify liquidity minted to account for fees accrued
         if (position.amount0 > 0 || position.amount1 > 0
@@ -276,7 +274,6 @@ library Positions {
                 params.upper,
                 uint128(cache.liquidityAmount)
             );
-            console.log('liquidity compounded', cache.liquidityAmount);
             uint256 amount0; uint256 amount1;
             (amount0, amount1) = ConstantProduct.getAmountsForLiquidity(
                 cache.priceLower,
@@ -456,6 +453,7 @@ library Positions {
         uint128 feesOwed1
     ) {
         PoolsharkStructs.Immutables memory constants = IPool(pool).immutables();
+        
         TicksRange.validate(lower, upper, constants.tickSpacing);
 
         IRangePoolStructs.SnapshotCache memory cache;
@@ -468,6 +466,8 @@ library Positions {
         cache.price = poolState.price;
         cache.liquidity = poolState.liquidity;
         cache.samples = poolState.samples;
+
+        console.log('pool state check', cache.price, cache.liquidity);
 
         (
             PoolsharkStructs.RangeTick memory tickLower
@@ -488,13 +488,12 @@ library Positions {
         cache.secondsPerLiquidityAccumUpper = tickUpper.secondsPerLiquidityAccumOutside;
 
         (
+            cache.position.feeGrowthInside0Last,
+            cache.position.feeGrowthInside1Last,
             cache.position.liquidity,
             cache.position.amount0,
-            cache.position.amount1,
-            cache.position.feeGrowthInside0Last,
-            cache.position.feeGrowthInside1Last
-        )
-            = IPool(pool).positions(lower, upper);
+            cache.position.amount1
+        ) = IPool(pool).positions(lower, upper);
 
         cache.constants = IPool(pool).immutables();
         
@@ -520,14 +519,13 @@ library Positions {
                 Q128
             )
         );
+        //TODO: figure out why fees owed doesn't match range repo
         console.log('fee check',rangeFeeGrowth1, cache.position.feeGrowthInside1Last, cache.position.liquidity);
         if (cache.totalSupply > 0) {
             cache.position.amount0 = uint128(cache.position.amount0 * cache.userBalance / cache.totalSupply);
             cache.position.amount1 = uint128(cache.position.amount1 * cache.userBalance / cache.totalSupply);
         }
         cache.tick = ConstantProduct.getTickAtPrice(cache.price, cache.constants);
-               console.log('liq oracle check', cache.secondsPerLiquidityAccumLower, cache.secondsPerLiquidityAccumUpper);
-        console.log('inside lib 5', uint24(lower), uint24(cache.tick));
         if (lower >= cache.tick) {
             return (
                 cache.tickSecondsAccumLower - cache.tickSecondsAccumUpper,
@@ -536,7 +534,6 @@ library Positions {
                 cache.position.amount1
             );
         } else if (upper >= cache.tick) {
-            console.log('inside here', cache.liquidity);
             cache.blockTimestamp = uint32(block.timestamp);
             (
                 cache.tickSecondsAccum,
@@ -554,10 +551,6 @@ library Positions {
                 ),
                 0
             );
-                        console.log('samples check',     uint56(cache.tickSecondsAccum),
-                cache.secondsPerLiquidityAccum
-            );
-
             return (
                 cache.tickSecondsAccum 
                   - cache.tickSecondsAccumLower 

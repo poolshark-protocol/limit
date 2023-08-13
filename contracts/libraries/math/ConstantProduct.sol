@@ -133,7 +133,7 @@ library ConstantProduct {
         uint256 amount,
         bool zeroForOne,
         bool exactIn
-    ) internal view returns (
+    ) internal pure returns (
         uint256 newPrice
     ) {
         if (exactIn) {
@@ -151,7 +151,6 @@ library ConstantProduct {
             if (zeroForOne) {
                 newPrice = price - 
                         OverflowMath.divRoundingUp(amount << 96, liquidity);
-                        console.log('new price check', newPrice);
             } else {
                 uint256 liquidityPadded = uint256(liquidity) << 96;
                 newPrice = OverflowMath.mulDivRoundingUp(

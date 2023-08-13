@@ -102,7 +102,8 @@ describe('RangePool Exact In Tests', function () {
 
     // console.log('after swap')
     if (debugMode) await getPrice()
-    if (debugMode) await getSnapshot(hre.props.alice.address, 20, 60)
+    if (true) await getSnapshot(hre.props.alice.address, 20, 60)
+
     // if (debugMode) await getSample()
 
     if (debugMode) await getRangeBalanceOf(hre.props.alice.address, 20, 60)

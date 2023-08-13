@@ -63,8 +63,6 @@ library TicksRange {
         // get tick at price
         int24 tickAtPrice = state.pool.tickAtPrice;
 
-        console.log('amount liq check', amount);
-
         if(TickMap.set(tickMap, lower, constants.tickSpacing)) {
             ticks[lower].range.liquidityDelta += int128(amount);
             ticks[lower].range.liquidityAbsolute += amount;
@@ -99,11 +97,7 @@ library TicksRange {
                 ticks[lower].range.liquidityAbsolute += amount;
             }
         }
-
         if(TickMap.set(tickMap, upper, constants.tickSpacing)) {
-                        if (upper == 1000) {
-                console.log('1000 is already set :)');
-            }
             ticks[upper].range.liquidityDelta -= int128(amount);
             ticks[upper].range.liquidityAbsolute += amount;
         } else {
@@ -125,9 +119,6 @@ library TicksRange {
                         ),
                         0
                 );
-            if (upper == 1000) {
-                console.log('CREATING 1000', secondsPerLiquidityAccum);
-            }
                 ticks[upper].range = PoolsharkStructs.RangeTick(
                     state.pool.feeGrowthGlobal0,
                     state.pool.feeGrowthGlobal1,
@@ -137,9 +128,6 @@ library TicksRange {
                     amount
                 );
             } else {
-                            if (upper == 1000) {
-                console.log('CREATING 1000 2');
-            }
                 ticks[upper].range.liquidityDelta = -int128(amount);
                 ticks[upper].range.liquidityAbsolute = amount;
             }
@@ -191,9 +179,6 @@ library TicksRange {
         clear(ticks, constants, tickMap, lower);
 
         // update upper liquidity values
-                   if (upper == 1000) {
-                console.log('DELETING 1000', ticks[upper].range.liquidityAbsolute, amount);
-            }
         PoolsharkStructs.RangeTick memory tickUpper = ticks[upper].range;
         unchecked {
             tickUpper.liquidityDelta += int128(amount);
@@ -224,9 +209,6 @@ library TicksRange {
         PoolsharkStructs.TickMap storage tickMap,
         int24 tickToClear
     ) internal {
-            if (tickToClear == 1000) {
-                console.log('DELETING 1000', ticks[tickToClear].range.liquidityAbsolute);
-            }
         if (_empty(ticks[tickToClear])) {
             if (tickToClear != ConstantProduct.maxTick(constants.tickSpacing) &&
                     tickToClear != ConstantProduct.minTick(constants.tickSpacing)) {

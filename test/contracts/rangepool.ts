@@ -487,8 +487,6 @@ describe('RangePool Exact In Tests', function () {
     const aliceLiquidity2 = BigNumber.from('3852877204305891777654')
     const aliceToken2 = BigNumber.from('3851318661512648798121')
 
-    debugMode = true
-
     await validateSwap({
         signer: hre.props.alice,
         recipient: hre.props.alice.address,
@@ -1285,6 +1283,20 @@ describe('RangePool Exact In Tests', function () {
       console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
     }
   })
+  //TODO:
+  // test adding liquidity when pool price is at tick price for upper
+  // 1. move price to upper
+  // 2. mint / burn / mint
+  // 3. cross down on swap
+  // 4. cross down to tick price at lower
+  // 5. remove liquidity
+
+  // test adding liquidity when pool price is at tick price for lower
+  // 1. move price to lower
+  // 2. mint / burn / mint
+  // 3. cross up on swap
+  // 4. cross up to tick price at upper
+  // 5. remove liquidity
 
 })
 
@@ -1395,7 +1407,8 @@ describe('RangePool Exact Out Tests', function () {
     //79450223072165328185028600164
     // after swap pool prices slightly different between exactIn vs. exactOut
     if (debugMode) await getPrice()
-    if (debugMode) await getSnapshot(hre.props.alice.address, 20, 60)
+    if (true) await getSnapshot(hre.props.alice.address, 20, 60)
+
  //   if (debugMode) await getSample()
 
     if (debugMode) await getRangeBalanceOf(hre.props.alice.address, 20, 60)

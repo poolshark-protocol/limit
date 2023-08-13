@@ -467,7 +467,7 @@ library Positions {
         cache.liquidity = poolState.liquidity;
         cache.samples = poolState.samples;
 
-        console.log('pool state check', cache.price, cache.liquidity);
+        console.log('tick price check:', ConstantProduct.getPriceAtTick(500, constants));
 
         (
             PoolsharkStructs.RangeTick memory tickLower

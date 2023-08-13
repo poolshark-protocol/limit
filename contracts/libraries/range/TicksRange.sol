@@ -65,7 +65,6 @@ library TicksRange {
 
         if(TickMap.set(tickMap, lower, constants.tickSpacing)) {
             ticks[lower].range.liquidityDelta += int128(amount);
-            console.log(ticks[lower].range.liquidityAbsolute, amount);
             ticks[lower].range.liquidityAbsolute += amount;
         } else {
             if (lower <= tickAtPrice) {
@@ -98,12 +97,12 @@ library TicksRange {
                 ticks[lower].range.liquidityAbsolute += amount;
             }
         }
-
         if(TickMap.set(tickMap, upper, constants.tickSpacing)) {
             ticks[upper].range.liquidityDelta -= int128(amount);
             ticks[upper].range.liquidityAbsolute += amount;
         } else {
             if (upper <= tickAtPrice) {
+
                 (
                     int56 tickSecondsAccum,
                     uint160 secondsPerLiquidityAccum
@@ -187,7 +186,7 @@ library TicksRange {
         }
         ticks[upper].range = tickUpper;
         // try to clear tick if possible
-        clear(ticks, constants, tickMap, lower);
+        clear(ticks, constants, tickMap, upper);
 
         if (tickAtPrice >= lower && tickAtPrice < upper) {
             // write an oracle entry

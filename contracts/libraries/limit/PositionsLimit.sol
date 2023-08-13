@@ -9,7 +9,6 @@ import './Claims.sol';
 import './EpochMap.sol';
 import '../utils/SafeCast.sol';
 import '../Ticks.sol';
-import 'hardhat/console.sol';
 
 /// @notice Position management library for ranged liquidity.
 /// @notice Position management library for ranged liquidity.
@@ -177,13 +176,12 @@ library PositionsLimit {
                 cache.liquidityMinted = 0;
             cache.state.epoch += 1;
         }
-        // console.log('position bounds end', uint24(-params.lower), uint24(params.upper), uint24(cache.state.pool.tickAtPrice));
 
         if (params.lower >= params.upper) {
             params.amount = 0;
         }
 
-        console.log('position bounds', uint24(params.lower), uint24(params.upper));
+        // console.log('position bounds', uint24(params.lower), uint24(params.upper));
 
         return (
             params,
@@ -412,18 +410,14 @@ library PositionsLimit {
             // update global liquidity
             state.liquidityGlobal -= params.amount;
         }
-        //TODO: set params.amount = 0 if end tick so correct value is emitted for event
         if (params.zeroForOne ? params.claim == params.upper
                               : params.claim == params.lower) {
             state.liquidityGlobal -= cache.position.liquidity;
-            // set params.amount for BurnLimit event
-            params.amount = cache.position.liquidity;
             cache.position.liquidity = 0;
         }
         // clear out old position
         if (params.zeroForOne ? params.claim != params.lower 
                               : params.claim != params.upper) {
-            
             /// @dev - this also clears out position end claims
             if (params.zeroForOne ? params.claim == params.lower 
                                   : params.claim == params.upper) {

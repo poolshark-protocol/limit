@@ -74,6 +74,8 @@ library Claims {
 
         // validate claim tick
         if (params.claim == (params.zeroForOne ? params.upper : params.lower)) {
+            // set params.amount to 0 for event emitted at end
+            params.amount = 0;
              if (claimTickEpoch <= cache.position.epochLast)
                 require (false, 'WrongTickClaimedAt3()');
         } else if (params.amount > 0) {

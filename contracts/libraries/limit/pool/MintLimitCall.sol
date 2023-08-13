@@ -62,7 +62,6 @@ library MintLimitCall {
                                   : cache.constants.token0,
                 cache.swapCache.output
             );
-        console.log('amount check', params.amount, cache.swapCache.output);
         // mint position if amount is left
         if (params.amount > 0 && params.lower < params.upper) {
             cache.pool = params.zeroForOne ? cache.state.pool0 : cache.state.pool1;
@@ -129,7 +128,6 @@ library MintLimitCall {
                 uint128(cache.liquidityMinted)
             );
         }
-        console.log('position liquidity check', cache.state.pool1.liquidity);
 
         // save lp side for safe reentrancy
         save(cache, globalState, params.zeroForOne);

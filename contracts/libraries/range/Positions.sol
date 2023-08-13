@@ -9,6 +9,7 @@ import '../math/OverflowMath.sol';
 import './TicksRange.sol';
 import './Tokens.sol';
 import './Samples.sol';
+import 'hardhat/console.sol';
 
 /// @notice Position management library for ranged liquidity.
 library Positions {
@@ -451,7 +452,9 @@ library Positions {
         uint128 feesOwed0,
         uint128 feesOwed1
     ) {
-        TicksRange.validate(lower, upper, (IPool(pool).immutables()).tickSpacing);
+        PoolsharkStructs.Immutables memory constants = IPool(pool).immutables();
+        
+        TicksRange.validate(lower, upper, constants.tickSpacing);
 
         IRangePoolStructs.SnapshotCache memory cache;
         (
@@ -463,6 +466,8 @@ library Positions {
         cache.price = poolState.price;
         cache.liquidity = poolState.liquidity;
         cache.samples = poolState.samples;
+
+        console.log('tick price check:', ConstantProduct.getPriceAtTick(500, constants));
 
         (
             PoolsharkStructs.RangeTick memory tickLower
@@ -483,33 +488,30 @@ library Positions {
         cache.secondsPerLiquidityAccumUpper = tickUpper.secondsPerLiquidityAccumOutside;
 
         (
+            cache.position.feeGrowthInside0Last,
+            cache.position.feeGrowthInside1Last,
             cache.position.liquidity,
             cache.position.amount0,
-            cache.position.amount1,
-            cache.position.feeGrowthInside0Last,
-            cache.position.feeGrowthInside1Last
-        )
-            = IPool(pool).positions(lower, upper);
+            cache.position.amount1
+        ) = IPool(pool).positions(lower, upper);
 
         cache.constants = IPool(pool).immutables();
         
-        cache.userBalance = Tokens.balanceOf(pool, owner, lower, upper);
-        cache.totalSupply = Tokens.totalSupply(pool, lower, upper);
+        cache.userBalance = Tokens.balanceOf(constants.poolToken, owner, lower, upper);
+        cache.totalSupply = Tokens.totalSupply(constants.poolToken, lower, upper);
 
         (uint256 rangeFeeGrowth0, uint256 rangeFeeGrowth1) = rangeFeeGrowth(
             pool,
             lower,
             upper
         );
-
         cache.position.amount0 += uint128(
             OverflowMath.mulDiv(
                 rangeFeeGrowth0 - cache.position.feeGrowthInside0Last,
-                uint256(cache.position.liquidity),
+                cache.position.liquidity,
                 Q128
             )
         );
-
         cache.position.amount1 += uint128(
             OverflowMath.mulDiv(
                 rangeFeeGrowth1 - cache.position.feeGrowthInside1Last,
@@ -517,14 +519,13 @@ library Positions {
                 Q128
             )
         );
-
+        //TODO: figure out why fees owed doesn't match range repo
+        console.log('fee check',rangeFeeGrowth1, cache.position.feeGrowthInside1Last, cache.position.liquidity);
         if (cache.totalSupply > 0) {
             cache.position.amount0 = uint128(cache.position.amount0 * cache.userBalance / cache.totalSupply);
             cache.position.amount1 = uint128(cache.position.amount1 * cache.userBalance / cache.totalSupply);
         }
-        
         cache.tick = ConstantProduct.getTickAtPrice(cache.price, cache.constants);
-
         if (lower >= cache.tick) {
             return (
                 cache.tickSecondsAccumLower - cache.tickSecondsAccumUpper,
@@ -538,7 +539,7 @@ library Positions {
                 cache.tickSecondsAccum,
                 cache.secondsPerLiquidityAccum
             ) = Samples.getSingle(
-                IPool(address(this)), 
+                IPool(pool), 
                 IRangePoolStructs.SampleParams(
                     cache.samples.index,
                     cache.samples.length,

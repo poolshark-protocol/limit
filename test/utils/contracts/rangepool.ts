@@ -298,26 +298,26 @@ export async function validateMint(params: ValidateMintParams) {
   const balanceCheck = params.balanceCheck ? true : params.balanceCheck
 
   //collect first to recreate positions if necessary
-//   if (!collectRevertMessage) {
-//     const txn = await hre.props.limitPool
-//       .connect(signer)
-//       .burn({
-//         to: signer.address, 
-//         lower: lower, 
-//         upper: upper,
-//         burnPercent: '0',
-//       }, {gasLimit: 3000000})
-//     await txn.wait()
-//   } else {
-//     await expect(
-//       hre.props.limitPool.connect(params.signer).burn({
-//         to: signer.address, 
-//         lower: lower, 
-//         upper: upper,
-//         burnPercent: '0',
-//       })
-//     ).to.be.revertedWith(collectRevertMessage)
-//   }
+  if (!collectRevertMessage) {
+    const txn = await hre.props.limitPool
+      .connect(signer)
+      .burn({
+        to: signer.address, 
+        lower: lower, 
+        upper: upper,
+        burnPercent: '0',
+      }, {gasLimit: 3000000})
+    await txn.wait()
+  } else {
+    await expect(
+      hre.props.limitPool.connect(params.signer).burn({
+        to: signer.address, 
+        lower: lower, 
+        upper: upper,
+        burnPercent: '0',
+      })
+    ).to.be.revertedWith(collectRevertMessage)
+  }
 
   let balance0Before
   let balance1Before

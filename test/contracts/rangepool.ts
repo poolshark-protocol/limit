@@ -945,8 +945,8 @@ describe('RangePool Exact In Tests', function () {
         revertMessage: '',
     })
 
-    await mintSigners20(hre.props.token0, tokenAmount.mul(100), [hre.props.alice, hre.props.bob])
-    await mintSigners20(hre.props.token1, tokenAmount.mul(100), [hre.props.alice, hre.props.bob])
+    await mintSigners20(hre.props.token0, tokenAmount.mul(1e6), [hre.props.alice, hre.props.bob])
+    await mintSigners20(hre.props.token1, tokenAmount.mul(1e6), [hre.props.alice, hre.props.bob])
     await validateSwap({
       signer: hre.props.alice,
       recipient: hre.props.alice.address,
@@ -978,7 +978,6 @@ describe('RangePool Exact In Tests', function () {
     // await getRangeFeeGrowth(73140, 76020)
     // await getPositionFeeGrowth(73140, 76020)
 
-    await mintSigners20(hre.props.token1, BigNumber.from('1000120000000000000000'), [hre.props.alice, hre.props.bob])
     //console.log(0x0ce063e85ccdeea4f80aed91034aab9310cec387ac572e7366fdf2264741c4d1)
     await validateSwap({
       signer: hre.props.alice,
@@ -996,7 +995,6 @@ describe('RangePool Exact In Tests', function () {
     // await getRangeFeeGrowth(73140, 76020)
     // await getPositionFeeGrowth(73140, 76020)
 
-    await mintSigners20(hre.props.token1, BigNumber.from('1000120000000000000000'), [hre.props.alice, hre.props.bob])
     //console.log(0x11fa356690c58c71c0abaedd6400f5011f624cdcf657c569d623e97d6592187e)
     await validateSwap({
       signer: hre.props.alice,
@@ -1009,7 +1007,6 @@ describe('RangePool Exact In Tests', function () {
       revertMessage: '',
     })
     //console.log(0xf0df1cade6825075311fbaf6a7c15b73478fc9ff0cfaa1e52185c3d908e827fb)
-    await mintSigners20(hre.props.token1, BigNumber.from('1496453379000000000000'), [hre.props.alice, hre.props.bob])
     await validateSwap({
       signer: hre.props.alice,
       recipient: hre.props.alice.address,
@@ -1021,7 +1018,6 @@ describe('RangePool Exact In Tests', function () {
       revertMessage: '',
     })
     //console.log(0x560d01f19e9cdb296813ee610cbd6d7c8a0fb78e9e8740697aa7bc10ad7f1e4e)
-    await mintSigners20(hre.props.token1, BigNumber.from('1496453379000000000000'), [hre.props.alice, hre.props.bob])
     await validateSwap({
       signer: hre.props.alice,
       recipient: hre.props.alice.address,
@@ -1033,7 +1029,6 @@ describe('RangePool Exact In Tests', function () {
       revertMessage: '',
     })
     //console.log(0x256395b982182064b119c1971988dd9808c7d65b9d444ec20ccdd055193b5b02)
-    await mintSigners20(hre.props.token1, BigNumber.from('1496453379000000000000'), [hre.props.alice, hre.props.bob])
     await validateSwap({
       signer: hre.props.alice,
       recipient: hre.props.alice.address,
@@ -1082,8 +1077,6 @@ describe('RangePool Exact In Tests', function () {
       revertMessage: '',
     })
     //console.log(0xdbccb0a55ff2841f7d0778f80fded3b48c0493202b21bac0ab071b619ac836bd)
-    await mintSigners20(hre.props.token0, BigNumber.from('1496453379000000000000'), [hre.props.alice, hre.props.bob])
-    await mintSigners20(hre.props.token1, BigNumber.from('1496453379000000000000'), [hre.props.alice, hre.props.bob])
     await validateMint({
       signer: hre.props.alice,
       recipient: hre.props.alice.address,
@@ -1121,7 +1114,6 @@ describe('RangePool Exact In Tests', function () {
       revertMessage: '',
     })
     //console.log(0xf56c6732aec4578f3068358f213ac61548744890c9b59a9b4d94deea7095e007)
-
     await validateMint({
       signer: hre.props.alice,
       recipient: hre.props.alice.address,
@@ -1168,8 +1160,6 @@ describe('RangePool Exact In Tests', function () {
     })
 
     //console.log('0xa05d59b9bd417d6489d1aff5c5b6efe5e61443e30a6a2f0d40482c2683a40d7e')
-    await mintSigners20(hre.props.token0, BigNumber.from('33023622513667392995848'), [hre.props.alice, hre.props.bob])
-    await mintSigners20(hre.props.token1, BigNumber.from('33023622513667392995848'), [hre.props.alice, hre.props.bob])
     const aliceTokenAmount6 = BigNumber.from('2879560692345943491093')
     const aliceLiquidity6 = BigNumber.from('2879560960970776983364')
     await validateMint({
@@ -1188,8 +1178,6 @@ describe('RangePool Exact In Tests', function () {
     })
 
     //console.log('0xd4e4fb14cc804685f0c35893cea7171a1dfa37b28f4719bf1cacc80321d2fa6e')
-    await mintSigners20(hre.props.token0, BigNumber.from('33023622513667392995848'), [hre.props.alice, hre.props.bob])
-    await mintSigners20(hre.props.token1, BigNumber.from('33023622513667392995848'), [hre.props.alice, hre.props.bob])
     await validateMint({
       signer: hre.props.alice,
       recipient: hre.props.alice.address,
@@ -2365,8 +2353,8 @@ describe('RangePool Exact Out Tests', function () {
     const aliceTokenAmount4 = BigNumber.from('867731891934556487058')
     const aliceLiquidity4 = BigNumber.from('867733278644158824787')
 
-    await mintSigners20(hre.props.token0, tokenAmount.mul(100), [hre.props.alice, hre.props.bob])
-    await mintSigners20(hre.props.token1, tokenAmount.mul(100), [hre.props.alice, hre.props.bob])
+    await mintSigners20(hre.props.token0, tokenAmount.mul(1e6), [hre.props.alice, hre.props.bob])
+    await mintSigners20(hre.props.token1, tokenAmount.mul(1e6), [hre.props.alice, hre.props.bob])
     await validateSwap({
       signer: hre.props.alice,
       recipient: hre.props.alice.address,
@@ -2399,7 +2387,6 @@ describe('RangePool Exact Out Tests', function () {
     // await getRangeFeeGrowth(73140, 76020)
     // await getPositionFeeGrowth(73140, 76020)
 
-    await mintSigners20(hre.props.token1, BigNumber.from('1000120000000000000000'), [hre.props.alice, hre.props.bob])
     //console.log(0x0ce063e85ccdeea4f80aed91034aab9310cec387ac572e7366fdf2264741c4d1)
     await validateSwap({
       signer: hre.props.alice,
@@ -2417,8 +2404,6 @@ describe('RangePool Exact Out Tests', function () {
     // await getFeeGrowthGlobal()
     // await getRangeFeeGrowth(73140, 76020)
     // await getPositionFeeGrowth(73140, 76020)
-
-    await mintSigners20(hre.props.token1, BigNumber.from('1000120000000000000000'), [hre.props.alice, hre.props.bob])
     //console.log(0x11fa356690c58c71c0abaedd6400f5011f624cdcf657c569d623e97d6592187e)
     await validateSwap({
       signer: hre.props.alice,
@@ -2432,7 +2417,6 @@ describe('RangePool Exact Out Tests', function () {
       exactIn: false
     })
     //console.log(0xf0df1cade6825075311fbaf6a7c15b73478fc9ff0cfaa1e52185c3d908e827fb)
-    await mintSigners20(hre.props.token1, BigNumber.from('1496453379000000000000'), [hre.props.alice, hre.props.bob])
     await validateSwap({
       signer: hre.props.alice,
       recipient: hre.props.alice.address,
@@ -2445,7 +2429,6 @@ describe('RangePool Exact Out Tests', function () {
       exactIn: false
     })
     //console.log(0x560d01f19e9cdb296813ee610cbd6d7c8a0fb78e9e8740697aa7bc10ad7f1e4e)
-    await mintSigners20(hre.props.token1, BigNumber.from('1496453379000000000000'), [hre.props.alice, hre.props.bob])
     await validateSwap({
       signer: hre.props.alice,
       recipient: hre.props.alice.address,
@@ -2458,7 +2441,6 @@ describe('RangePool Exact Out Tests', function () {
       exactIn: false
     })
     //console.log(0x256395b982182064b119c1971988dd9808c7d65b9d444ec20ccdd055193b5b02)
-    await mintSigners20(hre.props.token1, BigNumber.from('1496453379000000000000'), [hre.props.alice, hre.props.bob])
     await validateSwap({
       signer: hre.props.alice,
       recipient: hre.props.alice.address,
@@ -2512,8 +2494,6 @@ describe('RangePool Exact Out Tests', function () {
       revertMessage: '',
     })
     //console.log(0xdbccb0a55ff2841f7d0778f80fded3b48c0493202b21bac0ab071b619ac836bd)
-    await mintSigners20(hre.props.token0, BigNumber.from('1496453379000000000000'), [hre.props.alice, hre.props.bob])
-    await mintSigners20(hre.props.token1, BigNumber.from('1496453379000000000000'), [hre.props.alice, hre.props.bob])
     await validateMint({
       signer: hre.props.alice,
       recipient: hre.props.alice.address,
@@ -2597,8 +2577,6 @@ describe('RangePool Exact Out Tests', function () {
     })
 
     //console.log('0xa05d59b9bd417d6489d1aff5c5b6efe5e61443e30a6a2f0d40482c2683a40d7e')
-    await mintSigners20(hre.props.token0, BigNumber.from('33023622513667392995848'), [hre.props.alice, hre.props.bob])
-    await mintSigners20(hre.props.token1, BigNumber.from('33023622513667392995848'), [hre.props.alice, hre.props.bob])
     const aliceTokenAmount6 = BigNumber.from('2879560692345943491092')
     const aliceLiquidity6 = BigNumber.from('2879560960970776983363')
     await validateMint({
@@ -2616,8 +2594,6 @@ describe('RangePool Exact Out Tests', function () {
       collectRevertMessage: ''
     })
     //console.log('0xd4e4fb14cc804685f0c35893cea7171a1dfa37b28f4719bf1cacc80321d2fa6e')
-    await mintSigners20(hre.props.token0, BigNumber.from('33023622513667392995848'), [hre.props.alice, hre.props.bob])
-    await mintSigners20(hre.props.token1, BigNumber.from('33023622513667392995848'), [hre.props.alice, hre.props.bob])
     await validateMint({
       signer: hre.props.alice,
       recipient: hre.props.alice.address,

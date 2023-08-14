@@ -6274,10 +6274,289 @@ describe('LimitPool Tests', function () {
         } 
     })
 
-    it.skip("pool0 - Users Prevented From Burning When Stashed On A Nonstandard Tick", async function () {
+    it("pool0 - Users Prevented From Burning When Stashed On A Nonstandard Tick", async function () {
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: "-100",
+            upper: "100",
+            amount: "227",
+            zeroForOne: true,
+            balanceInDecrease: "227",
+            liquidityIncrease: "22701",
+            balanceOutIncrease: "0",
+            upperTickCleared: false,
+            lowerTickCleared: true,
+            revertMessage: "",
+        });
+
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: false,
+            amountIn: BigNumber.from("340282366920938463463374607431768211452"),
+            priceLimit: BigNumber.from('79255900000000000000000000000'), // price at tick 7
+            balanceInDecrease: "122",
+            balanceOutIncrease: "121",
+            revertMessage: "",
+        });
+
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: "-100",
+            upper: "100",
+            amount: "227",
+            zeroForOne: true,
+            balanceInDecrease: "227",
+            liquidityIncrease: "22701",
+            balanceOutIncrease: "0",
+            upperTickCleared: false,
+            lowerTickCleared: true,
+            revertMessage: "",
+        });
+
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: false,
+            amountIn: BigNumber.from("340282366920938463463374607431768211452"),
+            priceLimit: BigNumber.from('79251933339942720485266405665'), // price at tick 6
+            balanceInDecrease: "121",
+            balanceOutIncrease: "120",
+            revertMessage: "",
+        });
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: "-100",
+            upper: "100",
+            claim: "5",
+            expectedLower: "5",
+            expectedPositionLower: "0",
+            liquidityPercent: ethers.utils.parseUnits('5', 37),
+            zeroForOne: true,
+            balanceInIncrease: "116",
+            positionLiquidityChange: "11350",
+            balanceOutIncrease: "52",
+            lowerTickCleared: false,
+            upperTickCleared: false,
+            revertMessage: "",
+        });
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: "0",
+            upper: "100",
+            claim: "5",
+            expectedLower: "5",
+            expectedPositionLower: "0",
+            liquidityPercent: ethers.utils.parseUnits('5', 37),
+            zeroForOne: true,
+            balanceInIncrease: "1",
+            positionLiquidityChange: "5675",
+            balanceOutIncrease: "26",
+            lowerTickCleared: false,
+            upperTickCleared: false,
+            revertMessage: "",
+        });
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: "0",
+            upper: "100",
+            claim: "5",
+            expectedLower: "5",
+            expectedPositionLower: "0",
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: true,
+            balanceInIncrease: "1",
+            positionLiquidityChange: "5676",
+            balanceOutIncrease: "26",
+            lowerTickCleared: false,
+            upperTickCleared: false,
+            revertMessage: "",
+        });
+
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: "-100",
+            upper: "100",
+            claim: "5",
+            expectedPositionLower: "0",
+            liquidityPercent: ethers.utils.parseUnits('5', 37),
+            zeroForOne: true,
+            balanceInIncrease: "116",
+            positionLiquidityChange: "11350",
+            balanceOutIncrease: "53",
+            lowerTickCleared: true,
+            upperTickCleared: false,
+            revertMessage: "",
+        });
+
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: "0",
+            upper: "100",
+            claim: "5",
+            expectedPositionLower: "0",
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: true,
+            balanceInIncrease: "3",
+            positionLiquidityChange: "11351",
+            balanceOutIncrease: "53",
+            lowerTickCleared: true,
+            upperTickCleared: false,
+            revertMessage: "",
+        });
+
+        if (balanceCheck) {
+            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
+            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
+        }
     })
 
-    it.skip("pool1 - Users Prevented From Burning When Stashed On A Nonstandard Tick", async function () {
+    it("pool1 - Users Prevented From Burning When Stashed On A Nonstandard Tick", async function () {
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: "-100",
+            upper: "100",
+            amount: "227",
+            zeroForOne: false,
+            balanceInDecrease: "227",
+            liquidityIncrease: "22701",
+            balanceOutIncrease: "0",
+            upperTickCleared: true,
+            lowerTickCleared: false,
+            revertMessage: "",
+        });
+
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: true,
+            amountIn: BigNumber.from("340282366920938463463374607431768211452"),
+            priceLimit: BigNumber.from('79200400000000000000000000000'), // price at tick -7
+            balanceInDecrease: "122",
+            balanceOutIncrease: "121",
+            revertMessage: "",
+        });
+
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: "-100",
+            upper: "100",
+            amount: "227",
+            zeroForOne: false,
+            balanceInDecrease: "227",
+            liquidityIncrease: "22701",
+            balanceOutIncrease: "0",
+            upperTickCleared: true,
+            lowerTickCleared: false,
+            revertMessage: "",
+        });
+
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: true,
+            amountIn: BigNumber.from("340282366920938463463374607431768211452"),
+            priceLimit: BigNumber.from('79204398818407646348591574759'), // price at tick -6
+            balanceInDecrease: "121",
+            balanceOutIncrease: "120",
+            revertMessage: "",
+        });
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: "-100",
+            upper: "100",
+            claim: "-5",
+            expectedUpper: "-5",
+            expectedPositionUpper: "0",
+            liquidityPercent: ethers.utils.parseUnits('5', 37),
+            zeroForOne: false,
+            balanceInIncrease: "116",
+            positionLiquidityChange: "11350",
+            balanceOutIncrease: "52",
+            lowerTickCleared: false,
+            upperTickCleared: false,
+            revertMessage: "",
+        });
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: "-100",
+            upper: "0",
+            claim: "-5",
+            expectedUpper: "-5",
+            expectedPositionUpper: "0",
+            liquidityPercent: ethers.utils.parseUnits('5', 37),
+            zeroForOne: false,
+            balanceInIncrease: "1",
+            positionLiquidityChange: "5675",
+            balanceOutIncrease: "26",
+            lowerTickCleared: false,
+            upperTickCleared: false,
+            revertMessage: "",
+        });
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: "-100",
+            upper: "0",
+            claim: "-5",
+            expectedUpper: "-5",
+            expectedPositionUpper: "0",
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: false,
+            balanceInIncrease: "1",
+            positionLiquidityChange: "5676",
+            balanceOutIncrease: "26",
+            lowerTickCleared: false,
+            upperTickCleared: false,
+            revertMessage: "",
+        });
+
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: "-100",
+            upper: "100",
+            claim: "-5",
+            expectedUpper: "-5",
+            expectedPositionUpper: "0",
+            liquidityPercent: ethers.utils.parseUnits('5', 37),
+            zeroForOne: false,
+            balanceInIncrease: "116",
+            positionLiquidityChange: "11350",
+            balanceOutIncrease: "53",
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: "",
+        });
+
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: "-100",
+            upper: "0",
+            claim: "-5",
+            expectedPositionLower: "0",
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: false,
+            balanceInIncrease: "3",
+            positionLiquidityChange: "11351",
+            balanceOutIncrease: "53",
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: "",
+        });
+
+        if (balanceCheck) {
+            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
+            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
+        }
     })
 
     it("pool0 - Unsetting ticks leads to invalid claims", async function () {

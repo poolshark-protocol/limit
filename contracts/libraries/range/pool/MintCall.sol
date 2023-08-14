@@ -55,7 +55,6 @@ library MintCall {
                 cache.constants
             );
         }
-        console.log('position liquidity 2', cache.position.liquidity);
         // update position with latest fees accrued
         (cache.state, cache.position, cache.liquidityMinted) = Positions.add(
             cache.position,

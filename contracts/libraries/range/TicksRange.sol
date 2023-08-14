@@ -11,7 +11,6 @@ import '../math/OverflowMath.sol';
 import '../math/ConstantProduct.sol';
 import '../TickMap.sol';
 import './Samples.sol';
-import 'hardhat/console.sol';
 
 /// @notice Tick management library for range pools
 library TicksRange {
@@ -55,7 +54,7 @@ library TicksRange {
         uint128 amount
     ) internal returns (PoolsharkStructs.GlobalState memory) {
         validate(lower, upper, constants.tickSpacing);
-        console.log('adding liquidity');
+
         // check for amount to overflow liquidity delta & global
         if (amount == 0) return state;
         if (amount > uint128(type(int128).max)) require(false, 'LiquidityOverflow()');
@@ -197,7 +196,6 @@ library TicksRange {
                 state.pool.liquidity,
                 tickAtPrice
             );
-            console.log('pool liquidity', state.pool.liquidity);
             state.pool.liquidity -= amount;  
         }
         state.liquidityGlobal -= amount;

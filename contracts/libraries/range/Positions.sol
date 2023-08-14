@@ -9,7 +9,6 @@ import '../math/OverflowMath.sol';
 import './TicksRange.sol';
 import './Tokens.sol';
 import './Samples.sol';
-import 'hardhat/console.sol';
 
 /// @notice Position management library for ranged liquidity.
 library Positions {
@@ -467,8 +466,6 @@ library Positions {
         cache.liquidity = poolState.liquidity;
         cache.samples = poolState.samples;
 
-        console.log('tick price check:', ConstantProduct.getPriceAtTick(500, constants));
-
         (
             PoolsharkStructs.RangeTick memory tickLower
             ,
@@ -519,7 +516,6 @@ library Positions {
                 Q128
             )
         );
-        console.log('fee check',rangeFeeGrowth1, cache.position.feeGrowthInside1Last, cache.position.liquidity);
         if (cache.totalSupply > 0) {
             cache.position.amount0 = uint128(cache.position.amount0 * cache.userBalance / cache.totalSupply);
             cache.position.amount1 = uint128(cache.position.amount1 * cache.userBalance / cache.totalSupply);

@@ -932,7 +932,7 @@ describe('RangePool Exact In Tests', function () {
     const aliceTokenAmount4 = BigNumber.from('867731891934556487059')
     const aliceLiquidity4 = BigNumber.from('867733278644158824788')
 
-    await getPrice()
+    if (debugMode) await getPrice()
 
     await validateSwap({
         signer: hre.props.alice,

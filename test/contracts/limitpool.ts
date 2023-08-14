@@ -6251,7 +6251,7 @@ describe('LimitPool Tests', function () {
             revertMessage: "",
         });
 
-        await getPrice(false, true)
+        if (debugMode) await getPrice(false, true)
 
         await validateBurn({
             signer: hre.props.bob,

@@ -104,7 +104,7 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
 
-        await getPrice(true, true)
+        if (debugMode) await getPrice(true, true)
         expect(await getLiquidity(true)).to.be.equal(aliceLiquidity)
 
         // no-op swap

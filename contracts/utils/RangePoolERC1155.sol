@@ -6,7 +6,7 @@ import '../interfaces/IPool.sol';
 import "./RangePoolErrors.sol";
 import '../base/storage/RangePoolERC1155Immutables.sol';
 import "../interfaces/range/IRangePoolERC1155.sol";
-import "../libraries/range/Tokens.sol";
+import "../libraries/range/RangeTokens.sol";
 import '../libraries/solady/LibClone.sol';
 
 // needs to be deployed as a separate clone

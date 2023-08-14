@@ -2,7 +2,7 @@
 pragma solidity 0.8.13;
 
 import '../../../interfaces/limit/ILimitPoolStructs.sol';
-import '../PositionsLimit.sol';
+import '../LimitPositions.sol';
 import '../../utils/Collect.sol';
 
 library MintLimitCall {
@@ -35,7 +35,7 @@ library MintLimitCall {
     ) external returns (ILimitPoolStructs.MintLimitCache memory) {
 
         // resize position if necessary
-        (params, cache) = PositionsLimit.resize(
+        (params, cache) = LimitPositions.resize(
             ticks,
             samples,
             rangeTickMap,
@@ -70,7 +70,7 @@ library MintLimitCall {
             // bump to the next tick if there is no liquidity
             if (cache.pool.liquidity == 0) {
                 /// @dev - this makes sure to have liquidity unlocked if undercutting
-                (cache, cache.pool) = TicksLimit.unlock(cache, cache.pool, ticks, limitTickMap, params.zeroForOne);
+                (cache, cache.pool) = LimitTicks.unlock(cache, cache.pool, ticks, limitTickMap, params.zeroForOne);
             }
 
             if (params.zeroForOne) {
@@ -78,7 +78,7 @@ library MintLimitCall {
                 if (priceLower <= cache.pool.price) {
                     // save liquidity if active
                     if (cache.pool.liquidity > 0) {
-                        cache.pool = TicksLimit.insertSingle(params, ticks, limitTickMap, cache, cache.pool, cache.constants);
+                        cache.pool = LimitTicks.insertSingle(params, ticks, limitTickMap, cache, cache.pool, cache.constants);
                     }
                     cache.pool.price = priceLower;
                     cache.pool.tickAtPrice = params.lower;
@@ -93,7 +93,7 @@ library MintLimitCall {
                 uint160 priceUpper = ConstantProduct.getPriceAtTick(params.upper, cache.constants);
                 if (priceUpper >= cache.pool.price) {
                     if (cache.pool.liquidity > 0) {
-                        cache.pool = TicksLimit.insertSingle(params, ticks, limitTickMap, cache, cache.pool, cache.constants);
+                        cache.pool = LimitTicks.insertSingle(params, ticks, limitTickMap, cache, cache.pool, cache.constants);
                     }
                     cache.pool.price = priceUpper;
                     cache.pool.tickAtPrice = params.upper;
@@ -104,7 +104,7 @@ library MintLimitCall {
                     emit Sync(cache.pool.price, cache.pool.liquidity);
                 }
             }
-            (cache.pool, cache.position) = PositionsLimit.add(
+            (cache.pool, cache.position) = LimitPositions.add(
                 cache,
                 ticks,
                 limitTickMap,

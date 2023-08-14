@@ -6,12 +6,12 @@ import '../../interfaces/range/IRangePoolStructs.sol';
 import '../math/ConstantProduct.sol';
 import './math/FeeMath.sol';
 import '../math/OverflowMath.sol';
-import './TicksRange.sol';
-import './Tokens.sol';
+import './RangeTicks.sol';
+import './RangeTokens.sol';
 import './Samples.sol';
 
 /// @notice Position management library for ranged liquidity.
-library Positions {
+library RangePositions {
     error NotEnoughPositionLiquidity();
     error InvalidClaimTick();
     error LiquidityOverflow();

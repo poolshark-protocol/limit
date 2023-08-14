@@ -2,15 +2,15 @@ import { SUPPORTED_NETWORKS } from '../../../scripts/constants/supportedNetworks
 import { DeployAssist } from '../../../scripts/util/deployAssist'
 import { ContractDeploymentsKeys } from '../../../scripts/util/files/contractDeploymentKeys'
 import { ContractDeploymentsJson } from '../../../scripts/util/files/contractDeploymentsJson'
-import { BurnLimitCall__factory, LimitPool__factory, MintLimitCall__factory, PositionsLimit__factory, QuoteCall__factory, RangePoolERC1155__factory, TicksLimit__factory } from '../../../typechain'
-import { BurnCall__factory } from '../../../typechain'
+import { BurnLimitCall__factory, LimitPool__factory, MintLimitCall__factory, LimitPositions__factory, QuoteCall__factory, RangePoolERC1155__factory, LimitTicks__factory } from '../../../typechain'
+import { BurnRangeCall__factory } from '../../../typechain'
 import { SwapCall__factory } from '../../../typechain'
-import { MintCall__factory } from '../../../typechain'
+import { MintRangeCall__factory } from '../../../typechain'
 import {
     Token20__factory,
     LimitPoolFactory__factory,
     Ticks__factory,
-    Positions__factory,
+    RangePositions__factory,
     LimitPoolManager__factory,
     TickMap__factory,
     PoolRouter__factory
@@ -132,8 +132,8 @@ export class InitialSetup {
         await this.deployAssist.deployContractWithRetry(
             network,
             // @ts-ignore
-            Positions__factory,
-            'positionsLib',
+            RangePositions__factory,
+            'rangePositionsLib',
             [],
         )
 
@@ -142,8 +142,8 @@ export class InitialSetup {
         await this.deployAssist.deployContractWithRetry(
             network,
             // @ts-ignore
-            PositionsLimit__factory,
-            'positionsLimitLib',
+            LimitPositions__factory,
+            'limitPositionsLib',
             [],
         )
 
@@ -179,16 +179,16 @@ export class InitialSetup {
         await this.deployAssist.deployContractWithRetry(
             network,
             // @ts-ignore
-            MintCall__factory,
-            'mintCall',
+            MintRangeCall__factory,
+            'mintRangeCall',
             []
         )
 
         await this.deployAssist.deployContractWithRetry(
             network,
             // @ts-ignore
-            BurnCall__factory,
-            'burnCall',
+            BurnRangeCall__factory,
+            'burnRangeCall',
             []
         )
 
@@ -228,10 +228,10 @@ export class InitialSetup {
                 hre.props.limitPoolFactory.address
             ],
             {
-                'contracts/libraries/limit/PositionsLimit.sol:PositionsLimit': hre.props.positionsLimitLib.address,
+                'contracts/libraries/limit/LimitPositions.sol:LimitPositions': hre.props.limitPositionsLib.address,
                 'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address,
-                'contracts/libraries/range/pool/MintCall.sol:MintCall': hre.props.mintCall.address,
-                'contracts/libraries/range/pool/BurnCall.sol:BurnCall': hre.props.burnCall.address,
+                'contracts/libraries/range/pool/MintRangeCall.sol:MintRangeCall': hre.props.mintRangeCall.address,
+                'contracts/libraries/range/pool/BurnRangeCall.sol:BurnRangeCall': hre.props.burnRangeCall.address,
                 'contracts/libraries/limit/pool/MintLimitCall.sol:MintLimitCall': hre.props.mintLimitCall.address,
                 'contracts/libraries/limit/pool/BurnLimitCall.sol:BurnLimitCall': hre.props.burnLimitCall.address,
                 'contracts/libraries/pool/SwapCall.sol:SwapCall': hre.props.swapCall.address,

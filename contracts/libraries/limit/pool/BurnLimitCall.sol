@@ -2,7 +2,7 @@
 pragma solidity 0.8.13;
 
 import '../../../interfaces/limit/ILimitPoolStructs.sol';
-import '../PositionsLimit.sol';
+import '../LimitPositions.sol';
 import '../../utils/Collect.sol';
 
 library BurnLimitCall {
@@ -37,7 +37,7 @@ library BurnLimitCall {
                 cache.state,
                 cache.position,
                 params.claim
-            ) = PositionsLimit.update(
+            ) = LimitPositions.update(
                 positions,
                 ticks,
                 tickMap,
@@ -55,7 +55,7 @@ library BurnLimitCall {
             );
         } else {
             // position has not been crossed into
-            (cache.state, cache.position) = PositionsLimit.remove(
+            (cache.state, cache.position) = LimitPositions.remove(
                 positions,
                 ticks,
                 tickMap,

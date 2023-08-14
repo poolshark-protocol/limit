@@ -3,9 +3,9 @@ pragma solidity ^0.8.13;
 
 import '../../../interfaces/range/IRangePoolStructs.sol';
 import '../../utils/SafeTransfers.sol';
-import '../Positions.sol';
+import '../RangePositions.sol';
 
-library BurnCall {
+library BurnRangeCall {
     event Burn(
         address indexed recipient,
         int24 lower,
@@ -30,7 +30,7 @@ library BurnCall {
             cache.amount0,
             cache.amount1,
             cache.tokenBurned
-        ) = Positions.update(
+        ) = RangePositions.update(
                 ticks,
                 cache.position,
                 cache.state,
@@ -46,7 +46,7 @@ library BurnCall {
             cache.position,
             cache.amount0,
             cache.amount1
-        ) = Positions.remove(
+        ) = RangePositions.remove(
             cache.position,
             ticks,
             samples,
@@ -63,7 +63,7 @@ library BurnCall {
         cache.position.amount0 -= cache.amount0;
         cache.position.amount1 -= cache.amount1;
         if (cache.position.amount0 > 0 || cache.position.amount1 > 0) {
-            (cache.position, cache.state) = Positions.compound(
+            (cache.position, cache.state) = RangePositions.compound(
                 cache.position,
                 ticks,
                 samples,

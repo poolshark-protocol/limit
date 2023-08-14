@@ -10,7 +10,7 @@ import './utils/SafeCast.sol';
 import './range/math/FeeMath.sol';
 import './range/Samples.sol';
 import './limit/EpochMap.sol';
-import './limit/TicksLimit.sol';
+import './limit/LimitTicks.sol';
 
 library Ticks {
 
@@ -430,7 +430,7 @@ library Ticks {
             }
             // zero out liquidityDelta and priceAt
             ticks[cache.crossTick].limit = PoolsharkStructs.LimitTick(0,0,0);
-            TicksLimit.clear(ticks, cache.constants, limitTickMap, cache.crossTick);
+            LimitTicks.clear(ticks, cache.constants, limitTickMap, cache.crossTick);
             /// @dev - price and tickAtPrice updated at end of loop
         }
         if ((cache.crossStatus & LIMIT_POOL) > 0) {

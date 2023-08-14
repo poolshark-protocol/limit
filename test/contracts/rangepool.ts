@@ -104,7 +104,7 @@ describe('RangePool Exact In Tests', function () {
 
     // console.log('after swap')
     if (debugMode) await getPrice()
-    if (true) await getSnapshot(hre.props.alice.address, 20, 60)
+    if (debugMode) await getSnapshot(hre.props.alice.address, 20, 60)
 
     // if (debugMode) await getSample()
 
@@ -135,7 +135,7 @@ describe('RangePool Exact In Tests', function () {
   it('token0 - Should mint, swap, and burn 17', async function () {
     const pool: RangePoolState = (await hre.props.limitPool.globalState()).pool
     const aliceLiquidity = BigNumber.from('55483175795606442088768')
-    debugMode = true
+
     if (debugMode) await getPrice()
 
     await validateMint({
@@ -856,7 +856,7 @@ describe('RangePool Exact In Tests', function () {
     const aliceLiquidity = BigNumber.from('4152939701311089823384')
     const bobLiquidity = BigNumber.from('10356653617731432349576')
 
-    await getPrice()
+    if (debugMode) await getPrice()
     await validateMint({
       signer: hre.props.alice,
       recipient: hre.props.alice.address,
@@ -1322,7 +1322,7 @@ describe('RangePool Exact In Tests', function () {
     const aliceLiquidity = BigNumber.from('4152939701311089823384')
     const bobLiquidity = BigNumber.from('10356653617731432349576')
 
-    await getPrice()
+    if (debugMode) await getPrice()
 
     await validateSwap({
         signer: hre.props.alice,
@@ -1334,7 +1334,7 @@ describe('RangePool Exact In Tests', function () {
         balanceOutIncrease: BigNumber.from('0'),
         revertMessage: '',
     })
-    await getPrice()
+    if (debugMode) await getPrice()
 
     await validateMint({
       signer: hre.props.alice,
@@ -1480,7 +1480,7 @@ describe('RangePool Exact Out Tests', function () {
   })
 
   it('token1 - Should mint, swap, and burn 27', async function () {
-    if (true) await getPrice()
+    if (debugMode) await getPrice()
     await validateSwap({
         signer: hre.props.alice,
         recipient: hre.props.alice.address,
@@ -1515,7 +1515,7 @@ describe('RangePool Exact Out Tests', function () {
       liquidityIncrease: liquidityAmount,
       revertMessage: '',
     })
-    console.log('before swap')
+    if (debugMode) console.log('before swap')
 
     //177159557114295710296101716160
     //177159557114295710296101716160
@@ -1530,14 +1530,14 @@ describe('RangePool Exact Out Tests', function () {
       revertMessage: '',
       exactIn: false
     })
-    console.log('after swap')
-    await getPrice()
+    if (debugMode) console.log('after swap')
+    if (debugMode) await getPrice()
 
     //79450223072165328185028130650
     //79450223072165328185028600164
     // after swap pool prices slightly different between exactIn vs. exactOut
     if (debugMode) await getPrice()
-    if (true) await getSnapshot(hre.props.alice.address, 20, 60)
+    if (debugMode) await getSnapshot(hre.props.alice.address, 20, 60)
 
  //   if (debugMode) await getSample()
 
@@ -1570,7 +1570,7 @@ describe('RangePool Exact Out Tests', function () {
                                          //55483175795606442088768
     const aliceLiquidity = BigNumber.from('55483175795606442088768')
 
-    if (true) await getPrice()
+    if (debugMode) await getPrice()
 
     //79450223072165328185028130650
     //79450223072165328185028600164
@@ -2350,7 +2350,7 @@ describe('RangePool Exact Out Tests', function () {
       revertMessage: '',
     })
 
-    if (true) {
+    if (balanceCheck) {
       console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
       console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
     }
@@ -2727,11 +2727,10 @@ describe('RangePool Exact Out Tests', function () {
       revertMessage: '',
     })
     
-    if (true) {
+    if (balanceCheck) {
       console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
       console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
     }
-    return
   })
 
   //TODO: swapping to boundary price w/ exactOut

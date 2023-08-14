@@ -576,7 +576,7 @@ describe('LimitPool Tests', function () {
         if (debugMode) await getPrice(false, true)
         const aliceLiquidity = '20051041647900280328782'
         const bobLiquidity = '20151542874862585449132'
-        debugMode = true
+
         // mint position
         await validateMint({
             signer: hre.props.bob,
@@ -1729,7 +1729,7 @@ describe('LimitPool Tests', function () {
             revertMessage: 'PositionNotFound()',
         })
         
-        if (true) {
+        if (balanceCheck) {
             console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
             console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
         }
@@ -4491,7 +4491,7 @@ describe('LimitPool Tests', function () {
         const aliceLiquidity = '185871770591153141'
         const aliceLiquidity2 = '1998'
         const aliceLiquidityDiff = '-185871770591151142'
-        debugMode = true
+
 
         if (debugMode) console.log("Mint #1");
 
@@ -5150,7 +5150,7 @@ describe('LimitPool Tests', function () {
         }
       });
 
-      it("pool0 - Can claim at the current pool price even when it is not your claim tick", async () => {
+    it("pool0 - Can claim at the current pool price even when it is not your claim tick", async () => {
         if (debugMode) console.log("Mint #1");
 
         await validateMint({
@@ -6135,7 +6135,7 @@ describe('LimitPool Tests', function () {
             revertMessage: "",
         });
 
-        if (true) {
+        if (balanceCheck) {
             console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
             console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
         } 

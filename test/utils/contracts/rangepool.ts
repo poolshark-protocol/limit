@@ -93,6 +93,11 @@ export async function getPrice() {
   console.log('pool price:', poolPrice.toString())
 }
 
+export async function getRangeLiquidity() {
+  const poolLiquidity = (await hre.props.limitPool.globalState()).pool.liquidity
+  console.log('range pool liquidity:', poolLiquidity.toString())
+}
+
 export async function getRangeBalanceOf(owner: string, lower: number, upper: number): Promise<BigNumber> {
   const positionTokenId  = await hre.props.positionsLib.id(lower, upper);
   const balance = await hre.props.limitPoolToken.balanceOf(owner, positionTokenId)
@@ -257,6 +262,8 @@ export async function validateSwap(params: ValidateSwapParams) {
     return
   }
 
+  await getPrice()
+
   let balanceInAfter
   let balanceOutAfter
   if (zeroForOne) {
@@ -269,7 +276,7 @@ export async function validateSwap(params: ValidateSwapParams) {
 
   expect(balanceInBefore.sub(balanceInAfter)).to.be.equal(balanceInDecrease)
   expect(balanceOutAfter.sub(balanceOutBefore)).to.be.equal(balanceOutIncrease)
-//   expect(balanceInBefore.sub(balanceInAfter)).to.be.equal(inAmount)
+  expect(balanceInBefore.sub(balanceInAfter)).to.be.equal(inAmount)
   expect(balanceOutAfter.sub(balanceOutBefore)).to.be.equal(outAmount)
 
   const poolAfter: RangePoolState = (await hre.props.limitPool.globalState()).pool
@@ -381,11 +388,8 @@ export async function validateMint(params: ValidateMintParams) {
   balance0After = await hre.props.token0.balanceOf(params.signer.address)
   balance1After = await hre.props.token1.balanceOf(params.signer.address)
 
-  if (balanceCheck) {
-    expect(balance0Before.sub(balance0After)).to.be.equal(balance0Decrease)
-    expect(balance1Before.sub(balance1After)).to.be.equal(balance1Decrease)
-  }
-
+  expect(balance0Before.sub(balance0After)).to.be.equal(balance0Decrease)
+  expect(balance1Before.sub(balance1After)).to.be.equal(balance1Decrease)
 
   let lowerTickAfter: RangeTick
   let upperTickAfter: RangeTick

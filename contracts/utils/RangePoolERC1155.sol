@@ -242,8 +242,6 @@ contract RangePoolERC1155 is
         uint256 amount
     ) internal virtual {}
 
-    //TODO: check address(this) for valid poolToken clone
-
     function _onlyCanonicalPoolTokens(
         PoolsharkStructs.Immutables memory constants
     ) private view returns (bool) {

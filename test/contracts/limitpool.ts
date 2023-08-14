@@ -1567,8 +1567,6 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
 
-        //TODO: test undercut on top of undercut
-        //swaps from 100 to 200
         if (debugMode) await getTick(false, 21000)
         if (debugMode) console.log('BEFORE MINT 2')
         if (debugMode) await getPrice(true, true)
@@ -1662,8 +1660,7 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
 
-        //TODO: test undercut on top of undercut
-        //swaps from 100 to 200
+        //swaps from 100 to 190
         if (debugMode) await getTick(false, 21000)
         if (debugMode) console.log('BEFORE MINT 2')
         if (debugMode) await getPrice(true, true)
@@ -1683,15 +1680,10 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
 
-        // return
         if (debugMode) await getPrice(true, true)
         if (debugMode) console.log('BEFORE BURN 1')
         if (debugMode) await getTick(false, 21000, true)
         // close both positions
-        //amountOut should be
-        //49861732254639926627
-        //TODO: claim tick at 145 does not complain about epoch on 150
-        //TODO: claim tick at 150 is not reverted
         await validateBurn({
             signer: hre.props.bob,
             lower: '100',
@@ -1872,8 +1864,6 @@ describe('LimitPool Tests', function () {
         })
 
         if (debugMode) console.log('BEFORE BURN 3')
-
-        //TODO: make sure active pool liquidity is removed on burn removal
         if (debugMode) await getTick(true, 120, true)
         if (debugMode) await getLiquidity(true, true)
 
@@ -2007,7 +1997,7 @@ describe('LimitPool Tests', function () {
             zeroForOne: true,
             amountIn: tokenAmountBn.mul(5),
             priceLimit: BigNumber.from('78734600000000000000000000000'), // price at tick -125
-            balanceInDecrease: '126593680232133996918', //TODO: check these amounts are correct
+            balanceInDecrease: '126593680232133996918',
             balanceOutIncrease: '125177623841344633721',
             revertMessage: '',
         })
@@ -2062,7 +2052,6 @@ describe('LimitPool Tests', function () {
 
         if (debugMode) console.log('BEFORE BURN 3')
         if (debugMode) getPrice(false, true)
-        //TODO: revert if there is no liquidity
 
         await validateBurn({
             signer: hre.props.alice,
@@ -2087,7 +2076,7 @@ describe('LimitPool Tests', function () {
             liquidityPercent: ethers.utils.parseUnits('5', 37),
             zeroForOne: false,
             balanceInIncrease: '6273424767410208531',
-            balanceOutIncrease: '93503056303984116865', //TODO: if we go back to the same tick why is amountOut more?
+            balanceOutIncrease: '93503056303984116865',
             lowerTickCleared: false,
             upperTickCleared: true,
             expectedUpper: '-120',
@@ -2102,7 +2091,7 @@ describe('LimitPool Tests', function () {
             liquidityPercent: ethers.utils.parseUnits('0', 37),
             zeroForOne: false,
             balanceInIncrease: '6273424767410208531',
-            balanceOutIncrease: '93503056303984116865', //TODO: if we go back to the same tick why is amountOut more?
+            balanceOutIncrease: '93503056303984116865',
             lowerTickCleared: false,
             upperTickCleared: true,
             expectedUpper: '-120',
@@ -2110,8 +2099,6 @@ describe('LimitPool Tests', function () {
         })
 
         if (debugMode) console.log('BEFORE MINT 3')
-
-        //TODO: make sure active pool liquidity is removed on burn removal
         if (debugMode) await getTick(true, 120, true)
         if (debugMode) await getLiquidity(true, true)
 
@@ -2341,8 +2328,6 @@ describe('LimitPool Tests', function () {
         })
 
         if (debugMode) console.log('BEFORE BURN 3')
-
-        //TODO: make sure active pool liquidity is removed on burn removal
         if (debugMode) await getTick(true, 120, true)
         if (debugMode) await getLiquidity(true, true)
 
@@ -2473,8 +2458,8 @@ describe('LimitPool Tests', function () {
             recipient: hre.props.alice.address,
             zeroForOne: true,
             amountIn: tokenAmountBn.mul(5),
-            priceLimit: BigNumber.from('78734600000000000000000000000'), // price at tick -125
-            balanceInDecrease: '126593680232133996918', //TODO: check these amounts are correct
+            priceLimit: BigNumber.from('78734600000000000000000000000'),
+            balanceInDecrease: '126593680232133996918',
             balanceOutIncrease: '125177623841344633721',
             revertMessage: '',
         })
@@ -2529,7 +2514,7 @@ describe('LimitPool Tests', function () {
 
         if (debugMode) console.log('BEFORE BURN 3')
         if (debugMode) getPrice(false, true)
-        //TODO: revert if there is no liquidity
+
         await validateBurn({
             signer: hre.props.alice,
             lower: '-200', 
@@ -2553,7 +2538,7 @@ describe('LimitPool Tests', function () {
             liquidityPercent: ethers.utils.parseUnits('5', 37),
             zeroForOne: false,
             balanceInIncrease: '6273424767410208531',
-            balanceOutIncrease: '93503056303984116865', //TODO: if we go back to the same tick why is amountOut more?
+            balanceOutIncrease: '93503056303984116865',
             lowerTickCleared: false,
             upperTickCleared: true,
             expectedUpper: '-120',
@@ -2589,7 +2574,7 @@ describe('LimitPool Tests', function () {
             liquidityPercent: ethers.utils.parseUnits('1', 38),
             zeroForOne: false,
             balanceInIncrease: '6299127910586212059',
-            balanceOutIncrease: '93477672367024421972', //TODO: if we go back to the same tick why is amountOut more?
+            balanceOutIncrease: '93477672367024421972',
             lowerTickCleared: false,
             upperTickCleared: true,
             expectedUpper: '-120',
@@ -2604,7 +2589,7 @@ describe('LimitPool Tests', function () {
             liquidityPercent: ethers.utils.parseUnits('1', 38),
             zeroForOne: false,
             balanceInIncrease: '6299127910586212059',
-            balanceOutIncrease: '93477672367024421972', //TODO: if we go back to the same tick why is amountOut more?
+            balanceOutIncrease: '93477672367024421972',
             lowerTickCleared: false,
             upperTickCleared: true,
             expectedUpper: '-120',

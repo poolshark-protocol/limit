@@ -181,7 +181,7 @@ library PositionsLimit {
             params.amount = 0;
         }
 
-        // console.log('position bounds', uint24(params.lower), uint24(params.upper));
+        console.log('position bounds', uint24(-params.lower), uint24(params.upper));
 
         return (
             params,

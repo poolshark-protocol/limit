@@ -6,7 +6,7 @@ import '../../interfaces/range/IRangePoolStructs.sol';
 import '../../interfaces/range/IRangePoolFactory.sol';
 import '../../interfaces/range/IRangePool.sol';
 import './math/FeeMath.sol';
-import './Positions.sol';
+import './RangePositions.sol';
 import '../math/OverflowMath.sol';
 import '../math/ConstantProduct.sol';
 import '../TickMap.sol';

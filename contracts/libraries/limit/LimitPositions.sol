@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.13;
 
-import './TicksLimit.sol';
+import './LimitTicks.sol';
 import '../../interfaces/range/IRangePoolStructs.sol';
 import '../../interfaces/limit/ILimitPoolStructs.sol';
 import '../math/OverflowMath.sol';
@@ -12,7 +12,7 @@ import '../Ticks.sol';
 
 /// @notice Position management library for ranged liquidity.
 /// @notice Position management library for ranged liquidity.
-library PositionsLimit {
+library LimitPositions {
     using SafeCast for uint256;
 
     event BurnLimit(
@@ -215,7 +215,7 @@ library PositionsLimit {
         }
         
         // add liquidity to ticks
-        TicksLimit.insert(
+        LimitTicks.insert(
             ticks,
             tickMap,
             cache,
@@ -291,7 +291,7 @@ library PositionsLimit {
             }
         }
 
-        TicksLimit.remove(
+        LimitTicks.remove(
             ticks,
             tickMap,
             cache,
@@ -396,7 +396,7 @@ library PositionsLimit {
                             cache.pool.price > cache.priceClaim)
                     cache.removeUpper = true;
             }
-            TicksLimit.remove(
+            LimitTicks.remove(
                 ticks,
                 tickMap,
                 cache,

@@ -99,7 +99,7 @@ export async function getRangeLiquidity() {
 }
 
 export async function getRangeBalanceOf(owner: string, lower: number, upper: number): Promise<BigNumber> {
-  const positionTokenId  = await hre.props.positionsLib.id(lower, upper);
+  const positionTokenId  = await hre.props.rangePositionsLib.id(lower, upper);
   const balance = await hre.props.limitPoolToken.balanceOf(owner, positionTokenId)
   console.log('position token balance')
   console.log('----------------------')
@@ -124,7 +124,7 @@ export async function getFeeGrowthGlobal() {
 }
 
 export async function getRangeFeeGrowth(lower: number, upper: number) {
-  const feeGrowth = await hre.props.positionsLib.rangeFeeGrowth(
+  const feeGrowth = await hre.props.rangePositionsLib.rangeFeeGrowth(
     hre.props.limitPool.address,
     lower,
     upper
@@ -141,7 +141,7 @@ export async function getPositionFeeGrowth(lower: number, upper: number) {
 }
 
 export async function getSnapshot(owner: string, lower: number, upper: number) {
-  const snapshot = await hre.props.positionsLib.snapshot(
+  const snapshot = await hre.props.rangePositionsLib.snapshot(
     hre.props.limitPool.address,
     owner,
     lower,
@@ -351,7 +351,7 @@ export async function validateMint(params: ValidateMintParams) {
     upper
   )
 
-  positionTokenId  = await hre.props.positionsLib.id(lower, upper);
+  positionTokenId  = await hre.props.rangePositionsLib.id(lower, upper);
   positionTokens = await hre.ethers.getContractAt('RangePoolERC1155', hre.props.limitPoolToken.address);
   positionTokenBalanceBefore = await positionTokens.balanceOf(signer.address, positionTokenId);
 
@@ -438,7 +438,7 @@ export async function validateBurn(params: ValidateBurnParams) {
   lowerTickBefore = (await hre.props.limitPool.ticks(lower)).range
   upperTickBefore = (await hre.props.limitPool.ticks(upper)).range
   // check position token balance
-  positionTokenId  = await hre.props.positionsLib.id(lower, upper);
+  positionTokenId  = await hre.props.rangePositionsLib.id(lower, upper);
   positionToken = await hre.ethers.getContractAt('RangePoolERC1155', hre.props.limitPoolToken.address);
   positionTokenBalanceBefore = await positionToken.balanceOf(signer.address, positionTokenId);
   positionTokenTotalSupply = await positionToken.totalSupply(positionTokenId);

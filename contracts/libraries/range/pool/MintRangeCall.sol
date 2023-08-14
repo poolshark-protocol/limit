@@ -3,9 +3,9 @@ pragma solidity ^0.8.13;
 
 import '../../../interfaces/range/IRangePoolStructs.sol';
 import '../../utils/SafeTransfers.sol';
-import '../Positions.sol';
+import '../RangePositions.sol';
 
-library MintCall {
+library MintRangeCall {
     event Mint(
         address indexed recipient,
         int24 lower,
@@ -27,7 +27,7 @@ library MintCall {
         (
             cache.position,
             ,,
-        ) = Positions.update(
+        ) = RangePositions.update(
                 ticks,
                 cache.position,
                 cache.state,
@@ -38,11 +38,11 @@ library MintCall {
                     0
                 )
         );
-        (params, cache.liquidityMinted) = Positions.validate(params, cache.state, cache.constants);
+        (params, cache.liquidityMinted) = RangePositions.validate(params, cache.state, cache.constants);
         if (params.amount0 > 0) SafeTransfers.transferIn(cache.constants.token0, params.amount0);
         if (params.amount1 > 0) SafeTransfers.transferIn(cache.constants.token1, params.amount1);
         if (cache.position.amount0 > 0 || cache.position.amount1 > 0) {
-            (cache.position, cache.state) = Positions.compound(
+            (cache.position, cache.state) = RangePositions.compound(
                 cache.position,
                 ticks,
                 samples,
@@ -56,7 +56,7 @@ library MintCall {
             );
         }
         // update position with latest fees accrued
-        (cache.state, cache.position, cache.liquidityMinted) = Positions.add(
+        (cache.state, cache.position, cache.liquidityMinted) = RangePositions.add(
             cache.position,
             ticks,
             samples,

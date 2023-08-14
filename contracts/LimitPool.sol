@@ -11,8 +11,8 @@ import './base/structs/LimitPoolFactoryStructs.sol';
 import './utils/LimitPoolErrors.sol';
 import './libraries/pool/SwapCall.sol';
 import './libraries/pool/QuoteCall.sol';
-import './libraries/range/pool/MintCall.sol';
-import './libraries/range/pool/BurnCall.sol';
+import './libraries/range/pool/MintRangeCall.sol';
+import './libraries/range/pool/BurnRangeCall.sol';
 import './libraries/limit/pool/MintLimitCall.sol';
 import './libraries/limit/pool/BurnLimitCall.sol';
 import './libraries/math/ConstantProduct.sol';
@@ -85,7 +85,7 @@ contract LimitPool is
             constants: immutables(),
             liquidityMinted: 0
         });
-        cache = MintCall.perform(params, cache, rangeTickMap, ticks, samples);
+        cache = MintRangeCall.perform(params, cache, rangeTickMap, ticks, samples);
         globalState = cache.state; 
         positions[params.lower][params.upper] = cache.position;
     }
@@ -104,7 +104,7 @@ contract LimitPool is
             amount1: 0,
             tokenBurned: 0
         });
-        cache = BurnCall.perform(params, cache, rangeTickMap, ticks, samples);
+        cache = BurnRangeCall.perform(params, cache, rangeTickMap, ticks, samples);
         globalState = cache.state;
         positions[params.lower][params.upper] = cache.position;
     }

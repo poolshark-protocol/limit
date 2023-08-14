@@ -253,7 +253,7 @@ library Samples {
         uint32  blockTimestamp,
         int24   tick,
         uint128 liquidity
-    ) internal view returns (
+    ) internal pure returns (
          IRangePoolStructs.Sample memory
     ) {
         int56 timeDelta = int56(uint56(blockTimestamp - newSample.blockTimestamp));

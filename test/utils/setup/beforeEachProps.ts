@@ -7,17 +7,16 @@ import {
     LimitPoolManager,
     TickMap,
     PoolRouter,
-    Positions,
-    PositionsLimit,
-    Ticks,
-    TicksLimit,
+    RangePositions,
+    LimitPositions,
     BurnLimitCall,
     MintLimitCall,
     RangePoolERC1155,
+    Ticks,
 } from '../../../typechain'
 import { InitialSetup } from './initialSetup'
-import { MintCall } from '../../../typechain'
-import { BurnCall } from '../../../typechain'
+import { MintRangeCall } from '../../../typechain'
+import { BurnRangeCall } from '../../../typechain'
 import { SwapCall } from '../../../typechain'
 import { QuoteCall } from '../../../typechain'
 
@@ -30,19 +29,19 @@ export interface BeforeEachProps {
     limitPoolManager: LimitPoolManager
     limitPoolFactory: LimitPoolFactory
     poolRouter: PoolRouter
-    tickMapLib: TickMap
     ticksLib: Ticks
+    tickMapLib: TickMap
     swapCall: SwapCall
     quoteCall: QuoteCall
     //range
-    burnCall: BurnCall
-    mintCall: MintCall
-    positionsLib: Positions
+    burnRangeCall: BurnRangeCall
+    mintRangeCall: MintRangeCall
+    rangePositionsLib: RangePositions
     rangePoolERC1155: RangePoolERC1155
     //limit
     burnLimitCall: BurnLimitCall
     mintLimitCall: MintLimitCall
-    positionsLimitLib: PositionsLimit
+    limitPositionsLib: LimitPositions
     //shared
     tokenA: Token20
     tokenB: Token20
@@ -90,14 +89,14 @@ export class GetBeforeEach {
         let swapCall: SwapCall
         let quoteCall: QuoteCall
         //range
-        let burnCall: BurnCall
-        let mintCall: MintCall
-        let positionsLib: Positions
+        let burnCall: BurnRangeCall
+        let mintCall: MintRangeCall
+        let positionsLib: RangePositions
         let rangePoolERC1155: RangePoolERC1155
         //limit
         let burnLimitCall: BurnLimitCall
         let mintLimitCall: MintLimitCall
-        let positionsLimitLib: PositionsLimit
+        let positionsLimitLib: LimitPositions
         //shared
         let tokenA: Token20
         let tokenB: Token20
@@ -123,14 +122,14 @@ export class GetBeforeEach {
             swapCall,
             quoteCall,
             //range
-            burnCall,
-            mintCall,
-            positionsLib,
+            burnRangeCall: burnCall,
+            mintRangeCall: mintCall,
+            rangePositionsLib: positionsLib,
             rangePoolERC1155,
             //limit
             burnLimitCall,
             mintLimitCall,
-            positionsLimitLib,
+            limitPositionsLib: positionsLimitLib,
             //shared
             tokenA,
             tokenB,

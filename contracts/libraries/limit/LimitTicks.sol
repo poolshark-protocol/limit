@@ -6,7 +6,7 @@ import '../../interfaces/limit/ILimitPoolFactory.sol';
 import '../../base/structs/LimitPoolFactoryStructs.sol';
 import '../../interfaces/limit/ILimitPool.sol';
 import '../math/ConstantProduct.sol';
-import './PositionsLimit.sol';
+import './LimitPositions.sol';
 import '../math/OverflowMath.sol';
 import '../TickMap.sol';
 import './EpochMap.sol';
@@ -14,7 +14,7 @@ import '../range/Samples.sol';
 import '../utils/SafeCast.sol';
 
 /// @notice Tick management library for limit pools
-library TicksLimit {
+library LimitTicks {
     error LiquidityOverflow();
     error LiquidityUnderflow();
     error InvalidLowerTick();

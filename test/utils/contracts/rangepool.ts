@@ -262,8 +262,6 @@ export async function validateSwap(params: ValidateSwapParams) {
     return
   }
 
-  await getPrice()
-
   let balanceInAfter
   let balanceOutAfter
   if (zeroForOne) {

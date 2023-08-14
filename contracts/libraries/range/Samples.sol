@@ -5,7 +5,6 @@ import '../math/ConstantProduct.sol';
 import '../../interfaces/IPool.sol';
 import '../../interfaces/range/IRangePool.sol';
 import '../../interfaces/range/IRangePoolStructs.sol';
-import 'hardhat/console.sol';
 
 library Samples {
 
@@ -258,8 +257,7 @@ library Samples {
          IRangePoolStructs.Sample memory
     ) {
         int56 timeDelta = int56(uint56(blockTimestamp - newSample.blockTimestamp));
-        console.log('building sample', newSample.secondsPerLiquidityAccum +
-                    ((uint160(uint56(timeDelta)) << 128) / (liquidity > 0 ? liquidity : 1)), uint56(timeDelta));
+
         return
             PoolsharkStructs.Sample({
                 blockTimestamp: blockTimestamp,

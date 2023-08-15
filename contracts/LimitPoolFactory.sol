@@ -18,6 +18,7 @@ contract LimitPoolFactory is
     using LibClone for address;
 
 event Debug(uint a);
+event DebugTick(int24 a);
     address immutable public owner;
     address immutable public original;
 
@@ -53,7 +54,7 @@ event Debug(uint a);
         // check if tick spacing supported
         constants.swapFee = swapFee;
         constants.tickSpacing = ILimitPoolManager(owner).feeTiers(swapFee);
-                emit Debug(21);
+        emit Debug(21);
 
         if (constants.tickSpacing == 0) revert FeeTierNotSupported();
         emit Debug(11);

@@ -21,7 +21,7 @@ contract EchidnaPool {
     event Address(address a);
     event Price(uint160 price);
     event Prices(uint160 price0, uint160 price1);
-    event LiquidityGlobal(uint128 liq0Before, uint128 liq1Before, uint128 liq0After, uint128 liq1After);
+    event LiquidityGlobal(uint128 liqBefore, uint128 liqAfter);
     event Liquidity(uint128 liq0Before, uint128 liq1Before, uint128 liq0After, uint128 liq1After);
     event LiquidityDelta(int128 liqLowerBefore, int128 liqUpperBefore, int128 liqLowerAfter, int128 liqUperAfter);
     event Amount(uint256 amt);
@@ -33,7 +33,8 @@ contract EchidnaPool {
     event PositionCreated(bool isCreated);
     event liquidityDeltaAfterUndercut(bool zeroForOne, int128 liquidityDeltaBefore, int128 liquidityDeltaAfter);
     event AssertFailTest(string message, uint160 priceAfter, uint160 priceBefore);
-    
+    event LiquidityAbsolute(uint128 beforeAbs, uint128 afterAbs);
+
     LimitPoolFactory private factory;
     address private implementation;
     LimitPoolManager private manager;
@@ -55,22 +56,31 @@ contract EchidnaPool {
     struct PoolValues {
         uint160 price0Before;
         uint128 liquidity0Before;
-        uint128 liquidityGlobal0Before;
         uint160 price1Before;
+        // uint128 liquidityGlobal1Before;
         uint128 liquidity1Before;
-        uint128 liquidityGlobal1Before;
         uint160 price0After;
         uint128 liquidity0After;
-        uint128 liquidityGlobal0After;
         uint160 price1After;
         uint128 liquidity1After;
-        uint128 liquidityGlobal1After;
+        // uint128 liquidityGlobal1After;
+
+        uint128 liquidityGlobalBefore;
+        uint128 liquidityGlobalAfter;
+
+        uint128 liquidityAbsoluteUpperBefore;
+        uint128 liquidityAbsoluteLowerBefore;
+        uint128 liquidityAbsoluteUpperAfter;
+        uint128 liquidityAbsoluteLowerAfter;
 
         // int128 liquidityDeltaAtPrice0Before;
         // int128 liquidityDeltaAtPrice1Before;
 
         // int128 liquidityDeltaAtPrice0After;
         // int128 liquidityDeltaAtPrice1After;
+
+        uint160 price0;
+        uint160 price1;
     }
 
     struct SwapCallbackData {
@@ -82,6 +92,13 @@ contract EchidnaPool {
         int24 lower;
         int24 upper;
         bool zeroForOne;
+    }
+
+    struct PoolStructs {
+        PoolsharkStructs.LimitTick lower;
+        PoolsharkStructs.LimitTick upper;
+        PoolsharkStructs.LimitPoolState pool0;
+        PoolsharkStructs.LimitPoolState pool1;
     }
 
     modifier tickPreconditions(int24 lower, int24 upper) {
@@ -97,14 +114,14 @@ contract EchidnaPool {
         factory = new LimitPoolFactory(address(manager));
         implementation = address(new LimitPool(address(factory)));
         rangePool = new RangePoolERC1155(address(factory));
-        swapFee = 500;
-        tickSpacing = 10;
-
+        
         manager.enableImplementation(bytes32(0x0), address(implementation), address(rangePool));
+        tickSpacing = 10;
+        // manager.enableTickSpacing(tickSpacing,500);
         tokenIn = new Token20("IN", "IN", 18);
         tokenOut = new Token20("OUT", "OUT", 18);
-        (address poolAddr,) = factory.createLimitPool(bytes32(0x0), address(tokenIn), address(tokenOut), swapFee, 79228162514264337593543950336);
-        pool = new LimitPool(poolAddr);
+        (address poolAddr,) = factory.createLimitPool(bytes32(0x0), address(tokenIn), address(tokenOut), 500, 79228162514264337593543950336);
+        pool = LimitPool(poolAddr);
     }
 
 
@@ -114,16 +131,28 @@ contract EchidnaPool {
         mintAndApprove();
         amount = amount + 1;
         PoolValues memory poolValues;
-        (,PoolsharkStructs.LimitPoolState memory pool0, PoolsharkStructs.LimitPoolState memory pool1,,,) = pool.globalState();
-        poolValues.price0Before = pool0.price;
-        poolValues.liquidity0Before = pool0.liquidity;
-        poolValues.price1Before = pool1.price;
-        poolValues.liquidity1Before = pool1.liquidity;
+        PoolStructs memory poolStructs;
+
+        (,poolStructs.pool0, poolStructs.pool1, poolValues.liquidityGlobalBefore,,) = pool.globalState();
+        poolValues.price0Before = poolStructs.pool0.price;
+        poolValues.liquidity0Before = poolStructs.pool0.liquidity;
+        poolValues.price1Before = poolStructs.pool1.price;
+        poolValues.liquidity1Before = poolStructs.pool1.liquidity;
+
+        // LiquidityDeltaValues memory values;
+        (, poolStructs.lower) = pool.ticks(lower);
+        (, poolStructs.upper) = pool.ticks(upper);
+
+        // values.liquidityDeltaLowerBefore = lowerTick.liquidityDelta;
+        // values.liquidityDeltaUpperBefore = upperTick.liquidityDelta;
+        poolValues.liquidityAbsoluteLowerBefore = poolStructs.lower.liquidityAbsolute;
+        poolValues.liquidityAbsoluteUpperBefore = poolStructs.upper.liquidityAbsolute;
+
 
         ILimitPoolStructs.MintLimitParams memory params;
         params.to = msg.sender;
         params.amount = amount;
-        params.mintPercent = 0; // TODO: Change this to be arbitrary
+        params.mintPercent = 0;
         params.lower = lower;
         params.upper = upper;
         params.zeroForOne = zeroForOne;
@@ -135,34 +164,58 @@ contract EchidnaPool {
         emit PositionTicks(lower, upper);
         emit PositionCreated(posCreated);
 
-        LiquidityDeltaValues memory values;
-
         // ACTION 
         pool.mintLimit(params);
         if (posCreated) positions.push(Position(msg.sender, lower, upper, zeroForOne));
 
-        (, pool0, pool1,,,) = pool.globalState();
-        poolValues.price0After = pool0.price;
-        poolValues.liquidity0After = pool0.liquidity;
-        poolValues.price1After = pool1.price;
-        poolValues.liquidity1After = pool1.liquidity;
+        (, poolStructs.lower) = pool.ticks(lower);
+        (, poolStructs.upper) = pool.ticks(upper);
 
+        // values.liquidityDeltaLowerAfter = lowerTick.liquidityDelta;
+        // values.liquidityDeltaUpperAfter = upperTick.liquidityDelta;
+        poolValues.liquidityAbsoluteLowerAfter = poolStructs.lower.liquidityAbsolute;
+        poolValues.liquidityAbsoluteUpperAfter = poolStructs.upper.liquidityAbsolute;
+
+        (, poolStructs.pool0, poolStructs.pool1, poolValues.liquidityGlobalAfter,,) = pool.globalState();
+        poolValues.price0After = poolStructs.pool0.price;
+        poolValues.liquidity0After = poolStructs.pool0.liquidity;
+        poolValues.price1After = poolStructs.pool1.price;
+        poolValues.liquidity1After = poolStructs.pool1.liquidity;
+        poolValues.price0 = poolStructs.pool0.price;
+        poolValues.price1 = poolStructs.pool1.price;
+        emit Prices(poolValues.price0, poolValues.price1);
+        assert(poolValues.price0 >= poolValues.price1);
         emit Prices(poolValues.price0After, poolValues.price1After);
 
         // POST CONDITIONS
 
-        // Ensure that liquidity delta is incremented when undercutting
+        // TODO: Create an invariant that combines liquidity delta and liquidity absolute
+        
+        // Ensure that liquidityAbsolute is incremented when not undercutting
         if(zeroForOne){
-            if(poolValues.price0After <= poolValues.price0Before){
-                emit liquidityDeltaAfterUndercut(zeroForOne, values.liquidityDeltaLowerBefore, values.liquidityDeltaLowerAfter);
-                assert(values.liquidityDeltaLowerAfter >= values.liquidityDeltaLowerBefore);
+            if(poolValues.price0After >= poolValues.price0Before){
+                emit LiquidityAbsolute(poolValues.liquidityAbsoluteUpperBefore, poolValues.liquidityAbsoluteUpperAfter);
+                assert(poolValues.liquidityAbsoluteUpperAfter > poolValues.liquidityAbsoluteUpperBefore);
             }
         } else {
-            if(poolValues.price1Before <= poolValues.price1After){
-                emit liquidityDeltaAfterUndercut(zeroForOne, values.liquidityDeltaUpperBefore, values.liquidityDeltaUpperAfter);
-                assert(values.liquidityDeltaUpperAfter >= values.liquidityDeltaUpperBefore);
+            if(poolValues.price1Before >= poolValues.price1After){
+                emit LiquidityAbsolute(poolValues.liquidityAbsoluteLowerBefore, poolValues.liquidityAbsoluteLowerAfter);
+                assert(poolValues.liquidityAbsoluteLowerAfter > poolValues.liquidityAbsoluteLowerBefore);
             }
         }
+        // Check that liqudityAbsolute is decremented on undercut
+
+        // if(zeroForOne){
+        //     if(poolValues.price0After < poolValues.price0Before){
+        //         emit LiquidityAbsolute(poolValues.liquidityAbsoluteUpperBefore, poolValues.liquidityAbsoluteUpperAfter);
+        //         assert(poolValues.liquidityAbsoluteUpperAfter < poolValues.liquidityAbsoluteUpperBefore);
+        //     }
+        // } else {
+        //     if(poolValues.price1Before < poolValues.price1After){
+        //         emit LiquidityAbsolute(poolValues.liquidityAbsoluteLowerBefore, poolValues.liquidityAbsoluteLowerAfter);
+        //         assert(poolValues.liquidityAbsoluteLowerAfter < poolValues.liquidityAbsoluteLowerBefore);
+        //     }
+        // }
 
         // Ensure prices have not crossed
         assert(poolValues.price0After >= poolValues.price1After);
@@ -173,15 +226,14 @@ contract EchidnaPool {
             assert((lower % tickSpacing == 0) && (upper % tickSpacing == 0));
         }
         
-        
-        emit LiquidityGlobal(poolValues.liquidityGlobal0Before, poolValues.liquidityGlobal1Before, poolValues.liquidityGlobal0After, poolValues.liquidityGlobal1After);
+        emit LiquidityGlobal(poolValues.liquidityGlobalBefore, poolValues.liquidityGlobalAfter);
         emit Liquidity(poolValues.liquidity0Before, poolValues.liquidity1Before, poolValues.liquidity0After, poolValues.liquidity1After);
-        emit LiquidityDelta(values.liquidityDeltaLowerBefore, values.liquidityDeltaUpperBefore, values.liquidityDeltaLowerAfter, values.liquidityDeltaUpperAfter);
-
+        // emit LiquidityDelta(values.liquidityDeltaLowerBefore, values.liquidityDeltaUpperBefore, values.liquidityDeltaLowerAfter, values.liquidityDeltaUpperAfter);
+        
+        // Ensure pool.liquity is incremented when undercutting
+        assert(poolValues.liquidityGlobalAfter >= poolValues.liquidityGlobalBefore);
         if (zeroForOne) {
             // Ensure liquidity does not decrease on mint
-            assert(poolValues.liquidityGlobal0After >= poolValues.liquidityGlobal0Before);
-            // Ensure pool.liquity is incremented when undercutting
             if (poolValues.price0After < poolValues.price0Before) {
                 emit AssertFailTest("poolValues.price0After < poolValues.price0Before", poolValues.price0After, poolValues.price0Before);
                 assert(poolValues.liquidity0After > 0);
@@ -194,8 +246,126 @@ contract EchidnaPool {
             // }
         }
         else {
+            // Ensure pool.liquity is incremented when undercutting
+            if (poolValues.price1After > poolValues.price1Before) {
+                emit AssertFailTest("poolValues.price1After > poolValues.price1Before", poolValues.price1After, poolValues.price1Before);
+                assert(poolValues.liquidity1After > 0);
+            }
+
+            // if (posCreated) {
+            //     assert(values.liquidityDeltaUpperAfter >= values.liquidityDeltaUpperBefore);
+            //     assert(values.liquidityDeltaLowerAfter <= values.liquidityDeltaLowerBefore);
+            // }
+            
+        }
+    }
+
+    function mintVariable(uint128 amount, bool zeroForOne, int24 lower, int24 upper, uint96 mintPercent) public tickPreconditions(lower, upper) {
+        // PRE CONDITIONS
+        // NOTE: Do not use the exact inputs of this function for POCs, use the inputs after the input validation
+        mintAndApprove();
+        amount = amount + 1;
+        PoolValues memory poolValues;
+        PoolStructs memory poolStructs;
+
+        (,poolStructs.pool0, poolStructs.pool1, poolValues.liquidityGlobalBefore,,) = pool.globalState();
+        poolValues.price0Before = poolStructs.pool0.price;
+        poolValues.liquidity0Before = poolStructs.pool0.liquidity;
+        poolValues.price1Before = poolStructs.pool1.price;
+        poolValues.liquidity1Before = poolStructs.pool1.liquidity;
+
+        // LiquidityDeltaValues memory values;
+        (, poolStructs.lower) = pool.ticks(lower);
+        (, poolStructs.upper) = pool.ticks(upper);
+
+        // values.liquidityDeltaLowerBefore = lowerTick.liquidityDelta;
+        // values.liquidityDeltaUpperBefore = upperTick.liquidityDelta;
+        poolValues.liquidityAbsoluteLowerBefore = poolStructs.lower.liquidityAbsolute;
+        poolValues.liquidityAbsoluteUpperBefore = poolStructs.upper.liquidityAbsolute;
+
+        ILimitPoolStructs.MintLimitParams memory params;
+        params.to = msg.sender;
+        params.amount = amount;
+        params.mintPercent = mintPercent;
+        params.lower = lower;
+        params.upper = upper;
+        params.zeroForOne = zeroForOne;
+
+        // Get the ticks the position will be minted with rather than what was passed directly by fuzzer
+        // This is so the we can properly compare before and after mint states of particular ticks.
+        bool posCreated;
+        (lower, upper, posCreated) = pool.getResizedTicksForMint(params);
+        emit PositionTicks(lower, upper);
+        emit PositionCreated(posCreated);
+
+        // ACTION 
+        pool.mintLimit(params);
+        if (posCreated) positions.push(Position(msg.sender, lower, upper, zeroForOne));
+
+        (, poolStructs.lower) = pool.ticks(lower);
+        (, poolStructs.upper) = pool.ticks(upper);
+
+        // values.liquidityDeltaLowerAfter = poolStructs.lower.liquidityDelta;
+        // values.liquidityDeltaUpperAfter = poolStructs.upper.liquidityDelta;
+        poolValues.liquidityAbsoluteLowerAfter = poolStructs.lower.liquidityAbsolute;
+        poolValues.liquidityAbsoluteUpperAfter = poolStructs.upper.liquidityAbsolute;
+
+        (, poolStructs.pool0, poolStructs.pool1, poolValues.liquidityGlobalAfter,,) = pool.globalState();
+        poolValues.price0After = poolStructs.pool0.price;
+        poolValues.liquidity0After = poolStructs.pool0.liquidity;
+        poolValues.price1After = poolStructs.pool1.price;
+        poolValues.liquidity1After = poolStructs.pool1.liquidity;
+
+        
+        poolValues.price0 = poolStructs.pool0.price;
+        poolValues.price1 = poolStructs.pool1.price;
+        emit Prices(poolValues.price0, poolValues.price1);
+        assert(poolValues.price0 >= poolValues.price1);
+        emit Prices(poolValues.price0After, poolValues.price1After);
+
+        // POST CONDITIONS
+
+        if(zeroForOne){
+            if(poolValues.price0After >= poolValues.price0Before){
+                emit LiquidityAbsolute(poolValues.liquidityAbsoluteUpperBefore, poolValues.liquidityAbsoluteUpperAfter);
+                assert(poolValues.liquidityAbsoluteUpperAfter > poolValues.liquidityAbsoluteUpperBefore);
+            }
+        } else {
+            if(poolValues.price1Before >= poolValues.price1After){
+                emit LiquidityAbsolute(poolValues.liquidityAbsoluteLowerBefore, poolValues.liquidityAbsoluteLowerAfter);
+                assert(poolValues.liquidityAbsoluteLowerAfter > poolValues.liquidityAbsoluteLowerBefore);
+            }
+        }
+
+        // Ensure prices have not crossed
+        assert(poolValues.price0After >= poolValues.price1After);
+        if (posCreated) {
+            // Ensure positions ticks arent crossed
+            assert(lower < upper);
+            // Ensure minted ticks on proper tick spacing
+            assert((lower % tickSpacing == 0) && (upper % tickSpacing == 0));
+        }
+        
+        emit LiquidityGlobal(poolValues.liquidityGlobalBefore, poolValues.liquidityGlobalAfter);
+        emit Liquidity(poolValues.liquidity0Before, poolValues.liquidity1Before, poolValues.liquidity0After, poolValues.liquidity1After);
+        // emit LiquidityDelta(values.liquidityDeltaLowerBefore, values.liquidityDeltaUpperBefore, values.liquidityDeltaLowerAfter, values.liquidityDeltaUpperAfter);
+        
+        // Ensure pool.liquity is incremented when undercutting
+        assert(poolValues.liquidityGlobalAfter >= poolValues.liquidityGlobalBefore);
+        if (zeroForOne) {
             // Ensure liquidity does not decrease on mint
-            assert(poolValues.liquidityGlobal1After >= poolValues.liquidityGlobal1Before);
+            if (poolValues.price0After < poolValues.price0Before) {
+                emit AssertFailTest("poolValues.price0After < poolValues.price0Before", poolValues.price0After, poolValues.price0Before);
+                assert(poolValues.liquidity0After > 0);
+            }
+
+            // Doesn't hold due to insertSingle stashing pool liquidity on tick to save
+            // if (posCreated) {
+            //     assert(values.liquidityDeltaLowerAfter >= values.liquidityDeltaLowerBefore);
+            //     assert(values.liquidityDeltaUpperAfter <= values.liquidityDeltaUpperBefore);
+            // }
+        }
+        else {
             // Ensure pool.liquity is incremented when undercutting
             if (poolValues.price1After > poolValues.price1Before) {
                 emit AssertFailTest("poolValues.price1After > poolValues.price1Before", poolValues.price1After, poolValues.price1Before);
@@ -214,6 +384,8 @@ contract EchidnaPool {
         // PRE CONDITIONS
         // NOTE: Do not use the exact inputs of this function for POCs, use the inputs after the input validation
         mintAndApprove();
+
+        // TODO: Can do a check for liquidity absolute here probably
 
         // ACTION
         ILimitPoolStructs.SwapParams memory params;
@@ -241,14 +413,85 @@ contract EchidnaPool {
         Position memory pos = positions[positionIndex];
         claimAt = pos.lower + (claimAt % (pos.upper - pos.lower));
         require(claimAt % tickSpacing == 0);
+        PoolValues memory poolValues;
 
-        // (,/*liquidity*/,uint128 liquidityGlobal0Before,,,,) = pool.pool0();
-        // (,/*liquidity*/,uint128 liquidityGlobal1Before,,,,) = pool.pool1();
+        (,PoolsharkStructs.LimitPoolState memory pool0, PoolsharkStructs.LimitPoolState memory pool1, uint128 liquidityGlobalBefore,,) = pool.globalState();
 
         ILimitPoolStructs.BurnLimitParams memory params;
         params.to = pos.owner;
         // TODO: allow for variable burn percentages
         params.burnPercent = burnPercent == 1e38 ? burnPercent : _between(burnPercent, 1e36, 1e38); //1e38;
+        params.lower = pos.lower;
+        params.claim = claimAt;
+        params.upper = pos.upper;
+        params.zeroForOne = pos.zeroForOne;
+
+        // LiquidityDeltaValues memory values;
+        (, PoolsharkStructs.LimitTick memory lowerTick) = pool.ticks(pos.lower);
+        (, PoolsharkStructs.LimitTick memory upperTick) = pool.ticks(pos.upper);
+
+        // values.liquidityDeltaLowerBefore = lowerTick.liquidityDelta;
+        // values.liquidityDeltaUpperBefore = upperTick.liquidityDelta;
+        poolValues.liquidityAbsoluteLowerBefore = lowerTick.liquidityAbsolute;
+        poolValues.liquidityAbsoluteUpperBefore = upperTick.liquidityAbsolute;
+        
+        emit PositionTicks(pos.lower, pos.upper);
+        (int24 lower, int24 upper, bool positionExists) = pool.getResizedTicksForBurn(params);
+        emit BurnTicks(lower, upper, positionExists);
+
+        // ACTION
+        pool.burnLimit(params);
+        if (!positionExists) {
+            positions[positionIndex] = positions[positions.length - 1];
+            delete positions[positions.length - 1];
+        }
+        else {
+            // Update position data in array if not fully burned
+            positions[positionIndex] = Position(pos.owner, lower, upper, pos.zeroForOne);
+            // Ensure positions ticks arent crossed
+            assert(lower < upper);
+            // Ensure minted ticks on proper tick spacing
+            assert((lower % tickSpacing == 0) && (upper % tickSpacing == 0));
+        }
+
+        // POST CONDITIONS
+
+        (, lowerTick) = pool.ticks(lower);
+        (, upperTick) = pool.ticks(upper);
+
+        // values.liquidityDeltaLowerAfter = lowerTick.liquidityDelta;
+        // values.liquidityDeltaUpperAfter = upperTick.liquidityDelta;
+        poolValues.liquidityAbsoluteLowerAfter = lowerTick.liquidityAbsolute;
+        poolValues.liquidityAbsoluteUpperAfter = upperTick.liquidityAbsolute;
+
+        (,pool0, pool1, poolValues.liquidityGlobalAfter,,) = pool.globalState();
+        uint160 price0 = pool0.price;
+        uint160 price1 = pool1.price;
+        emit Prices(price0, price1);
+        assert(price0 >= price1);
+        emit LiquidityGlobal(liquidityGlobalBefore, poolValues.liquidityGlobalAfter);
+        assert((poolValues.liquidityGlobalAfter < liquidityGlobalBefore));
+
+        // TODO: Look into this more
+        // emit LiquidityAbsolute(poolValues.liquidityAbsoluteLowerBefore, poolValues.liquidityAbsoluteLowerAfter);
+        // assert(poolValues.liquidityAbsoluteLowerAfter < poolValues.liquidityAbsoluteLowerBefore);
+    }
+
+    function claim(int24 claimAt, uint256 positionIndex) public {
+        // PRE CONDITIONS
+        // NOTE: Do not use the exact inputs of this function for POCs, use the inputs after the input validation
+        positionIndex = positionIndex % positions.length;
+        Position memory pos = positions[positionIndex];
+        claimAt = pos.lower + (claimAt % (pos.upper - pos.lower));
+        require(claimAt % tickSpacing == 0);
+
+        PoolValues memory poolValues;
+        (,PoolsharkStructs.LimitPoolState memory pool0, PoolsharkStructs.LimitPoolState memory pool1, uint128 liquidityGlobalBefore,,) = pool.globalState();
+
+        ILimitPoolStructs.BurnLimitParams memory params;
+        params.to = pos.owner;
+        // TODO: allow for variable burn percentages
+        params.burnPercent = 0;
         params.lower = pos.lower;
         params.claim = claimAt;
         params.upper = pos.upper;
@@ -274,90 +517,91 @@ contract EchidnaPool {
         }
 
         // POST CONDITIONS
-        (,PoolsharkStructs.LimitPoolState memory pool0, PoolsharkStructs.LimitPoolState memory pool1,,,) = pool.globalState();
+        (,pool0, pool1, poolValues.liquidityGlobalAfter,,) = pool.globalState();
         uint160 price0 = pool0.price;
         uint160 price1 = pool1.price;
         emit Prices(price0, price1);
         assert(price0 >= price1);
 
+        // NOTE: INVALID INVARIANTS
         // if(pos.zeroForOne) {
         //     emit LiquidityGlobal(liquidityGlobal0Before, liquidityGlobal1Before, liquidityGlobal0After, liquidityGlobal1After);
-        //     assert((liquidityGlobal0After < liquidityGlobal0Before));
+        //     if (positionExists) {
+        //         assert((liquidityGlobal0After == liquidityGlobal0Before));
+        //     }
         // }
         // else {
         //     emit LiquidityGlobal(liquidityGlobal0Before, liquidityGlobal1Before, liquidityGlobal0After, liquidityGlobal1After);
-        //     assert((liquidityGlobal1After < liquidityGlobal1Before));
+        //     if (positionExists) {
+        //         assert((liquidityGlobal1After == liquidityGlobal1Before));
+        //     }
         // }
     }
 
-    // function claim(int24 claimAt, uint256 positionIndex) public {
-    //     // PRE CONDITIONS
-    //     // NOTE: Do not use the exact inputs of this function for POCs, use the inputs after the input validation
-    //     positionIndex = positionIndex % positions.length;
-    //     Position memory pos = positions[positionIndex];
-    //     claimAt = pos.lower + (claimAt % (pos.upper - pos.lower));
-    //     require(claimAt % tickSpacing == 0);
+    function mintThenBurnZeroLiquidityChangeVariable(uint128 amount, bool zeroForOne, int24 lower, int24 upper, uint96 mintPercent) public tickPreconditions(lower, upper) {
+        // PRE CONDITIONS
+        // NOTE: Do not use the exact inputs of this function for POCs, use the inputs after the input validation
+        mintAndApprove();
+        PoolValues memory poolValues;
+        (,PoolsharkStructs.LimitPoolState memory pool0, PoolsharkStructs.LimitPoolState memory pool1, uint128 liquidityGlobalBefore,,) = pool.globalState();
+        // uint160 price0Before = pool0.price;
+        // uint160 price1Before = pool1.price;
 
-    //     // (,/*liquidity*/,uint128 liquidityGlobal0Before,,,,) = pool.pool0();
-    //     // (,/*liquidity*/,uint128 liquidityGlobal1Before,,,,) = pool.pool1();
+        LiquidityDeltaValues memory values;
+        (, PoolsharkStructs.LimitTick memory lowerTick) = pool.ticks(lower);
+        (, PoolsharkStructs.LimitTick memory upperTick) = pool.ticks(upper);
 
-    //     ILimitPoolStructs.BurnLimitParams memory params;
-    //     params.to = pos.owner;
-    //     // TODO: allow for variable burn percentages
-    //     params.burnPercent = 0;
-    //     params.lower = pos.lower;
-    //     params.claim = claimAt;
-    //     params.upper = pos.upper;
-    //     params.zeroForOne = pos.zeroForOne;
+        values.liquidityDeltaLowerBefore = lowerTick.liquidityDelta;
+        values.liquidityDeltaUpperBefore = upperTick.liquidityDelta;
+        poolValues.liquidityAbsoluteLowerBefore = lowerTick.liquidityAbsolute;
+        poolValues.liquidityAbsoluteUpperBefore = upperTick.liquidityAbsolute;
+
+        // ACTION 
+        mintVariable(amount, zeroForOne, lower, upper, mintPercent);
+        emit PassedMint();
+        burn(zeroForOne ? lower : upper, positions.length - 1, 1e38);
+        emit PassedBurn();
+
+        // POST CONDITIONS
+        (, lowerTick) = pool.ticks(lower);
+        (, upperTick) = pool.ticks(upper);
+
+        values.liquidityDeltaLowerAfter = lowerTick.liquidityDelta;
+        values.liquidityDeltaUpperAfter = upperTick.liquidityDelta;
+        poolValues.liquidityAbsoluteLowerAfter = lowerTick.liquidityAbsolute;
+        poolValues.liquidityAbsoluteUpperAfter = upperTick.liquidityAbsolute;
         
-    //     emit PositionTicks(pos.lower, pos.upper);
-    //     (int24 lower, int24 upper, bool positionExists) = pool.getResizedTicksForBurn(params);
-    //     emit BurnTicks(lower, upper, positionExists);
+        (,pool0, pool1, poolValues.liquidityGlobalAfter,,) = pool.globalState();
+        uint160 price0After = pool0.price;
+        uint160 price1After = pool1.price;
+        emit Prices(price0After, price1After);
+        assert(price0After >= price1After);
+        emit LiquidityGlobal(liquidityGlobalBefore, poolValues.liquidityGlobalAfter);
+        assert(poolValues.liquidityGlobalAfter == liquidityGlobalBefore);
 
-    //     // ACTION
-    //     pool.burnLimit(params);
-    //     if (!positionExists) {
-    //         positions[positionIndex] = positions[positions.length - 1];
-    //         delete positions[positions.length - 1];
-    //     }
-    //     else {
-    //         // Update position data in array if not fully burned
-    //         positions[positionIndex] = Position(pos.owner, lower, upper, pos.zeroForOne);
-    //         // Ensure positions ticks arent crossed
-    //         assert(lower < upper);
-    //         // Ensure minted ticks on proper tick spacing
-    //         assert((lower % tickSpacing == 0) && (upper % tickSpacing == 0));
-    //     }
-
-    //     // POST CONDITIONS
-    //     (,PoolsharkStructs.LimitPoolState memory pool0, PoolsharkStructs.LimitPoolState memory pool1,,,) = pool.globalState();
-    //     uint160 price0 = pool0.price;
-    //     uint160 price1 = pool1.price;
-    //     emit Prices(price0, price1);
-    //     assert(price0 >= price1);
-
-    //     // NOTE: INVALID INVARIANTS
-    //     // if(pos.zeroForOne) {
-    //     //     emit LiquidityGlobal(liquidityGlobal0Before, liquidityGlobal1Before, liquidityGlobal0After, liquidityGlobal1After);
-    //     //     if (positionExists) {
-    //     //         assert((liquidityGlobal0After == liquidityGlobal0Before));
-    //     //     }
-    //     // }
-    //     // else {
-    //     //     emit LiquidityGlobal(liquidityGlobal0Before, liquidityGlobal1Before, liquidityGlobal0After, liquidityGlobal1After);
-    //     //     if (positionExists) {
-    //     //         assert((liquidityGlobal1After == liquidityGlobal1Before));
-    //     //     }
-    //     // }
-    // }
+        emit LiquidityAbsolute(poolValues.liquidityAbsoluteLowerBefore, poolValues.liquidityAbsoluteLowerAfter);
+        assert(poolValues.liquidityAbsoluteLowerAfter == poolValues.liquidityAbsoluteLowerBefore);
+        emit LiquidityAbsolute(poolValues.liquidityAbsoluteUpperBefore, poolValues.liquidityAbsoluteUpperAfter);
+        assert(poolValues.liquidityAbsoluteUpperAfter == poolValues.liquidityAbsoluteUpperBefore);
+    }
 
     function mintThenBurnZeroLiquidityChange(uint128 amount, bool zeroForOne, int24 lower, int24 upper) public tickPreconditions(lower, upper) {
         // PRE CONDITIONS
         // NOTE: Do not use the exact inputs of this function for POCs, use the inputs after the input validation
         mintAndApprove();
-        // (,PoolsharkStructs.LimitPoolState memory pool0, PoolsharkStructs.LimitPoolState memory pool1,,,) = pool.globalState();
+        PoolValues memory poolValues;
+        (,PoolsharkStructs.LimitPoolState memory pool0, PoolsharkStructs.LimitPoolState memory pool1, uint128 liquidityGlobalBefore,,) = pool.globalState();
         // uint160 price0Before = pool0.price;
         // uint160 price1Before = pool1.price;
+
+        LiquidityDeltaValues memory values;
+        (, PoolsharkStructs.LimitTick memory lowerTick) = pool.ticks(lower);
+        (, PoolsharkStructs.LimitTick memory upperTick) = pool.ticks(upper);
+
+        values.liquidityDeltaLowerBefore = lowerTick.liquidityDelta;
+        values.liquidityDeltaUpperBefore = upperTick.liquidityDelta;
+        poolValues.liquidityAbsoluteLowerBefore = lowerTick.liquidityAbsolute;
+        poolValues.liquidityAbsoluteUpperBefore = upperTick.liquidityAbsolute;
 
         // ACTION 
         mint(amount, zeroForOne, lower, upper);
@@ -366,45 +610,130 @@ contract EchidnaPool {
         emit PassedBurn();
 
         // POST CONDITIONS
-        // (,pool0, pool1,,,) = pool.globalState();
-        (,PoolsharkStructs.LimitPoolState memory pool0, PoolsharkStructs.LimitPoolState memory pool1,,,) = pool.globalState();
+        (, lowerTick) = pool.ticks(lower);
+        (, upperTick) = pool.ticks(upper);
+
+        values.liquidityDeltaLowerAfter = lowerTick.liquidityDelta;
+        values.liquidityDeltaUpperAfter = upperTick.liquidityDelta;
+        poolValues.liquidityAbsoluteLowerAfter = lowerTick.liquidityAbsolute;
+        poolValues.liquidityAbsoluteUpperAfter = upperTick.liquidityAbsolute;
+
+
+        (,pool0, pool1, poolValues.liquidityGlobalAfter,,) = pool.globalState();
         uint160 price0After = pool0.price;
         uint160 price1After = pool1.price;
         emit Prices(price0After, price1After);
         assert(price0After >= price1After);
-        // emit LiquidityGlobal(liquidityGlobal0Before, liquidityGlobal1Before, liquidityGlobal0After, liquidityGlobal1After);
-        // assert((liquidityGlobal0After == liquidityGlobal0Before) && (liquidityGlobal1After == liquidityGlobal1Before));
+        emit LiquidityGlobal(liquidityGlobalBefore, poolValues.liquidityGlobalAfter);
+        assert(poolValues.liquidityGlobalAfter == liquidityGlobalBefore);
+
+        emit LiquidityAbsolute(poolValues.liquidityAbsoluteLowerBefore, poolValues.liquidityAbsoluteLowerAfter);
+        assert(poolValues.liquidityAbsoluteLowerAfter == poolValues.liquidityAbsoluteLowerBefore);
+        emit LiquidityAbsolute(poolValues.liquidityAbsoluteUpperBefore, poolValues.liquidityAbsoluteUpperAfter);
+        assert(poolValues.liquidityAbsoluteUpperAfter == poolValues.liquidityAbsoluteUpperBefore);
     }
 
-    // function mintThenPartialBurnTwiceLiquidityChange(uint128 amount, bool zeroForOne, int24 lower, int24 upper, uint128 percent) public tickPreconditions(lower, upper) {
-    //     // PRE CONDITIONS
-    //     // NOTE: Do not use the exact inputs of this function for POCs, use the inputs after the input validation
-    //     percent = 1 + (percent % (1e38 - 1));
-    //     mintAndApprove();
-    //     // (uint160 price0Before,/*liquidity*/,uint128 liquidityGlobal0Before,,,,) = pool.pool0();
-    //     // (uint160 price1Before,/*liquidity*/,uint128 liquidityGlobal1Before,,,,) = pool.pool1();
+    function mintThenPartialBurnTwiceLiquidityChange(uint128 amount, bool zeroForOne, int24 lower, int24 upper, uint128 percent) public tickPreconditions(lower, upper) {
+        // PRE CONDITIONS
+        // NOTE: Do not use the exact inputs of this function for POCs, use the inputs after the input validation
+        percent = 1 + (percent % (1e38 - 1));
+        mintAndApprove();
+        PoolValues memory poolValues;
+        (,PoolsharkStructs.LimitPoolState memory pool0, PoolsharkStructs.LimitPoolState memory pool1, uint128 liquidityGlobalBefore,,) = pool.globalState();
 
-    //     // ACTION 
-    //     mint(amount, zeroForOne, lower, upper);
-    //     emit PassedMint();
-    //     burn(zeroForOne ? lower : upper, positions.length - 1, percent);
-    //     emit PassedBurn();
-    //     burn(zeroForOne ? lower : upper, positions.length - 1, 1e38);
-    //     emit PassedBurn();
+        LiquidityDeltaValues memory values;
+        (, PoolsharkStructs.LimitTick memory lowerTick) = pool.ticks(lower);
+        (, PoolsharkStructs.LimitTick memory upperTick) = pool.ticks(upper);
 
-    //     // POST CONDITIONS
-    //     (,PoolsharkStructs.LimitPoolState memory pool0, PoolsharkStructs.LimitPoolState memory pool1,,,) = pool.globalState();
-    //     uint160 price0After = pool0.price;
-    //     uint160 price1After = pool1.price;
-    //     emit Prices(price0After, price1After);
-    //     assert(price0After >= price1After);
-    //     // emit LiquidityGlobal(liquidityGlobal0Before, liquidityGlobal1Before, liquidityGlobal0After, liquidityGlobal1After);
-    //     // assert((liquidityGlobal0After == liquidityGlobal0Before) && (liquidityGlobal1After == liquidityGlobal1Before));
-    // }
+        values.liquidityDeltaLowerBefore = lowerTick.liquidityDelta;
+        values.liquidityDeltaUpperBefore = upperTick.liquidityDelta;
+        poolValues.liquidityAbsoluteLowerBefore = lowerTick.liquidityAbsolute;
+        poolValues.liquidityAbsoluteUpperBefore = upperTick.liquidityAbsolute;
+
+        // ACTION 
+        mint(amount, zeroForOne, lower, upper);
+        emit PassedMint();
+        burn(zeroForOne ? lower : upper, positions.length - 1, percent);
+        emit PassedBurn();
+        burn(zeroForOne ? lower : upper, positions.length - 1, 1e38);
+        emit PassedBurn();
+
+        // POST CONDITIONS
+
+        (, lowerTick) = pool.ticks(lower);
+        (, upperTick) = pool.ticks(upper);
+
+        values.liquidityDeltaLowerAfter = lowerTick.liquidityDelta;
+        values.liquidityDeltaUpperAfter = upperTick.liquidityDelta;
+        poolValues.liquidityAbsoluteLowerAfter = lowerTick.liquidityAbsolute;
+        poolValues.liquidityAbsoluteUpperAfter = upperTick.liquidityAbsolute;
+
+        (,pool0, pool1, poolValues.liquidityGlobalAfter,,) = pool.globalState();
+        uint160 price0After = pool0.price;
+        uint160 price1After = pool1.price;
+        emit Prices(price0After, price1After);
+        assert(price0After >= price1After);
+        emit LiquidityGlobal(liquidityGlobalBefore, poolValues.liquidityGlobalAfter);
+        assert(poolValues.liquidityGlobalAfter == liquidityGlobalBefore);
+
+        emit LiquidityAbsolute(poolValues.liquidityAbsoluteLowerBefore, poolValues.liquidityAbsoluteLowerAfter);
+        assert(poolValues.liquidityAbsoluteLowerAfter == poolValues.liquidityAbsoluteLowerBefore);
+        emit LiquidityAbsolute(poolValues.liquidityAbsoluteUpperBefore, poolValues.liquidityAbsoluteUpperAfter);
+        assert(poolValues.liquidityAbsoluteUpperAfter == poolValues.liquidityAbsoluteUpperBefore);
+    }
+
+    function mintThenPartialBurnTwiceLiquidityChangeVariable(uint128 amount, bool zeroForOne, int24 lower, int24 upper, uint128 percent, uint96 mintPercent) public tickPreconditions(lower, upper) {
+        // PRE CONDITIONS
+        // NOTE: Do not use the exact inputs of this function for POCs, use the inputs after the input validation
+        percent = 1 + (percent % (1e38 - 1));
+        mintAndApprove();
+        PoolValues memory poolValues;
+        (,PoolsharkStructs.LimitPoolState memory pool0, PoolsharkStructs.LimitPoolState memory pool1, uint128 liquidityGlobalBefore,,) = pool.globalState();
+
+        LiquidityDeltaValues memory values;
+        (, PoolsharkStructs.LimitTick memory lowerTick) = pool.ticks(lower);
+        (, PoolsharkStructs.LimitTick memory upperTick) = pool.ticks(upper);
+
+        values.liquidityDeltaLowerBefore = lowerTick.liquidityDelta;
+        values.liquidityDeltaUpperBefore = upperTick.liquidityDelta;
+        poolValues.liquidityAbsoluteLowerBefore = lowerTick.liquidityAbsolute;
+        poolValues.liquidityAbsoluteUpperBefore = upperTick.liquidityAbsolute;
+
+
+        // ACTION 
+        mintVariable(amount, zeroForOne, lower, upper, mintPercent);
+        emit PassedMint();
+        burn(zeroForOne ? lower : upper, positions.length - 1, percent);
+        emit PassedBurn();
+        burn(zeroForOne ? lower : upper, positions.length - 1, 1e38);
+        emit PassedBurn();
+
+        // POST CONDITIONS
+        (, lowerTick) = pool.ticks(lower);
+        (, upperTick) = pool.ticks(upper);
+
+        values.liquidityDeltaLowerAfter = lowerTick.liquidityDelta;
+        values.liquidityDeltaUpperAfter = upperTick.liquidityDelta;
+        poolValues.liquidityAbsoluteLowerAfter = lowerTick.liquidityAbsolute;
+        poolValues.liquidityAbsoluteUpperAfter = upperTick.liquidityAbsolute;
+
+        (,pool0, pool1, poolValues.liquidityGlobalAfter,,) = pool.globalState();
+        uint160 price0After = pool0.price;
+        uint160 price1After = pool1.price;
+        emit Prices(price0After, price1After);
+        assert(price0After >= price1After);
+        emit LiquidityGlobal(liquidityGlobalBefore, poolValues.liquidityGlobalAfter);
+        assert(poolValues.liquidityGlobalAfter == liquidityGlobalBefore);
+
+        emit LiquidityAbsolute(poolValues.liquidityAbsoluteLowerBefore, poolValues.liquidityAbsoluteLowerAfter);
+        assert(poolValues.liquidityAbsoluteLowerAfter == poolValues.liquidityAbsoluteLowerBefore);
+        emit LiquidityAbsolute(poolValues.liquidityAbsoluteUpperBefore, poolValues.liquidityAbsoluteUpperAfter);
+        assert(poolValues.liquidityAbsoluteUpperAfter == poolValues.liquidityAbsoluteUpperBefore);
+    }
 
     function poolsharkSwapCallback(
         int256 amount0Delta,
-        int256 amount1Delta,
+    int256 amount1Delta,
         bytes calldata data
     ) external {
         address token0 = LimitPool(pool).token0();

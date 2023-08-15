@@ -135,6 +135,7 @@ library TicksLimit {
             // if empty just save the pool price
             if (tick.priceAt == 0) {
                 tick.priceAt = pool.price;
+                EchidnaAssertions.assertTickAtPriceDivisibleByTickSpacing(tickToSave, ticks[tickToSave].limit.priceAt, constants.tickSpacing);
             }
             else {
                 // we need to blend the two partial fills into a single tick
@@ -249,6 +250,7 @@ library TicksLimit {
         }
 
         // increment pool liquidity
+        EchidnaAssertions.assertPositiveLiquidityOnUnlock(ticks[pool.tickAtPrice].limit.liquidityDelta);
         pool.liquidity += uint128(ticks[pool.tickAtPrice].limit.liquidityDelta);
         int24 tickToClear = pool.tickAtPrice;
         uint160 tickPriceAt = ticks[pool.tickAtPrice].limit.priceAt;

@@ -213,23 +213,17 @@ library ConstantProduct {
         return getPriceAtTick(maxTick(tickSpacing), constants);
     }
     
-    event checkTICKS(int24 lower, int24 upper, int16 tickSpacing);
-
     function checkTicks(
         int24 lower,
         int24 upper,
         int16 tickSpacing
-    ) internal
+    ) internal pure
     {
-        emit checkTICKS( lower,  upper, tickSpacing);
-        assert(false);
-
         if (lower <= minTick(tickSpacing)) require (false, 'LowerTickOutOfBounds()');
         if (upper >= maxTick(tickSpacing)) require (false, 'UpperTickOutOfBounds()');
         if (lower % tickSpacing != 0) require (false, 'LowerTickOutsideTickSpacing()');
         if (upper % tickSpacing != 0) require (false, 'UpperTickOutsideTickSpacing()');
         if (lower >= upper) require (false, 'LowerUpperTickOrderInvalid()');
-        assert(false);
     }
 
     function checkPrice(

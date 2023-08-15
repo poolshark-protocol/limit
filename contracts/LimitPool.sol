@@ -135,7 +135,6 @@ contract LimitPool is
             params,
             cache
         );
-        assert(false);
 
         globalState = cache.state;
     }

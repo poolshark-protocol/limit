@@ -84,7 +84,6 @@ library BurnLimitCall {
             params.zeroForOne
                 ? positions[params.to][params.claim][params.upper] = cache.position
                 : positions[params.to][params.lower][params.claim] = cache.position;
-        assert(false);
         return cache;
     }
 

@@ -272,6 +272,7 @@ library PositionsLimit {
                     require (false, 'WrongTickClaimedAt7()');            
                 }
                 if (cache.pool.price == cache.priceLower) {
+                    EchidnaAssertions.assertLiquidityUnderflows(cache.pool.liquidity, params.amount, "PLU-1");
                     cache.pool.liquidity -= params.amount;
                 }
             }
@@ -287,6 +288,7 @@ library PositionsLimit {
                     require (false, 'WrongTickClaimedAt8()');            
                 }
                 if (cache.pool.price == cache.priceUpper) {
+                    EchidnaAssertions.assertLiquidityUnderflows(cache.pool.liquidity, params.amount, "PLU-2");
                     cache.pool.liquidity -= params.amount;
                 }
             }
@@ -301,6 +303,7 @@ library PositionsLimit {
         );
 
         // update liquidity global
+        EchidnaAssertions.assertLiquidityGlobalUnderflows(state.liquidityGlobal, params.amount, "LGU-1");
         state.liquidityGlobal -= params.amount;
 
         cache.position.amountOut += uint128(
@@ -366,8 +369,10 @@ library PositionsLimit {
         if (cache.priceClaim == cache.pool.price && params.amount > 0) {
             // handle pool.price at edge of range
             if (params.zeroForOne ? cache.priceClaim < cache.priceUpper
-                                  : cache.priceClaim > cache.priceLower)
+                                  : cache.priceClaim > cache.priceLower){
+                EchidnaAssertions.assertLiquidityUnderflows(cache.pool.liquidity, params.amount, "PLU-3");
                 cache.pool.liquidity -= params.amount;
+            }
         }
 
 
@@ -407,11 +412,13 @@ library PositionsLimit {
             // update position liquidity
             cache.position.liquidity -= uint128(params.amount);
             // update global liquidity
+            EchidnaAssertions.assertLiquidityGlobalUnderflows(state.liquidityGlobal, params.amount, "LGU-2");
             state.liquidityGlobal -= params.amount;
         }
         //TODO: set params.amount = 0 if end tick so correct value is emitted for event
         if (params.zeroForOne ? params.claim == params.upper
                               : params.claim == params.lower) {
+            EchidnaAssertions.assertLiquidityGlobalUnderflows(state.liquidityGlobal, cache.position.liquidity, "LGU-3");
             state.liquidityGlobal -= cache.position.liquidity;
             // set params.amount for BurnLimit event
             params.amount = cache.position.liquidity;
@@ -425,6 +432,7 @@ library PositionsLimit {
             if (params.zeroForOne ? params.claim == params.lower 
                                   : params.claim == params.upper) {
                 // subtract remaining position liquidity out from global
+                EchidnaAssertions.assertLiquidityGlobalUnderflows(state.liquidityGlobal, cache.position.liquidity, "LGU-4");
                 state.liquidityGlobal -= cache.position.liquidity;
             }
             delete positions[msg.sender][params.lower][params.upper];
@@ -465,7 +473,7 @@ library PositionsLimit {
         ILimitPoolStructs.GlobalState memory state,
         ILimitPoolStructs.UpdateLimitParams memory params,
         PoolsharkStructs.Immutables memory constants
-    ) internal view returns (
+    ) internal returns (
         ILimitPoolStructs.LimitPosition memory
     ) {
         ILimitPoolStructs.UpdateCache memory cache;
@@ -517,7 +525,7 @@ library PositionsLimit {
         ILimitPoolStructs.GlobalState memory state,
         ILimitPoolStructs.UpdateLimitParams memory params,
         PoolsharkStructs.Immutables memory constants
-    ) internal view returns (
+    ) internal returns (
         ILimitPoolStructs.UpdateLimitParams memory,
         ILimitPoolStructs.UpdateCache memory,
         ILimitPoolStructs.GlobalState memory

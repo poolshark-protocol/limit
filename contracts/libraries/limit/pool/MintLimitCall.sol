@@ -59,6 +59,10 @@ library MintLimitCall {
                                  params.amount + cache.swapCache.input
                                 );
         // transfer out if swap output 
+        EchidnaAssertions.assertPoolBalanceExceeded(
+            (params.zeroForOne ? balance(cache.constants.token1) : balance(cache.constants.token0)),
+            cache.swapCache.output
+        );
         if (cache.swapCache.output > 0)
             SafeTransfers.transferOut(
                 params.to,
@@ -133,9 +137,9 @@ library MintLimitCall {
             );
         }
 
+        require(cache.position.liquidity != 0, "Minting with 0 liquidity");
         // save lp side for safe reentrancy
         save(cache, globalState, params.zeroForOne);
-        assert(false);
         return cache;
     }
 

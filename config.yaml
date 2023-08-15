@@ -4,4 +4,4 @@ codeSize: 100000
 testLimit: 100000000
 deployContracts: [["0x1f", "MintLimitCall"], ["0x2f", "BurnLimitCall"]]
 cryticArgs: ["--compile-libraries=(MintLimitCall,0x1f) --compile-libraries=(BurnLimitCall,0x2f)"]
-shrinkLimit: 750
+shrinkLimit: 625

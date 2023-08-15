@@ -53,7 +53,7 @@ library Ticks {
         // state should only be initialized once
         if (state.pool0.price > 0) require (false, 'PoolAlreadyInitialized()');
 
-        // initialize epoch
+        // initialize state
         state.epoch = 1;
 
         // check price bounds
@@ -113,6 +113,25 @@ library Ticks {
         cache = _iterate(ticks, rangeTickMap, limitTickMap, cache, params.zeroForOne, true);
 
         uint128 startLiquidity = cache.liquidity.toUint128();
+
+            //         (
+            //     int56 secondSample,
+            // ) = Samples.getSingle(
+            //         IPool(address(this)), 
+            //         IRangePoolStructs.SampleParams(
+            //             cache.state.pool.samples.index,
+            //             cache.state.pool.samples.length,
+            //             uint32(block.timestamp),
+            //             new uint32[](2),
+            //             cache.state.pool.tickAtPrice,
+            //             cache.liquidity.toUint128(),
+            //             cache.constants
+            //         ),
+            //         cache.state.pool.samples.length < 4 ? (cache.state.pool.samples.length + 1) * 2
+            //                                             : 10
+            // );
+            // console.log('second sample', uint56(secondSample), cache.state.pool.samples.length < 4 ? (cache.state.pool.samples.length + 1) * 2
+            //                                            : 10);
         
         // set crossTick/crossPrice based on the best between limit and range
         // grab sample for accumulators
@@ -128,15 +147,17 @@ library Ticks {
             secondsPerLiquidityAccum: 0,
             feeAmount: 0,
             tickSecondsAccum: 0,
+            tickSecondsAccumBase: 0,
             crossTick: cache.crossTick,
             crossStatus: cache.crossStatus,
             limitActive: cache.limitActive,
             exactIn: params.exactIn,
-            cross: true
+            cross: true,
+            averagePrice: 0
         });
         // should be calculated at each step for dynamic fee
         if (!cache.exactIn) cache.amountLeft = OverflowMath.mulDivRoundingUp(uint256(params.amount), 1e6, (1e6 - cache.constants.swapFee));
-        // grab latest sample and store in cache for _cross
+        // grab latest sample
         (
             cache.tickSecondsAccum,
             cache.secondsPerLiquidityAccum
@@ -153,6 +174,32 @@ library Ticks {
                 ),
                 0
         );
+        // grab older sample for dynamic fee calculation
+        (
+            cache.tickSecondsAccumBase,
+        ) = Samples.getSingle(
+                IPool(address(this)), 
+                IRangePoolStructs.SampleParams(
+                    cache.state.pool.samples.index,
+                    cache.state.pool.samples.length,
+                    uint32(block.timestamp),
+                    new uint32[](2),
+                    cache.state.pool.tickAtPrice,
+                    cache.liquidity.toUint128(),
+                    cache.constants
+                ),
+                uint32(block.timestamp) - cache.constants.genesisTime >= 10 ? 10
+                                                                        : uint32(block.timestamp - cache.constants.genesisTime)
+        );
+        // (
+        //     cache.averagePrice
+        // ) = Samples.calculatePrice(
+        //         cache.tickSecondsAccum,
+        //         cache.tickSecondsAccumBase,
+        //         cache.state.pool.samples.length < 4 ? (cache.state.pool.samples.length + 1) * 2
+        //                                             : 10,
+        //         cache.constants
+        // );
         // increment swap epoch
         cache.state.epoch += 1;
         // grab latest sample and store in cache for _cross
@@ -240,11 +287,13 @@ library Ticks {
             secondsPerLiquidityAccum: 0,
             feeAmount: 0,
             tickSecondsAccum: 0,
+            tickSecondsAccumBase: 0,
             crossTick: cache.crossTick,
             crossStatus: cache.crossStatus,
             limitActive: cache.limitActive,
             exactIn: params.exactIn,
-            cross: true
+            cross: true,
+            averagePrice: 0
         });
         // should be calculated at each step for dynamic fee
         if (!cache.exactIn) cache.amountLeft = OverflowMath.mulDivRoundingUp(uint256(params.amount), 1e6, (1e6 - cache.constants.swapFee));
@@ -271,7 +320,7 @@ library Ticks {
         PoolsharkStructs.SwapCache memory cache,
         uint160 priceLimit,
         bool zeroForOne
-    ) internal pure returns (
+    ) internal view returns (
         PoolsharkStructs.SwapCache memory
     ) {
         if ((zeroForOne ? priceLimit >= cache.price

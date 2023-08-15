@@ -139,6 +139,20 @@ library Samples {
                                     * (secondsAgo[0] - secondsAgo[secondsAgo.length - 1]));
         }
     }
+
+    function calculatePrice(
+        int56 tickSecondsAccum,
+        int56 tickSecondsAccumBase,
+        uint32 timeElapsed,
+        PoolsharkStructs.Immutables memory constants
+    ) internal pure returns (
+        uint160 averagePrice
+    ) {
+        int24 averageTick = int24((tickSecondsAccum - tickSecondsAccumBase) 
+                                / int32(timeElapsed));
+        averagePrice = ConstantProduct.getPriceAtTick(averageTick, constants);
+    }
+
     function _poolSample(
         IPool pool,
         uint256 sampleIndex

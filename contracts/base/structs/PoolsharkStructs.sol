@@ -86,6 +86,7 @@ interface PoolsharkStructs {
         address token0;
         address token1;
         address poolToken;
+        uint32 genesisTime;
         int16 tickSpacing;
         uint16 swapFee;
     }
@@ -112,9 +113,11 @@ interface PoolsharkStructs {
         uint256 input;
         uint256 output;
         uint160 crossPrice;
+        uint160 averagePrice;
         uint160 secondsPerLiquidityAccum;
         uint128 feeAmount;
         int56   tickSecondsAccum;
+        int56   tickSecondsAccumBase;
         int24   crossTick;
         uint8   crossStatus;
         bool    limitActive;

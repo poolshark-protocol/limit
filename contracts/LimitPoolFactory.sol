@@ -74,6 +74,7 @@ contract LimitPoolFactory is
         // set immutables
         constants.owner = owner;
         constants.factory = original;
+        constants.genesisTime = uint32(block.timestamp);
         (
             constants.bounds.min,
             constants.bounds.max
@@ -102,6 +103,7 @@ contract LimitPoolFactory is
                 constants.poolToken,
                 constants.bounds.min,
                 constants.bounds.max,
+                constants.genesisTime,
                 constants.tickSpacing,
                 constants.swapFee
             )

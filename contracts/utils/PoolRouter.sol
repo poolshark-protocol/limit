@@ -51,6 +51,7 @@ contract PoolRouter is
                 constants.poolToken,
                 constants.bounds.min,
                 constants.bounds.max,
+                constants.genesisTime,
                 constants.tickSpacing,
                 constants.swapFee
             ),

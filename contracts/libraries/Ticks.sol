@@ -138,7 +138,7 @@ library Ticks {
             averagePrice: 0
         });
         // should be calculated at each step for dynamic fee
-        if (!cache.exactIn) cache.amountLeft = OverflowMath.mulDivRoundingUp(uint256(params.amount), 1e6, (1e6 - cache.constants.swapFee));
+        // if (!cache.exactIn) cache.amountLeft = OverflowMath.mulDivRoundingUp(uint256(params.amount), 1e6, (1e6 - cache.constants.swapFee));
         // grab latest sample
         console.log('NEW SAMPLE');
         (
@@ -321,8 +321,6 @@ library Ticks {
                 FEE_TIME_DELTA_MAX,
                 cache.constants
         );
-        // should be calculated at each step for dynamic fee
-        if (!cache.exactIn) cache.amountLeft = OverflowMath.mulDivRoundingUp(uint256(params.amount), 1e6, (1e6 - cache.constants.swapFee));
         while (cache.cross) {
             cache = _quoteSingle(cache, params.priceLimit, params.zeroForOne);
             if (cache.cross) {
@@ -359,7 +357,7 @@ library Ticks {
             return cache;
         }
         uint256 nextPrice = cache.crossPrice;
-        uint256 amountOut;
+         uint256 amountIn; uint256 amountOut;
         if (zeroForOne) {
             // Trading token 0 (x) for token 1 (y).
             // price  is decreasing.
@@ -379,10 +377,10 @@ library Ticks {
                 );
                 if (cache.exactIn) {   
                     amountOut = ConstantProduct.getDy(cache.liquidity, newPrice, uint256(cache.price), false);
-                    cache.input += cache.amountLeft;
+                    amountIn = cache.amountLeft;
                 } else {
                     amountOut = cache.amountLeft;
-                    cache.input += ConstantProduct.getDx(cache.liquidity, newPrice, uint256(cache.price), true);
+                    amountIn += ConstantProduct.getDx(cache.liquidity, newPrice, uint256(cache.price), true);
                 }
                 cache.amountLeft = 0;
                 cache.cross = false;
@@ -390,10 +388,10 @@ library Ticks {
             } else {
                 if (cache.exactIn) {
                     amountOut = ConstantProduct.getDy(cache.liquidity, nextPrice, cache.price, false);
-                    cache.input += amountMax;
+                    amountIn += amountMax;
                 } else {
                     amountOut = amountMax;
-                    cache.input += ConstantProduct.getDx(cache.liquidity, nextPrice, cache.price, true);
+                    amountIn += ConstantProduct.getDx(cache.liquidity, nextPrice, cache.price, true);
                 }
                 cache.amountLeft -= amountMax;
                 if (nextPrice == cache.crossPrice) cache.cross = true;
@@ -417,11 +415,10 @@ library Ticks {
                 );
                 if (cache.exactIn) {
                     amountOut = ConstantProduct.getDx(cache.liquidity, cache.price, newPrice, false);
-                    cache.input += cache.amountLeft;
+                    amountIn = cache.amountLeft;
                 } else {
-                    
                     amountOut = cache.amountLeft;
-                    cache.input += ConstantProduct.getDy(cache.liquidity, cache.price, newPrice, true);
+                    amountIn = ConstantProduct.getDy(cache.liquidity, cache.price, newPrice, true);
                 }
                 cache.amountLeft = 0;
                 cache.cross = false;
@@ -429,10 +426,10 @@ library Ticks {
             } else {
                 if (cache.exactIn) {
                     amountOut = ConstantProduct.getDx(cache.liquidity, cache.price, nextPrice, false);
-                    cache.input += amountMax;
+                    amountIn = amountMax;
                 } else {
                     amountOut = amountMax;
-                    cache.input += ConstantProduct.getDy(cache.liquidity, cache.price, nextPrice, true);
+                    amountIn = ConstantProduct.getDy(cache.liquidity, cache.price, nextPrice, true);
                 }
                 cache.amountLeft -= amountMax;
                 if (nextPrice == cache.crossPrice) cache.cross = true;
@@ -440,7 +437,7 @@ library Ticks {
                 cache.price = uint160(nextPrice);
             }
         }
-        cache = FeeMath.calculate(cache, amountOut, zeroForOne);
+        cache = FeeMath.calculate(cache, amountIn, amountOut, zeroForOne);
         return cache;
     }
 
@@ -453,67 +450,69 @@ library Ticks {
     ) internal returns (
         PoolsharkStructs.SwapCache memory
     ) {
-        // crossing range ticks
-        if ((cache.crossStatus & RANGE_TICK) > 0) {
-            if (!params.zeroForOne || (cache.amountLeft > 0 && params.priceLimit < cache.crossPrice)) {
-                PoolsharkStructs.RangeTick memory crossTick = ticks[cache.crossTick].range;
-                crossTick.feeGrowthOutside0       = cache.state.pool.feeGrowthGlobal0 - crossTick.feeGrowthOutside0;
-                crossTick.feeGrowthOutside1       = cache.state.pool.feeGrowthGlobal1 - crossTick.feeGrowthOutside1;
-                crossTick.tickSecondsAccumOutside = cache.tickSecondsAccum - crossTick.tickSecondsAccumOutside;
-                crossTick.secondsPerLiquidityAccumOutside = cache.secondsPerLiquidityAccum - crossTick.secondsPerLiquidityAccumOutside;
-                ticks[cache.crossTick].range = crossTick;
-                int128 liquidityDelta = crossTick.liquidityDelta;
-                if (params.zeroForOne) {
-                    unchecked {
-                        if (liquidityDelta >= 0){
-                            cache.state.pool.liquidity -= uint128(liquidityDelta);
-                        } else {
-                            cache.state.pool.liquidity += uint128(-liquidityDelta); 
+        if (cache.price == cache.crossPrice) {
+            // crossing range ticks
+            if ((cache.crossStatus & RANGE_TICK) > 0) {
+                if (!params.zeroForOne || (cache.amountLeft > 0 && params.priceLimit < cache.crossPrice)) {
+                    PoolsharkStructs.RangeTick memory crossTick = ticks[cache.crossTick].range;
+                    crossTick.feeGrowthOutside0       = cache.state.pool.feeGrowthGlobal0 - crossTick.feeGrowthOutside0;
+                    crossTick.feeGrowthOutside1       = cache.state.pool.feeGrowthGlobal1 - crossTick.feeGrowthOutside1;
+                    crossTick.tickSecondsAccumOutside = cache.tickSecondsAccum - crossTick.tickSecondsAccumOutside;
+                    crossTick.secondsPerLiquidityAccumOutside = cache.secondsPerLiquidityAccum - crossTick.secondsPerLiquidityAccumOutside;
+                    ticks[cache.crossTick].range = crossTick;
+                    int128 liquidityDelta = crossTick.liquidityDelta;
+                    if (params.zeroForOne) {
+                        unchecked {
+                            if (liquidityDelta >= 0){
+                                cache.state.pool.liquidity -= uint128(liquidityDelta);
+                            } else {
+                                cache.state.pool.liquidity += uint128(-liquidityDelta); 
+                            }
+                        }
+                    } else {
+                        unchecked {
+                            if (liquidityDelta >= 0) {
+                                cache.state.pool.liquidity += uint128(liquidityDelta);
+                            } else {
+                                cache.state.pool.liquidity -= uint128(-liquidityDelta);
+                            }
                         }
                     }
                 } else {
-                    unchecked {
-                        if (liquidityDelta >= 0) {
-                            cache.state.pool.liquidity += uint128(liquidityDelta);
-                        } else {
-                            cache.state.pool.liquidity -= uint128(-liquidityDelta);
-                        }
-                    }
+                    // if zeroForOne && amountLeft == 0 skip crossing the tick
+                    /// @dev - this is so users can safely add liquidity with lower or upper at the pool price 
+                    cache.cross = false;
                 }
-            } else {
-                // if zeroForOne && amountLeft == 0 skip crossing the tick
-                /// @dev - this is so users can safely add liquidity with lower or upper at the pool price 
-                cache.cross = false;
+                /// @dev - price and tickAtPrice updated at end of loop
             }
-            /// @dev - price and tickAtPrice updated at end of loop
-        }
-        // crossing limit tick
-        if ((cache.crossStatus & LIMIT_TICK) > 0) {
-            // cross limit tick
-            EpochMap.set(cache.crossTick, !params.zeroForOne, cache.state.epoch, limitTickMap, cache.constants);
-            int128 liquidityDelta = ticks[cache.crossTick].limit.liquidityDelta;
+            // crossing limit tick
+            if ((cache.crossStatus & LIMIT_TICK) > 0) {
+                // cross limit tick
+                EpochMap.set(cache.crossTick, !params.zeroForOne, cache.state.epoch, limitTickMap, cache.constants);
+                int128 liquidityDelta = ticks[cache.crossTick].limit.liquidityDelta;
 
-            if (liquidityDelta >= 0) {
-                cache.liquidity += uint128(liquidityDelta);
-                if (params.zeroForOne) cache.state.pool1.liquidity += uint128(liquidityDelta);
-                else cache.state.pool0.liquidity += uint128(liquidityDelta);
+                if (liquidityDelta >= 0) {
+                    cache.liquidity += uint128(liquidityDelta);
+                    if (params.zeroForOne) cache.state.pool1.liquidity += uint128(liquidityDelta);
+                    else cache.state.pool0.liquidity += uint128(liquidityDelta);
+                }
+                else {
+                    cache.liquidity -= uint128(-liquidityDelta);
+                    if (params.zeroForOne) cache.state.pool1.liquidity -= uint128(-liquidityDelta);
+                    else cache.state.pool0.liquidity -= uint128(-liquidityDelta);
+                }
+                // zero out liquidityDelta and priceAt
+                ticks[cache.crossTick].limit = PoolsharkStructs.LimitTick(0,0,0);
+                LimitTicks.clear(ticks, cache.constants, limitTickMap, cache.crossTick);
+                /// @dev - price and tickAtPrice updated at end of loop
             }
-            else {
-                cache.liquidity -= uint128(-liquidityDelta);
-                if (params.zeroForOne) cache.state.pool1.liquidity -= uint128(-liquidityDelta);
-                else cache.state.pool0.liquidity -= uint128(-liquidityDelta);
-            }
-            // zero out liquidityDelta and priceAt
-            ticks[cache.crossTick].limit = PoolsharkStructs.LimitTick(0,0,0);
-            LimitTicks.clear(ticks, cache.constants, limitTickMap, cache.crossTick);
-            /// @dev - price and tickAtPrice updated at end of loop
-        }
-        if ((cache.crossStatus & LIMIT_POOL) > 0) {
-            // add limit pool
-            uint128 liquidityDelta = params.zeroForOne ? cache.state.pool1.liquidity
-                                                       : cache.state.pool0.liquidity;
+            if ((cache.crossStatus & LIMIT_POOL) > 0) {
+                // add limit pool
+                uint128 liquidityDelta = params.zeroForOne ? cache.state.pool1.liquidity
+                                                        : cache.state.pool0.liquidity;
 
-            if (liquidityDelta > 0) cache.liquidity += liquidityDelta;
+                if (liquidityDelta > 0) cache.liquidity += liquidityDelta;
+            }
         }
         if (cache.cross)
             cache = _iterate(ticks, rangeTickMap, limitTickMap, cache, params.zeroForOne, false);
@@ -530,55 +529,58 @@ library Ticks {
     ) internal view returns (
         PoolsharkStructs.SwapCache memory
     ) {
-        if ((cache.crossStatus & RANGE_TICK) > 0) {
-            if (!params.zeroForOne || cache.amountLeft > 0) {
-                int128 liquidityDelta = ticks[cache.crossTick].range.liquidityDelta;
-                if (params.zeroForOne) {
-                    unchecked {
-                        if (liquidityDelta >= 0){
-                            cache.state.pool.liquidity -= uint128(liquidityDelta);
-                        } else {
-                            cache.state.pool.liquidity += uint128(-liquidityDelta);
+        console.log('QUOTE ITERATE');
+        if (cache.price == cache.crossPrice ) {
+            if ((cache.crossStatus & RANGE_TICK) > 0) {
+                if (!params.zeroForOne || cache.amountLeft > 0) {
+                    int128 liquidityDelta = ticks[cache.crossTick].range.liquidityDelta;
+                    if (params.zeroForOne) {
+                        unchecked {
+                            if (liquidityDelta >= 0){
+                                cache.state.pool.liquidity -= uint128(liquidityDelta);
+                            } else {
+                                cache.state.pool.liquidity += uint128(-liquidityDelta);
+                            }
+                        }
+                    } else {
+                        unchecked {
+                            if (liquidityDelta >= 0) {
+                                cache.state.pool.liquidity += uint128(liquidityDelta);
+                            } else {
+                                cache.state.pool.liquidity -= uint128(-liquidityDelta);
+                            }
                         }
                     }
                 } else {
-                    unchecked {
-                        if (liquidityDelta >= 0) {
-                            cache.state.pool.liquidity += uint128(liquidityDelta);
-                        } else {
-                            cache.state.pool.liquidity -= uint128(-liquidityDelta);
-                        }
+                    cache.cross = false;
+                }
+            }
+            if ((cache.crossStatus & LIMIT_TICK) > 0) {
+                // cross limit tick
+                int128 liquidityDelta = ticks[cache.crossTick].limit.liquidityDelta;
+
+                if (liquidityDelta > 0) {
+                    cache.liquidity += uint128(liquidityDelta);
+                    if (params.zeroForOne) cache.state.pool1.liquidity += uint128(liquidityDelta);
+                    else cache.state.pool0.liquidity += uint128(liquidityDelta);
+                } 
+                else {
+                    cache.liquidity -= uint128(-liquidityDelta);
+                    if (params.zeroForOne) {
+                        cache.state.pool1.liquidity -= uint128(-liquidityDelta);
+                    } else {
+                        cache.state.pool0.liquidity -= uint128(-liquidityDelta);
                     }
                 }
-            } else {
-                cache.cross = false;
             }
-        }
-        if ((cache.crossStatus & LIMIT_TICK) > 0) {
-            // cross limit tick
-            int128 liquidityDelta = ticks[cache.crossTick].limit.liquidityDelta;
+            if ((cache.crossStatus & LIMIT_POOL) > 0) {
+                // add limit pool
+                uint128 liquidityDelta = params.zeroForOne ? cache.state.pool1.liquidity
+                                                        : cache.state.pool0.liquidity;
 
-            if (liquidityDelta > 0) {
-                cache.liquidity += uint128(liquidityDelta);
-                if (params.zeroForOne) cache.state.pool1.liquidity += uint128(liquidityDelta);
-                else cache.state.pool0.liquidity += uint128(liquidityDelta);
-            } 
-            else {
-                cache.liquidity -= uint128(-liquidityDelta);
-                if (params.zeroForOne) {
-                    cache.state.pool1.liquidity -= uint128(-liquidityDelta);
-                } else {
-                    cache.state.pool0.liquidity -= uint128(-liquidityDelta);
+                if (liquidityDelta > 0) {
+                    cache.liquidity += liquidityDelta;
                 }
-            }
-        }
-        if ((cache.crossStatus & LIMIT_POOL) > 0) {
-            // add limit pool
-            uint128 liquidityDelta = params.zeroForOne ? cache.state.pool1.liquidity
-                                                       : cache.state.pool0.liquidity;
-
-            if (liquidityDelta > 0) {
-                cache.liquidity += liquidityDelta;
             }
         }
         if (cache.cross)

@@ -13,6 +13,8 @@ library FeeMath {
     using SafeCast for uint256;
 
     uint256 internal constant FEE_DELTA_CONST = 0;
+    //TODO: change FEE_DELTA_CONST before launch
+    // uint256 internal constant FEE_DELTA_CONST = 5000;
     uint256 internal constant Q128 = 0x100000000000000000000000000000000;
 
     struct CalculateLocals {
@@ -23,21 +25,21 @@ library FeeMath {
         uint256 feeAmount;
         uint256 protocolFee;
         uint256 protocolFeesAccrued;
-        uint256 amountOutRange;
+        uint256 amountRange;
         bool feeDirection;
     }
 
     function calculate(
         PoolsharkStructs.SwapCache memory cache,
+        uint256 amountIn,
         uint256 amountOut,
         bool zeroForOne
     ) internal view returns (
         PoolsharkStructs.SwapCache memory
     )
     {
+        CalculateLocals memory locals;
         if (cache.state.pool.liquidity != 0) {
-            CalculateLocals memory locals;
-
             // calculate dynamic fee
             {
                 locals.minPrice = ConstantProduct.getPrice(cache.constants.bounds.min);
@@ -82,17 +84,27 @@ library FeeMath {
                 // console.log('price movement', locals.lastPrice, locals.price);
                 // console.log('swap fee adjustment',cache.constants.swapFee + delta * cache.constants.swapFee / 1e6);
             }
-            // calculate output from range liquidity
-            locals.amountOutRange = OverflowMath.mulDiv(amountOut, cache.state.pool.liquidity, cache.liquidity);
-
-            // take enough fees to cover fee growth
-            locals.feeAmount = OverflowMath.mulDivRoundingUp(locals.amountOutRange, locals.swapFee, 1e6);
+            if (cache.exactIn) {
+                // calculate output from range liquidity
+                locals.amountRange = OverflowMath.mulDiv(amountOut, cache.state.pool.liquidity, cache.liquidity);
+                // take enough fees to cover fee growth
+                locals.feeAmount = OverflowMath.mulDivRoundingUp(locals.amountRange, locals.swapFee, 1e6);
+                amountOut -= locals.feeAmount;
+            } else {
+                // calculate input from range liquidity
+                locals.amountRange = OverflowMath.mulDiv(amountIn, cache.state.pool.liquidity, cache.liquidity);
+                // take enough fees to cover fee growth
+                locals.feeAmount = OverflowMath.mulDivRoundingUp(locals.amountRange, locals.swapFee, 1e6);
+                amountIn += locals.feeAmount;
+            }
+            console.log('amount check', locals.feeAmount, amountIn, amountOut);
+            console.log('amount check 2', locals.amountRange);
 
             // load protocol fee from cache
-            locals.protocolFee = zeroForOne ? cache.state.pool0.protocolFee : cache.state.pool1.protocolFee;
+            locals.protocolFee = zeroForOne == cache.exactIn ? cache.state.pool0.protocolFee : cache.state.pool1.protocolFee;
             // calculate fee
             locals.protocolFeesAccrued = OverflowMath.mulDivRoundingUp(locals.feeAmount, locals.protocolFee, 1e6);
-            amountOut -= locals.feeAmount;
+
             
             // fees for this swap step
             locals.feeAmount -= locals.protocolFeesAccrued;
@@ -100,7 +112,7 @@ library FeeMath {
             cache.feeAmount += locals.feeAmount.toUint128();
             
             // save fee growth and protocol fees
-            if (zeroForOne) {
+            if (zeroForOne == cache.exactIn) {
                 cache.state.pool0.protocolFees += uint128(locals.protocolFeesAccrued);
                 cache.state.pool.feeGrowthGlobal1 += uint200(OverflowMath.mulDiv(locals.feeAmount, Q128, cache.state.pool.liquidity));
             } else {
@@ -108,7 +120,9 @@ library FeeMath {
                 cache.state.pool.feeGrowthGlobal0 += uint200(OverflowMath.mulDiv(locals.feeAmount, Q128, cache.state.pool.liquidity));
             }
         }
+        cache.input  += amountIn;
         cache.output += amountOut;
+
         return cache;
     }
 }

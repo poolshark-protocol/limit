@@ -17,6 +17,7 @@ library Ticks {
     using SafeCast for uint256;
 
     // constants for crossing ticks / limit pools
+    uint8 internal constant FEE_TIME_DELTA_MAX = 8;
     uint8 internal constant RANGE_TICK = 2**0;
     uint8 internal constant LIMIT_TICK = 2**1;
     uint8 internal constant LIMIT_POOL = 2**2;
@@ -139,6 +140,7 @@ library Ticks {
         // should be calculated at each step for dynamic fee
         if (!cache.exactIn) cache.amountLeft = OverflowMath.mulDivRoundingUp(uint256(params.amount), 1e6, (1e6 - cache.constants.swapFee));
         // grab latest sample
+        console.log('NEW SAMPLE');
         (
             cache.tickSecondsAccum,
             cache.secondsPerLiquidityAccum
@@ -155,7 +157,9 @@ library Ticks {
                 ),
                 0
         );
+        console.log('NEW SAMPLE COMPLETED', uint56(cache.tickSecondsAccum));
         // grab older sample for dynamic fee calculation
+        console.log('OLD SAMPLE', timeElapsed(cache.constants));
         (
             cache.tickSecondsAccumBase,
         ) = Samples.getSingle(
@@ -177,6 +181,7 @@ library Ticks {
                 cache.tickSecondsAccum,
                 cache.tickSecondsAccumBase,
                 timeElapsed(cache.constants),
+                FEE_TIME_DELTA_MAX,
                 cache.constants
         );
         // increment swap epoch
@@ -274,6 +279,23 @@ library Ticks {
             cross: true,
             averagePrice: 0
         });
+        // grab latest sample
+        (
+            cache.tickSecondsAccum,
+            cache.secondsPerLiquidityAccum
+        ) = Samples.getSingle(
+                IPool(address(this)), 
+                IRangePoolStructs.SampleParams(
+                    cache.state.pool.samples.index,
+                    cache.state.pool.samples.length,
+                    uint32(block.timestamp),
+                    new uint32[](2),
+                    cache.state.pool.tickAtPrice,
+                    cache.liquidity.toUint128(),
+                    cache.constants
+                ),
+                0
+        );
         // grab older sample for dynamic fee calculation
         (
             cache.tickSecondsAccumBase,
@@ -296,6 +318,7 @@ library Ticks {
                 cache.tickSecondsAccum,
                 cache.tickSecondsAccumBase,
                 timeElapsed(cache.constants),
+                FEE_TIME_DELTA_MAX,
                 cache.constants
         );
         // should be calculated at each step for dynamic fee
@@ -681,8 +704,8 @@ library Ticks {
         uint32
     )    
     {
-        return  uint32(block.timestamp) - constants.genesisTime >= 10
-                    ? 10
+        return  uint32(block.timestamp) - constants.genesisTime >= FEE_TIME_DELTA_MAX
+                    ? FEE_TIME_DELTA_MAX
                     : uint32(block.timestamp - constants.genesisTime);
     }
 }

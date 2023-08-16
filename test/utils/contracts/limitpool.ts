@@ -255,7 +255,7 @@ export async function validateSwap(params: ValidateSwapParams) {
               priceLimit: priceLimit,
               exactIn: true,
               callbackData: ethers.utils.formatBytes32String('')
-            }])
+            }], {gasLimit: 3000000})
             if (splitInto == 1) await txn.wait()
         }
         if (splitInto > 1){
@@ -275,7 +275,7 @@ export async function validateSwap(params: ValidateSwapParams) {
               priceLimit: priceLimit,
               exactIn: true,
               callbackData: ethers.utils.formatBytes32String('')
-            }])
+            }], {gasLimit: 3000000})
         ).to.be.revertedWith(revertMessage)
         return
     }

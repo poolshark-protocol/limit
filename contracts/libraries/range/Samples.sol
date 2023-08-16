@@ -69,6 +69,9 @@ library Samples {
             sampleLengthNew = sampleState.length;
         }
         sampleIndexNew = (sampleState.index + 1) % sampleLengthNew;
+        console.log('samples 0 check', uint56(samples[0].tickSecondsAccum), uint56(samples[1].tickSecondsAccum));
+        console.log('SAVING SAMPLE', sampleIndexNew);
+        console.log('-------------');
         samples[sampleIndexNew] = _build(newSample, uint32(block.timestamp), tick, startLiquidity);
 
         emit SampleRecorded(
@@ -148,15 +151,28 @@ library Samples {
         int56 tickSecondsAccum,
         int56 tickSecondsAccumBase,
         uint32 timeElapsed,
+        uint32 timeElapsedMax,
         PoolsharkStructs.Immutables memory constants
     ) internal view returns (
         uint160 averagePrice
     ) {
-        int24 averageTick = int24((tickSecondsAccum - tickSecondsAccumBase) 
-                                / int32(timeElapsed));
-                            console.log('average tick', uint24(averageTick));
+        int56 tickSecondsAccumDiff = tickSecondsAccum - tickSecondsAccumBase;
+        int24 averageTick;
+        if (timeElapsed == timeElapsedMax) {
+            console.log('non zero diff');
+            console.logInt(tickSecondsAccumDiff);
+            averageTick = int24(tickSecondsAccumDiff / int32(timeElapsed));
+        } else {
+            console.log('zero diff');
+            console.logInt(tickSecondsAccumDiff);
+            averageTick = int24(tickSecondsAccum / int32(timeElapsed));
+        }
+        console.log('average tick');
+        console.logInt(averageTick);
+        console.log('accum values');
+        console.logInt(tickSecondsAccum);
+        console.logInt(tickSecondsAccumBase);
         averagePrice = ConstantProduct.getPriceAtTick(averageTick, constants);
-
     }
 
     function _poolSample(
@@ -205,6 +221,9 @@ library Samples {
 
         uint32 targetTime = uint32(block.timestamp) - secondsAgo;
 
+        console.log('targetTime:', targetTime, block.timestamp);
+
+        // should be getting samples
         (
             IRangePoolStructs.Sample memory firstSample,
             IRangePoolStructs.Sample memory secondSample
@@ -215,6 +234,8 @@ library Samples {
                 targetTime
         );
 
+        console.log('sample times', firstSample.blockTimestamp, secondSample.blockTimestamp);
+        console.log('sample accum values', uint56(-firstSample.tickSecondsAccum), uint56(-secondSample.tickSecondsAccum));
         if (targetTime == firstSample.blockTimestamp) {
             // first sample
             return (
@@ -273,11 +294,18 @@ library Samples {
         uint32  blockTimestamp,
         int24   tick,
         uint128 liquidity
-    ) internal pure returns (
+    ) internal view returns (
          IRangePoolStructs.Sample memory
     ) {
         int56 timeDelta = int56(uint56(blockTimestamp - newSample.blockTimestamp));
 
+        console.log('tick accum check', tick > 0 ? uint24(tick) : uint24(-tick), uint56(timeDelta));
+        console.log('sample add check', int56(tick) * int32(timeDelta) > 0 ? uint56(int56(tick) * int32(timeDelta)) : uint56(int56(tick) * int32(timeDelta)));
+         console.log('new sample check', newSample.tickSecondsAccum + int56(tick) * int32(timeDelta) > 0 ? uint56(newSample.tickSecondsAccum)
+                                                                                     : uint56(-(newSample.tickSecondsAccum)));
+        console.log('new sample check', newSample.tickSecondsAccum + int56(tick) * int32(timeDelta) > 0 ? uint56(newSample.tickSecondsAccum + int56(tick) * int32(timeDelta))
+                                                                                     : uint56(-(newSample.tickSecondsAccum + int56(tick) * int32(timeDelta))));
+        console.log('-------------'); 
         return
             PoolsharkStructs.Sample({
                 blockTimestamp: blockTimestamp,
@@ -344,6 +372,7 @@ library Samples {
         if (firstSample.blockTimestamp == 0) {
             firstSample = _poolSample(pool, 0);
         }
+        console.log('target time', targetTime, firstSample.blockTimestamp);
         if(!_lte(firstSample.blockTimestamp, targetTime)) require(false, 'SampleLengthNotAvailable()');
 
         return _binarySearch(

@@ -48,12 +48,16 @@ library FeeMath {
                     locals.price = locals.minPrice;
                 if (locals.lastPrice < locals.minPrice)
                     locals.lastPrice = locals.minPrice;
+                // 0.1% => 0.1%
+                // 1% move => 0.5%
+                // 0.3% => 0.3%
+                // 1% => 1%
+                // 10% move => 5% fee
                 console.log('liquidity check', cache.state.pool.liquidity, cache.price);
                 // delta is % modifier on the swapFee
                 uint256 delta = OverflowMath.mulDiv(
-                        FEE_DELTA_CONST * uint16(cache.constants.tickSpacing), // higher FEE_DELTA_CONST means
-                                                                               // more aggressive dynamic fee
-                        (
+                        FEE_DELTA_CONST / uint16(cache.constants.tickSpacing), // higher FEE_DELTA_CONST means
+                        (                                                      // more aggressive dynamic fee
                             locals.price > locals.lastPrice
                                 ? locals.price - locals.lastPrice
                                 : locals.lastPrice - locals.price
@@ -61,7 +65,7 @@ library FeeMath {
                         locals.lastPrice 
                 );
                 // max fee increase at 5x
-                if (delta > 5_000_000) delta = 5_000_000;
+                if (delta > 4_000_000) delta = 4_000_000;
                 // true means increased fee for zeroForOne = true
                 locals.feeDirection = locals.price < locals.lastPrice;
                 // adjust fee based on direction
@@ -75,6 +79,8 @@ library FeeMath {
                     // if swapping towards twap price and delta > 100%, set fee to zero
                     locals.swapFee = 0;
                 }
+                // console.log('price movement', locals.lastPrice, locals.price);
+                // console.log('swap fee adjustment',cache.constants.swapFee + delta * cache.constants.swapFee / 1e6);
             }
             // calculate output from range liquidity
             locals.amountOutRange = OverflowMath.mulDiv(amountOut, cache.state.pool.liquidity, cache.liquidity);

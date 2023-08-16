@@ -297,7 +297,7 @@ contract LimitPool is
         uint16 protocolFee1,
         bool setFees
     ) external override
-        ownerOnly
+        // ownerOnly
         nonReentrant(globalState)
         canoncialOnly 
     returns (

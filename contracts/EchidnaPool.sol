@@ -122,8 +122,8 @@ contract EchidnaPool {
         tokenOut = new Token20("OUT", "OUT", 18);
         (address poolAddr,) = factory.createLimitPool(bytes32(0x0), address(tokenIn), address(tokenOut), 500, 79228162514264337593543950336);
         pool = LimitPool(poolAddr);
+        // pool.fees(500, 500, true);
     }
-
 
     function mint(uint128 amount, bool zeroForOne, int24 lower, int24 upper) public tickPreconditions(lower, upper) {
         // PRE CONDITIONS
@@ -405,6 +405,12 @@ contract EchidnaPool {
         emit Prices(price0, price1);
         assert(price0 >= price1);
     }
+
+    // function mintThenSwap(uint128 amount, bool zeroForOne, int24 lower, int24 upper, uint160 priceLimit) public {
+    //     mint(amount, zeroForOne, lower, upper);
+    //     swap(priceLimit, amount, true, zeroForOne);
+    //     assert(false);
+    // }
 
     function burn(int24 claimAt, uint256 positionIndex, uint128 burnPercent) public {
         // PRE CONDITIONS 

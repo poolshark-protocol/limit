@@ -31,6 +31,11 @@ library EchidnaAssertions {
         assert(uint256(liquidity) + uint256(amount) <= type(uint128).max);
     }
 
+    function assertLiquidityAbsoluteUnderflows(uint128 liquidityAbs, uint128 amount, string memory location) internal {
+        emit LiquidityUnderflow(liquidityAbs, amount, location);
+        assert(liquidityAbs >= amount);
+    }
+
     // function assertTickOverflow(int24 tick, int24 addition, string memory location) internal {
     //     emit TickOverflow(tick, addition, location);
     //     assert(ConstantProduct.maxTick(tickSpacing));

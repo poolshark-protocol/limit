@@ -201,6 +201,7 @@ library TicksLimit {
                 } else {
                     tickLower.liquidityDelta += int128(params.amount);
                 }
+                EchidnaAssertions.assertLiquidityAbsoluteUnderflows(tickLower.liquidityAbsolute, params.amount, 'TSL-1');
                 tickLower.liquidityAbsolute -= params.amount;
                 ticks[lower].limit = tickLower;
                 clear(ticks, constants, tickMap, lower);
@@ -214,6 +215,7 @@ library TicksLimit {
                 } else {
                     tickUpper.liquidityDelta -= int128(params.amount);
                 }
+                EchidnaAssertions.assertLiquidityAbsoluteUnderflows(tickUpper.liquidityAbsolute, params.amount, 'TSL-2');
                 tickUpper.liquidityAbsolute -= params.amount;
                 ticks[upper].limit = tickUpper;
                 clear(ticks, constants, tickMap, upper);

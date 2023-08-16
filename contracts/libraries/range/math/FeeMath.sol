@@ -38,13 +38,10 @@ library FeeMath {
         if (cache.state.pool.liquidity != 0) {
             CalculateLocals memory locals;
 
-            // 1. calculate twap price for last 10 seconds
-
-            // if no 10 second sample, take as long of a sample as possible
-
-                        // compute spread.
+            // calculate dynamic fee
             {
                 locals.minPrice = ConstantProduct.getPrice(cache.constants.bounds.min);
+                // square prices to take delta
                 locals.price = ConstantProduct.getPrice(cache.price);
                 locals.lastPrice = ConstantProduct.getPrice(cache.averagePrice);
                 if (locals.price < locals.minPrice)
@@ -52,6 +49,7 @@ library FeeMath {
                 if (locals.lastPrice < locals.minPrice)
                     locals.lastPrice = locals.minPrice;
                 console.log('liquidity check', cache.state.pool.liquidity, cache.price);
+                // delta is % modifier on the swapFee
                 uint256 delta = OverflowMath.mulDiv(
                         FEE_DELTA_CONST * uint16(cache.constants.tickSpacing), // higher FEE_DELTA_CONST means
                                                                                // more aggressive dynamic fee
@@ -66,11 +64,15 @@ library FeeMath {
                 if (delta > 5_000_000) delta = 5_000_000;
                 // true means increased fee for zeroForOne = true
                 locals.feeDirection = locals.price < locals.lastPrice;
+                // adjust fee based on direction
                 if (zeroForOne == locals.feeDirection) {
+                    // if swapping away from twap price, increase fee
                     locals.swapFee = cache.constants.swapFee + delta * cache.constants.swapFee / 1e6;
                 } else if (delta < 1e6) {
+                    // if swapping towards twap price, decrease fee
                     locals.swapFee = cache.constants.swapFee - delta * cache.constants.swapFee / 1e6;
                 } else {
+                    // if swapping towards twap price and delta > 100%, set fee to zero
                     locals.swapFee = 0;
                 }
             }

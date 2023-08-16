@@ -22,7 +22,7 @@ interface IRangePool is IRangePoolStructs {
 
     function quote(
         QuoteParams memory params
-    ) external view returns (
+    ) external returns (
         uint256 inAmount,
         uint256 outAmount,
         uint160 priceAfter

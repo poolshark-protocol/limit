@@ -211,7 +211,7 @@ library Ticks {
         PoolsharkStructs.TickMap storage limitTickMap,
         PoolsharkStructs.QuoteParams memory params,
         PoolsharkStructs.SwapCache memory cache
-    ) internal view returns (
+    ) internal returns (
         uint256,
         uint256,
         uint160
@@ -390,16 +390,20 @@ library Ticks {
             if (params.zeroForOne) {
                 unchecked {
                     if (liquidityDelta >= 0){
+                        EchidnaAssertions.assertLiquidityUnderflows(cache.state.pool.liquidity, uint128(liquidityDelta), "TKS-1");
                         cache.state.pool.liquidity -= uint128(liquidityDelta);
                     } else {
+                        EchidnaAssertions.assertLiquidityOverflows(cache.state.pool.liquidity, uint128(-liquidityDelta), "TKS-2");
                         cache.state.pool.liquidity += uint128(-liquidityDelta); 
                     }
                 }
             } else {
                 unchecked {
                     if (liquidityDelta >= 0) {
+                        EchidnaAssertions.assertLiquidityOverflows(cache.state.pool.liquidity, uint128(-liquidityDelta), "TKS-3");
                         cache.state.pool.liquidity += uint128(liquidityDelta);
                     } else {
+                        EchidnaAssertions.assertLiquidityUnderflows(cache.state.pool.liquidity, uint128(liquidityDelta), "TKS-4");
                         cache.state.pool.liquidity -= uint128(-liquidityDelta);
                     }
                 }
@@ -445,7 +449,7 @@ library Ticks {
         PoolsharkStructs.TickMap storage limitTickMap,
         PoolsharkStructs.SwapCache memory cache,
         PoolsharkStructs.QuoteParams memory params
-    ) internal view returns (
+    ) internal returns (
         PoolsharkStructs.SwapCache memory
     ) {
         if ((cache.crossStatus & RANGE_TICK) > 0) {
@@ -453,16 +457,20 @@ library Ticks {
             if (params.zeroForOne) {
                 unchecked {
                     if (liquidityDelta >= 0){
+                        EchidnaAssertions.assertLiquidityUnderflows(cache.state.pool.liquidity, uint128(liquidityDelta), "TKS-5");
                         cache.state.pool.liquidity -= uint128(liquidityDelta);
                     } else {
+                        EchidnaAssertions.assertLiquidityOverflows(cache.state.pool.liquidity, uint128(-liquidityDelta), "TKS-6");
                         cache.state.pool.liquidity += uint128(-liquidityDelta);
                     }
                 }
             } else {
                 unchecked {
                     if (liquidityDelta >= 0) {
+                        EchidnaAssertions.assertLiquidityOverflows(cache.state.pool.liquidity, uint128(-liquidityDelta), "TKS-7");
                         cache.state.pool.liquidity += uint128(liquidityDelta);
                     } else {
+                        EchidnaAssertions.assertLiquidityUnderflows(cache.state.pool.liquidity, uint128(liquidityDelta), "TKS-8");
                         cache.state.pool.liquidity -= uint128(-liquidityDelta);
                     }
                 }

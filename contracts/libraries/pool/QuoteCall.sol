@@ -21,7 +21,7 @@ library QuoteCall {
         PoolsharkStructs.TickMap storage limitTickMap,
         PoolsharkStructs.QuoteParams memory params,
         PoolsharkStructs.SwapCache memory cache
-    ) internal view returns (
+    ) internal returns (
         uint256,
         uint256,
         uint160

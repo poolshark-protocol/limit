@@ -186,8 +186,8 @@ contract LimitPool is
         if (params.to == address(0)) revert CollectToZeroAddress();
         BurnLimitCache memory cache = BurnLimitCache({
             state: globalState,
-            position: params.zeroForOne ? positions0[msg.sender][params.lower][params.upper]
-                                        : positions1[msg.sender][params.lower][params.upper],
+            position: params.zeroForOne ? positions0[params.to][params.lower][params.upper]
+                                        : positions1[params.to][params.lower][params.upper],
             constants: immutables()
         });
         cache = BurnLimitCall.perform(
@@ -262,7 +262,7 @@ contract LimitPool is
 
     function quote(
         QuoteParams memory params
-    ) external view override canoncialOnly returns (
+    ) external override canoncialOnly returns (
         uint256,
         uint256,
         uint160

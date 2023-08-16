@@ -2,11 +2,14 @@
 pragma solidity 0.8.13;
 
 import '../interfaces/limit/ILimitPoolStructs.sol';
+import './math/ConstantProduct.sol';
 
 library EchidnaAssertions {
 
     event LiquidityGlobalUnderflow(uint128 liquidityGlobal, uint128 amount, string location);
     event LiquidityUnderflow(uint128 liquidity, uint128 amount, string location);
+    event LiquidityOverflow(uint128 liquidity, uint128 amount, string location);
+    // event TickOverflow(int24 tick, int24 addition, string location);
     event LiquidityUnlock(int128 liquidity);
     event PoolBalanceExceeded(uint256 poolBalance, uint256 outputAmount);
     event LiquidityDelta(int128 liquidityDelta);
@@ -22,6 +25,16 @@ library EchidnaAssertions {
         emit LiquidityUnderflow(liquidity, amount, location);
         assert(liquidity >= amount);
     }
+
+    function assertLiquidityOverflows(uint128 liquidity, uint128 amount, string memory location) internal {
+        emit LiquidityUnderflow(liquidity, amount, location);
+        assert(uint256(liquidity) + uint256(amount) <= type(uint128).max);
+    }
+
+    // function assertTickOverflow(int24 tick, int24 addition, string memory location) internal {
+    //     emit TickOverflow(tick, addition, location);
+    //     assert(ConstantProduct.maxTick(tickSpacing));
+    // }
 
     function assertPositiveLiquidityOnUnlock(int128 liquidity) internal {
         emit LiquidityUnlock(liquidity);

@@ -247,7 +247,7 @@ library PositionsLimit {
     ) {
         // initialize cache
         ILimitPoolStructs.UpdateCache memory cache;
-        cache.position = positions[msg.sender][params.lower][params.upper];
+        cache.position = positions[params.to][params.lower][params.upper];
         cache.priceLower = ConstantProduct.getPriceAtTick(params.lower, constants);
         cache.priceUpper = ConstantProduct.getPriceAtTick(params.upper, constants);
         cache.removeLower = true; cache.removeUpper = true;
@@ -313,7 +313,7 @@ library PositionsLimit {
         );
 
         cache.position.liquidity -= uint128(params.amount);
-        positions[msg.sender][params.lower][params.upper] = cache.position;
+        positions[params.to][params.lower][params.upper] = cache.position;
 
         if (params.amount > 0) {
             emit BurnLimit(
@@ -435,7 +435,7 @@ library PositionsLimit {
                 EchidnaAssertions.assertLiquidityGlobalUnderflows(state.liquidityGlobal, cache.position.liquidity, "LGU-4");
                 state.liquidityGlobal -= cache.position.liquidity;
             }
-            delete positions[msg.sender][params.lower][params.upper];
+            delete positions[params.to][params.lower][params.upper];
         }
         // clear position if empty
         if (cache.position.liquidity == 0) {

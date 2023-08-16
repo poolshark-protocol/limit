@@ -114,7 +114,7 @@ library BurnLimitCall {
                 tickMap,
                 cache.state,
                 ILimitPoolStructs.UpdateLimitParams(
-                    msg.sender,
+                    params.to,
                     params.to,
                     params.burnPercent,
                     params.lower,
@@ -132,7 +132,7 @@ library BurnLimitCall {
                 tickMap,
                 cache.state,
                 ILimitPoolStructs.UpdateLimitParams(
-                    msg.sender,
+                    params.to,
                     params.to,
                     params.burnPercent,
                     params.lower,

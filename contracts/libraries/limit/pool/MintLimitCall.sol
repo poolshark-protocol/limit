@@ -249,6 +249,8 @@ library MintLimitCall {
                 params
             );
 
+            positionCreated = true;
+
             // save position to storage
             positions[params.to][params.lower][params.upper] = cache.position;
 

@@ -74,6 +74,88 @@ describe('RangePool Exact In Tests', function () {
     await mintSigners20(hre.props.token1, tokenAmount.mul(10), [hre.props.alice, hre.props.bob])
   })
 
+  it.only('token1 - test dynamic fee', async function () {
+    const aliceLiquidity = BigNumber.from('44721359549995793929')
+
+    await validateMint({
+      signer: hre.props.alice,
+      recipient: hre.props.alice.address,
+      lower: '-887260',
+      upper: '887260',
+      amount0: tokenAmount,
+      amount1: tokenAmount,
+      balance0Decrease: BigNumber.from('19999999999999999998'),
+      balance1Decrease: tokenAmount,
+      liquidityIncrease: aliceLiquidity,
+      revertMessage: '',
+    })
+
+    // console.log('before swap')
+    if (true) await getPrice()
+    await validateSwap({
+      signer: hre.props.alice,
+      recipient: hre.props.alice.address,
+      zeroForOne: true,
+      amount: tokenAmount,
+      sqrtPriceLimitX96: BigNumber.from('79386769463160146968577785965'), 
+      balanceInDecrease: BigNumber.from('24632010676919545389'),
+      balanceOutIncrease: BigNumber.from('55023545371189094035'),
+      revertMessage: '',
+    })
+    if (true) await getPrice()
+
+    await validateSwap({
+        signer: hre.props.alice,
+        recipient: hre.props.alice.address,
+        zeroForOne: false,
+        amount: tokenAmount,
+        sqrtPriceLimitX96: BigNumber.from('79545693927487839655804034729'), 
+        balanceInDecrease: BigNumber.from('89706966373347543'),
+        balanceOutIncrease: BigNumber.from('89125777643798713'),
+        revertMessage: '',
+    })
+
+    await validateSwap({
+        signer: hre.props.alice,
+        recipient: hre.props.alice.address,
+        zeroForOne: true,
+        amount: tokenAmount,
+        sqrtPriceLimitX96: BigNumber.from('79386769463160146968577785965'), 
+        balanceInDecrease: BigNumber.from('89170362825211320'),
+        balanceOutIncrease: BigNumber.from('89662112890160868'),
+        revertMessage: '',
+      })
+    return
+    // console.log('after swap')
+    if (debugMode) await getPrice()
+    if (debugMode) await getSnapshot(hre.props.alice.address, 20, 60)
+
+    // if (debugMode) await getSample()
+
+    if (debugMode) await getRangeBalanceOf(hre.props.alice.address, 20, 60)
+    if (debugMode) await getSnapshot(hre.props.alice.address, 20, 60)
+    await validateBurn({
+      signer: hre.props.alice,
+      lower: '20',
+      upper: '60',
+      liquidityAmount: liquidityAmount,
+      balance0Increase: tokenAmount.div(10).sub(1),
+      balance1Increase: BigNumber.from('89946873348418057510'),
+      revertMessage: '',
+    })
+    // if (debugMode) await getSample()
+    if (debugMode) await getSnapshot(hre.props.alice.address, 20, 60)
+    if (debugMode){
+      console.log('after burn')
+      await getRangeBalanceOf(hre.props.alice.address, 20, 60)
+    }
+
+    if (balanceCheck) {
+      console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
+      console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
+    }
+  })
+
   it('token1 - Should mint, swap, and burn 17', async function () {
 
     await validateMint({
@@ -923,7 +1005,7 @@ describe('RangePool Exact In Tests', function () {
     }
   })
 
-  it.skip('pool - Should not skip crossing tickAtPrice 17', async function () {
+  it('pool - Should not skip crossing tickAtPrice 17', async function () {
     const pool: RangePoolState = (await hre.props.limitPool.globalState()).pool
     const aliceLiquidity = BigNumber.from('288859894188086395983120')
     const aliceLiquidity2 = BigNumber.from('130948265789136120265')

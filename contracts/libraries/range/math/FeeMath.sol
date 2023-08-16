@@ -12,13 +12,19 @@ import 'hardhat/console.sol';
 library FeeMath {
     using SafeCast for uint256;
 
+    uint256 internal constant FEE_DELTA_CONST = 0;
     uint256 internal constant Q128 = 0x100000000000000000000000000000000;
 
     struct CalculateLocals {
+        uint256 price;
+        uint256 minPrice;
+        uint256 lastPrice;
+        uint256 swapFee;
         uint256 feeAmount;
         uint256 protocolFee;
         uint256 protocolFeesAccrued;
         uint256 amountOutRange;
+        bool feeDirection;
     }
 
     function calculate(
@@ -37,37 +43,42 @@ library FeeMath {
             // if no 10 second sample, take as long of a sample as possible
 
                         // compute spread.
-
-            // uint256 price = _getPrice(cache.price);
-            // uint256 lastPrice = _getPrice(averagePrice);
-
-            // 1000 => 0 and 5000
-
-            // int16 delta = SafeCast.toUint16(
-            //     OverflowMath.mulDiv(
-            //         c, // set to 7500
-            //         (
-            //             price > lastPrice
-            //                 ? price - lastPrice
-            //                 : lastPrice - price
-            //         ) * 1_000_000,
-            //         lastPrice * 10_000
-            //     )
-            // );
-
-            // impactDirection = price > lastPrice;
-            // positive value if price went up
-            // negative value if price went down
-            // zeroForOne => - (fee)
-            // !zeroForOne => + (fee)
-            // take greater fee in direction of delta
-            // take lesser fee in opposing direction of delta
-
+            {
+                locals.minPrice = ConstantProduct.getPrice(cache.constants.bounds.min);
+                locals.price = ConstantProduct.getPrice(cache.price);
+                locals.lastPrice = ConstantProduct.getPrice(cache.averagePrice);
+                if (locals.price < locals.minPrice)
+                    locals.price = locals.minPrice;
+                if (locals.lastPrice < locals.minPrice)
+                    locals.lastPrice = locals.minPrice;
+                console.log('liquidity check', cache.state.pool.liquidity, cache.price);
+                uint256 delta = OverflowMath.mulDiv(
+                        FEE_DELTA_CONST * uint16(cache.constants.tickSpacing), // higher FEE_DELTA_CONST means
+                                                                               // more aggressive dynamic fee
+                        (
+                            locals.price > locals.lastPrice
+                                ? locals.price - locals.lastPrice
+                                : locals.lastPrice - locals.price
+                        ) * 1_000_000,
+                        locals.lastPrice 
+                );
+                // max fee increase at 5x
+                if (delta > 5_000_000) delta = 5_000_000;
+                // true means increased fee for zeroForOne = true
+                locals.feeDirection = locals.price < locals.lastPrice;
+                if (zeroForOne == locals.feeDirection) {
+                    locals.swapFee = cache.constants.swapFee + delta * cache.constants.swapFee / 1e6;
+                } else if (delta < 1e6) {
+                    locals.swapFee = cache.constants.swapFee - delta * cache.constants.swapFee / 1e6;
+                } else {
+                    locals.swapFee = 0;
+                }
+            }
             // calculate output from range liquidity
             locals.amountOutRange = OverflowMath.mulDiv(amountOut, cache.state.pool.liquidity, cache.liquidity);
 
             // take enough fees to cover fee growth
-            locals.feeAmount = OverflowMath.mulDivRoundingUp(locals.amountOutRange, cache.constants.swapFee, 1e6);
+            locals.feeAmount = OverflowMath.mulDivRoundingUp(locals.amountOutRange, locals.swapFee, 1e6);
 
             // load protocol fee from cache
             locals.protocolFee = zeroForOne ? cache.state.pool0.protocolFee : cache.state.pool1.protocolFee;

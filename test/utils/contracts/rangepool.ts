@@ -242,7 +242,7 @@ export async function validateSwap(params: ValidateSwapParams) {
         priceLimit: sqrtPriceLimitX96,
         exactIn: params.exactIn ?? true,
         callbackData: ethers.utils.formatBytes32String('')
-      }])
+      }], {gasLimit: 10000000})
     await txn.wait()
   } else {
     await expect(
@@ -311,7 +311,7 @@ export async function validateMint(params: ValidateMintParams) {
         lower: lower, 
         upper: upper,
         burnPercent: '0',
-      }, {gasLimit: 3000000})
+      })
     await txn.wait()
   } else {
     await expect(

@@ -114,25 +114,6 @@ library Ticks {
 
         uint128 startLiquidity = cache.liquidity.toUint128();
 
-            //         (
-            //     int56 secondSample,
-            // ) = Samples.getSingle(
-            //         IPool(address(this)), 
-            //         IRangePoolStructs.SampleParams(
-            //             cache.state.pool.samples.index,
-            //             cache.state.pool.samples.length,
-            //             uint32(block.timestamp),
-            //             new uint32[](2),
-            //             cache.state.pool.tickAtPrice,
-            //             cache.liquidity.toUint128(),
-            //             cache.constants
-            //         ),
-            //         cache.state.pool.samples.length < 4 ? (cache.state.pool.samples.length + 1) * 2
-            //                                             : 10
-            // );
-            // console.log('second sample', uint56(secondSample), cache.state.pool.samples.length < 4 ? (cache.state.pool.samples.length + 1) * 2
-            //                                            : 10);
-        
         // set crossTick/crossPrice based on the best between limit and range
         // grab sample for accumulators
         cache = PoolsharkStructs.SwapCache({
@@ -188,18 +169,16 @@ library Ticks {
                     cache.liquidity.toUint128(),
                     cache.constants
                 ),
-                uint32(block.timestamp) - cache.constants.genesisTime >= 10 ? 10
-                                                                        : uint32(block.timestamp - cache.constants.genesisTime)
+                timeElapsed(cache.constants)
         );
-        // (
-        //     cache.averagePrice
-        // ) = Samples.calculatePrice(
-        //         cache.tickSecondsAccum,
-        //         cache.tickSecondsAccumBase,
-        //         cache.state.pool.samples.length < 4 ? (cache.state.pool.samples.length + 1) * 2
-        //                                             : 10,
-        //         cache.constants
-        // );
+        (
+            cache.averagePrice
+        ) = Samples.calculatePrice(
+                cache.tickSecondsAccum,
+                cache.tickSecondsAccumBase,
+                timeElapsed(cache.constants),
+                cache.constants
+        );
         // increment swap epoch
         cache.state.epoch += 1;
         // grab latest sample and store in cache for _cross
@@ -295,6 +274,30 @@ library Ticks {
             cross: true,
             averagePrice: 0
         });
+        // grab older sample for dynamic fee calculation
+        (
+            cache.tickSecondsAccumBase,
+        ) = Samples.getSingle(
+                IPool(address(this)), 
+                IRangePoolStructs.SampleParams(
+                    cache.state.pool.samples.index,
+                    cache.state.pool.samples.length,
+                    uint32(block.timestamp),
+                    new uint32[](2),
+                    cache.state.pool.tickAtPrice,
+                    cache.liquidity.toUint128(),
+                    cache.constants
+                ),
+                timeElapsed(cache.constants)
+        );
+        (
+            cache.averagePrice
+        ) = Samples.calculatePrice(
+                cache.tickSecondsAccum,
+                cache.tickSecondsAccumBase,
+                timeElapsed(cache.constants),
+                cache.constants
+        );
         // should be calculated at each step for dynamic fee
         if (!cache.exactIn) cache.amountLeft = OverflowMath.mulDivRoundingUp(uint256(params.amount), 1e6, (1e6 - cache.constants.swapFee));
         while (cache.cross) {
@@ -670,5 +673,16 @@ library Ticks {
             }
         }
         return cache;
+    }
+
+    function timeElapsed(
+        PoolsharkStructs.Immutables memory constants
+    ) private view returns (
+        uint32
+    )    
+    {
+        return  uint32(block.timestamp) - constants.genesisTime >= 10
+                    ? 10
+                    : uint32(block.timestamp - constants.genesisTime);
     }
 }

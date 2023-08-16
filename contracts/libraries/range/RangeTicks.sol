@@ -37,9 +37,9 @@ library TicksRange {
         int16 tickSpacing
     ) internal pure {
         if (lower % tickSpacing != 0) require(false, 'InvalidLowerTick()');
-        if (lower <= ConstantProduct.minTick(tickSpacing)) require(false, 'InvalidLowerTick()');
+        if (lower < ConstantProduct.minTick(tickSpacing)) require(false, 'InvalidLowerTick()');
         if (upper % tickSpacing != 0) require(false, 'InvalidUpperTick()');
-        if (upper >= ConstantProduct.maxTick(tickSpacing)) require(false, 'InvalidUpperTick()');
+        if (upper > ConstantProduct.maxTick(tickSpacing)) require(false, 'InvalidUpperTick()');
         if (lower >= upper) require(false, 'InvalidPositionBounds()');
     }
 

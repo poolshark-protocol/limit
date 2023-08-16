@@ -5,6 +5,7 @@ import '../math/ConstantProduct.sol';
 import '../../interfaces/IPool.sol';
 import '../../interfaces/range/IRangePool.sol';
 import '../../interfaces/range/IRangePoolStructs.sol';
+import 'hardhat/console.sol';
 
 library Samples {
 
@@ -40,6 +41,9 @@ library Samples {
         return state;
         /// @dev - TWAP length of 5 is safer for oracle manipulation
     }
+
+    //TODO: check tick accumulator on each sample save
+    // do math between samples and verify all is well
 
     function save(
         IRangePoolStructs.Sample[65535] storage samples,
@@ -145,12 +149,14 @@ library Samples {
         int56 tickSecondsAccumBase,
         uint32 timeElapsed,
         PoolsharkStructs.Immutables memory constants
-    ) internal pure returns (
+    ) internal view returns (
         uint160 averagePrice
     ) {
         int24 averageTick = int24((tickSecondsAccum - tickSecondsAccumBase) 
                                 / int32(timeElapsed));
+                            console.log('average tick', uint24(averageTick));
         averagePrice = ConstantProduct.getPriceAtTick(averageTick, constants);
+
     }
 
     function _poolSample(

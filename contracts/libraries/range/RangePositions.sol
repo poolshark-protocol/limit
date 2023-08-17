@@ -147,14 +147,14 @@ library RangePositions {
             );
             cache.amount0 += cache.position.amount0;
             cache.amount1 += cache.position.amount1;
-            if (cache.position.amount1 > 0) {
-                // score in terms of token0
-                cache.mintScore = params.amount0 + OverflowMath.mulDivRoundingUp(params.amount1, Q96, cache.state.pool.price);
-                cache.positionScore = cache.amount0 + OverflowMath.mulDivRoundingUp(cache.amount1, Q96, cache.state.pool.price);
-            } else {
+            if (cache.state.pool.tickAtPrice >= 0) {
                 // score in terms of token1
                 cache.mintScore = OverflowMath.mulDivRoundingUp(params.amount0, cache.state.pool.price, Q96) + params.amount1;
                 cache.positionScore = OverflowMath.mulDivRoundingUp(cache.amount0, cache.state.pool.price, Q96) + cache.amount1;
+            } else {
+                // score in terms of token0
+                cache.mintScore = params.amount0 + OverflowMath.mulDivRoundingUp(params.amount1, Q96, cache.state.pool.price);
+                cache.positionScore = cache.amount0 + OverflowMath.mulDivRoundingUp(cache.amount1, Q96, cache.state.pool.price);
             }
             console.log(ConstantProduct.getPriceAtTick(0, cache.constants));
             console.log('position score', cache.positionScore);

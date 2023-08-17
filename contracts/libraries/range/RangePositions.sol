@@ -147,14 +147,24 @@ library RangePositions {
             );
             cache.amount0 += cache.position.amount0;
             cache.amount1 += cache.position.amount1;
-            if (cache.state.pool.tickAtPrice >= 0) {
+            // decide scoring price based on pool price
+            cache.priceScore = cache.state.pool.price;
+            if (cache.priceScore > cache.priceUpper) {
+                // if above priceUpper, use priceUpper
+                cache.priceScore = cache.priceUpper;
+            } else if (cache.priceScore < cache.priceLower) {
+                // if above priceLower, use priceLower
+                cache.priceScore = cache.priceLower;
+            }
+            // use larger of Q96 and cache.priceScore in numerator
+            if (cache.priceScore >= Q96) {
                 // score in terms of token1
-                cache.mintScore = OverflowMath.mulDivRoundingUp(params.amount0, cache.state.pool.price, Q96) + params.amount1;
-                cache.positionScore = OverflowMath.mulDivRoundingUp(cache.amount0, cache.state.pool.price, Q96) + cache.amount1;
+                cache.mintScore = OverflowMath.mulDivRoundingUp(params.amount0, cache.priceScore, Q96) + params.amount1;
+                cache.positionScore = OverflowMath.mulDivRoundingUp(cache.amount0, cache.priceScore, Q96) + cache.amount1;
             } else {
                 // score in terms of token0
-                cache.mintScore = params.amount0 + OverflowMath.mulDivRoundingUp(params.amount1, Q96, cache.state.pool.price);
-                cache.positionScore = cache.amount0 + OverflowMath.mulDivRoundingUp(cache.amount1, Q96, cache.state.pool.price);
+                cache.mintScore = params.amount0 + OverflowMath.mulDivRoundingUp(params.amount1, Q96, cache.priceScore);
+                cache.positionScore = cache.amount0 + OverflowMath.mulDivRoundingUp(cache.amount1, Q96, cache.priceScore);
             }
             console.log(ConstantProduct.getPriceAtTick(0, cache.constants));
             console.log('position score', cache.positionScore);

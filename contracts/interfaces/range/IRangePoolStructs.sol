@@ -80,6 +80,7 @@ interface IRangePoolStructs is PoolsharkStructs {
         uint256 tokenId;
         uint256 liquidityMinted;
         uint256 tokenMinted;
+        uint256 priceScore;
         uint256 positionScore;
         uint256 mintScore;
         uint160 priceLower;

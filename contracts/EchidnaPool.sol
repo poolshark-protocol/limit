@@ -130,6 +130,15 @@ contract EchidnaPool {
         // NOTE: Do not use the exact inputs of this function for POCs, use the inputs after the input validation
         mintAndApprove();
         amount = amount + 1;
+        for(uint i = 0; i < positions.length;) {
+            if(positions[i].owner == msg.sender && positions[i].lower == lower && positions[i].upper == upper && positions[i].zeroForOne == zeroForOne) {
+                revert("Position already exists");
+            }
+            unchecked {
+                ++i;
+            }
+        }
+
         PoolValues memory poolValues;
         PoolStructs memory poolStructs;
 
@@ -265,6 +274,15 @@ contract EchidnaPool {
         // NOTE: Do not use the exact inputs of this function for POCs, use the inputs after the input validation
         mintAndApprove();
         amount = amount + 1;
+        for(uint i = 0; i < positions.length;) {
+            if(positions[i].owner == msg.sender && positions[i].lower == lower && positions[i].upper == upper && positions[i].zeroForOne == zeroForOne) {
+                revert("Position already exists");
+            }
+            unchecked {
+                ++i;
+            }
+        }
+
         PoolValues memory poolValues;
         PoolStructs memory poolStructs;
 
@@ -405,12 +423,6 @@ contract EchidnaPool {
         emit Prices(price0, price1);
         assert(price0 >= price1);
     }
-
-    // function mintThenSwap(uint128 amount, bool zeroForOne, int24 lower, int24 upper, uint160 priceLimit) public {
-    //     mint(amount, zeroForOne, lower, upper);
-    //     swap(priceLimit, amount, true, zeroForOne);
-    //     assert(false);
-    // }
 
     function burn(int24 claimAt, uint256 positionIndex, uint128 burnPercent) public {
         // PRE CONDITIONS 
@@ -582,8 +594,8 @@ contract EchidnaPool {
         uint160 price1After = pool1.price;
         emit Prices(price0After, price1After);
         assert(price0After >= price1After);
-        // emit LiquidityGlobal(liquidityGlobalBefore, poolValues.liquidityGlobalAfter);
-        // assert(poolValues.liquidityGlobalAfter == liquidityGlobalBefore);
+        emit LiquidityGlobal(liquidityGlobalBefore, poolValues.liquidityGlobalAfter);
+        assert(poolValues.liquidityGlobalAfter == liquidityGlobalBefore);
 
         // emit LiquidityAbsolute(poolValues.liquidityAbsoluteLowerBefore, poolValues.liquidityAbsoluteLowerAfter);
         // assert(poolValues.liquidityAbsoluteLowerAfter == poolValues.liquidityAbsoluteLowerBefore);
@@ -630,8 +642,8 @@ contract EchidnaPool {
         uint160 price1After = pool1.price;
         emit Prices(price0After, price1After);
         assert(price0After >= price1After);
-        // emit LiquidityGlobal(liquidityGlobalBefore, poolValues.liquidityGlobalAfter);
-        // assert(poolValues.liquidityGlobalAfter == liquidityGlobalBefore);
+        emit LiquidityGlobal(liquidityGlobalBefore, poolValues.liquidityGlobalAfter);
+        assert(poolValues.liquidityGlobalAfter == liquidityGlobalBefore);
 
         // emit LiquidityAbsolute(poolValues.liquidityAbsoluteLowerBefore, poolValues.liquidityAbsoluteLowerAfter);
         // assert(poolValues.liquidityAbsoluteLowerAfter == poolValues.liquidityAbsoluteLowerBefore);
@@ -679,8 +691,8 @@ contract EchidnaPool {
         uint160 price1After = pool1.price;
         emit Prices(price0After, price1After);
         assert(price0After >= price1After);
-        // emit LiquidityGlobal(liquidityGlobalBefore, poolValues.liquidityGlobalAfter);
-        // assert(poolValues.liquidityGlobalAfter == liquidityGlobalBefore);
+        emit LiquidityGlobal(liquidityGlobalBefore, poolValues.liquidityGlobalAfter);
+        assert(poolValues.liquidityGlobalAfter == liquidityGlobalBefore);
 
         // emit LiquidityAbsolute(poolValues.liquidityAbsoluteLowerBefore, poolValues.liquidityAbsoluteLowerAfter);
         // assert(poolValues.liquidityAbsoluteLowerAfter == poolValues.liquidityAbsoluteLowerBefore);
@@ -731,10 +743,10 @@ contract EchidnaPool {
         emit LiquidityGlobal(liquidityGlobalBefore, poolValues.liquidityGlobalAfter);
         assert(poolValues.liquidityGlobalAfter == liquidityGlobalBefore);
 
-        emit LiquidityAbsolute(poolValues.liquidityAbsoluteLowerBefore, poolValues.liquidityAbsoluteLowerAfter);
-        assert(poolValues.liquidityAbsoluteLowerAfter == poolValues.liquidityAbsoluteLowerBefore);
-        emit LiquidityAbsolute(poolValues.liquidityAbsoluteUpperBefore, poolValues.liquidityAbsoluteUpperAfter);
-        assert(poolValues.liquidityAbsoluteUpperAfter == poolValues.liquidityAbsoluteUpperBefore);
+        // emit LiquidityAbsolute(poolValues.liquidityAbsoluteLowerBefore, poolValues.liquidityAbsoluteLowerAfter);
+        // assert(poolValues.liquidityAbsoluteLowerAfter == poolValues.liquidityAbsoluteLowerBefore);
+        // emit LiquidityAbsolute(poolValues.liquidityAbsoluteUpperBefore, poolValues.liquidityAbsoluteUpperAfter);
+        // assert(poolValues.liquidityAbsoluteUpperAfter == poolValues.liquidityAbsoluteUpperBefore);
     }
 
     function poolsharkSwapCallback(

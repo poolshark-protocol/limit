@@ -289,6 +289,7 @@ contract RangePoolERC1155 is
                 constants.poolToken,
                 constants.bounds.min,
                 constants.bounds.max,
+                constants.genesisTime,
                 constants.tickSpacing,
                 constants.swapFee
             ),

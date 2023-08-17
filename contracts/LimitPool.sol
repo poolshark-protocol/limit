@@ -254,6 +254,7 @@ contract LimitPool is
             token0(),
             token1(),
             poolToken(),
+            genesisTime(),
             tickSpacing(),
             swapFee()
         );
@@ -281,6 +282,7 @@ contract LimitPool is
                 poolToken(),
                 minPrice(),
                 maxPrice(),
+                genesisTime(),
                 tickSpacing(),
                 swapFee()
             ),

@@ -17,6 +17,7 @@ library Ticks {
     using SafeCast for uint256;
 
     // constants for crossing ticks / limit pools
+    uint8 internal constant FEE_TIME_DELTA_MAX = 8;
     uint8 internal constant RANGE_TICK = 2**0;
     uint8 internal constant LIMIT_TICK = 2**1;
     uint8 internal constant LIMIT_POOL = 2**2;
@@ -53,7 +54,7 @@ library Ticks {
         // state should only be initialized once
         if (state.pool0.price > 0) require (false, 'PoolAlreadyInitialized()');
 
-        // initialize epoch
+        // initialize state
         state.epoch = 1;
 
         // check price bounds
@@ -113,7 +114,7 @@ library Ticks {
         cache = _iterate(ticks, rangeTickMap, limitTickMap, cache, params.zeroForOne, true);
 
         uint128 startLiquidity = cache.liquidity.toUint128();
-        
+
         // set crossTick/crossPrice based on the best between limit and range
         // grab sample for accumulators
         cache = PoolsharkStructs.SwapCache({
@@ -128,15 +129,15 @@ library Ticks {
             secondsPerLiquidityAccum: 0,
             feeAmount: 0,
             tickSecondsAccum: 0,
+            tickSecondsAccumBase: 0,
             crossTick: cache.crossTick,
             crossStatus: cache.crossStatus,
             limitActive: cache.limitActive,
             exactIn: params.exactIn,
-            cross: true
+            cross: true,
+            averagePrice: 0
         });
-        // should be calculated at each step for dynamic fee
-        if (!cache.exactIn) cache.amountLeft = OverflowMath.mulDivRoundingUp(uint256(params.amount), 1e6, (1e6 - cache.constants.swapFee));
-        // grab latest sample and store in cache for _cross
+        // grab latest sample
         (
             cache.tickSecondsAccum,
             cache.secondsPerLiquidityAccum
@@ -152,6 +153,31 @@ library Ticks {
                     cache.constants
                 ),
                 0
+        );
+        // grab older sample for dynamic fee calculation
+        (
+            cache.tickSecondsAccumBase,
+        ) = Samples.getSingle(
+                IPool(address(this)), 
+                IRangePoolStructs.SampleParams(
+                    cache.state.pool.samples.index,
+                    cache.state.pool.samples.length,
+                    uint32(block.timestamp),
+                    new uint32[](2),
+                    cache.state.pool.tickAtPrice,
+                    cache.liquidity.toUint128(),
+                    cache.constants
+                ),
+                timeElapsed(cache.constants)
+        );
+        (
+            cache.averagePrice
+        ) = Samples.calculatePrice(
+                cache.tickSecondsAccum,
+                cache.tickSecondsAccumBase,
+                timeElapsed(cache.constants),
+                FEE_TIME_DELTA_MAX,
+                cache.constants
         );
         // increment swap epoch
         cache.state.epoch += 1;
@@ -240,14 +266,56 @@ library Ticks {
             secondsPerLiquidityAccum: 0,
             feeAmount: 0,
             tickSecondsAccum: 0,
+            tickSecondsAccumBase: 0,
             crossTick: cache.crossTick,
             crossStatus: cache.crossStatus,
             limitActive: cache.limitActive,
             exactIn: params.exactIn,
-            cross: true
+            cross: true,
+            averagePrice: 0
         });
-        // should be calculated at each step for dynamic fee
-        if (!cache.exactIn) cache.amountLeft = OverflowMath.mulDivRoundingUp(uint256(params.amount), 1e6, (1e6 - cache.constants.swapFee));
+        // grab latest sample
+        (
+            cache.tickSecondsAccum,
+            cache.secondsPerLiquidityAccum
+        ) = Samples.getSingle(
+                IPool(address(this)), 
+                IRangePoolStructs.SampleParams(
+                    cache.state.pool.samples.index,
+                    cache.state.pool.samples.length,
+                    uint32(block.timestamp),
+                    new uint32[](2),
+                    cache.state.pool.tickAtPrice,
+                    cache.liquidity.toUint128(),
+                    cache.constants
+                ),
+                0
+        );
+        // grab older sample for dynamic fee calculation
+        (
+            cache.tickSecondsAccumBase,
+        ) = Samples.getSingle(
+                IPool(address(this)), 
+                IRangePoolStructs.SampleParams(
+                    cache.state.pool.samples.index,
+                    cache.state.pool.samples.length,
+                    uint32(block.timestamp),
+                    new uint32[](2),
+                    cache.state.pool.tickAtPrice,
+                    cache.liquidity.toUint128(),
+                    cache.constants
+                ),
+                timeElapsed(cache.constants)
+        );
+        (
+            cache.averagePrice
+        ) = Samples.calculatePrice(
+                cache.tickSecondsAccum,
+                cache.tickSecondsAccumBase,
+                timeElapsed(cache.constants),
+                FEE_TIME_DELTA_MAX,
+                cache.constants
+        );
         while (cache.cross) {
             cache = _quoteSingle(cache, params.priceLimit, params.zeroForOne);
             if (cache.cross) {
@@ -284,7 +352,7 @@ library Ticks {
             return cache;
         }
         uint256 nextPrice = cache.crossPrice;
-        uint256 amountOut;
+         uint256 amountIn; uint256 amountOut;
         if (zeroForOne) {
             // Trading token 0 (x) for token 1 (y).
             // price  is decreasing.
@@ -302,23 +370,24 @@ library Ticks {
                     zeroForOne,
                     cache.exactIn
                 );
-                if (cache.exactIn) {   
+                if (cache.exactIn) {
+                    amountIn = cache.amountLeft;
                     amountOut = ConstantProduct.getDy(cache.liquidity, newPrice, uint256(cache.price), false);
-                    cache.input += cache.amountLeft;
                 } else {
+                    amountIn = ConstantProduct.getDx(cache.liquidity, newPrice, uint256(cache.price), true);
                     amountOut = cache.amountLeft;
-                    cache.input += ConstantProduct.getDx(cache.liquidity, newPrice, uint256(cache.price), true);
                 }
                 cache.amountLeft = 0;
                 cache.cross = false;
                 cache.price = uint160(newPrice);
             } else {
                 if (cache.exactIn) {
+                    amountIn = amountMax;
                     amountOut = ConstantProduct.getDy(cache.liquidity, nextPrice, cache.price, false);
-                    cache.input += amountMax;
+
                 } else {
+                    amountIn = ConstantProduct.getDx(cache.liquidity, nextPrice, cache.price, true);
                     amountOut = amountMax;
-                    cache.input += ConstantProduct.getDx(cache.liquidity, nextPrice, cache.price, true);
                 }
                 cache.amountLeft -= amountMax;
                 if (nextPrice == cache.crossPrice) cache.cross = true;
@@ -341,23 +410,22 @@ library Ticks {
                     cache.exactIn
                 );
                 if (cache.exactIn) {
+                    amountIn = cache.amountLeft;
                     amountOut = ConstantProduct.getDx(cache.liquidity, cache.price, newPrice, false);
-                    cache.input += cache.amountLeft;
                 } else {
-                    
+                    amountIn = ConstantProduct.getDy(cache.liquidity, cache.price, newPrice, true);
                     amountOut = cache.amountLeft;
-                    cache.input += ConstantProduct.getDy(cache.liquidity, cache.price, newPrice, true);
                 }
                 cache.amountLeft = 0;
                 cache.cross = false;
                 cache.price = uint160(newPrice);
             } else {
                 if (cache.exactIn) {
+                    amountIn = amountMax;
                     amountOut = ConstantProduct.getDx(cache.liquidity, cache.price, nextPrice, false);
-                    cache.input += amountMax;
                 } else {
+                    amountIn = ConstantProduct.getDy(cache.liquidity, cache.price, nextPrice, true);
                     amountOut = amountMax;
-                    cache.input += ConstantProduct.getDy(cache.liquidity, cache.price, nextPrice, true);
                 }
                 cache.amountLeft -= amountMax;
                 if (nextPrice == cache.crossPrice) cache.cross = true;
@@ -365,7 +433,7 @@ library Ticks {
                 cache.price = uint160(nextPrice);
             }
         }
-        cache = FeeMath.calculate(cache, amountOut, zeroForOne);
+        cache = FeeMath.calculate(cache, amountIn, amountOut, zeroForOne);
         return cache;
     }
 
@@ -378,6 +446,7 @@ library Ticks {
     ) internal returns (
         PoolsharkStructs.SwapCache memory
     ) {
+
         // crossing range ticks
         if ((cache.crossStatus & RANGE_TICK) > 0) {
             if (!params.zeroForOne || (cache.amountLeft > 0 && params.priceLimit < cache.crossPrice)) {
@@ -436,7 +505,7 @@ library Ticks {
         if ((cache.crossStatus & LIMIT_POOL) > 0) {
             // add limit pool
             uint128 liquidityDelta = params.zeroForOne ? cache.state.pool1.liquidity
-                                                       : cache.state.pool0.liquidity;
+                                                    : cache.state.pool0.liquidity;
 
             if (liquidityDelta > 0) cache.liquidity += liquidityDelta;
         }
@@ -500,12 +569,13 @@ library Ticks {
         if ((cache.crossStatus & LIMIT_POOL) > 0) {
             // add limit pool
             uint128 liquidityDelta = params.zeroForOne ? cache.state.pool1.liquidity
-                                                       : cache.state.pool0.liquidity;
+                                                    : cache.state.pool0.liquidity;
 
             if (liquidityDelta > 0) {
                 cache.liquidity += liquidityDelta;
             }
         }
+
         if (cache.cross)
             cache = _iterate(ticks, rangeTickMap, limitTickMap, cache, params.zeroForOne, false);
 
@@ -621,5 +691,16 @@ library Ticks {
             }
         }
         return cache;
+    }
+
+    function timeElapsed(
+        PoolsharkStructs.Immutables memory constants
+    ) private view returns (
+        uint32
+    )    
+    {
+        return  uint32(block.timestamp) - constants.genesisTime >= FEE_TIME_DELTA_MAX
+                    ? FEE_TIME_DELTA_MAX
+                    : uint32(block.timestamp - constants.genesisTime);
     }
 }

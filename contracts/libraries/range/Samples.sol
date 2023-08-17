@@ -41,6 +41,9 @@ library Samples {
         /// @dev - TWAP length of 5 is safer for oracle manipulation
     }
 
+    //TODO: check tick accumulator on each sample save
+    // do math between samples and verify all is well
+
     function save(
         IRangePoolStructs.Sample[65535] storage samples,
         PoolsharkStructs.SampleState memory sampleState,
@@ -139,6 +142,26 @@ library Samples {
                                     * (secondsAgo[0] - secondsAgo[secondsAgo.length - 1]));
         }
     }
+
+    function calculatePrice(
+        int56 tickSecondsAccum,
+        int56 tickSecondsAccumBase,
+        uint32 timeElapsed,
+        uint32 timeElapsedMax,
+        PoolsharkStructs.Immutables memory constants
+    ) internal pure returns (
+        uint160 averagePrice
+    ) {
+        int56 tickSecondsAccumDiff = tickSecondsAccum - tickSecondsAccumBase;
+        int24 averageTick;
+        if (timeElapsed == timeElapsedMax) {
+            averageTick = int24(tickSecondsAccumDiff / int32(timeElapsed));
+        } else {
+            averageTick = int24(tickSecondsAccum / int32(timeElapsed));
+        }
+        averagePrice = ConstantProduct.getPriceAtTick(averageTick, constants);
+    }
+
     function _poolSample(
         IPool pool,
         uint256 sampleIndex
@@ -185,6 +208,7 @@ library Samples {
 
         uint32 targetTime = uint32(block.timestamp) - secondsAgo;
 
+        // should be getting samples
         (
             IRangePoolStructs.Sample memory firstSample,
             IRangePoolStructs.Sample memory secondSample

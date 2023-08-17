@@ -13,7 +13,7 @@ import '../TickMap.sol';
 import './Samples.sol';
 
 /// @notice Tick management library for range pools
-library TicksRange {
+library RangeTicks {
     error LiquidityOverflow();
     error LiquidityUnderflow();
     error InvalidLowerTick();

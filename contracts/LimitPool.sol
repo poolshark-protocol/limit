@@ -79,14 +79,12 @@ contract LimitPool is
         nonReentrant(globalState)
         canoncialOnly
     {
-        MintCache memory cache = MintCache({
-            state: globalState,
-            position: positions[params.lower][params.upper],
-            constants: immutables(),
-            liquidityMinted: 0
-        });
+        MintCache memory cache;
+        cache.state = globalState;
+        cache.position = positions[params.lower][params.upper];
+        cache.constants = immutables();
         cache = MintRangeCall.perform(params, cache, rangeTickMap, ticks, samples);
-        globalState = cache.state; 
+        globalState = cache.state;
         positions[params.lower][params.upper] = cache.position;
     }
 

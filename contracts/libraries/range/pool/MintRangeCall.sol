@@ -38,7 +38,9 @@ library MintRangeCall {
                     0
                 )
         );
-        (params, cache.liquidityMinted) = RangePositions.validate(params, cache.state, cache.constants);
+        console.log('position amounts', cache.position.amount0, cache.position.amount1);
+        (params, cache) = RangePositions.validate(params, cache);
+        console.log('position amounts', cache.position.amount0, cache.position.amount1);
         if (params.amount0 > 0) SafeTransfers.transferIn(cache.constants.token0, params.amount0);
         if (params.amount1 > 0) SafeTransfers.transferIn(cache.constants.token1, params.amount1);
         if (cache.position.amount0 > 0 || cache.position.amount1 > 0) {
@@ -55,19 +57,14 @@ library MintRangeCall {
                 cache.constants
             );
         }
+        console.log('position amounts', cache.position.amount0, cache.position.amount1);
         // update position with latest fees accrued
-        (cache.state, cache.position, cache.liquidityMinted) = RangePositions.add(
-            cache.position,
+        cache = RangePositions.add(
             ticks,
             samples,
             tickMap,
-            IRangePoolStructs.AddParams(
-                cache.state, 
-                params,
-                uint128(cache.liquidityMinted),
-                uint128(cache.liquidityMinted)
-            ),
-            cache.constants
+            params,
+            cache
         );
         return cache;
     }

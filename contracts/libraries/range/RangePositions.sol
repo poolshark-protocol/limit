@@ -6,12 +6,16 @@ import '../../interfaces/range/IRangePoolStructs.sol';
 import '../math/ConstantProduct.sol';
 import './math/FeeMath.sol';
 import '../math/OverflowMath.sol';
+import '../utils/SafeCast.sol';
 import './RangeTicks.sol';
 import './RangeTokens.sol';
 import './Samples.sol';
+import 'hardhat/console.sol';
 
 /// @notice Position management library for ranged liquidity.
 library RangePositions {
+    using SafeCast for uint256;
+
     error NotEnoughPositionLiquidity();
     error InvalidClaimTick();
     error LiquidityOverflow();
@@ -24,6 +28,7 @@ library RangePositions {
     error InvalidPositionBoundsOrder();
     error NotImplementedYet();
 
+    uint256 internal constant Q96 = 0x1000000000000000000000000;
     uint256 internal constant Q128 = 0x100000000000000000000000000000000;
 
     event Mint(
@@ -58,108 +63,122 @@ library RangePositions {
 
     function validate(
         IRangePoolStructs.MintParams memory params,
-        PoolsharkStructs.GlobalState memory state,
-        PoolsharkStructs.Immutables memory constants
-    ) internal pure returns (IRangePoolStructs.MintParams memory, uint256 liquidityMinted) {
-        TicksRange.validate(params.lower, params.upper, constants.tickSpacing);
+        IRangePoolStructs.MintCache memory cache
+    ) internal pure returns (
+        IRangePoolStructs.MintParams memory,
+        IRangePoolStructs.MintCache memory
+    ) {
+        RangeTicks.validate(params.lower, params.upper, cache.constants.tickSpacing);
         
-        uint256 priceLower = uint256(ConstantProduct.getPriceAtTick(params.lower, constants));
-        uint256 priceUpper = uint256(ConstantProduct.getPriceAtTick(params.upper, constants));
+        cache.priceLower = ConstantProduct.getPriceAtTick(params.lower, cache.constants);
+        cache.priceUpper = ConstantProduct.getPriceAtTick(params.upper, cache.constants);
 
-        liquidityMinted = ConstantProduct.getLiquidityForAmounts(
-            priceLower,
-            priceUpper,
-            state.pool.price,
+        cache.liquidityMinted = ConstantProduct.getLiquidityForAmounts(
+            cache.priceLower,
+            cache.priceUpper,
+            cache.state.pool.price,
             params.amount1,
             params.amount0
         );
-        if (liquidityMinted == 0) require(false, 'NoLiquidityBeingAdded()');
+        if (cache.liquidityMinted == 0) require(false, 'NoLiquidityBeingAdded()');
         (params.amount0, params.amount1) = ConstantProduct.getAmountsForLiquidity(
-            priceLower,
-            priceUpper,
-            state.pool.price,
-            liquidityMinted,
+            cache.priceLower,
+            cache.priceUpper,
+            cache.state.pool.price,
+            cache.liquidityMinted,
             true
         );
-        if (liquidityMinted > uint128(type(int128).max)) require(false, 'LiquidityOverflow()');
+        if (cache.liquidityMinted > uint128(type(int128).max)) require(false, 'LiquidityOverflow()');
 
-        return (params, liquidityMinted);
+        return (params, cache);
     }
 
     function add(
-        IRangePoolStructs.Position memory position,
         mapping(int24 => PoolsharkStructs.Tick) storage ticks,
         IRangePoolStructs.Sample[65535] storage samples,
         PoolsharkStructs.TickMap storage tickMap,
-        IRangePoolStructs.AddParams memory params,
-        PoolsharkStructs.Immutables memory constants
+        IRangePoolStructs.MintParams memory params,
+        IRangePoolStructs.MintCache memory cache
     ) internal returns (
-        PoolsharkStructs.GlobalState memory,
-        IRangePoolStructs.Position memory,
-        uint128
+        IRangePoolStructs.MintCache memory
     ) {
-        if (params.mint.amount0 == 0 && params.mint.amount1 == 0) return (params.state, position, 0);
+        if (params.amount0 == 0 && params.amount1 == 0) return cache;
 
-        IRangePoolStructs.PositionCache memory cache = IRangePoolStructs.PositionCache({
-            priceLower: ConstantProduct.getPriceAtTick(params.mint.lower, constants),
-            priceUpper: ConstantProduct.getPriceAtTick(params.mint.upper, constants),
-            liquidityOnPosition: 0,
-            liquidityAmount: 0,
-            totalSupply: Tokens.totalSupply(constants.poolToken, params.mint.lower, params.mint.upper),
-            tokenId: Tokens.id(params.mint.lower, params.mint.upper)
-        });
-        params.state = TicksRange.insert(
+        cache.tokenId = Tokens.id(params.lower, params.upper);
+        cache.totalSupply = Tokens.totalSupply(cache.constants.poolToken, params.lower, params.upper);
+
+        cache.state = RangeTicks.insert(
             ticks,
             samples,
             tickMap,
-            params.state,
-            constants,
-            params.mint.lower,
-            params.mint.upper,
-            params.amount
+            cache.state,
+            cache.constants,
+            params.lower,
+            params.upper,
+            cache.liquidityMinted.toUint128()
         );
-
         (
-            position.feeGrowthInside0Last,
-            position.feeGrowthInside1Last
+            cache.position.feeGrowthInside0Last,
+            cache.position.feeGrowthInside1Last
         ) = rangeFeeGrowth(
-            ticks[params.mint.lower].range,
-            ticks[params.mint.upper].range,
-            params.state,
-            params.mint.lower,
-            params.mint.upper
+            ticks[params.lower].range,
+            ticks[params.upper].range,
+            cache.state,
+            params.lower,
+            params.upper
         );
 
-        position.liquidity += uint128(params.amount);
-        
-        // modify liquidity minted to account for fees accrued
-        if (position.amount0 > 0 || position.amount1 > 0
-            || (position.liquidity - params.amount) > cache.totalSupply) {
-            // modify amount based on autocompounded fees
-            if (cache.totalSupply > 0) {
-                cache.liquidityOnPosition = ConstantProduct.getLiquidityForAmounts(
-                                                cache.priceLower,
-                                                cache.priceUpper,
-                                                position.amount0 > 0 ? cache.priceLower : cache.priceUpper,
-                                                position.amount1,
-                                                position.amount0
-                                            );
-                params.amount = uint128(uint256(params.amount) * cache.totalSupply /
-                        (uint256(position.liquidity - params.amount) + cache.liquidityOnPosition));
-            } /// @dev - if there are fees on the position we mint less positionToken
+        console.log('position amounts', cache.position.amount0, cache.position.amount1);
+        console.log('total supply', cache.totalSupply);
+
+        if (cache.position.liquidity == cache.totalSupply &&
+            cache.position.amount0 == 0 &&
+            cache.position.amount1 == 0
+        ) {
+            console.log('fresh mint', cache.liquidityMinted);
+            cache.tokenMinted = cache.liquidityMinted;
+        } else {
+            (cache.amount0, cache.amount1) = ConstantProduct.getAmountsForLiquidity(
+                cache.priceLower,
+                cache.priceUpper,
+                cache.state.pool.price,
+                cache.position.liquidity,
+                true
+            );
+            cache.amount0 += cache.position.amount0;
+            cache.amount1 += cache.position.amount1;
+            if (cache.position.amount1 > 0) {
+                // score in terms of token0
+                cache.mintScore = params.amount0 + OverflowMath.mulDivRoundingUp(params.amount1, Q96, cache.state.pool.price);
+                cache.positionScore = cache.amount0 + OverflowMath.mulDivRoundingUp(cache.amount1, Q96, cache.state.pool.price);
+            } else {
+                // score in terms of token1
+                cache.mintScore = OverflowMath.mulDivRoundingUp(params.amount0, cache.state.pool.price, Q96) + params.amount1;
+                cache.positionScore = OverflowMath.mulDivRoundingUp(cache.amount0, cache.state.pool.price, Q96) + cache.amount1;
+            }
+            console.log(ConstantProduct.getPriceAtTick(0, cache.constants));
+            console.log('position score', cache.positionScore);
+            console.log('mint score', cache.mintScore);
+            cache.tokenMinted = cache.mintScore * cache.totalSupply / cache.positionScore;
         }
-        IRangePoolERC1155(constants.poolToken).mintFungible(params.mint.to, cache.tokenId, params.amount, constants);
-        emit Mint(
-            params.mint.to,
-            params.mint.lower,
-            params.mint.upper,
+        IRangePoolERC1155(cache.constants.poolToken).mintFungible(
+            params.to,
             cache.tokenId,
-            params.amount,
-            params.liquidity,
-            params.mint.amount0,
-            params.mint.amount1
+            cache.tokenMinted,
+            cache.constants
         );
-        return (params.state, position, params.amount);
+        cache.position.liquidity += uint128(cache.liquidityMinted);
+        emit Mint(
+            params.to,
+            params.lower,
+            params.upper,
+            cache.tokenId,
+            cache.tokenMinted.toUint128(),
+            cache.liquidityMinted.toUint128(),
+            params.amount0,
+            params.amount1
+        );
+        return cache;
     }
 
     function remove(
@@ -182,7 +201,9 @@ library RangePositions {
             liquidityOnPosition: 0,
             liquidityAmount: 0,
             totalSupply: 0,
-            tokenId: Tokens.id(params.lower, params.upper)
+            tokenId: Tokens.id(params.lower, params.upper),
+            amount0: 0,
+            amount1: 0
         });
         cache.totalSupply = Tokens.totalSupplyById(removeParams.constants.poolToken, cache.tokenId);
         cache.liquidityAmount = params.burnPercent > 0 ? removeParams.tokenBurned * uint256(position.liquidity) 
@@ -212,7 +233,7 @@ library RangePositions {
             position.feeGrowthInside0Last = 0;
             position.feeGrowthInside1Last = 0;
         }
-        state = TicksRange.remove(
+        state = RangeTicks.remove(
             ticks,
             samples,
             tickMap,
@@ -250,7 +271,9 @@ library RangePositions {
             liquidityOnPosition: 0,
             liquidityAmount: 0,
             totalSupply: 0,
-            tokenId: 0
+            tokenId: 0,
+            amount0: 0,
+            amount1: 0
         });
 
         // price tells you the ratio so you need to swap into the correct ratio and add liquidity
@@ -262,7 +285,7 @@ library RangePositions {
             position.amount0
         );
         if (cache.liquidityAmount > 0) {
-            state = TicksRange.insert(
+            state = RangeTicks.insert(
                 ticks,
                 samples,
                 tickMap,
@@ -398,7 +421,7 @@ library RangePositions {
         uint256 feeGrowthInside0,
         uint256 feeGrowthInside1
     ) {
-        TicksRange.validate(lower, upper, (IPool(pool).immutables()).tickSpacing);
+        RangeTicks.validate(lower, upper, (IPool(pool).immutables()).tickSpacing);
         (
             PoolsharkStructs.RangePoolState memory poolState,
             ,,,,
@@ -452,7 +475,7 @@ library RangePositions {
     ) {
         PoolsharkStructs.Immutables memory constants = IPool(pool).immutables();
         
-        TicksRange.validate(lower, upper, constants.tickSpacing);
+        RangeTicks.validate(lower, upper, constants.tickSpacing);
 
         IRangePoolStructs.SnapshotCache memory cache;
         (

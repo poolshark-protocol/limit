@@ -2313,10 +2313,11 @@ describe('RangePool Exact Out Tests', function () {
       revertMessage: '',
       exactIn: false
     })
-
-    await getTickLiquidity(600)
-    await getTickLiquidity(800)
-    console.log('MINT #2')
+    if (debugMode) {
+        await getTickLiquidity(600)
+        await getTickLiquidity(800)
+        console.log('MINT #2')
+    }
     await validateMint({
       signer: hre.props.bob,
       recipient: hre.props.bob.address,
@@ -2662,7 +2663,7 @@ describe('RangePool Exact Out Tests', function () {
       revertMessage: '',
       exactIn: false
     })
-    console.log('0x5e9bdcfaedba76aa371e1877dd10b998f20fcc243ff739320ef6deff77ee2704')
+    // console.log('0x5e9bdcfaedba76aa371e1877dd10b998f20fcc243ff739320ef6deff77ee2704')
     const aliceTokenAmount5 = BigNumber.from('866866363770548989881')
     const aliceLiquidity5 = BigNumber.from('866868102897460296291')
     await validateMint({
@@ -2680,7 +2681,7 @@ describe('RangePool Exact Out Tests', function () {
       collectRevertMessage: ''
     })
 
-    console.log('0xa05d59b9bd417d6489d1aff5c5b6efe5e61443e30a6a2f0d40482c2683a40d7e')
+    // console.log('0xa05d59b9bd417d6489d1aff5c5b6efe5e61443e30a6a2f0d40482c2683a40d7e')
     const aliceTokenAmount6 = BigNumber.from('2879560474037493414648')
     const aliceLiquidity6 = BigNumber.from('2879560742468351153073')
     await validateMint({
@@ -2697,7 +2698,7 @@ describe('RangePool Exact Out Tests', function () {
       revertMessage: '',
       collectRevertMessage: ''
     })
-    console.log('0xd4e4fb14cc804685f0c35893cea7171a1dfa37b28f4719bf1cacc80321d2fa6e')
+    // console.log('0xd4e4fb14cc804685f0c35893cea7171a1dfa37b28f4719bf1cacc80321d2fa6e')
     await validateMint({
       signer: hre.props.alice,
       recipient: hre.props.alice.address,

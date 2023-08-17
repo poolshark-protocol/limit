@@ -6843,8 +6843,11 @@ describe('LimitPool Tests', function () {
           lowerTickCleared: true,
           revertMessage: "",
         });
-        console.log("MINT #1 Completed");
-        console.log()
+        if (debugMode) {
+            console.log("MINT #1 Completed");
+            console.log()
+        }
+
 
         // This mint does not undercut
         await validateMint({
@@ -6860,9 +6863,11 @@ describe('LimitPool Tests', function () {
             upperTickCleared: false,
             lowerTickCleared: false,
             revertMessage: "",
-          });
-        console.log("MINT #2 Completed");
-        console.log()
+        });
+        if (debugMode) {
+            console.log("MINT #2 Completed");
+            console.log()
+        }
 
         await validateBurn({
             signer: hre.props.bob,
@@ -6877,11 +6882,14 @@ describe('LimitPool Tests', function () {
             upperTickCleared: false,
             revertMessage: "",
         });
-        console.log("BURN #1 Completed");
-        console.log()
+        if (debugMode) {
+            console.log("BURN #1 Completed");
+            console.log()
+            await getTickAtPrice(true, true)
+            await getTickAtPrice(false, true)
+        }
 
-        await getTickAtPrice(true, true)
-        await getTickAtPrice(false, true)
+
 
         // This mint sets the epoch on tick 10 to epoch 0.
         // Sadly, Bob's position on the other side needs tick 10 to have the right epoch!
@@ -6901,10 +6909,12 @@ describe('LimitPool Tests', function () {
             lowerTickCleared: false,
             revertMessage: "",
           });
-        console.log("MINT #3 Completed");
-        console.log()
-        await getTickAtPrice(true, true)
-        await getTickAtPrice(false, true)
+          if (debugMode) {
+            console.log("MINT #3 Completed");
+            console.log()
+            await getTickAtPrice(true, true)
+            await getTickAtPrice(false, true)
+        }
 
        // Claim tick 10 is allowed which causes entry into Positions.remove although position has been partially filled
        // by Mint #3
@@ -6921,7 +6931,7 @@ describe('LimitPool Tests', function () {
             upperTickCleared: false,
             revertMessage: "",
         });
-        console.log("BURN #2 Completed");
+        if (debugMode) console.log("BURN #2 Completed");
 
         await validateBurn({
             signer: hre.props.alice,
@@ -6941,7 +6951,6 @@ describe('LimitPool Tests', function () {
             console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
             console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
         }  
-
     });
       
     it("poo1 Position.remove entered when position is crossed into", async function () {

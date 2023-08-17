@@ -423,7 +423,6 @@ library Ticks {
                 if (cache.exactIn) {
                     amountIn = amountMax;
                     amountOut = ConstantProduct.getDx(cache.liquidity, cache.price, nextPrice, false);
-
                 } else {
                     amountIn = ConstantProduct.getDy(cache.liquidity, cache.price, nextPrice, true);
                     amountOut = amountMax;

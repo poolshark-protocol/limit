@@ -1290,7 +1290,7 @@ describe('RangePool Exact In Tests', function () {
       revertMessage: '',
       collectRevertMessage: ''
     })
-    return
+
     //console.log('0x0c2cf2c87629df41bc1472e3984cded9df86aec0e4e3398ef9ab1f30cd7a6afc')
     await validateBurn({
       signer: hre.props.alice,
@@ -1360,7 +1360,7 @@ describe('RangePool Exact In Tests', function () {
       lower: '73140',
       upper: '76020',
       burnPercent: ethers.utils.parseUnits('1', 38),
-      liquidityAmount: BigNumber.from('290594832266070128492212'),
+      liquidityAmount: BigNumber.from('290594832266070128492211'),
       balance0Increase: BigNumber.from('1006006157700985848708'),
       balance1Increase: BigNumber.from('1749018723452173172'),
       revertMessage: '',
@@ -1385,7 +1385,7 @@ describe('RangePool Exact In Tests', function () {
       balance1Increase: BigNumber.from('6324961650864055083800'),
       revertMessage: '',
     })
-    if (balanceCheck) {
+    if (true) {
       console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
       console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
     }

@@ -6,7 +6,6 @@ import '../../utils/SafeCast.sol';
 import "../../math/OverflowMath.sol";
 import '../../../base/structs/PoolsharkStructs.sol';
 import "../../../interfaces/range/IRangePoolStructs.sol";
-import 'hardhat/console.sol';
 
 /// @notice Math library that facilitates fee handling.
 library FeeMath {
@@ -34,7 +33,7 @@ library FeeMath {
         uint256 amountIn,
         uint256 amountOut,
         bool zeroForOne
-    ) internal view returns (
+    ) internal pure returns (
         PoolsharkStructs.SwapCache memory
     )
     {
@@ -50,12 +49,6 @@ library FeeMath {
                     locals.price = locals.minPrice;
                 if (locals.lastPrice < locals.minPrice)
                     locals.lastPrice = locals.minPrice;
-                // 0.1% => 0.1%
-                // 1% move => 0.5%
-                // 0.3% => 0.3%
-                // 1% => 1%
-                // 10% move => 5% fee
-                console.log('liquidity check', cache.state.pool.liquidity, cache.price);
                 // delta is % modifier on the swapFee
                 uint256 delta = OverflowMath.mulDiv(
                         FEE_DELTA_CONST / uint16(cache.constants.tickSpacing), // higher FEE_DELTA_CONST means
@@ -97,9 +90,6 @@ library FeeMath {
                 locals.feeAmount = OverflowMath.mulDivRoundingUp(locals.amountRange, locals.swapFee, 1e6);
                 amountIn += locals.feeAmount;
             }
-            console.log('amount check', locals.feeAmount, amountIn, amountOut);
-            console.log('amount check 2', locals.amountRange);
-
             // load protocol fee from cache
             locals.protocolFee = zeroForOne == cache.exactIn ? cache.state.pool0.protocolFee : cache.state.pool1.protocolFee;
             // calculate fee

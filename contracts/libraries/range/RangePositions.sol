@@ -108,7 +108,6 @@ library RangePositions {
             totalSupply: Tokens.totalSupply(constants.poolToken, params.mint.lower, params.mint.upper),
             tokenId: Tokens.id(params.mint.lower, params.mint.upper)
         });
-
         params.state = TicksRange.insert(
             ticks,
             samples,

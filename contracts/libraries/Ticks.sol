@@ -137,10 +137,7 @@ library Ticks {
             cross: true,
             averagePrice: 0
         });
-        // should be calculated at each step for dynamic fee
-        // if (!cache.exactIn) cache.amountLeft = OverflowMath.mulDivRoundingUp(uint256(params.amount), 1e6, (1e6 - cache.constants.swapFee));
         // grab latest sample
-        console.log('NEW SAMPLE');
         (
             cache.tickSecondsAccum,
             cache.secondsPerLiquidityAccum
@@ -157,9 +154,7 @@ library Ticks {
                 ),
                 0
         );
-        console.log('NEW SAMPLE COMPLETED', uint56(cache.tickSecondsAccum));
         // grab older sample for dynamic fee calculation
-        console.log('OLD SAMPLE', timeElapsed(cache.constants));
         (
             cache.tickSecondsAccumBase,
         ) = Samples.getSingle(
@@ -344,7 +339,7 @@ library Ticks {
         PoolsharkStructs.SwapCache memory cache,
         uint160 priceLimit,
         bool zeroForOne
-    ) internal view returns (
+    ) internal pure returns (
         PoolsharkStructs.SwapCache memory
     ) {
         if ((zeroForOne ? priceLimit >= cache.price
@@ -529,7 +524,6 @@ library Ticks {
     ) internal view returns (
         PoolsharkStructs.SwapCache memory
     ) {
-        console.log('QUOTE ITERATE');
         if (cache.price == cache.crossPrice ) {
             if ((cache.crossStatus & RANGE_TICK) > 0) {
                 if (!params.zeroForOne || cache.amountLeft > 0) {

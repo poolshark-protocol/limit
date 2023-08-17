@@ -210,6 +210,7 @@ contract EchidnaPool {
         }
 
         if (posCreated) {
+            emit PositionTicks(lower, upper);
             // Ensure positions ticks arent crossed
             assert(lower < upper);
             // Ensure minted ticks on proper tick spacing

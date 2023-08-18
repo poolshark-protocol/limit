@@ -65,10 +65,10 @@ library RangePositions {
         IRangePoolStructs.MintParams memory,
         IRangePoolStructs.MintCache memory
     ) {
-        RangeTicks.validate(params.lower, params.upper, cache.constants.tickSpacing);
+        RangeTicks.validate(cache.position.lower, cache.position.upper, cache.constants.tickSpacing);
         
-        cache.priceLower = ConstantProduct.getPriceAtTick(params.lower, cache.constants);
-        cache.priceUpper = ConstantProduct.getPriceAtTick(params.upper, cache.constants);
+        cache.priceLower = ConstantProduct.getPriceAtTick(cache.position.lower, cache.constants);
+        cache.priceUpper = ConstantProduct.getPriceAtTick(cache.position.upper, cache.constants);
 
         cache.liquidityMinted = ConstantProduct.getLiquidityForAmounts(
             cache.priceLower,
@@ -107,19 +107,19 @@ library RangePositions {
             tickMap,
             cache.state,
             cache.constants,
-            params.lower,
-            params.upper,
+            cache.position.lower,
+            cache.position.upper,
             cache.liquidityMinted.toUint128()
         );
         (
             cache.position.feeGrowthInside0Last,
             cache.position.feeGrowthInside1Last
         ) = rangeFeeGrowth(
-            ticks[params.lower].range,
-            ticks[params.upper].range,
+            ticks[cache.position.lower].range,
+            ticks[cache.position.upper].range,
             cache.state,
-            params.lower,
-            params.upper
+            cache.position.lower,
+            cache.position.upper
         );
         if (cache.position.liquidity == 0) {
             IRangePoolERC1155(cache.constants.poolToken).mint(
@@ -132,8 +132,8 @@ library RangePositions {
         cache.position.liquidity += uint128(cache.liquidityMinted);
         emit Mint(
             params.to,
-            params.lower,
-            params.upper,
+            cache.position.lower,
+            cache.position.upper,
             params.positionId,
             cache.liquidityMinted.toUint128(),
             params.amount0,
@@ -270,11 +270,11 @@ library RangePositions {
         }
         
         (uint256 rangeFeeGrowth0, uint256 rangeFeeGrowth1) = rangeFeeGrowth(
-            ticks[params.lower].range,
-            ticks[params.upper].range,
+            ticks[position.lower].range,
+            ticks[position.upper].range,
             state,
-            params.lower,
-            params.upper
+            position.lower,
+            position.upper
         );
 
         uint128 amount0Fees = uint128(

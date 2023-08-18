@@ -329,6 +329,7 @@ contract EchidnaPool {
         // Ensure prices have not crossed
         assert(poolValues.price0After >= poolValues.price1After);
         if (posCreated) {
+            emit PositionTicks(lower, upper);
             // Ensure positions ticks arent crossed
             assert(lower < upper);
             // Ensure minted ticks on proper tick spacing

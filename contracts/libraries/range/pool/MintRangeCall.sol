@@ -30,9 +30,11 @@ library MintRangeCall {
         IRangePoolStructs.MintParams memory params
     ) external returns (IRangePoolStructs.MintCache memory) {
         // id of 0 can be passed to create new position
-        if (params.positionId > 0 && RangeTokens.balanceOf(cache.constants, msg.sender, params.positionId) == 0)
-            require(false, 'InvalidPositionId()');
         if (params.positionId > 0) {
+            // existing position
+            if (RangeTokens.balanceOf(cache.constants, msg.sender, params.positionId) == 0)
+                // check for balance held
+                require(false, 'PositionNotFound()');
             // set bounds as defined by position
             params.lower = cache.position.lower;
             params.upper = cache.position.upper;

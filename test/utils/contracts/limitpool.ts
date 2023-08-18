@@ -231,17 +231,20 @@ export async function validateSwap(params: ValidateSwapParams) {
     const priceBefore = poolBefore.price
 
     // quote pre-swap and validate balance changes match post-swap
-    const quote = await hre.props.limitPool.quote({
-        priceLimit: priceLimit,
-        amount: amountIn,
-        zeroForOne: zeroForOne,
-        exactIn: true
-    })
 
-    const amountInQuoted = quote[0]
-    const amountOutQuoted = quote[1]
+
+    let amountInQuoted
+    let amountOutQuoted
 
     if (revertMessage == '') {
+        const quote = await hre.props.limitPool.quote({
+            priceLimit: priceLimit,
+            amount: amountIn,
+            zeroForOne: zeroForOne,
+            exactIn: true
+        })
+        amountInQuoted = quote[0]
+        amountOutQuoted = quote[1]
         if (splitInto > 1) await ethers.provider.send("evm_setAutomine", [false]);
         for (let i = 0; i < splitInto; i++) {
             let txn = await hre.props.poolRouter

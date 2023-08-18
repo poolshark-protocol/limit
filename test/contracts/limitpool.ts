@@ -7069,4 +7069,120 @@ describe('LimitPool Tests', function () {
         }  
 
     });
+
+    it("_iterate does not unlock liquidity from the halfTick leading to liquidity underflow", async function () {
+        
+        await validateMint({
+          signer: hre.props.bob,
+          recipient: hre.props.bob.address,
+          lower: "0",
+          upper: "10",
+          amount: "20",
+          zeroForOne: false,
+          balanceInDecrease: "20",
+          liquidityIncrease: "39992",
+          balanceOutIncrease: "0",
+          upperTickCleared: true,
+          lowerTickCleared: true,
+          revertMessage: "",
+        });
+
+        console.log("MINT #1 Completed");
+        console.log()
+    
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: "0",
+            upper: "10",
+            amount: "20",
+            zeroForOne: true,
+            balanceInDecrease:  "20",
+            liquidityIncrease: "0",
+            balanceOutIncrease: "12",
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: "",
+          });
+
+        console.log("MINT #2 Completed");
+        console.log()
+    
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: "0",
+            upper: "10",
+            amount: "20",
+            zeroForOne: false,
+            balanceInDecrease:  "20",
+            liquidityIncrease: "39992",
+            balanceOutIncrease: "0",
+            upperTickCleared: true,
+            lowerTickCleared: false,
+            revertMessage: "",
+          });
+
+        console.log("MINT #3 Completed");
+        console.log()
+    
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: "0",
+            upper: "20",
+            amount: "20",
+            expectedLower: "10",
+            zeroForOne: true,
+            balanceInDecrease:  "20",
+            liquidityIncrease: "36028",
+            balanceOutIncrease: "2",
+            upperTickCleared: false,
+            lowerTickCleared: true,
+            revertMessage: "",
+          });
+        console.log("MINT #4 Completed");
+        console.log()
+    
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: "10",
+            upper: "20",
+            claim: "10",
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: true,
+            balanceInIncrease: "0",
+            balanceOutIncrease: "17",
+            lowerTickCleared: true,
+            upperTickCleared: false,
+            revertMessage: "",
+        });
+        console.log("BURN #1 Completed");
+        console.log()
+    
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: false,
+            amountIn: BigNumber.from("26"),
+            priceLimit: maxPrice,
+            balanceInDecrease: '9',
+            balanceOutIncrease: '7',
+            revertMessage: '',
+        })
+        console.log("SWAP #1 Completed");
+        console.log()
+    
+        // Swap reverts with underflow 
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: true,
+            amountIn: BigNumber.from("207384318602420766392973380627479492219"),
+            priceLimit: minPrice,
+            balanceInDecrease: '26',
+            balanceOutIncrease: '25',
+            revertMessage: '',
+        })
+    }); 
 })

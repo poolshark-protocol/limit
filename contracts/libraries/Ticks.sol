@@ -604,6 +604,7 @@ library Ticks {
                 cache.crossPrice = ConstantProduct.getPriceAtTick(cache.crossTick, cache.constants);
                 if (cache.state.pool1.price >= cache.crossPrice) {
                     // cross into limit pool
+                    console.log('crossing into limit pool', ticks[5].limit.priceAt, cache.state.pool1.price);
                     cache.crossStatus = LIMIT_POOL;
                     if (cache.state.pool1.price == cache.crossPrice)
                         // also cross range tick
@@ -622,9 +623,20 @@ library Ticks {
                 cache.limitActive = true;
                 cache.liquidity = cache.state.pool.liquidity + cache.state.pool1.liquidity;
                 (cache.crossTick,) = TickMap.roundHalf(cache.crossTick, cache.constants, cache.price);
+                console.log('rounded half', uint24(cache.crossTick));
+                int24 rangeTickAhead; int24 limitTickAhead;
+                if (cache.crossStatus == LIMIT_POOL &&
+                        cache.crossTick % cache.constants.tickSpacing != 0 &&
+                        TickMap.get(limitTickMap, cache.crossTick, cache.constants.tickSpacing))
+                {
+                    limitTickAhead = cache.crossTick;
+                    rangeTickAhead = cache.crossTick - cache.constants.tickSpacing / 2;
+                } else {
+                    rangeTickAhead = TickMap.previous(rangeTickMap, cache.crossTick, cache.constants.tickSpacing, inclusive);
+                    limitTickAhead = TickMap.previous(limitTickMap, cache.crossTick, cache.constants.tickSpacing, inclusive);
+                }
                 // next range tick vs. next limit tick
-                int24 rangeTickAhead = TickMap.previous(rangeTickMap, cache.crossTick, cache.constants.tickSpacing, inclusive);
-                int24 limitTickAhead = TickMap.previous(limitTickMap, cache.crossTick, cache.constants.tickSpacing, inclusive);
+                
                 if (rangeTickAhead >= limitTickAhead) {
                     cache.crossTick = rangeTickAhead;
                     // cross range tick
@@ -671,8 +683,17 @@ library Ticks {
                 cache.liquidity = cache.state.pool.liquidity + cache.state.pool0.liquidity;
                 (cache.crossTick,) = TickMap.roundHalf(cache.crossTick, cache.constants, cache.price);
                 // next range tick vs. next limit tick
-                int24 rangeTickAhead = TickMap.next(rangeTickMap, cache.crossTick, cache.constants.tickSpacing, inclusive);
-                int24 limitTickAhead = TickMap.next(limitTickMap, cache.crossTick, cache.constants.tickSpacing, inclusive);
+                int24 rangeTickAhead; int24 limitTickAhead;
+                if (cache.crossStatus == LIMIT_POOL &&
+                        cache.crossTick % cache.constants.tickSpacing != 0 &&
+                        TickMap.get(limitTickMap, cache.crossTick, cache.constants.tickSpacing))
+                {
+                    limitTickAhead = cache.crossTick;
+                    rangeTickAhead = cache.crossTick + cache.constants.tickSpacing / 2;
+                } else {
+                    rangeTickAhead = TickMap.next(rangeTickMap, cache.crossTick, cache.constants.tickSpacing, inclusive);
+                    limitTickAhead = TickMap.next(limitTickMap, cache.crossTick, cache.constants.tickSpacing, inclusive);
+                }
                 if (rangeTickAhead <= limitTickAhead) {
                     cache.crossTick = rangeTickAhead;
                     // cross range tick
@@ -690,6 +711,7 @@ library Ticks {
                 }
             }
         }
+        console.log('cross tick', uint24(cache.crossTick), cache.crossStatus);
         return cache;
     }
 

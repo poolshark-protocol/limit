@@ -9,7 +9,6 @@ import './Claims.sol';
 import './EpochMap.sol';
 import '../utils/SafeCast.sol';
 import '../Ticks.sol';
-import 'hardhat/console.sol';
 
 /// @notice Position management library for ranged liquidity.
 /// @notice Position management library for ranged liquidity.
@@ -181,8 +180,6 @@ library LimitPositions {
         if (params.lower >= params.upper) {
             params.amount = 0;
         }
-
-        console.log('position bounds', uint24(params.lower), uint24(params.upper));
 
         return (
             params,

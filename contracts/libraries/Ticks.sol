@@ -604,7 +604,6 @@ library Ticks {
                 cache.crossPrice = ConstantProduct.getPriceAtTick(cache.crossTick, cache.constants);
                 if (cache.state.pool1.price >= cache.crossPrice) {
                     // cross into limit pool
-                    console.log('crossing into limit pool', ticks[5].limit.priceAt, cache.state.pool1.price);
                     cache.crossStatus = LIMIT_POOL;
                     if (cache.state.pool1.price == cache.crossPrice)
                         // also cross range tick
@@ -623,7 +622,6 @@ library Ticks {
                 cache.limitActive = true;
                 cache.liquidity = cache.state.pool.liquidity + cache.state.pool1.liquidity;
                 (cache.crossTick,) = TickMap.roundHalf(cache.crossTick, cache.constants, cache.price);
-                console.log('rounded half', uint24(cache.crossTick));
                 int24 rangeTickAhead; int24 limitTickAhead;
                 if (cache.crossStatus == LIMIT_POOL &&
                         cache.crossTick % cache.constants.tickSpacing != 0 &&
@@ -711,7 +709,6 @@ library Ticks {
                 }
             }
         }
-        console.log('cross tick', uint24(cache.crossTick), cache.crossStatus);
         return cache;
     }
 

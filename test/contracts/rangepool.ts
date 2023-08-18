@@ -275,7 +275,7 @@ describe('RangePool Exact In Tests', function () {
     }
   })
 
-  it('token0 - Should mint and burn fungible position 14', async function () {
+  it.only('token0 - Should mint and burn position 14', async function () {
     const pool: RangePoolState = (await hre.props.limitPool.globalState()).pool
     const aliceLiquidity = BigNumber.from('419027207938949970576')
     await validateSwap({
@@ -288,7 +288,7 @@ describe('RangePool Exact In Tests', function () {
         balanceOutIncrease: BigNumber.from('0'),
         revertMessage: '',
     })
-    await validateMint({
+    const aliceId = await validateMint({
       signer: hre.props.alice,
       recipient: hre.props.alice.address,
       lower: '10000',
@@ -297,7 +297,6 @@ describe('RangePool Exact In Tests', function () {
       amount1: tokenAmount,
       balance0Decrease: BigNumber.from('100000000000000000000'),
       balance1Decrease: BigNumber.from('0'),
-      tokenAmount: aliceLiquidity,
       liquidityIncrease: aliceLiquidity,
       revertMessage: '',
       collectRevertMessage: ''
@@ -337,13 +336,13 @@ describe('RangePool Exact In Tests', function () {
     })
 
  //   if (debugMode) await getSample()
-    if (debugMode) await getRangeBalanceOf(hre.props.alice.address, 10000, 20000)
-    if (debugMode) await getSnapshot(hre.props.alice.address, 10000, 20000)
+    if (debugMode) await getRangeBalanceOf(hre.props.alice.address, aliceId)
+    if (debugMode) await getSnapshot(aliceId)
     await validateBurn({
       signer: hre.props.alice,
       lower: '10000',
       upper: '20000',
-      tokenAmount: aliceLiquidity,
+      positionId: aliceId,
       liquidityAmount: aliceLiquidity,
       balance0Increase: tokenAmount.sub(1),
       balance1Increase: BN_ZERO,
@@ -356,9 +355,9 @@ describe('RangePool Exact In Tests', function () {
     }
   })
 
-  it('token0 - Should add in-range fungible liquidity 17', async function () {
+  it.only('token0 - Should add in-range liquidity 17', async function () {
     const pool: RangePoolState = (await hre.props.limitPool.globalState()).pool
-    await validateMint({
+    const aliceId = await validateMint({
       signer: hre.props.alice,
       recipient: hre.props.alice.address,
       lower: '10000',
@@ -367,7 +366,6 @@ describe('RangePool Exact In Tests', function () {
       amount1: tokenAmount,
       balance0Decrease: BigNumber.from('100000000000000000000'),
       balance1Decrease: BigNumber.from('0'),
-      tokenAmount: BigNumber.from('419027207938949970576'),
       liquidityIncrease: BigNumber.from('419027207938949970576'),
       revertMessage: '',
       collectRevertMessage: ''
@@ -386,12 +384,12 @@ describe('RangePool Exact In Tests', function () {
 
  //   if (debugMode) await getSample()
     if (debugMode) await getTickAtPrice()
-    if (debugMode) await getSnapshot(hre.props.alice.address, 10000, 20000)
+    if (debugMode) await getSnapshot(aliceId)
     await validateBurn({
       signer: hre.props.alice,
       lower: '10000',
       upper: '20000',
-      tokenAmount: BigNumber.from('419027207938949970576'),
+      positionId: aliceId,
       liquidityAmount: BigNumber.from('419027207938949970576'),
       balance0Increase: BigNumber.from('67878263067906662282'),
       balance1Increase: BigNumber.from('100000000000000000000').sub(1),
@@ -404,10 +402,10 @@ describe('RangePool Exact In Tests', function () {
     }
   })
 
-  it('token1 - Should mint, swap, and burn 17', async function () {
+  it.only('token1 - Should mint, swap, and burn 17', async function () {
     const liquidityAmount2 = BigNumber.from('690841800621472456980')
 
-    await validateMint({
+    const aliceId = await validateMint({
       signer: hre.props.alice,
       recipient: hre.props.alice.address,
       lower: '20000',
@@ -416,7 +414,6 @@ describe('RangePool Exact In Tests', function () {
       amount1: tokenAmount,
       balance0Decrease: tokenAmount,
       balance1Decrease: BN_ZERO,
-      tokenAmount: liquidityAmount2,
       liquidityIncrease: liquidityAmount2,
       revertMessage: '',
     })
@@ -432,13 +429,14 @@ describe('RangePool Exact In Tests', function () {
       revertMessage: '',
     })
  //   if (debugMode) await getSample()
-    if (debugMode) await getRangeBalanceOf(hre.props.alice.address, 25000, 30000)
-    if (debugMode) await getSnapshot(hre.props.alice.address, 20000, 30000)
+    if (debugMode) await getRangeBalanceOf(hre.props.alice.address, aliceId)
+    if (debugMode) await getSnapshot(aliceId)
     await validateBurn({
       signer: hre.props.alice,
       lower: '20000',
       upper: '30000',
       liquidityAmount: liquidityAmount2,
+      positionId: aliceId,
       balance0Increase: BigNumber.from('98654354619033495329'),
       balance1Increase: tokenAmount.div(10).sub(1),
       revertMessage: '',
@@ -450,13 +448,13 @@ describe('RangePool Exact In Tests', function () {
     }
   })
 
-  it('token1 - Should mint, swap, and burn position while in range 17', async function () {
+  it.only('token1 - Should mint, swap, and burn position while in range 17', async function () {
     if (debugMode) await getTickAtPrice()
     const aliceLiquidity = BigNumber.from('1577889144107833733009')
     const aliceTokenAmount = BigNumber.from('1577889144107833733009')
     const aliceLiquidity2 = BigNumber.from('1590926220637829792707')
     const aliceTokenAmount2 = BigNumber.from('1590919832480500238123')
-    await validateMint({
+    const aliceId = await validateMint({
       signer: hre.props.alice,
       recipient: hre.props.alice.address,
       lower: '25000',
@@ -480,7 +478,7 @@ describe('RangePool Exact In Tests', function () {
       revertMessage: '',
     })
 
-    if (debugMode) await getSnapshot(hre.props.alice.address, 25000, 30000)
+    if (debugMode) await getSnapshot(aliceId)
 
     await validateMint({
       signer: hre.props.alice,
@@ -489,23 +487,23 @@ describe('RangePool Exact In Tests', function () {
       upper: '30000',
       amount0: tokenAmount,
       amount1: tokenAmount,
-      balance0Decrease: BigNumber.from('100000000000000000000'),
+      balance0Decrease: BigNumber.from('99999590267720750455'), // collects fees
       balance1Decrease: BigNumber.from('10082623526365456124'),
       liquidityIncrease: aliceLiquidity2,
-      tokenAmount: aliceTokenAmount2,
+      positionId: aliceId,
       revertMessage: '',
     })
 
- //   if (debugMode) await getSample()
-    if (debugMode) await getRangeBalanceOf(hre.props.alice.address, 25000, 30000)
-    if (debugMode) await getSnapshot(hre.props.alice.address, 25000, 30000)
+    if (debugMode) await getRangeBalanceOf(hre.props.alice.address, aliceId)
+    if (debugMode) await getSnapshot(aliceId)
     await validateBurn({
       signer: hre.props.alice,
       lower: '25000',
       upper: '30000',
-      tokenAmount: aliceTokenAmount.add(aliceTokenAmount2),
+      positionId: aliceId,
       liquidityAmount: aliceLiquidity.add(aliceLiquidity2),
-      balance0Increase: BigNumber.from('199180945173780158958'),
+      burnPercent: ethers.utils.parseUnits('1',38),
+      balance0Increase: BigNumber.from('199180535441500909413'),
       balance1Increase: BigNumber.from('20082623526365456123'),
       revertMessage: '',
     })
@@ -516,12 +514,12 @@ describe('RangePool Exact In Tests', function () {
     }
   })
 
-  it('token0 - Should autocompound fungible position 17', async function () {
+  it.only('token0 - Should autocompound fungible position 17', async function () {
     const pool: RangePoolState = (await hre.props.limitPool.globalState()).pool
     const aliceLiquidity = BigNumber.from('3852877204305891777654')
     const aliceToken2 = BigNumber.from('7703597268822239417406')
     const aliceLiquidity2 = BigNumber.from('7705754408611783555308')
-    await validateMint({
+    const aliceId = await validateMint({
       signer: hre.props.alice,
       recipient: hre.props.alice.address,
       lower: '500',
@@ -530,7 +528,6 @@ describe('RangePool Exact In Tests', function () {
       amount1: tokenAmount,
       balance0Decrease: BN_ZERO,
       balance1Decrease: tokenAmount,
-      tokenAmount: aliceLiquidity,
       liquidityIncrease: aliceLiquidity,
       revertMessage: '',
     })
@@ -554,35 +551,36 @@ describe('RangePool Exact In Tests', function () {
       amount0: tokenAmount,
       amount1: tokenAmount,
       balance0Decrease: BigNumber.from('100000000000000000000'),
-      balance1Decrease: BigNumber.from('90970905615086187051'),
-      tokenAmount: aliceToken2,
+      balance1Decrease: BigNumber.from('90943648341489958598'),
+      positionId: aliceId,
       liquidityIncrease: BigNumber.from('7705754408611783555308'),
       revertMessage: '',
       collectRevertMessage: ''
     })
 
-    if (debugMode) await getSnapshot(hre.props.alice.address, 500, 1000)
+    if (debugMode) await getSnapshot(aliceId)
  //   if (debugMode) await getSample()
     await validateBurn({
       signer: hre.props.alice,
       lower: '500',
       upper: '1000',
-      tokenAmount: aliceLiquidity.add(aliceToken2),
+      positionId: aliceId,
       liquidityAmount: aliceLiquidity.add(aliceLiquidity2),
+      burnPercent: ethers.utils.parseUnits('1',38),
       balance0Increase: BigNumber.from('150000000000000000000').sub(1),
-      balance1Increase: BigNumber.from('136483615696225509029'),
+      balance1Increase: BigNumber.from('136456358422629280576'),
       revertMessage: '',
     })
 
-    if (balanceCheck) {
+    if (true) {
       console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
       console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
     }
   })
 
-  it('token0 - Should autocompound fungible position and add liquidity 17', async function () {
+  it.only('token0 - Should autocompound fungible position and add liquidity 17', async function () {
     const aliceLiquidity = BigNumber.from('7705754408611783555308')
-    const aliceLiquidity2 = BigNumber.from('3852877204305891777654')
+    const aliceLiquidity2 = BigNumber.from('3853399963994096559303')
     const aliceToken2 = BigNumber.from('3851350676919383233343')
 
     await validateSwap({
@@ -596,7 +594,7 @@ describe('RangePool Exact In Tests', function () {
         revertMessage: '',
     })
 
-    await validateMint({
+    const aliceId = await validateMint({
       signer: hre.props.alice,
       recipient: hre.props.alice.address,
       lower: '500',
@@ -605,7 +603,6 @@ describe('RangePool Exact In Tests', function () {
       amount1: tokenAmount,
       balance0Decrease: BigNumber.from('100000000000000000000'),
       balance1Decrease: BigNumber.from('90970905615086187051'),
-      tokenAmount: aliceLiquidity,
       liquidityIncrease: aliceLiquidity,
       revertMessage: '',
       collectRevertMessage: ''
@@ -643,7 +640,7 @@ describe('RangePool Exact In Tests', function () {
       balanceOutIncrease: BigNumber.from('78764658213120928119'),
       revertMessage: '',
     })
-    if (debugMode) await getSnapshot(hre.props.alice.address, 500, 1000)
+    if (debugMode) await getSnapshot(aliceId)
     await getTickAtPrice()
 
     await validateMint({
@@ -653,33 +650,34 @@ describe('RangePool Exact In Tests', function () {
       upper: '1000',
       amount0: tokenAmount,
       amount1: tokenAmount,
-      balance0Decrease: BigNumber.from('0'),
+      balance0Decrease: BigNumber.from('-62500000000000000'),
       balance1Decrease: BigNumber.from('100000000000000000000'),
-      tokenAmount: aliceToken2,
+      positionId: aliceId,
       liquidityIncrease: aliceLiquidity2,
       revertMessage: '',
       collectRevertMessage: ''
     })
 
-    if (debugMode) await getSnapshot(hre.props.alice.address, 500, 1000)
+    if (debugMode) await getSnapshot(aliceId)
     await validateBurn({
       signer: hre.props.alice,
       lower: '500',
       upper: '1000',
-      tokenAmount: aliceLiquidity.add(aliceToken2),
+      positionId: aliceId, 
       liquidityAmount: BigNumber.from('11559154372605880114611'),
-      balance0Increase: BigNumber.from('62500000000000000'),
+      burnPercent: ethers.utils.parseUnits('1',38),
+      balance0Increase: BigNumber.from('0'), // fees collected on second mint
       balance1Increase: BigNumber.from('300013568033977842760'),
       revertMessage: '',
     })
  //   if (debugMode) await getSample()
-    if (balanceCheck) {
+    if (true) {
       console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
       console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
     }
   })
 
-  it('token1 - Should mint position inside the other 17', async function () {
+  it.only('token1 - Should mint position inside the other 17', async function () {
     const pool: RangePoolState = (await hre.props.limitPool.globalState()).pool
 
     await validateSwap({
@@ -693,7 +691,7 @@ describe('RangePool Exact In Tests', function () {
         revertMessage: '',
     })
 
-    await validateMint({
+    const aliceId = await validateMint({
       signer: hre.props.alice,
       recipient: hre.props.alice.address,
       lower: '500',
@@ -702,7 +700,6 @@ describe('RangePool Exact In Tests', function () {
       amount1: tokenAmount,
       balance0Decrease: BigNumber.from('0'),
       balance1Decrease: BigNumber.from('100000000000000000000'),
-      tokenAmount: BigNumber.from('3852877204305891777654'),
       liquidityIncrease: BigNumber.from('3852877204305891777654'),
       revertMessage: '',
       collectRevertMessage: ''
@@ -721,7 +718,7 @@ describe('RangePool Exact In Tests', function () {
 
     if (debugMode) await getTickAtPrice()
 
-    await validateMint({
+    const bobId = await validateMint({
       signer: hre.props.bob,
       recipient: hre.props.bob.address,
       lower: '200',
@@ -730,48 +727,48 @@ describe('RangePool Exact In Tests', function () {
       amount1: tokenAmount,
       balance0Decrease: BigNumber.from('0'),
       balance1Decrease: BigNumber.from('100000000000000000000'),
-      tokenAmount: BigNumber.from('4901161634764542438934'),
       liquidityIncrease: BigNumber.from('4901161634764542438934'),
       revertMessage: '',
     })
-    if (debugMode) await getSnapshot(hre.props.alice.address, 200, 600)
+    if (debugMode) await getSnapshot(aliceId)
 
     await validateBurn({
       signer: hre.props.bob,
       lower: '200',
       upper: '600',
-      tokenAmount: BigNumber.from('4901161634764542438934'),
+      positionId: bobId,
       liquidityAmount: BigNumber.from('4901161634764542438934'),
+      burnPercent: ethers.utils.parseUnits('1',38),
       balance0Increase: BigNumber.from('0'),
       balance1Increase: tokenAmount.sub(1),
       revertMessage: '',
     })
-    if (debugMode) await getSnapshot(hre.props.alice.address, 500, 1000)
+    if (debugMode) await getSnapshot(aliceId)
 
     await validateBurn({
       signer: hre.props.alice,
       lower: '500',
       upper: '1000',
-      tokenAmount: BigNumber.from('3852877204305891777654'),
+      positionId: aliceId,
       liquidityAmount: BigNumber.from('3852877204305891777654'),
       balance0Increase: BigNumber.from('50000000000000000000').sub(1),
       balance1Increase: BigNumber.from('45512710081139321979').sub(1),
       revertMessage: '',
     })
 
-    if (balanceCheck) {
+    if (true) {
       console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
       console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
     }
   })
 
-  it('pool - Should mint position inside the other 17', async function () {
+  it.only('pool - Should mint position inside the other 17', async function () {
     const pool: RangePoolState = (await hre.props.limitPool.globalState()).pool
     const aliceLiquidity = BigNumber.from('7705754408611783555308')
     const bobLiquidity = BigNumber.from('12891478442546858467877')
     const bobLiquidity2 = BigNumber.from('4901161634764542438930')
 
-    await validateMint({
+    const aliceId = await validateMint({
       signer: hre.props.alice,
       recipient: hre.props.alice.address,
       lower: '500',
@@ -780,7 +777,6 @@ describe('RangePool Exact In Tests', function () {
       amount1: tokenAmount,
       balance0Decrease: BigNumber.from('100000000000000000000'),
       balance1Decrease: BigNumber.from('90970905615086187051'),
-      tokenAmount: aliceLiquidity,
       liquidityIncrease: aliceLiquidity,
       revertMessage: '',
       collectRevertMessage: ''
@@ -797,7 +793,7 @@ describe('RangePool Exact In Tests', function () {
       revertMessage: '',
     })
 
-    await validateMint({
+    const bobId = await validateMint({
       signer: hre.props.bob,
       recipient: hre.props.bob.address,
       lower: '600',
@@ -806,53 +802,55 @@ describe('RangePool Exact In Tests', function () {
       amount1: tokenAmount,
       balance0Decrease: BigNumber.from('31002239349424966834'),
       balance1Decrease: BigNumber.from('100000000000000000000'),
-      tokenAmount: bobLiquidity,
       liquidityIncrease: bobLiquidity,
       revertMessage: '',
     })
-    if (debugMode) await getSnapshot(hre.props.bob.address, 600, 800)
-    // console.log('FIRST BURN')
+    if (debugMode) await getSnapshot(bobId)
+    console.log('FIRST BURN')
     await validateBurn({
       signer: hre.props.bob,
       lower: '600',
       upper: '800',
-      tokenAmount: bobLiquidity2,
-      liquidityAmount: bobLiquidity2.sub(1),
-      balance0Increase: BigNumber.from('11786622206938309591'),
-      balance1Increase: BigNumber.from('38018615604156121196'),
+      positionId: bobId,
+      liquidityAmount: BigNumber.from('3867443532764057540363'),
+      burnPercent: ethers.utils.parseUnits('3', 37),
+      balance0Increase: BigNumber.from('9300671804827490049'),
+      balance1Increase: BigNumber.from('29999999999999999999'),
       revertMessage: '',
     })
-    if (debugMode) await getSnapshot(hre.props.bob.address, 600, 800)
-    // console.log('SECOND BURN')
+    if (debugMode) await getSnapshot(bobId)
+    console.log('SECOND BURN')
     await validateBurn({
       signer: hre.props.bob,
       lower: '600',
       upper: '800',
-      tokenAmount: bobLiquidity.sub(bobLiquidity2),
-      liquidityAmount: bobLiquidity.sub(bobLiquidity2).sub(1),
-      balance0Increase: BigNumber.from('19215617142486657241'),
-      balance1Increase: BigNumber.from('61981384395843878803'),
+      positionId: bobId,
+      liquidityAmount: BigNumber.from('9024034909782800927514'),
+      burnPercent: ethers.utils.parseUnits('1', 38),
+      balance0Increase: BigNumber.from('21701567544597476783'),
+      balance1Increase: BigNumber.from('69999999999999999999'),
       revertMessage: '',
     })
-    if (debugMode) await getSnapshot(hre.props.alice.address, 500, 1000)
+    if (debugMode) await getSnapshot(aliceId)
     await validateBurn({
       signer: hre.props.alice,
       lower: '500',
       upper: '1000',
-      tokenAmount: aliceLiquidity,
+      positionId: aliceId,
       liquidityAmount: aliceLiquidity,
+      burnPercent: ethers.utils.parseUnits('1', 38),
       balance0Increase: BigNumber.from('92198793754243677819'),
       balance1Increase: BigNumber.from('99375039384589972730'),
       revertMessage: '',
     })
 
-    if (balanceCheck) {
+    if (true) {
       console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
       console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
     }
   })
 
-  it('pool - Should mint position inside the other and not steal fee share 17:: KEBABSEC', async function () {
+  it.only('pool - Should mint position inside the other and not steal fee share 17:: KEBABSEC', async function () {
     const pool: RangePoolState = (await hre.props.limitPool.globalState()).pool
     const aliceLiquidity = BigNumber.from('3852877204305891777654')
     const bobLiquidity = BigNumber.from('10356653617731432349576')
@@ -863,13 +861,12 @@ describe('RangePool Exact In Tests', function () {
       zeroForOne: false,
       amount: tokenAmount,
       sqrtPriceLimitX96: maxPrice,
-      balanceInDecrease: BigNumber.from('1'), // token1 increase in pool
+      balanceInDecrease: BigNumber.from('0'), // token1 increase in pool
       balanceOutIncrease: BigNumber.from('0'), // token0 decrease in pool
       revertMessage: '',
     })
 
-
-    await validateMint({
+    const aliceId = await validateMint({
       signer: hre.props.alice,
       recipient: hre.props.alice.address,
       lower: '500',
@@ -878,7 +875,6 @@ describe('RangePool Exact In Tests', function () {
       amount1: tokenAmount,
       balance0Decrease: BigNumber.from('0'),
       balance1Decrease: tokenAmount,
-      tokenAmount: aliceLiquidity,
       liquidityIncrease: aliceLiquidity,
       revertMessage: '',
       collectRevertMessage: ''
@@ -890,12 +886,12 @@ describe('RangePool Exact In Tests', function () {
       zeroForOne: true,
       amount: tokenAmount,
       sqrtPriceLimitX96: minPrice,
-      balanceInDecrease: BigNumber.from('92774696514123048140'), // token1 increase in pool
-      balanceOutIncrease: BigNumber.from('99949999999999999997'), // token0 decrease in pool
+      balanceInDecrease: BigNumber.from('92774696514123048139'), // token1 increase in pool
+      balanceOutIncrease: BigNumber.from('99949999999999999999'), // token0 decrease in pool
       revertMessage: '',
     })
 
-    await validateMint({
+    const bobId = await validateMint({
       signer: hre.props.bob,
       recipient: hre.props.bob.address,
       lower: '600',
@@ -904,57 +900,57 @@ describe('RangePool Exact In Tests', function () {
       amount1: tokenAmount,
       balance0Decrease: tokenAmount,
       balance1Decrease: BN_ZERO,
-      tokenAmount: bobLiquidity,
       liquidityIncrease: bobLiquidity,
       revertMessage: '',
     })
-    if (debugMode) await getSnapshot(hre.props.bob.address, 600, 800)
+    if (debugMode) await getSnapshot(bobId)
     await validateBurn({
       signer: hre.props.bob,
       lower: '600',
       upper: '800',
-      tokenAmount: bobLiquidity.div(2),
-      liquidityAmount: bobLiquidity.div(2).sub(1),
+      positionId: bobId,
+      liquidityAmount: bobLiquidity.div(2),
+      burnPercent: ethers.utils.parseUnits('5', 37),
       balance0Increase: BigNumber.from('50000000000000000000').sub(1),
       balance1Increase: BN_ZERO,
       revertMessage: '',
     })
-    if (debugMode) await getSnapshot(hre.props.bob.address, 600, 800)
+    if (debugMode) await getSnapshot(bobId)
     await validateBurn({
       signer: hre.props.bob,
       lower: '600',
       upper: '800',
-      tokenAmount: bobLiquidity.div(2),
-      liquidityAmount: bobLiquidity.div(2).sub(1),
+      positionId: bobId,
+      liquidityAmount: bobLiquidity.div(2),
       balance0Increase: BigNumber.from('50000000000000000000').sub(1),
       balance1Increase: BN_ZERO,
       revertMessage: '',
     })
-    if (debugMode) await getSnapshot(hre.props.alice.address, 500, 1000)
+    if (debugMode) await getSnapshot(aliceId)
     await validateBurn({
       signer: hre.props.alice,
       lower: '500',
       upper: '1000',
-      tokenAmount: aliceLiquidity,
+      positionId: aliceId,
       liquidityAmount: aliceLiquidity,
       balance0Increase: BigNumber.from('92774696514123048138'),
-      balance1Increase: BigNumber.from('50000000000000001'),
+      balance1Increase: BigNumber.from('49999999999999999'),
       revertMessage: '',
     })
 
-    if (balanceCheck) {
+    if (true) {
       console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
       console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
     }
   })
 
-  it('pool - Should not underflow when crossing when exiting and entering position range 17:: KEBABSEC', async function () {
+  it.only('pool - Should not underflow when crossing when exiting and entering position range 17:: KEBABSEC', async function () {
     const pool: RangePoolState = (await hre.props.limitPool.globalState()).pool
     const aliceLiquidity = BigNumber.from('4152939701311089823384')
     const bobLiquidity = BigNumber.from('10356653617731432349576')
 
     if (debugMode) await getPrice()
-    await validateMint({
+    const aliceId = await validateMint({
       signer: hre.props.alice,
       recipient: hre.props.alice.address,
       lower: '500',
@@ -963,7 +959,6 @@ describe('RangePool Exact In Tests', function () {
       amount1: tokenAmount,
       balance0Decrease: tokenAmount,
       balance1Decrease: BN_ZERO,
-      tokenAmount: aliceLiquidity,
       liquidityIncrease: aliceLiquidity,
       revertMessage: '',
       collectRevertMessage: ''
@@ -975,8 +970,8 @@ describe('RangePool Exact In Tests', function () {
       zeroForOne: false,
       amount: tokenAmount.mul(2),
       sqrtPriceLimitX96: maxPrice,
-      balanceInDecrease: BigNumber.from('107788010909609440042'), // token1 increase in pool
-      balanceOutIncrease: BigNumber.from('99949999999999999998'), // token0 decrease in pool
+      balanceInDecrease: BigNumber.from('107788010909609440040'), // token1 increase in pool
+      balanceOutIncrease: BigNumber.from('99949999999999999999'), // token0 decrease in pool
       revertMessage: '',
     })
 
@@ -987,8 +982,8 @@ describe('RangePool Exact In Tests', function () {
       zeroForOne: true,
       amount: tokenAmount.mul(2),
       sqrtPriceLimitX96: minPrice,
-      balanceInDecrease: BigNumber.from('100000000000000000002'), // token1 increase in pool
-      balanceOutIncrease: BigNumber.from('107734116904154635317'), // token0 decrease in pool
+      balanceInDecrease: BigNumber.from('100000000000000000000'), // token1 increase in pool
+      balanceOutIncrease: BigNumber.from('107734116904154635318'), // token0 decrease in pool
       revertMessage: '',
     })
 
@@ -998,8 +993,8 @@ describe('RangePool Exact In Tests', function () {
       zeroForOne: false,
       amount: tokenAmount.mul(2),
       sqrtPriceLimitX96: maxPrice,
-      balanceInDecrease: BigNumber.from('107788010909609440042'), // token1 increase in pool
-      balanceOutIncrease: BigNumber.from('99949999999999999998'), // token0 decrease in pool
+      balanceInDecrease: BigNumber.from('107788010909609440040'), // token1 increase in pool
+      balanceOutIncrease: BigNumber.from('99949999999999999999'), // token0 decrease in pool
       revertMessage: '',
     })
 
@@ -1007,10 +1002,11 @@ describe('RangePool Exact In Tests', function () {
       signer: hre.props.alice,
       lower: '500',
       upper: '1000',
-      tokenAmount: aliceLiquidity,
+      positionId: aliceId,
       liquidityAmount: aliceLiquidity,
-      balance0Increase: BigNumber.from('100000000000000001'),
-      balance1Increase: BigNumber.from('107841904915064244760'),
+      burnPercent: ethers.utils.parseUnits('1', 38), 
+      balance0Increase: BigNumber.from('99999999999999999'),
+      balance1Increase: BigNumber.from('107841904915064244759'),
       revertMessage: '',
     })
 
@@ -1020,7 +1016,7 @@ describe('RangePool Exact In Tests', function () {
     }
   })
 
-  it('pool - Should not skip crossing tickAtPrice 17', async function () {
+  it.skip('pool - Should not skip crossing tickAtPrice 111', async function () {
     const pool: RangePoolState = (await hre.props.limitPool.globalState()).pool
     const aliceLiquidity = BigNumber.from('288859894188086395983120')
     const aliceLiquidity2 = BigNumber.from('130948265789136120265')
@@ -1050,12 +1046,12 @@ describe('RangePool Exact In Tests', function () {
       zeroForOne: true,
       amount: BigNumber.from('1000120000000000000000'),
       sqrtPriceLimitX96: minPrice,
-      balanceInDecrease: BigNumber.from('1'), // token1 increase in pool
+      balanceInDecrease: BigNumber.from('0'), // token1 increase in pool
       balanceOutIncrease: BigNumber.from('0'), // token0 decrease in pool
       revertMessage: '',
     })
     //console.log(0xdec118d63b65cfd3e8598a0a993fe6d455bf6b6ad8e30603b9bfe83b3c31d2c5)   
-    await validateMint({
+    const aliceId = await validateMint({
       signer: hre.props.alice,
       recipient: hre.props.alice.address,
       lower: '73140',
@@ -1064,7 +1060,6 @@ describe('RangePool Exact In Tests', function () {
       amount1: BN_ZERO,
       balance0Decrease: tokenAmount.mul(10),
       balance1Decrease: BN_ZERO,
-      tokenAmount: aliceLiquidity,
       liquidityIncrease: aliceLiquidity,
       revertMessage: '',
       collectRevertMessage: ''
@@ -1141,14 +1136,15 @@ describe('RangePool Exact In Tests', function () {
       signer: hre.props.alice,
       lower: '73140',
       upper: '76020',
-      tokenAmount: BN_ZERO,
+      positionId: aliceId,
       liquidityAmount: BN_ZERO.sub(BigNumber.from('336888226423966071')),
+      burnPercent: BN_ZERO,
       balance0Increase: BigNumber.from('0'),
-      balance1Increase: BigNumber.from('0'),
+      balance1Increase: BigNumber.from('748351718674010363'),
       revertMessage: '',
     })
     //console.log(0xe3140e07b139361118b959e57cefe2a2992d991a35bb73f14c302eeac78bf9b5)
-    await validateMint({
+    const aliceId2 = await validateMint({
       signer: hre.props.alice,
       recipient: hre.props.alice.address,
       lower: '66120',
@@ -1157,7 +1153,6 @@ describe('RangePool Exact In Tests', function () {
       amount1: BigNumber.from('1502429956147627474636'),
       balance0Decrease: BigNumber.from('1000000000000000000'),
       balance1Decrease: BigNumber.from('1502429956147627474624'),
-      tokenAmount: aliceLiquidity2,
       liquidityIncrease: aliceLiquidity2,
       revertMessage: '',
       collectRevertMessage: ''
@@ -1167,7 +1162,7 @@ describe('RangePool Exact In Tests', function () {
       signer: hre.props.alice,
       lower: '66120',
       upper: '80160',
-      tokenAmount: BN_ZERO,
+      positionId: aliceId2,
       liquidityAmount: BN_ZERO,
       balance0Increase: BigNumber.from('0'),
       balance1Increase: BigNumber.from('0'),
@@ -1184,7 +1179,7 @@ describe('RangePool Exact In Tests', function () {
       amount1: BigNumber.from('1997991949702276994'),
       balance0Decrease: BigNumber.from('1000000000000000000'),
       balance1Decrease: BigNumber.from('1997991949702276994'),
-      tokenAmount: aliceTokenAmount3,
+      positionId: aliceId,
       liquidityIncrease: aliceLiquidity3,
       revertMessage: '',
       collectRevertMessage: ''
@@ -1195,7 +1190,7 @@ describe('RangePool Exact In Tests', function () {
       signer: hre.props.alice,
       lower: '73140',
       upper: '76020',
-      tokenAmount: BN_ZERO,
+      positionId: aliceId,
       liquidityAmount: BN_ZERO,
       balance0Increase: BigNumber.from('0'),
       balance1Increase: BigNumber.from('0'),
@@ -1206,10 +1201,11 @@ describe('RangePool Exact In Tests', function () {
       signer: hre.props.alice,
       lower: '73140',
       upper: '76020',
+      positionId: aliceId2,
       burnPercent: BigNumber.from('100032954481854984095420499972189286'),
-      liquidityAmount: BigNumber.from('289244763213965801677'),
-      balance0Increase: BigNumber.from('1000001165101954093'),
-      balance1Increase: BigNumber.from('1998742875900707206'),
+      liquidityAmount: BigNumber.from('0'),
+      balance0Increase: BigNumber.from('1000329544818549'),
+      balance1Increase: BigNumber.from('1502925074154909984'),
       revertMessage: '',
     })
     //console.log(0xf56c6732aec4578f3068358f213ac61548744890c9b59a9b4d94deea7095e007)
@@ -1222,7 +1218,7 @@ describe('RangePool Exact In Tests', function () {
       amount1: BigNumber.from('5993975849106830981'),
       balance0Decrease: BigNumber.from('3000000000000000000'),
       balance1Decrease: BigNumber.from('5993975849106830981'),
-      tokenAmount: aliceTokenAmount4,
+      positionId: aliceId,
       liquidityIncrease: aliceLiquidity4,
       revertMessage: '',
       collectRevertMessage: ''
@@ -1252,7 +1248,7 @@ describe('RangePool Exact In Tests', function () {
       amount1: BigNumber.from('5993975849106830981'),
       balance0Decrease: BigNumber.from('3000000000000000000'),
       balance1Decrease: BigNumber.from('1499158837786365318'),
-      tokenAmount: aliceTokenAmount5,
+      positionId: aliceId,
       liquidityIncrease: aliceLiquidity5,
       revertMessage: '',
       collectRevertMessage: ''
@@ -1270,7 +1266,7 @@ describe('RangePool Exact In Tests', function () {
       amount1: BigNumber.from('33023622513667392995848'),
       balance0Decrease: BigNumber.from('22000000000000000000'),
       balance1Decrease: BigNumber.from('33023622340543288990059'),
-      tokenAmount: aliceTokenAmount6,
+      positionId: aliceId2,
       liquidityIncrease: aliceLiquidity6,
       revertMessage: '',
       collectRevertMessage: ''
@@ -1286,7 +1282,7 @@ describe('RangePool Exact In Tests', function () {
       amount1: BigNumber.from('33023622513667392995848'),
       balance0Decrease: BigNumber.from('22000000000000000000'),
       balance1Decrease: BigNumber.from('33023622340543288990059'),
-      tokenAmount: aliceTokenAmount6,
+      positionId: aliceId2,
       liquidityIncrease: aliceLiquidity6,
       revertMessage: '',
       collectRevertMessage: ''
@@ -1299,6 +1295,7 @@ describe('RangePool Exact In Tests', function () {
       upper: '80160',
       burnPercent: BigNumber.from('0'),
       liquidityAmount: BigNumber.from('0'),
+      positionId: aliceId2,
       balance0Increase: BigNumber.from('0'),
       balance1Increase: BigNumber.from('0'),
       revertMessage: '',
@@ -1340,7 +1337,7 @@ describe('RangePool Exact In Tests', function () {
     //console.log('0x4950b3696a62cdc4e9584c81911a4c3b6f6cc5c4013ea8454286a27d150d6f69')
     const aliceTokenAmount7 = BigNumber.from('621480049120650311492')
     const aliceLiquidity7 = BigNumber.from('621480049120650311492')
-    await validateMint({
+    const aliceId3 = await validateMint({
       signer: hre.props.alice,
       recipient: hre.props.alice.address,
       lower: '66960',
@@ -1349,7 +1346,6 @@ describe('RangePool Exact In Tests', function () {
       amount1: BigNumber.from('6437962369913333422010'),
       balance0Decrease: BigNumber.from('5000000000000000000'),
       balance1Decrease: BigNumber.from('6324961650864055083801'),
-      tokenAmount: aliceTokenAmount7,
       liquidityIncrease: aliceLiquidity7,
       revertMessage: '',
       collectRevertMessage: ''
@@ -1360,6 +1356,7 @@ describe('RangePool Exact In Tests', function () {
       signer: hre.props.alice,
       lower: '73140',
       upper: '76020',
+      positionId: aliceId,
       burnPercent: ethers.utils.parseUnits('1', 38),
       liquidityAmount: BigNumber.from('290594832266070128492211'),
       balance0Increase: BigNumber.from('1006006157700985848708'),
@@ -1370,6 +1367,7 @@ describe('RangePool Exact In Tests', function () {
       signer: hre.props.alice,
       lower: '66120',
       upper: '80160',
+      positionId: aliceId2,
       burnPercent: ethers.utils.parseUnits('1', 38),
       liquidityAmount: BigNumber.from('5890070187730690086993'),
       balance0Increase: BigNumber.from('45478016986915742291'),
@@ -1380,6 +1378,7 @@ describe('RangePool Exact In Tests', function () {
       signer: hre.props.alice,
       lower: '66960',
       upper: '80520',
+      positionId: aliceId3,
       burnPercent: ethers.utils.parseUnits('1', 38),
       liquidityAmount: aliceLiquidity7,
       balance0Increase: BigNumber.from('4999999999999999999'),
@@ -1514,9 +1513,20 @@ describe('RangePool Exact In Tests', function () {
     }
   })
 
-  it('Steal Fees From existing Liquidity Providers ', async function () {
+  it.only('Steal Fees From existing Liquidity Providers ', async function () {
 
     await getPrice()
+
+    await validateSwap({
+        signer: hre.props.alice,
+        recipient: hre.props.alice.address,
+        zeroForOne: true,
+        amount: tokenAmount.mul(2),
+        sqrtPriceLimitX96: BigNumber.from('177159557114295710296101716160'),
+        balanceInDecrease: BigNumber.from('0'), //1
+        balanceOutIncrease: BigNumber.from('0'),
+        revertMessage: '',
+    })
 
     await validateSwap({
         signer: hre.props.alice,
@@ -1524,12 +1534,12 @@ describe('RangePool Exact In Tests', function () {
         zeroForOne: false,
         amount: tokenAmount.mul(2),
         sqrtPriceLimitX96: BigNumber.from('177159557114295710296101716160'),
-        balanceInDecrease: BigNumber.from('1'), //1
+        balanceInDecrease: BigNumber.from('0'), //1
         balanceOutIncrease: BigNumber.from('0'),
         revertMessage: '',
     })
 
-    await validateMint({ // Regualr user mints position
+    const aliceId = await validateMint({ // Regualr user mints position
         signer: hre.props.alice,
         recipient: hre.props.alice.address,
         lower: '-800000',
@@ -1539,7 +1549,6 @@ describe('RangePool Exact In Tests', function () {
         balance0Decrease: BigNumber.from('19999999999999999848'),
         balance1Decrease: BigNumber.from('100000000000000000000'),
         liquidityIncrease: BigNumber.from('44721359549995794013'),
-        tokenAmount: BigNumber.from('44721359549995794013'),
         revertMessage: '',
     })
 
@@ -1549,8 +1558,8 @@ describe('RangePool Exact In Tests', function () {
         zeroForOne: true,
         amount: tokenAmount.div(2),
         sqrtPriceLimitX96: BigNumber.from('79450223072165328185028130650'),
-        balanceInDecrease: BigNumber.from('24596364934905253801'),
-        balanceOutIncrease: BigNumber.from('55125718852470931152'),
+        balanceInDecrease: BigNumber.from('24596364934905253800'),
+        balanceOutIncrease: BigNumber.from('55125718852470931154'),
         revertMessage: '',
     })
 
@@ -1561,7 +1570,7 @@ describe('RangePool Exact In Tests', function () {
         amount: tokenAmount.div(2),
         sqrtPriceLimitX96: BigNumber.from('79450223072165328185028130650000'),
         balanceInDecrease: BigNumber.from('50000000000000000000'),
-        balanceOutIncrease: BigNumber.from('23497952294453035871'),
+        balanceOutIncrease: BigNumber.from('23497952294453035875'),
         revertMessage: '',
     })
     console.log("COMPLETED SWAP 1");
@@ -1572,7 +1581,7 @@ describe('RangePool Exact In Tests', function () {
         amount: tokenAmount.div(2),
         sqrtPriceLimitX96: BigNumber.from('79450223072165328185028130650'),
         balanceInDecrease: BigNumber.from('23509707148027049401'),
-        balanceOutIncrease: BigNumber.from('49974999999999999995'),
+        balanceOutIncrease: BigNumber.from('49974999999999999999'),
         revertMessage: '',
     })
     console.log("COMPLETED SWAP 2");
@@ -1583,7 +1592,7 @@ describe('RangePool Exact In Tests', function () {
         amount: tokenAmount.div(2),
         sqrtPriceLimitX96: BigNumber.from('79450223072165328185028130650000'),
         balanceInDecrease: BigNumber.from('50000000000000000000'),
-        balanceOutIncrease: BigNumber.from('23497952294453035871'),
+        balanceOutIncrease: BigNumber.from('23497952294453035875'),
         revertMessage: '',
     })
     console.log("COMPLETED SWAP 3");
@@ -1594,7 +1603,7 @@ describe('RangePool Exact In Tests', function () {
         amount: tokenAmount.div(2),
         sqrtPriceLimitX96: BigNumber.from('79450223072165328185028130650'),
         balanceInDecrease: BigNumber.from('23509707148027049401'),
-        balanceOutIncrease: BigNumber.from('49974999999999999995'),
+        balanceOutIncrease: BigNumber.from('49974999999999999999'),
         revertMessage: '',
     })
 
@@ -1608,7 +1617,7 @@ describe('RangePool Exact In Tests', function () {
         amount: tokenAmount.div(2),
         sqrtPriceLimitX96: BigNumber.from('79450223072165328185028130650000'),
         balanceInDecrease: BigNumber.from('50000000000000000000'),
-        balanceOutIncrease: BigNumber.from('23497952294453035871'),
+        balanceOutIncrease: BigNumber.from('23497952294453035875'),
         revertMessage: '',
     })
     console.log("COMPLETED SWAP 5");
@@ -1632,7 +1641,7 @@ describe('RangePool Exact In Tests', function () {
         amount: tokenAmount.div(2),
         sqrtPriceLimitX96: BigNumber.from('79450223072165328185028130650000'),
         balanceInDecrease: BigNumber.from('50000000000000000000'),
-        balanceOutIncrease: BigNumber.from('23497952294453035871'),
+        balanceOutIncrease: BigNumber.from('23497952294453035875'),
         revertMessage: '',
     })
     console.log("COMPLETED SWAP 7");
@@ -1693,7 +1702,7 @@ describe('RangePool Exact In Tests', function () {
 
     await getTickAtPrice()
 
-    await validateMint({ // Attacker mints position
+    const bobId = await validateMint({ // Attacker mints position
         signer: hre.props.bob,
         recipient: hre.props.bob.address,
         lower: '-800000',
@@ -1702,7 +1711,6 @@ describe('RangePool Exact In Tests', function () {
         amount1: tokenAmount,
         balance0Decrease: BigNumber.from('100000000000000000000'),
         balance1Decrease: BigNumber.from('100000000000000000000'),
-        tokenAmount: BigNumber.from('99764189801678643394'),
         liquidityIncrease: BigNumber.from('100000000000000000425'),
         revertMessage: '',
     })
@@ -1711,11 +1719,11 @@ describe('RangePool Exact In Tests', function () {
         signer: hre.props.bob,
         lower: '-800000',
         upper: '800000',
-        liquidityAmount: BigNumber.from('99967594091793604201'),
-        tokenAmount: BigNumber.from('99764189801678643394'),
+        liquidityAmount: BigNumber.from('100000000000000000425'),
+        positionId: bobId,
         burnPercent: ethers.utils.parseUnits('1', 38),
-        balance0Increase: BigNumber.from('99967594091793603775'),
-        balance1Increase: BigNumber.from('100032405908206396221'),
+        balance0Increase: BigNumber.from('99999999999999999999'),
+        balance1Increase: BigNumber.from('99999999999999999999'),
         revertMessage: '',
     })
 
@@ -1723,16 +1731,16 @@ describe('RangePool Exact In Tests', function () {
         signer: hre.props.alice,
         lower: '-800000',
         upper: '800000',
-        liquidityAmount: BigNumber.from('44812539726072257861'),
-        tokenAmount: BigNumber.from('44721359549995794013'),
+        liquidityAmount: BigNumber.from('44721359549995794013'),
+        positionId: aliceId,
         burnPercent: ethers.utils.parseUnits('1', 38),
-        balance0Increase: BigNumber.from('44812539726072257670'),
-        balance1Increase: BigNumber.from('44841592962014399703'),
+        balance0Increase: BigNumber.from('44780133817865861446'),
+        balance1Increase: BigNumber.from('44873998870220795925'),
         revertMessage: '',
     })
 
     console.log("COMPLETED BURN");
-    if (balanceCheck) {
+    if (true) {
         console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
         console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
     }

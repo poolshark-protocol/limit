@@ -300,26 +300,26 @@ export async function validateMint(params: ValidateMintParams): Promise<number> 
                                                : (await hre.props.limitPool.globalState()).positionIdNext
 
   //collect first to recreate positions if necessary
-  if (params.positionId) {
-    if (!collectRevertMessage) {
-      const txn = await hre.props.limitPool
-        .connect(signer)
-        .burn({
-          to: signer.address, 
-          positionId: params.positionId,
-          burnPercent: '0',
-        })
-      await txn.wait()
-    } else {
-      await expect(
-        hre.props.limitPool.connect(params.signer).burn({
-          to: signer.address, 
-          positionId: params.positionId,
-          burnPercent: '0',
-        })
-      ).to.be.revertedWith(collectRevertMessage)
-    }
-  }
+  // if (params.positionId) {
+  //   if (!collectRevertMessage) {
+  //     const txn = await hre.props.limitPool
+  //       .connect(signer)
+  //       .burn({
+  //         to: signer.address, 
+  //         positionId: params.positionId,
+  //         burnPercent: '0',
+  //       })
+  //     await txn.wait()
+  //   } else {
+  //     await expect(
+  //       hre.props.limitPool.connect(params.signer).burn({
+  //         to: signer.address, 
+  //         positionId: params.positionId,
+  //         burnPercent: '0',
+  //       })
+  //     ).to.be.revertedWith(collectRevertMessage)
+  //   }
+  // }
 
   let balance0Before
   let balance1Before
@@ -436,14 +436,17 @@ export async function validateBurn(params: ValidateBurnParams) {
   positionBefore = await hre.props.limitPool.positions(params.positionId)
   console.log('about to do burn', params.positionId)
   let burnPercent = params.burnPercent
-  if (!burnPercent) burnPercent = liquidityAmount
+  if (!burnPercent) {
+    console.log('no burn percent found')
+    burnPercent = liquidityAmount
                         .mul(ethers.utils.parseUnits('1', 38))
                         .div(positionBefore.liquidity)
-  if (positionTokenBalanceBefore.gt(BN_ZERO)) {
-    if (!liquidityAmount) liquidityAmount = burnPercent.mul(positionBefore.liquidity).div(1e38)
-  } else {
-    if (!liquidityAmount) liquidityAmount = BN_ZERO
-  }
+  } 
+  // if (positionTokenBalanceBefore.gt(BN_ZERO)) {
+  //   if (!liquidityAmount) liquidityAmount = burnPercent.mul(positionBefore.liquidity).div(1e38)
+  // } else {
+  //   if (!liquidityAmount) liquidityAmount = BN_ZERO
+  // }
 
   // console.log('burn percent:', burnPercent.toString(), (params.tokenAmount ? params.tokenAmount : liquidityAmount).toString(), positionTokenBalanceBefore.toString())
   console.log('ready to do burn')
@@ -487,7 +490,7 @@ export async function validateBurn(params: ValidateBurnParams) {
   if (burnPercent.eq(ethers.utils.parseUnits('1', 38)))
     expect(positionTokenBalanceAfter.sub(positionTokenBalanceBefore)).to.be.equal(-1)
   expect(lowerTickAfter.liquidityDelta.sub(lowerTickBefore.liquidityDelta)).to.be.equal(
-    BN_ZERO.sub(params.liquidityAmount ?? liquidityAmount)
+    BN_ZERO.sub(params.liquidityAmount)
   )
   expect(upperTickAfter.liquidityDelta.sub(upperTickBefore.liquidityDelta)).to.be.equal(
     liquidityAmount

@@ -156,7 +156,7 @@ library RangePositions {
         cache.liquidityBurned = uint256(params.burnPercent) * cache.position.liquidity / 1e38;
         if (cache.liquidityBurned  == 0) {
             return cache;
-        } 
+        }
         if (cache.liquidityBurned > cache.position.liquidity) require(false, 'NotEnoughPositionLiquidity()');
         {
             uint128 amount0Removed; uint128 amount1Removed;
@@ -265,10 +265,10 @@ library RangePositions {
         /// @dev - only true if burn call
         if (params.burnPercent > 0) {
             cache.liquidityAmount = uint256(params.burnPercent) * position.liquidity / 1e38;
-            if (params.burnPercent == 1e38)
+            if (position.liquidity == cache.liquidityAmount)
                 IRangePoolERC1155(constants.poolToken).burn(msg.sender, params.positionId, 1, constants);
         }
-        
+
         (uint256 rangeFeeGrowth0, uint256 rangeFeeGrowth1) = rangeFeeGrowth(
             ticks[position.lower].range,
             ticks[position.upper].range,
@@ -298,6 +298,8 @@ library RangePositions {
 
         position.amount0 += amount0Fees;
         position.amount1 += amount1Fees;
+
+        console.log('amount fees', position.amount0, position.amount1);
 
         return position;
     }

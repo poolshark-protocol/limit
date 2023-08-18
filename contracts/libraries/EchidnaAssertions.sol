@@ -9,11 +9,9 @@ library EchidnaAssertions {
     event LiquidityGlobalUnderflow(uint128 liquidityGlobal, uint128 amount, string location);
     event LiquidityUnderflow(uint128 liquidity, uint128 amount, string location);
     event LiquidityOverflow(uint128 liquidity, uint128 amount, string location);
-    // event TickOverflow(int24 tick, int24 addition, string location);
     event LiquidityUnlock(int128 liquidity);
     event PoolBalanceExceeded(uint256 poolBalance, uint256 outputAmount);
     event LiquidityDelta(int128 liquidityDelta);
-    event WrongTickClaimedAt4(bool zeroForOne, int24 claimTickNext, int24 upper, int24 lower);
     event TickAtPriceDivisibleByTickSpacing(int24 tick, uint160 priceAt, int16 tickSpacing);
 
     function assertLiquidityGlobalUnderflows(uint128 liquidityGlobal, uint128 amount, string memory location) internal {
@@ -36,11 +34,6 @@ library EchidnaAssertions {
         assert(liquidityAbs >= amount);
     }
 
-    // function assertTickOverflow(int24 tick, int24 addition, string memory location) internal {
-    //     emit TickOverflow(tick, addition, location);
-    //     assert(ConstantProduct.maxTick(tickSpacing));
-    // }
-
     function assertPositiveLiquidityOnUnlock(int128 liquidity) internal {
         emit LiquidityUnlock(liquidity);
         assert(liquidity >= 0);
@@ -49,11 +42,6 @@ library EchidnaAssertions {
     function assertPoolBalanceExceeded(uint256 poolBalance, uint256 outputAmount) internal {
         emit PoolBalanceExceeded(poolBalance, outputAmount);
         assert(poolBalance >= outputAmount);
-    }
-
-    function assertWrongTickClaimedAt4(bool zeroForOne, int24 claimTickNext, int24 upper, int24 lower) internal {
-        emit WrongTickClaimedAt4(zeroForOne, claimTickNext, upper, lower);
-        assert(false);
     }
 
     function assertTickAtPriceDivisibleByTickSpacing(int24 tick, uint160 priceAt, int16 tickSpacing) internal {

@@ -271,11 +271,8 @@ library PositionsLimit {
                     require (false, 'WrongTickClaimedAt7()');            
                 }
                 if (cache.pool.price == cache.priceLower) {
-                  if(params.amount > 0){
                     EchidnaAssertions.assertLiquidityUnderflows(cache.pool.liquidity, params.amount, "PLU-1");
                     cache.pool.liquidity -= params.amount;
-                    assert(false);
-                  }
                 }
             }
             // if pool price is further along
@@ -290,11 +287,8 @@ library PositionsLimit {
                     require (false, 'WrongTickClaimedAt8()');            
                 }
                 if (cache.pool.price == cache.priceUpper) {
-                  if(params.amount > 0){
                     EchidnaAssertions.assertLiquidityUnderflows(cache.pool.liquidity, params.amount, "PLU-2");
                     cache.pool.liquidity -= params.amount;
-                    assert(false);
-                  }
                 }
             }
         }

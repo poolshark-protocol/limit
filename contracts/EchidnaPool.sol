@@ -98,6 +98,7 @@ contract EchidnaPool {
         require(upper % tickSpacing == 0);
         _;
     }
+
     constructor() {
         manager = new LimitPoolManager();
         factory = new LimitPoolFactory(address(manager));
@@ -181,7 +182,6 @@ contract EchidnaPool {
         poolValues.price1 = poolStructs.pool1.price;
         
         // POST CONDITIONS
-
         emit Prices(poolValues.price0, poolValues.price1);
         assert(poolValues.price0 >= poolValues.price1);
         // Ensure prices have not crossed
@@ -192,9 +192,6 @@ contract EchidnaPool {
         assert(int256(values.liquidityDeltaLowerAfter) <= int256(uint256(poolValues.liquidityAbsoluteLowerAfter)));
         emit LiquidityDeltaAndAbsolute(values.liquidityDeltaUpperAfter, poolValues.liquidityAbsoluteUpperAfter);
         assert(int256(values.liquidityDeltaUpperAfter) <= int256(uint256(poolValues.liquidityAbsoluteUpperAfter)));
-
-
-        // TODO: Create an invariant that combines liquidity delta and liquidity absolute
         
         // Ensure that liquidityAbsolute is incremented when not undercutting
         if(zeroForOne){
@@ -303,6 +300,8 @@ contract EchidnaPool {
         
         poolValues.price0 = poolStructs.pool0.price;
         poolValues.price1 = poolStructs.pool1.price;
+
+        // POST CONDITIONS
         emit Prices(poolValues.price0, poolValues.price1);
         assert(poolValues.price0 >= poolValues.price1);
         emit Prices(poolValues.price0After, poolValues.price1After);
@@ -311,8 +310,6 @@ contract EchidnaPool {
         assert(int256(values.liquidityDeltaLowerAfter) <= int256(uint256(poolValues.liquidityAbsoluteLowerAfter)));
         emit LiquidityDeltaAndAbsolute(values.liquidityDeltaUpperAfter, poolValues.liquidityAbsoluteUpperAfter);
         assert(int256(values.liquidityDeltaUpperAfter) <= int256(uint256(poolValues.liquidityAbsoluteUpperAfter)));
-
-        // POST CONDITIONS
 
         if(zeroForOne){
             if(poolValues.price0After >= poolValues.price0Before){
@@ -361,7 +358,6 @@ contract EchidnaPool {
         // PRE CONDITIONS
         mintAndApprove();
 
-        // ACTION
         ILimitPoolStructs.SwapParams memory params;
         params.to = msg.sender;
         params.priceLimit = priceLimit;
@@ -369,7 +365,8 @@ contract EchidnaPool {
         params.exactIn = exactIn;
         params.zeroForOne = zeroForOne;
         params.callbackData = abi.encodePacked(address(this));
-
+        
+        // ACTION
         pool.swap(params);
 
         // POST CONDITIONS
@@ -423,8 +420,6 @@ contract EchidnaPool {
             assert((lower % tickSpacing == 0) && (upper % tickSpacing == 0));
         }
 
-        // POST CONDITIONS
-
         (, lowerTick) = pool.ticks(lower);
         (, upperTick) = pool.ticks(upper);
 
@@ -434,6 +429,8 @@ contract EchidnaPool {
         (,pool0, pool1, poolValues.liquidityGlobalAfter,,) = pool.globalState();
         uint160 price0 = pool0.price;
         uint160 price1 = pool1.price;
+        
+        // POST CONDITIONS
         emit Prices(price0, price1);
         assert(price0 >= price1);
         emit LiquidityGlobal(liquidityGlobalBefore, poolValues.liquidityGlobalAfter);
@@ -518,6 +515,8 @@ contract EchidnaPool {
         (,pool0, pool1, poolValues.liquidityGlobalAfter,,) = pool.globalState();
         uint160 price0After = pool0.price;
         uint160 price1After = pool1.price;
+
+        // POST CONDITIONS
         emit Prices(price0After, price1After);
         assert(price0After >= price1After);
         emit LiquidityGlobal(liquidityGlobalBefore, poolValues.liquidityGlobalAfter);
@@ -545,7 +544,6 @@ contract EchidnaPool {
         burn(zeroForOne ? lower : upper, positions.length - 1, 1e38);
         emit PassedBurn();
 
-        // POST CONDITIONS
         (, lowerTick) = pool.ticks(lower);
         (, upperTick) = pool.ticks(upper);
 
@@ -558,6 +556,8 @@ contract EchidnaPool {
         (,pool0, pool1, poolValues.liquidityGlobalAfter,,) = pool.globalState();
         uint160 price0After = pool0.price;
         uint160 price1After = pool1.price;
+        
+        // POST CONDITIONS
         emit Prices(price0After, price1After);
         assert(price0After >= price1After);
         emit LiquidityGlobal(liquidityGlobalBefore, poolValues.liquidityGlobalAfter);
@@ -588,8 +588,6 @@ contract EchidnaPool {
         burn(zeroForOne ? lower : upper, positions.length - 1, 1e38);
         emit PassedBurn();
 
-        // POST CONDITIONS
-
         (, lowerTick) = pool.ticks(lower);
         (, upperTick) = pool.ticks(upper);
 
@@ -601,6 +599,8 @@ contract EchidnaPool {
         (,pool0, pool1, poolValues.liquidityGlobalAfter,,) = pool.globalState();
         uint160 price0After = pool0.price;
         uint160 price1After = pool1.price;
+
+        // POST CONDITIONS
         emit Prices(price0After, price1After);
         assert(price0After >= price1After);
         emit LiquidityGlobal(liquidityGlobalBefore, poolValues.liquidityGlobalAfter);
@@ -623,7 +623,6 @@ contract EchidnaPool {
         poolValues.liquidityAbsoluteLowerBefore = lowerTick.liquidityAbsolute;
         poolValues.liquidityAbsoluteUpperBefore = upperTick.liquidityAbsolute;
 
-
         // ACTION 
         mintVariable(amount, zeroForOne, lower, upper, mintPercent);
         emit PassedMint();
@@ -632,7 +631,6 @@ contract EchidnaPool {
         burn(zeroForOne ? lower : upper, positions.length - 1, 1e38);
         emit PassedBurn();
 
-        // POST CONDITIONS
         (, lowerTick) = pool.ticks(lower);
         (, upperTick) = pool.ticks(upper);
 
@@ -642,6 +640,8 @@ contract EchidnaPool {
         poolValues.liquidityAbsoluteUpperAfter = upperTick.liquidityAbsolute;
 
         (,pool0, pool1, poolValues.liquidityGlobalAfter,,) = pool.globalState();
+        
+        // POST CONDITIONS
         uint160 price0After = pool0.price;
         uint160 price1After = pool1.price;
         emit Prices(price0After, price1After);

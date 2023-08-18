@@ -176,7 +176,6 @@ library PositionsLimit {
                 cache.liquidityMinted = 0;
             cache.state.epoch += 1;
         }
-        // console.log('position bounds end', uint24(-params.lower), uint24(params.upper), uint24(cache.state.pool.tickAtPrice));
 
         if (params.lower >= params.upper) {
             params.amount = 0;

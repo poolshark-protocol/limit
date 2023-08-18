@@ -47,14 +47,14 @@ interface IRangePoolERC1155 is IERC165, PoolsharkStructs {
 
     function setApprovalForAll(address sender, bool approved) external;
 
-    function mintFungible(
+    function mint(
         address account,
         uint256 id,
         uint256 amount,
         PoolsharkStructs.Immutables memory constants
     ) external;
 
-    function burnFungible(
+    function burn(
         address account,
         uint256 id,
         uint256 amount,

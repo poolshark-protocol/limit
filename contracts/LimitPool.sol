@@ -26,7 +26,6 @@ contract LimitPool is
     IRangePool,
     LimitPoolStorage,
     LimitPoolImmutables,
-    LimitPoolFactoryStructs,
     ReentrancyGuard
 {
 
@@ -79,13 +78,23 @@ contract LimitPool is
         nonReentrant(globalState)
         canoncialOnly
     {
-        MintCache memory cache;
-        cache.state = globalState;
-        cache.position = positions[params.lower][params.upper];
-        cache.constants = immutables();
-        cache = MintRangeCall.perform(params, cache, rangeTickMap, ticks, samples);
-        globalState = cache.state;
-        positions[params.lower][params.upper] = cache.position;
+        MintCache memory cache = IRangePoolStructs.MintCache({
+            state: globalState,
+            position: positions[params.positionId],
+            constants: immutables(),
+            liquidityMinted: 0,
+            priceLower: 0,
+            priceUpper: 0
+        });
+        cache = MintRangeCall.perform(
+            positions,
+            ticks,
+            rangeTickMap,
+            samples,
+            globalState,
+            cache,
+            params
+        );
     }
 
     function burn(
@@ -94,17 +103,23 @@ contract LimitPool is
         nonReentrant(globalState)
         canoncialOnly
     {
-        BurnCache memory cache = BurnCache({
+        BurnCache memory cache = IRangePoolStructs.BurnCache({
             state: globalState,
-            position: positions[params.lower][params.upper],
+            position: positions[params.positionId],
             constants: immutables(),
-            amount0: 0,
-            amount1: 0,
-            tokenBurned: 0
+            liquidityBurned: 0,
+            priceLower: 0,
+            priceUpper: 0
         });
-        cache = BurnRangeCall.perform(params, cache, rangeTickMap, ticks, samples);
-        globalState = cache.state;
-        positions[params.lower][params.upper] = cache.position;
+        BurnRangeCall.perform(
+            positions,
+            ticks,
+            rangeTickMap,
+            samples,
+            globalState,
+            cache,
+            params
+        );
     }
 
     //limitSwap
@@ -205,6 +220,7 @@ contract LimitPool is
         nonReentrant(globalState)
         canoncialOnly 
     {
+        //0.3kb
         globalState.pool = Samples.expand(
             samples,
             globalState.pool,
@@ -224,7 +240,7 @@ contract LimitPool is
         uint128 token0Fees,
         uint128 token1Fees
     ) {
-
+        //0.8kb
         if (setFees) {
             if (protocolFee0 > 10000 || protocolFee1 > 10000)
                 revert ProtocolFeeCeilingExceeded();

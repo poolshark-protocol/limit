@@ -54,11 +54,11 @@ library MintRangeCall {
         } else {
             // create a new position
             params.positionId = cache.state.positionIdNext;
+            // increment for next position
+            cache.state.positionIdNext += 1;
             // set tick bounds on position
             cache.position.lower = params.lower;
             cache.position.upper = params.upper;
-            // increment for next position
-            cache.state.positionIdNext += 1;
         }
         console.log('position amounts', cache.position.amount0, cache.position.amount1);
         (params, cache) = RangePositions.validate(params, cache);
@@ -89,7 +89,7 @@ library MintRangeCall {
             cache,
             params
         );
-        Collect.range(
+        cache.position = Collect.range(
            cache.position,
            cache.constants,
            params.to 

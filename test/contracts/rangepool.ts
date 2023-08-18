@@ -287,7 +287,7 @@ describe('RangePool Exact In Tests', function () {
         balanceInDecrease: BigNumber.from('0'),
         balanceOutIncrease: BigNumber.from('0'),
         revertMessage: '',
-      })
+    })
     await validateMint({
       signer: hre.props.alice,
       recipient: hre.props.alice.address,

@@ -22,11 +22,7 @@ interface IPool is PoolsharkStructs {
     );
 
     function fees(
-        uint16 protocolSwapFee0,
-        uint16 protocolSwapFee1,
-        uint16 protocolFillFee0,
-        uint16 protocolFillFee1,
-        uint8 setFeesFlag
+        FeesParams memory params
     ) external returns (
         uint128 token0Fees,
         uint128 token1Fees

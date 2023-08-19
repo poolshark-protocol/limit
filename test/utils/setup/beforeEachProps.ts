@@ -13,6 +13,7 @@ import {
     MintLimitCall,
     RangePoolERC1155,
     Ticks,
+    FeesCall,
 } from '../../../typechain'
 import { InitialSetup } from './initialSetup'
 import { MintRangeCall } from '../../../typechain'
@@ -33,6 +34,7 @@ export interface BeforeEachProps {
     tickMapLib: TickMap
     swapCall: SwapCall
     quoteCall: QuoteCall
+    feesCall: FeesCall
     //range
     burnRangeCall: BurnRangeCall
     mintRangeCall: MintRangeCall
@@ -88,6 +90,7 @@ export class GetBeforeEach {
         let ticksLib: Ticks
         let swapCall: SwapCall
         let quoteCall: QuoteCall
+        let feesCall: FeesCall
         //range
         let burnCall: BurnRangeCall
         let mintCall: MintRangeCall
@@ -121,6 +124,7 @@ export class GetBeforeEach {
             ticksLib,
             swapCall,
             quoteCall,
+            feesCall,
             //range
             burnRangeCall: burnCall,
             mintRangeCall: mintCall,

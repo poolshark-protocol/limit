@@ -42,33 +42,22 @@ export interface RangePoolState {
     liquidity: BigNumber
     tickSecondsAccum: BigNumber
     tickAtPrice: number
-}
-
-export interface SampleState {
-    index: number
-    length: number
-    lengthNext: number
+    protocolSwapFee0: number
+    protocolSwapFee1: number
 }
 
 export interface LimitPoolState {
     price: BigNumber
     liquidity: BigNumber
     protocolFees: BigNumber
-    protocolFee: number
+    protocolFillFee: number
     tickAtPrice: number
 }
 
-export interface ProtocolFees {
-    token0: BigNumber
-    token1: BigNumber
-}
-
-export interface PoolState {
-    price: BigNumber
-    liquidity: BigNumber
-    liquidityGlobal: BigNumber
-    swapEpoch: number
-    tickAtPrice: number
+export interface SampleState {
+    index: number
+    length: number
+    lengthNext: number
 }
 
 export interface Tick {

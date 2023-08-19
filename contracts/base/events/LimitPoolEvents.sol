@@ -47,4 +47,18 @@ abstract contract LimitPoolEvents {
         uint128 liquidity,
         int24 tickAtPrice
     );
+
+    event ProtocolSwapFeesModified(
+        address[] modifyPools,
+        uint16[] protocolFillFee0,
+        uint16[] protocolFillFee1,
+        uint8[]  protocolFeesFlags
+    );
+
+    event ProtocolFillFeesModified(
+        address[] modifyPools,
+        uint16[] protocolFillFee0,
+        uint16[] protocolFillFee1,
+        uint8[]  protocolFeesFlags
+    );
 }

@@ -17,6 +17,16 @@ library FeesCall {
     uint8 internal constant PROTOCOL_FILL_FEE_0 = 2**2;
     uint8 internal constant PROTOCOL_FILL_FEE_1 = 2**3;
 
+    event ProtocolSwapFeesModified(
+        uint16 protocolFillFee0,
+        uint16 protocolFillFee1
+    );
+
+    event ProtocolFillFeesModified(
+        uint16 protocolFillFee0,
+        uint16 protocolFillFee1
+    );
+
     function perform(
         PoolsharkStructs.GlobalState storage globalState,
         PoolsharkStructs.FeesParams memory params,
@@ -60,6 +70,22 @@ library FeesCall {
             SafeTransfers.transferOut(feeTo, constants.token0, token0Fees);
         if (token1Fees > 0)
             SafeTransfers.transferOut(feeTo, constants.token1, token1Fees);
+
+        // emit events
+        if ((params.setFeesFlag & PROTOCOL_SWAP_FEE_0) > 0 ||
+                (params.setFeesFlag & PROTOCOL_SWAP_FEE_1) > 0) {
+            emit ProtocolSwapFeesModified(
+                params.protocolSwapFee0,
+                params.protocolSwapFee1
+            );
+        }
+        if ((params.setFeesFlag & PROTOCOL_FILL_FEE_0) > 0 ||
+                (params.setFeesFlag & PROTOCOL_FILL_FEE_1) > 0) {
+            emit ProtocolFillFeesModified(
+                params.protocolFillFee0,
+                params.protocolFillFee1
+            );
+        }
 
         return (token0Fees, token1Fees);
     }

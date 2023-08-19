@@ -7,7 +7,6 @@ import { mintSigners20 } from '../utils/token'
 import {
     BN_ZERO,
     LimitPoolState,
-    PoolState,
     getLiquidity,
     getPositionLiquidity,
     getPrice,

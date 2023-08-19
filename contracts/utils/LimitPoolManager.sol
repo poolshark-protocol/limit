@@ -128,8 +128,13 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
         if (collectPools.length == 0) require (false, 'EmptyPoolsArray()');
         uint128[] memory token0FeesCollected = new uint128[](collectPools.length);
         uint128[] memory token1FeesCollected = new uint128[](collectPools.length);
+        // pass empty fees params
+        FeesParams memory feesParams;
         for (uint i; i < collectPools.length;) {
-            (token0FeesCollected[i], token1FeesCollected[i]) = IPool(collectPools[i]).fees(0,0,0,0,0);
+            (
+                token0FeesCollected[i],
+                token1FeesCollected[i]
+            ) = IPool(collectPools[i]).fees(feesParams);
             unchecked {
                 ++i;
             }
@@ -144,53 +149,25 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
 
     function modifyProtocolFees(
         address[] calldata modifyPools,
-        uint16[] calldata protocolSwapFees0,
-        uint16[] calldata protocolSwapFees1,
-        uint16[] calldata protocolFillFees0,
-        uint16[] calldata protocolFillFees1,
-        uint8[] calldata protocolFeesFlags
+        FeesParams[] calldata feesParams
     ) external onlyOwner {
         if (modifyPools.length == 0) require (false, 'EmptyPoolsArray()');
-        if (modifyPools.length != protocolSwapFees0.length
-            || protocolSwapFees0.length != protocolSwapFees1.length
-            || protocolSwapFees1.length != protocolFillFees0.length
-            || protocolFillFees0.length != protocolFillFees1.length
-            || protocolFillFees1.length != protocolFeesFlags.length) {
+        if (modifyPools.length != feesParams.length) {
             require (false, 'MismatchedArrayLengths()');
         }
         uint128[] memory token0FeesCollected = new uint128[](modifyPools.length);
         uint128[] memory token1FeesCollected = new uint128[](modifyPools.length);
         for (uint i; i < modifyPools.length;) {
-            if (protocolSwapFees0[i] > MAX_PROTOCOL_SWAP_FEE) require (false, 'ProtocolSwapFeeCeilingExceeded()');
-            if (protocolSwapFees1[i] > MAX_PROTOCOL_SWAP_FEE) require (false, 'ProtocolSwapFeeCeilingExceeded()');
-            if (protocolFillFees0[i] > MAX_PROTOCOL_FILL_FEE) require (false, 'ProtocolFillFeeCeilingExceeded()');
-            if (protocolFillFees1[i] > MAX_PROTOCOL_FILL_FEE) require (false, 'ProtocolFillFeeCeilingExceeded()');
             (
                 token0FeesCollected[i],
                 token1FeesCollected[i]
             ) = IPool(modifyPools[i]).fees(
-                protocolSwapFees0[i],
-                protocolSwapFees1[i],
-                protocolFillFees0[i],
-                protocolFillFees1[i],
-                protocolFeesFlags[i]
+                feesParams[i]
             );
             unchecked {
                 ++i;
             }
         }
-        emit ProtocolSwapFeesModified(
-            modifyPools,
-            protocolSwapFees0,
-            protocolSwapFees1,
-            protocolFeesFlags
-        );
-        emit ProtocolFillFeesModified(
-            modifyPools,
-            protocolFillFees0,
-            protocolFillFees1,
-            protocolFeesFlags
-        );
         emit ProtocolFeesCollected(
             modifyPools,
             token0FeesCollected,

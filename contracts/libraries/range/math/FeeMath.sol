@@ -93,7 +93,12 @@ library FeeMath {
             // add to total fees paid for swap
             cache.feeAmount += locals.feeAmount.toUint128();
             // load protocol fee from cache
-            locals.protocolFee = zeroForOne == cache.exactIn ? cache.state.pool.protocolSwapFee0 : cache.state.pool.protocolSwapFee1;
+            // zeroForOne && exactIn   = fee on token1
+            // zeroForOne && !exactIn  = fee on token0
+            // !zeroForOne && !exactIn = fee on token1
+            // !zeroForOne && exactIn  = fee on token0
+            locals.protocolFee = (zeroForOne == cache.exactIn) ? cache.state.pool.protocolSwapFee1 
+                                                               : cache.state.pool.protocolSwapFee0;
             // calculate fee
             locals.protocolFeesAccrued = OverflowMath.mulDivRoundingUp(locals.feeAmount, locals.protocolFee, 1e4);
             // fees for this swap step

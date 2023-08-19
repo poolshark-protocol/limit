@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD
-pragma solidity ^0.8.4;
+pragma solidity 0.8.13;
 
 import { Clone } from "../../libraries/solady/Clone.sol";
 

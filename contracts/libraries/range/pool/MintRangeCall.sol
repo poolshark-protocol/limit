@@ -60,9 +60,7 @@ library MintRangeCall {
             cache.position.lower = params.lower;
             cache.position.upper = params.upper;
         }
-        console.log('position amounts', cache.position.amount0, cache.position.amount1);
         (params, cache) = RangePositions.validate(params, cache);
-        console.log('position amounts', cache.position.amount0, cache.position.amount1);
         if (params.amount0 > 0) SafeTransfers.transferIn(cache.constants.token0, params.amount0);
         if (params.amount1 > 0) SafeTransfers.transferIn(cache.constants.token1, params.amount1);
         // compound and transfer remaining back to user
@@ -80,7 +78,6 @@ library MintRangeCall {
                 )
             );
         }
-        console.log('position amounts', cache.position.amount0, cache.position.amount1);
         // update position with latest fees accrued
         cache = RangePositions.add(
             ticks,

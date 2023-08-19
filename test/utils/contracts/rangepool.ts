@@ -299,28 +299,6 @@ export async function validateMint(params: ValidateMintParams): Promise<number> 
   const expectedPositionId = params.positionId ? params.positionId
                                                : (await hre.props.limitPool.globalState()).positionIdNext
 
-  //collect first to recreate positions if necessary
-  // if (params.positionId) {
-  //   if (!collectRevertMessage) {
-  //     const txn = await hre.props.limitPool
-  //       .connect(signer)
-  //       .burn({
-  //         to: signer.address, 
-  //         positionId: params.positionId,
-  //         burnPercent: '0',
-  //       })
-  //     await txn.wait()
-  //   } else {
-  //     await expect(
-  //       hre.props.limitPool.connect(params.signer).burn({
-  //         to: signer.address, 
-  //         positionId: params.positionId,
-  //         burnPercent: '0',
-  //       })
-  //     ).to.be.revertedWith(collectRevertMessage)
-  //   }
-  // }
-
   let balance0Before
   let balance1Before
   balance0Before = await hre.props.token0.balanceOf(params.signer.address)
@@ -374,7 +352,6 @@ export async function validateMint(params: ValidateMintParams): Promise<number> 
     ).to.be.revertedWith(revertMessage)
     return
   }
-  console.log('mint finished')
   let balance0After
   let balance1After
   balance0After = await hre.props.token0.balanceOf(params.signer.address)
@@ -392,18 +369,15 @@ export async function validateMint(params: ValidateMintParams): Promise<number> 
 
   positionAfter = await hre.props.limitPool.positions(expectedPositionId)
   positionTokens = await hre.ethers.getContractAt('RangePoolERC1155', hre.props.limitPoolToken.address);
-  console.log('getting position balance')
   positionTokenBalanceAfter = await positionTokens.balanceOf(signer.address, expectedPositionId);
   if (!params.positionId)
     expect(positionTokenBalanceAfter.sub(positionTokenBalanceBefore)).to.be.equal(BigNumber.from(1))
-    console.log('get position balance')
   expect(lowerTickAfter.liquidityDelta.sub(lowerTickBefore.liquidityDelta)).to.be.equal(
     liquidityIncrease
   )
   expect(upperTickAfter.liquidityDelta.sub(upperTickBefore.liquidityDelta)).to.be.equal(
     BN_ZERO.sub(liquidityIncrease)
   )
-  console.log('get position after')
   expect(positionAfter.liquidity.sub(positionBefore.liquidity)).to.be.equal(liquidityIncrease)
   return expectedPositionId
 }
@@ -434,22 +408,13 @@ export async function validateBurn(params: ValidateBurnParams) {
   positionToken = await hre.ethers.getContractAt('RangePoolERC1155', hre.props.limitPoolToken.address);
   positionTokenBalanceBefore = await positionToken.balanceOf(signer.address, params.positionId);
   positionBefore = await hre.props.limitPool.positions(params.positionId)
-  console.log('about to do burn', params.positionId)
   let burnPercent = params.burnPercent
   if (!burnPercent) {
-    console.log('no burn percent found')
     burnPercent = liquidityAmount
                         .mul(ethers.utils.parseUnits('1', 38))
                         .div(positionBefore.liquidity)
   } 
-  // if (positionTokenBalanceBefore.gt(BN_ZERO)) {
-  //   if (!liquidityAmount) liquidityAmount = burnPercent.mul(positionBefore.liquidity).div(1e38)
-  // } else {
-  //   if (!liquidityAmount) liquidityAmount = BN_ZERO
-  // }
 
-  // console.log('burn percent:', burnPercent.toString(), (params.tokenAmount ? params.tokenAmount : liquidityAmount).toString(), positionTokenBalanceBefore.toString())
-  console.log('ready to do burn')
   if (revertMessage == '') {
     const burnTxn = await hre.props.limitPool
       .connect(signer)
@@ -469,7 +434,7 @@ export async function validateBurn(params: ValidateBurnParams) {
     ).to.be.revertedWith(revertMessage)
     return
   }
-  console.log('after burn')
+
   let balance0After
   let balance1After
   balance0After = await hre.props.token0.balanceOf(signer.address)

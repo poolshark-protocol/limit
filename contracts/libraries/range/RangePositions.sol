@@ -9,7 +9,6 @@ import '../math/OverflowMath.sol';
 import '../utils/SafeCast.sol';
 import './RangeTicks.sol';
 import './Samples.sol';
-import 'hardhat/console.sol';
 
 /// @notice Position management library for ranged liquidity.
 library RangePositions {
@@ -298,8 +297,6 @@ library RangePositions {
 
         position.amount0 += amount0Fees;
         position.amount1 += amount1Fees;
-
-        console.log('amount fees', position.amount0, position.amount1);
 
         return position;
     }

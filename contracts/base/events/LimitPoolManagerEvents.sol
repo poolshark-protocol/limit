@@ -16,15 +16,15 @@ abstract contract LimitPoolManagerEvents {
     event OwnerTransfer(address indexed previousOwner, address indexed newOwner);
     event ProtocolFeesModified(
         address[] modifyPools,
-        uint16[] syncFees,
-        uint16[] fillFees,
-        bool[] setFees,
-        uint128[] token0Fees,
-        uint128[] token1Fees
+        uint16[] newProtocolFee0,
+        uint16[] newProtocolFee1,
+        bool[]  setProtocolFees,
+        uint128[] token0FeesCollected,
+        uint128[] token1FeesCollected
     );
     event ProtocolFeesCollected(
         address[] collectPools,
-        uint128[] token0Fees,
-        uint128[] token1Fees
+        uint128[] token0FeesCollected,
+        uint128[] token1FeesCollected
     );
 }

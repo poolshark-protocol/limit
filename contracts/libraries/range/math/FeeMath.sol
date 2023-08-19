@@ -90,14 +90,14 @@ library FeeMath {
                 locals.feeAmount = OverflowMath.mulDivRoundingUp(locals.amountRange, locals.swapFee, 1e6);
                 amountIn += locals.feeAmount;
             }
+            // add to total fees paid for swap
+            cache.feeAmount += locals.feeAmount.toUint128();
             // load protocol fee from cache
             locals.protocolFee = zeroForOne == cache.exactIn ? cache.state.pool0.protocolFee : cache.state.pool1.protocolFee;
             // calculate fee
             locals.protocolFeesAccrued = OverflowMath.mulDivRoundingUp(locals.feeAmount, locals.protocolFee, 1e6);
             // fees for this swap step
             locals.feeAmount -= locals.protocolFeesAccrued;
-            // add to total fees paid for swap
-            cache.feeAmount += locals.feeAmount.toUint128();
             // save fee growth and protocol fees
             if (zeroForOne == cache.exactIn) {
                 cache.state.pool0.protocolFees += uint128(locals.protocolFeesAccrued);

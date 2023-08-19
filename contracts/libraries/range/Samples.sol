@@ -2,11 +2,15 @@
 pragma solidity 0.8.13;
 
 import '../math/ConstantProduct.sol';
+import '../utils/SafeCast.sol';
 import '../../interfaces/IPool.sol';
 import '../../interfaces/range/IRangePool.sol';
 import '../../interfaces/range/IRangePoolStructs.sol';
 
 library Samples {
+    using SafeCast for uint256;
+
+    uint8 internal constant TIME_DELTA_MAX = 6;
 
     error InvalidSampleLength();
     error SampleArrayUninitialized();
@@ -40,9 +44,6 @@ library Samples {
         return state;
         /// @dev - TWAP length of 5 is safer for oracle manipulation
     }
-
-    //TODO: check tick accumulator on each sample save
-    // do math between samples and verify all is well
 
     function save(
         IRangePoolStructs.Sample[65535] storage samples,
@@ -143,25 +144,6 @@ library Samples {
         }
     }
 
-    function calculatePrice(
-        int56 tickSecondsAccum,
-        int56 tickSecondsAccumBase,
-        uint32 timeElapsed,
-        uint32 timeElapsedMax,
-        PoolsharkStructs.Immutables memory constants
-    ) internal pure returns (
-        uint160 averagePrice
-    ) {
-        int56 tickSecondsAccumDiff = tickSecondsAccum - tickSecondsAccumBase;
-        int24 averageTick;
-        if (timeElapsed == timeElapsedMax) {
-            averageTick = int24(tickSecondsAccumDiff / int32(timeElapsed));
-        } else {
-            averageTick = int24(tickSecondsAccum / int32(timeElapsed));
-        }
-        averagePrice = ConstantProduct.getPriceAtTick(averageTick, constants);
-    }
-
     function _poolSample(
         IPool pool,
         uint256 sampleIndex
@@ -250,6 +232,89 @@ library Samples {
                     )
             );
         }
+    }
+
+    function getLatestPrice(
+        PoolsharkStructs.GlobalState memory state,
+        PoolsharkStructs.Immutables memory constants,
+        uint256 liquidity
+    ) internal view returns (
+        uint160 latestPrice,
+        uint160 secondsPerLiquidityAccum,
+        int56 tickSecondsAccum
+    ) {
+        uint32 timeDelta = timeElapsed(constants);
+        (
+            tickSecondsAccum,
+            secondsPerLiquidityAccum
+        ) = getSingle(
+                IPool(address(this)), 
+                IRangePoolStructs.SampleParams(
+                    state.pool.samples.index,
+                    state.pool.samples.length,
+                    uint32(block.timestamp),
+                    new uint32[](2),
+                    state.pool.tickAtPrice,
+                    liquidity.toUint128(),
+                    constants
+                ),
+                0
+        );
+        // grab older sample for dynamic fee calculation
+        (
+            int56 tickSecondsAccumBase,
+        ) = Samples.getSingle(
+                IPool(address(this)), 
+                IRangePoolStructs.SampleParams(
+                    state.pool.samples.index,
+                    state.pool.samples.length,
+                    uint32(block.timestamp),
+                    new uint32[](2),
+                    state.pool.tickAtPrice,
+                    liquidity.toUint128(),
+                    constants
+                ),
+                timeDelta
+        );
+
+        latestPrice = calculateLatestPrice(
+            tickSecondsAccum,
+            tickSecondsAccumBase,
+            timeDelta,
+            TIME_DELTA_MAX,
+            constants
+        );
+    }
+
+    function calculateLatestPrice(
+        int56 tickSecondsAccum,
+        int56 tickSecondsAccumBase,
+        uint32 timeDelta,
+        uint32 timeDeltaMax,
+        PoolsharkStructs.Immutables memory constants
+    ) private pure returns (
+        uint160 averagePrice
+    ) {
+        int56 tickSecondsAccumDiff = tickSecondsAccum - tickSecondsAccumBase;
+        int24 averageTick;
+        if (timeDelta == timeDeltaMax) {
+            averageTick = int24(tickSecondsAccumDiff / int32(timeDelta));
+        } else {
+            averageTick = int24(tickSecondsAccum / int32(timeDelta));
+        }
+        averagePrice = ConstantProduct.getPriceAtTick(averageTick, constants);
+    }
+
+
+    function timeElapsed(
+        PoolsharkStructs.Immutables memory constants
+    ) private view returns (
+        uint32
+    )    
+    {
+        return  uint32(block.timestamp) - constants.genesisTime >= TIME_DELTA_MAX
+                    ? TIME_DELTA_MAX
+                    : uint32(block.timestamp - constants.genesisTime);
     }
 
     function _lte(

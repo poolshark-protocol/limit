@@ -131,7 +131,16 @@ library TickMap {
         unchecked {
             /// @dev - handles tickAtPrice being past tickSpacing / 2
             if (inclusive && tick % tickSpacing != 0) {
-                tick -= 1;
+                // e.g. tick is 5 we subtract 1 to look ahead at 5
+                if (tick > 0 && (tick % tickSpacing <= (tickSpacing / 2)))
+                    tick -= 1;
+                // e.g. tick is -5 we subtract 1 to look ahead at -5
+                else if (tick < 0 && (tick % tickSpacing <= -(tickSpacing / 2)))
+                    tick -= 1;
+                // e.g. tick = 7 and tickSpacing = 10 we sub 5 to look ahead at 5
+                // e.g. tick = -2 and tickSpacing = 10 we sub 5 to look ahead at -5
+                else
+                    tick -= tickSpacing / 2;
             }
             /// @dev - handles negative ticks rounding up
             if (tick % (tickSpacing / 2) != 0) {

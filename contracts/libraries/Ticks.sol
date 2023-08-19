@@ -16,11 +16,12 @@ library Ticks {
 
     using SafeCast for uint256;
 
-    // constants for crossing ticks / limit pools
-    uint8 internal constant FEE_TIME_DELTA_MAX = 8;
+    // cross flags
     uint8 internal constant RANGE_TICK = 2**0;
     uint8 internal constant LIMIT_TICK = 2**1;
     uint8 internal constant LIMIT_POOL = 2**2;
+
+    // for Q64.96 numbers
     uint256 internal constant Q96 = 0x1000000000000000000000000;
 
     event Initialize(
@@ -45,17 +46,19 @@ library Ticks {
         PoolsharkStructs.TickMap storage rangeTickMap,
         PoolsharkStructs.TickMap storage limitTickMap,
         IRangePoolStructs.Sample[65535] storage samples,
-        ILimitPoolStructs.GlobalState memory state,
+        PoolsharkStructs.GlobalState memory state,
         PoolsharkStructs.Immutables memory constants,
         uint160 startPrice
     ) external returns (
-        ILimitPoolStructs.GlobalState memory
-    ) {
+        PoolsharkStructs.GlobalState memory  
+    )
+    {
         // state should only be initialized once
         if (state.pool0.price > 0) require (false, 'PoolAlreadyInitialized()');
 
         // initialize state
         state.epoch = 1;
+        state.positionIdNext = 1;
 
         // check price bounds
         if (startPrice < constants.bounds.min || startPrice >= constants.bounds.max) require(false, 'StartPriceInvalid()');
@@ -137,48 +140,12 @@ library Ticks {
             cross: true,
             averagePrice: 0
         });
-        // grab latest sample
+        // grab latest price and sample
         (
-            cache.tickSecondsAccum,
-            cache.secondsPerLiquidityAccum
-        ) = Samples.getSingle(
-                IPool(address(this)), 
-                IRangePoolStructs.SampleParams(
-                    cache.state.pool.samples.index,
-                    cache.state.pool.samples.length,
-                    uint32(block.timestamp),
-                    new uint32[](2),
-                    cache.state.pool.tickAtPrice,
-                    cache.liquidity.toUint128(),
-                    cache.constants
-                ),
-                0
-        );
-        // grab older sample for dynamic fee calculation
-        (
-            cache.tickSecondsAccumBase,
-        ) = Samples.getSingle(
-                IPool(address(this)), 
-                IRangePoolStructs.SampleParams(
-                    cache.state.pool.samples.index,
-                    cache.state.pool.samples.length,
-                    uint32(block.timestamp),
-                    new uint32[](2),
-                    cache.state.pool.tickAtPrice,
-                    cache.liquidity.toUint128(),
-                    cache.constants
-                ),
-                timeElapsed(cache.constants)
-        );
-        (
-            cache.averagePrice
-        ) = Samples.calculatePrice(
-                cache.tickSecondsAccum,
-                cache.tickSecondsAccumBase,
-                timeElapsed(cache.constants),
-                FEE_TIME_DELTA_MAX,
-                cache.constants
-        );
+            cache.averagePrice,
+            cache.secondsPerLiquidityAccum,
+            cache.tickSecondsAccum
+         ) = Samples.getLatestPrice(cache.state, cache.constants, cache.liquidity);
         // increment swap epoch
         cache.state.epoch += 1;
         // grab latest sample and store in cache for _cross
@@ -274,48 +241,12 @@ library Ticks {
             cross: true,
             averagePrice: 0
         });
-        // grab latest sample
+        // grab latest price and sample
         (
-            cache.tickSecondsAccum,
-            cache.secondsPerLiquidityAccum
-        ) = Samples.getSingle(
-                IPool(address(this)), 
-                IRangePoolStructs.SampleParams(
-                    cache.state.pool.samples.index,
-                    cache.state.pool.samples.length,
-                    uint32(block.timestamp),
-                    new uint32[](2),
-                    cache.state.pool.tickAtPrice,
-                    cache.liquidity.toUint128(),
-                    cache.constants
-                ),
-                0
-        );
-        // grab older sample for dynamic fee calculation
-        (
-            cache.tickSecondsAccumBase,
-        ) = Samples.getSingle(
-                IPool(address(this)), 
-                IRangePoolStructs.SampleParams(
-                    cache.state.pool.samples.index,
-                    cache.state.pool.samples.length,
-                    uint32(block.timestamp),
-                    new uint32[](2),
-                    cache.state.pool.tickAtPrice,
-                    cache.liquidity.toUint128(),
-                    cache.constants
-                ),
-                timeElapsed(cache.constants)
-        );
-        (
-            cache.averagePrice
-        ) = Samples.calculatePrice(
-                cache.tickSecondsAccum,
-                cache.tickSecondsAccumBase,
-                timeElapsed(cache.constants),
-                FEE_TIME_DELTA_MAX,
-                cache.constants
-        );
+            cache.averagePrice,
+            cache.secondsPerLiquidityAccum,
+            cache.tickSecondsAccum
+         ) = Samples.getLatestPrice(cache.state, cache.constants, cache.liquidity);
         while (cache.cross) {
             cache = _quoteSingle(cache, params.priceLimit, params.zeroForOne);
             if (cache.cross) {
@@ -691,16 +622,5 @@ library Ticks {
             }
         }
         return cache;
-    }
-
-    function timeElapsed(
-        PoolsharkStructs.Immutables memory constants
-    ) private view returns (
-        uint32
-    )    
-    {
-        return  uint32(block.timestamp) - constants.genesisTime >= FEE_TIME_DELTA_MAX
-                    ? FEE_TIME_DELTA_MAX
-                    : uint32(block.timestamp - constants.genesisTime);
     }
 }

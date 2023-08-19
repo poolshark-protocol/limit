@@ -50,11 +50,13 @@ interface IPool is PoolsharkStructs {
         LimitTick memory
     );
 
-    function positions(int24, int24) external view returns (
+    function positions(uint32) external view returns (
         uint256 feeGrowthInside0Last,
         uint256 feeGrowthInside1Last,
-        uint128 liquidity,
         uint128 amount0,
-        uint128 amount1
+        uint128 amount1,
+        uint128 liquidity,
+        int24 lower,
+        int24 upper
     );
 }

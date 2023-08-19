@@ -8,6 +8,7 @@ interface PoolsharkStructs {
         LimitPoolState pool0;
         LimitPoolState pool1;
         uint128 liquidityGlobal;
+        uint32  positionIdNext;
         uint32 epoch;
         uint8 unlocked;
     }

@@ -190,7 +190,6 @@ library Claims {
             cache.position.amountIn -= protocolFeeAmount;
             cache.pool.protocolFees += protocolFeeAmount;
         }
-
         return cache;
     }
 }

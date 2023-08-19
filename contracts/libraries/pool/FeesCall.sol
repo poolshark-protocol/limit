@@ -53,7 +53,9 @@ library FeesCall {
         }
         address feeTo = ILimitPoolManager(constants.owner).feeTo();
 
+        // token0 fees stored on pool1 for swaps and fills
         token0Fees = globalState.pool1.protocolFees;
+        // token1 fees stored on pool0 for swaps and fills
         token1Fees = globalState.pool0.protocolFees;
         globalState.pool0.protocolFees = 0;
         globalState.pool1.protocolFees = 0;

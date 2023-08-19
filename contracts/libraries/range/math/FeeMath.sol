@@ -66,10 +66,10 @@ library FeeMath {
                 // adjust fee based on direction
                 if (zeroForOne == locals.feeDirection) {
                     // if swapping away from twap price, increase fee
-                    locals.swapFee = cache.constants.swapFee + delta * cache.constants.swapFee / 1e6;
+                    locals.swapFee = cache.constants.swapFee + OverflowMath.mulDiv(delta,cache.constants.swapFee, 1e6);
                 } else if (delta < 1e6) {
                     // if swapping towards twap price, decrease fee
-                    locals.swapFee = cache.constants.swapFee - delta * cache.constants.swapFee / 1e6;
+                    locals.swapFee = cache.constants.swapFee - OverflowMath.mulDiv(delta,cache.constants.swapFee, 1e6);
                 } else {
                     // if swapping towards twap price and delta > 100%, set fee to zero
                     locals.swapFee = 0;
@@ -100,7 +100,7 @@ library FeeMath {
             locals.protocolFee = (zeroForOne == cache.exactIn) ? cache.state.pool.protocolSwapFee1 
                                                                : cache.state.pool.protocolSwapFee0;
             // calculate fee
-            locals.protocolFeesAccrued = OverflowMath.mulDivRoundingUp(locals.feeAmount, locals.protocolFee, 1e4);
+            locals.protocolFeesAccrued = OverflowMath.mulDiv(locals.feeAmount, locals.protocolFee, 1e4);
             // fees for this swap step
             locals.feeAmount -= locals.protocolFeesAccrued;
             // save fee growth and protocol fees

@@ -17,7 +17,7 @@ interface PoolsharkStructs {
         uint160 price; /// @dev Starting price current
         uint128 liquidity; /// @dev Liquidity currently active
         uint128 protocolFees;
-        uint16 protocolFee;
+        uint16 protocolFillFee;
         int24 tickAtPrice;
     }
 
@@ -30,6 +30,8 @@ interface PoolsharkStructs {
         uint128 liquidity;           /// @dev Liquidity currently active
         int56   tickSecondsAccum;
         int24   tickAtPrice;
+        uint16 protocolSwapFee0;
+        uint16 protocolSwapFee1;
     }
 
     struct Tick {
@@ -79,6 +81,14 @@ interface PoolsharkStructs {
         bool exactIn;
         bool zeroForOne;
     }
+
+    struct FeesParams {
+        uint16 protocolSwapFee0;
+        uint16 protocolSwapFee1;
+        uint16 protocolFillFee0;
+        uint16 protocolFillFee1;
+        uint8 setFeesFlags;
+    }
     
     struct Immutables {
         address owner;
@@ -124,13 +134,7 @@ interface PoolsharkStructs {
         bool    limitActive;
         bool    exactIn;
         bool    cross;
-    }
-
-    // struct CrossState {
-    //     int24   tickAhead;
-    //     bool    limitPoolAhead;
-    //     bool    active;
-    // }    
+    }  
 
     enum CrossStatus {
         RANGE,

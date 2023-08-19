@@ -11,6 +11,7 @@ import './base/structs/LimitPoolFactoryStructs.sol';
 import './utils/LimitPoolErrors.sol';
 import './libraries/pool/SwapCall.sol';
 import './libraries/pool/QuoteCall.sol';
+import './libraries/pool/FeesCall.sol';
 import './libraries/range/pool/MintRangeCall.sol';
 import './libraries/range/pool/BurnRangeCall.sol';
 import './libraries/limit/pool/MintLimitCall.sol';
@@ -229,9 +230,7 @@ contract LimitPool is
     }
 
     function fees(
-        uint16 protocolFee0,
-        uint16 protocolFee1,
-        bool setFees
+        FeesParams memory params
     ) external override
         ownerOnly
         nonReentrant(globalState)
@@ -240,22 +239,11 @@ contract LimitPool is
         uint128 token0Fees,
         uint128 token1Fees
     ) {
-        //0.8kb
-        if (setFees) {
-            if (protocolFee0 > 10000 || protocolFee1 > 10000)
-                revert ProtocolFeeCeilingExceeded();
-            globalState.pool1.protocolFee = protocolFee0;
-            globalState.pool0.protocolFee = protocolFee1;
-        }
-        address feeTo = ILimitPoolManager(owner()).feeTo();
-        token0Fees = globalState.pool1.protocolFees;
-        token1Fees = globalState.pool0.protocolFees;
-        globalState.pool0.protocolFees = 0;
-        globalState.pool1.protocolFees = 0;
-        if (token0Fees > 0)
-            SafeTransfers.transferOut(feeTo, token0(), token0Fees);
-        if (token1Fees > 0)
-            SafeTransfers.transferOut(feeTo, token1(), token1Fees);
+        return FeesCall.perform(
+            globalState,
+            params,
+            immutables()
+        );
     }
 
     function immutables() public view returns (

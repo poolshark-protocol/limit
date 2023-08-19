@@ -2,7 +2,7 @@ import { SUPPORTED_NETWORKS } from '../../../scripts/constants/supportedNetworks
 import { DeployAssist } from '../../../scripts/util/deployAssist'
 import { ContractDeploymentsKeys } from '../../../scripts/util/files/contractDeploymentKeys'
 import { ContractDeploymentsJson } from '../../../scripts/util/files/contractDeploymentsJson'
-import { BurnLimitCall__factory, LimitPool__factory, MintLimitCall__factory, LimitPositions__factory, QuoteCall__factory, RangePoolERC1155__factory, LimitTicks__factory } from '../../../typechain'
+import { BurnLimitCall__factory, LimitPool__factory, MintLimitCall__factory, LimitPositions__factory, QuoteCall__factory, RangePoolERC1155__factory, LimitTicks__factory, FeesCall__factory } from '../../../typechain'
 import { BurnRangeCall__factory } from '../../../typechain'
 import { SwapCall__factory } from '../../../typechain'
 import { MintRangeCall__factory } from '../../../typechain'
@@ -218,6 +218,14 @@ export class InitialSetup {
             'quoteCall',
             []
         )
+        
+        await this.deployAssist.deployContractWithRetry(
+            network,
+            // @ts-ignore
+            FeesCall__factory,
+            'feesCall',
+            []
+        )
 
         await this.deployAssist.deployContractWithRetry(
             network,
@@ -235,7 +243,8 @@ export class InitialSetup {
                 'contracts/libraries/limit/pool/MintLimitCall.sol:MintLimitCall': hre.props.mintLimitCall.address,
                 'contracts/libraries/limit/pool/BurnLimitCall.sol:BurnLimitCall': hre.props.burnLimitCall.address,
                 'contracts/libraries/pool/SwapCall.sol:SwapCall': hre.props.swapCall.address,
-                'contracts/libraries/pool/QuoteCall.sol:QuoteCall': hre.props.quoteCall.address
+                'contracts/libraries/pool/QuoteCall.sol:QuoteCall': hre.props.quoteCall.address,
+                'contracts/libraries/pool/FeesCall.sol:FeesCall': hre.props.feesCall.address,
             }
         )
 

@@ -14,14 +14,17 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
     address public owner;
     address public feeTo;
     address public factory;
-    uint16  public constant MAX_PROTOCOL_FEE = 1e4; /// @dev - max protocol fee of 1%
-    // tickSpacing => enabled
+    uint16  public constant MAX_PROTOCOL_SWAP_FEE = 1e4; /// @dev - max protocol swap fee of 100%
+    uint16  public constant MAX_PROTOCOL_FILL_FEE = 1e2; /// @dev - max protocol fill fee of 1%
+    // impl name => impl address
     mapping(bytes32 => address) internal _poolImpls;
     mapping(bytes32 => address) internal _tokenImpls;
+    // swap fee => tick spacing
     mapping(uint16 => int16) internal _feeTiers;
 
     error InvalidSwapFee();
     error InvalidTickSpacing();
+    error InvalidImplAddress();
     error TickSpacingAlreadyEnabled();
     error ImplementationAlreadyExists();
 
@@ -103,6 +106,9 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
         address tokenImpl_
     ) external onlyOwner {
         if (_poolImpls[poolType_] != address(0)) revert ImplementationAlreadyExists();
+        if (poolImpl_ == address(0) || tokenImpl_ == address(0)) revert InvalidImplAddress();
+        /// @dev - prevent same addresses since factory does not support this
+        if (poolImpl_ == tokenImpl_) revert InvalidImplAddress();
         _poolImpls[poolType_] = poolImpl_;
         _tokenImpls[poolType_] = tokenImpl_;
         emit ImplementationEnabled(poolType_, poolImpl_, tokenImpl_);
@@ -117,50 +123,84 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
     }
 
     function collectProtocolFees(
-        address[] calldata collectPools
+        address[] calldata pools
     ) external {
-        if (collectPools.length == 0) require (false, 'EmptyPoolsArray()');
-        uint128[] memory token0Fees = new uint128[](collectPools.length);
-        uint128[] memory token1Fees = new uint128[](collectPools.length);
-        for (uint i; i < collectPools.length;) {
-            (token0Fees[i], token1Fees[i]) = IPool(collectPools[i]).fees(0,0,false);
+        if (pools.length == 0) require (false, 'EmptyPoolsArray()');
+        uint128[] memory token0FeesCollected = new uint128[](pools.length);
+        uint128[] memory token1FeesCollected = new uint128[](pools.length);
+        // pass empty fees params
+        FeesParams memory feesParams;
+        for (uint i; i < pools.length;) {
+            (
+                token0FeesCollected[i],
+                token1FeesCollected[i]
+            ) = IPool(pools[i]).fees(feesParams);
             unchecked {
                 ++i;
             }
         }
-        emit ProtocolFeesCollected(collectPools, token0Fees, token1Fees);
+        emit ProtocolFeesCollected(pools, token0FeesCollected, token1FeesCollected);
     }
 
+    // protocol fee flags
+    uint8 internal constant PROTOCOL_SWAP_FEE_0 = 2**0;
+    uint8 internal constant PROTOCOL_SWAP_FEE_1 = 2**1;
+    uint8 internal constant PROTOCOL_FILL_FEE_0 = 2**2;
+    uint8 internal constant PROTOCOL_FILL_FEE_1 = 2**3;
+
     function modifyProtocolFees(
-        address[] calldata modifyPools,
-        uint16[] calldata syncFees,
-        uint16[] calldata fillFees,
-        bool[] calldata setFees
+        address[] calldata pools,
+        FeesParams[] calldata feesParams
     ) external onlyOwner {
-        if (modifyPools.length == 0) require (false, 'EmptyPoolsArray()');
-        if (modifyPools.length != syncFees.length
-            || syncFees.length != fillFees.length
-            || fillFees.length != setFees.length) {
+        if (pools.length == 0) require (false, 'EmptyPoolsArray()');
+        if (pools.length != feesParams.length) {
             require (false, 'MismatchedArrayLengths()');
         }
-        uint128[] memory token0Fees = new uint128[](modifyPools.length);
-        uint128[] memory token1Fees = new uint128[](modifyPools.length);
-        for (uint i; i < modifyPools.length;) {
-            if (syncFees[i] > MAX_PROTOCOL_FEE) require (false, 'ProtocolFeeCeilingExceeded()');
-            if (fillFees[i] > MAX_PROTOCOL_FEE) require (false, 'ProtocolFeeCeilingExceeded()');
+        uint128[] memory token0FeesCollected = new uint128[](pools.length);
+        uint128[] memory token1FeesCollected = new uint128[](pools.length);
+        uint16[] memory protocolSwapFees0 = new uint16[](pools.length);
+        uint16[] memory protocolSwapFees1 = new uint16[](pools.length);
+        uint16[] memory protocolFillFees0 = new uint16[](pools.length);
+        uint16[] memory protocolFillFees1 = new uint16[](pools.length);
+        for (uint i; i < pools.length;) {
             (
-                token0Fees[i],
-                token1Fees[i]
-            ) = IPool(modifyPools[i]).fees(
-                syncFees[i],
-                fillFees[i],
-                setFees[i]
+                token0FeesCollected[i],
+                token1FeesCollected[i]
+            ) = IPool(pools[i]).fees(
+                feesParams[i]
             );
+            if ((feesParams[i].setFeesFlags & PROTOCOL_SWAP_FEE_0) > 0) {
+                protocolSwapFees0[i] = feesParams[i].protocolSwapFee0;
+            }
+            if ((feesParams[i].setFeesFlags & PROTOCOL_SWAP_FEE_1) > 0) {
+                protocolSwapFees1[i] = feesParams[i].protocolSwapFee1;
+            }
+            if ((feesParams[i].setFeesFlags & PROTOCOL_FILL_FEE_0) > 0) {
+                protocolFillFees0[i] = feesParams[i].protocolFillFee0;
+            }
+            if ((feesParams[i].setFeesFlags & PROTOCOL_FILL_FEE_1) > 0) {
+                protocolFillFees1[i] = feesParams[i].protocolFillFee1;
+            }
+            // else values will remain zero
             unchecked {
                 ++i;
             }
         }
-        emit ProtocolFeesModified(modifyPools, syncFees, fillFees, setFees, token0Fees, token1Fees);
+        emit ProtocolSwapFeesModified(
+            pools,
+            protocolSwapFees0,
+            protocolSwapFees1
+        );
+        emit ProtocolFillFeesModified(
+            pools,
+            protocolFillFees0,
+            protocolFillFees1
+        );
+        emit ProtocolFeesCollected(
+            pools,
+            token0FeesCollected,
+            token1FeesCollected
+        );
     }
 
     function implementations(

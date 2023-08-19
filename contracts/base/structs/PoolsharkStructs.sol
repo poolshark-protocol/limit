@@ -87,7 +87,7 @@ interface PoolsharkStructs {
         uint16 protocolSwapFee1;
         uint16 protocolFillFee0;
         uint16 protocolFillFee1;
-        uint8 setFeesFlag;
+        uint8 setFeesFlags;
     }
     
     struct Immutables {

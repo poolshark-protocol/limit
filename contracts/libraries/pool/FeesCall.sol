@@ -17,15 +17,7 @@ library FeesCall {
     uint8 internal constant PROTOCOL_FILL_FEE_0 = 2**2;
     uint8 internal constant PROTOCOL_FILL_FEE_1 = 2**3;
 
-    event ProtocolSwapFeesModified(
-        uint16 protocolFillFee0,
-        uint16 protocolFillFee1
-    );
-
-    event ProtocolFillFeesModified(
-        uint16 protocolFillFee0,
-        uint16 protocolFillFee1
-    );
+    /// @dev - LimitPoolManager (i.e. constants.owner) emits events in aggregate
 
     function perform(
         PoolsharkStructs.GlobalState storage globalState,
@@ -36,25 +28,25 @@ library FeesCall {
         uint128 token1Fees
     ) {
         // swap fee token0
-        if ((params.setFeesFlag & PROTOCOL_SWAP_FEE_0) > 0) {
+        if ((params.setFeesFlags & PROTOCOL_SWAP_FEE_0) > 0) {
             if (params.protocolSwapFee0 > MAX_PROTOCOL_SWAP_FEE)
                 require(false, 'ProtocolSwapFeeCeilingExceeded()');
             globalState.pool.protocolSwapFee0 = params.protocolSwapFee0;
         }
         // swap fee token1
-        if ((params.setFeesFlag & PROTOCOL_SWAP_FEE_1) > 0) {
+        if ((params.setFeesFlags & PROTOCOL_SWAP_FEE_1) > 0) {
             if (params.protocolSwapFee1 > MAX_PROTOCOL_SWAP_FEE)
                 require(false, 'ProtocolSwapFeeCeilingExceeded()');
             globalState.pool.protocolSwapFee1 = params.protocolSwapFee1;
         }
         // fill fee token0
-        if ((params.setFeesFlag & PROTOCOL_FILL_FEE_0) > 0) {
+        if ((params.setFeesFlags & PROTOCOL_FILL_FEE_0) > 0) {
             if (params.protocolFillFee0 > MAX_PROTOCOL_FILL_FEE)
                 require(false, 'ProtocolFillFeeCeilingExceeded()');
             globalState.pool1.protocolFillFee = params.protocolFillFee0;
         }
         // fill fee token1
-        if ((params.setFeesFlag & PROTOCOL_FILL_FEE_1) > 0) {
+        if ((params.setFeesFlags & PROTOCOL_FILL_FEE_1) > 0) {
             if (params.protocolFillFee1 > MAX_PROTOCOL_FILL_FEE)
                 require(false, 'ProtocolFillFeeCeilingExceeded()');
             globalState.pool0.protocolFillFee = params.protocolFillFee1;
@@ -70,22 +62,6 @@ library FeesCall {
             SafeTransfers.transferOut(feeTo, constants.token0, token0Fees);
         if (token1Fees > 0)
             SafeTransfers.transferOut(feeTo, constants.token1, token1Fees);
-
-        // emit events
-        if ((params.setFeesFlag & PROTOCOL_SWAP_FEE_0) > 0 ||
-                (params.setFeesFlag & PROTOCOL_SWAP_FEE_1) > 0) {
-            emit ProtocolSwapFeesModified(
-                params.protocolSwapFee0,
-                params.protocolSwapFee1
-            );
-        }
-        if ((params.setFeesFlag & PROTOCOL_FILL_FEE_0) > 0 ||
-                (params.setFeesFlag & PROTOCOL_FILL_FEE_1) > 0) {
-            emit ProtocolFillFeesModified(
-                params.protocolFillFee0,
-                params.protocolFillFee1
-            );
-        }
 
         return (token0Fees, token1Fees);
     }

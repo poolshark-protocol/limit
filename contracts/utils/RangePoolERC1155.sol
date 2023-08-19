@@ -6,7 +6,6 @@ import '../interfaces/IPool.sol';
 import "./RangePoolErrors.sol";
 import '../base/storage/RangePoolERC1155Immutables.sol';
 import "../interfaces/range/IRangePoolERC1155.sol";
-import "../libraries/range/RangeTokens.sol";
 import '../libraries/solady/LibClone.sol';
 
 // needs to be deployed as a separate clone
@@ -75,7 +74,7 @@ contract RangePoolERC1155 is
         _;
     }
 
-    function mintFungible(
+    function mint(
         address _account,
         uint256 _id,
         uint256 _amount,
@@ -84,7 +83,7 @@ contract RangePoolERC1155 is
         _mint(_account, _id, _amount);
     }
 
-    function burnFungible(
+    function burn(
         address _account,
         uint256 _id,
         uint256 _amount,

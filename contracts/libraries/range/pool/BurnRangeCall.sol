@@ -2,7 +2,8 @@
 pragma solidity ^0.8.13;
 
 import '../../../interfaces/range/IRangePoolStructs.sol';
-import '../../utils/SafeTransfers.sol';
+import '../../utils/Collect.sol';
+import '../RangeTokens.sol';
 import '../RangePositions.sol';
 
 library BurnRangeCall {
@@ -11,73 +12,73 @@ library BurnRangeCall {
         int24 lower,
         int24 upper,
         uint256 indexed tokenId,
-        uint128 tokenBurned,
         uint128 liquidityBurned,
         uint128 amount0,
         uint128 amount1
     );
 
     function perform(
-        IRangePoolStructs.BurnParams memory params,
-        IRangePoolStructs.BurnCache memory cache,
-        PoolsharkStructs.TickMap storage tickMap,
+        mapping(uint256 => IRangePoolStructs.RangePosition)
+            storage positions,
         mapping(int24 => PoolsharkStructs.Tick) storage ticks,
-        IRangePoolStructs.Sample[65535] storage samples
-    ) external returns (IRangePoolStructs.BurnCache memory) {
+        PoolsharkStructs.TickMap storage tickMap,
+        IRangePoolStructs.Sample[65535] storage samples,
+        PoolsharkStructs.GlobalState storage globalState,
+        IRangePoolStructs.BurnCache memory cache,
+        IRangePoolStructs.BurnParams memory params
+    ) external {
+        if (RangeTokens.balanceOf(cache.constants, msg.sender, params.positionId) == 0)
+            require(false, 'PositionNotFound()');
         if (params.burnPercent > 1e38) params.burnPercent = 1e38;
-        (
-            cache.position,
-            cache.amount0,
-            cache.amount1,
-            cache.tokenBurned
-        ) = RangePositions.update(
+        cache.position = RangePositions.update(
                 ticks,
                 cache.position,
                 cache.state,
                 cache.constants,
                 IRangePoolStructs.UpdateParams(
-                    params.lower,
-                    params.upper,
+                    cache.position.lower,
+                    cache.position.upper,
+                    params.positionId,
                     params.burnPercent
                 )
         );
-        (
-            cache.state,
-            cache.position,
-            cache.amount0,
-            cache.amount1
-        ) = RangePositions.remove(
-            cache.position,
+        cache = RangePositions.remove(
             ticks,
             samples,
             tickMap,
-            cache.state,
             params,
-            IRangePoolStructs.RemoveParams(
-                cache.amount0,
-                cache.amount1,
-                cache.tokenBurned,
-                cache.constants
-            )
+            cache
         );
-        cache.position.amount0 -= cache.amount0;
-        cache.position.amount1 -= cache.amount1;
-        if (cache.position.amount0 > 0 || cache.position.amount1 > 0) {
-            (cache.position, cache.state) = RangePositions.compound(
-                cache.position,
-                ticks,
-                samples,
-                tickMap,
-                cache.state,
-                IRangePoolStructs.CompoundParams(
-                    params.lower,
-                    params.upper
-                ),
-                cache.constants
-            );
-        }
-        if (cache.amount0 > 0) SafeTransfers.transferOut(params.to, cache.constants.token0, cache.amount0);
-        if (cache.amount1 > 0) SafeTransfers.transferOut(params.to, cache.constants.token1, cache.amount1);
-        return cache;
+        // only compound if burnPercent is zero
+        if (params.burnPercent == 0)
+            if (cache.position.amount0 > 0 || cache.position.amount1 > 0) {
+                (cache.position, cache.state) = RangePositions.compound(
+                    ticks,
+                    tickMap,
+                    samples,
+                    cache.state,
+                    cache.constants,
+                    cache.position,
+                    IRangePoolStructs.CompoundParams(
+                        cache.priceLower,
+                        cache.priceUpper
+                    )
+                );
+            }
+        cache.position = Collect.range(cache.position, cache.constants, params.to);
+        // save changes to storage
+        save(positions, globalState, cache, params.positionId);
+    }
+
+    function save(
+        mapping(uint256 => IRangePoolStructs.RangePosition)
+            storage positions,
+        PoolsharkStructs.GlobalState storage globalState,
+        IRangePoolStructs.BurnCache memory cache,
+        uint32 positionId
+    ) internal {
+        positions[positionId] = cache.position;
+        globalState.pool = cache.state.pool;
+        globalState.liquidityGlobal = cache.state.liquidityGlobal;
     }
 }

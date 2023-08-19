@@ -62,6 +62,7 @@ library Claims {
                     cache.priceClaim = cache.priceLower;
                     params.claim = params.lower;
                     cache.claimTick = ticks[params.upper].limit;
+
                 }
                 claimTickEpoch = cache.state.epoch;
             } else if (params.claim % constants.tickSpacing != 0) {

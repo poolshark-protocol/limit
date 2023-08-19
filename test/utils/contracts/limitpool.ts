@@ -28,6 +28,7 @@ export interface GlobalState {
     pool0: LimitPoolState
     pool1: LimitPoolState
     liquidityGlobal: BigNumber
+    positionIdNext: number
     epoch: number
     unlocked: number
 }

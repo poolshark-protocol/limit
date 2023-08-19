@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.13;
 
-abstract contract LimitPoolManagerEvents {
+import '../structs/PoolsharkStructs.sol';
+
+abstract contract LimitPoolManagerEvents is PoolsharkStructs {
     event FactoryChanged(address indexed previousFactory, address indexed newFactory);
     event ImplementationEnabled(
         bytes32 key,
@@ -14,13 +16,17 @@ abstract contract LimitPoolManagerEvents {
     );
     event FeeToTransfer(address indexed previousFeeTo, address indexed newFeeTo);
     event OwnerTransfer(address indexed previousOwner, address indexed newOwner);
-    event ProtocolFeesModified(
+    event ProtocolSwapFeesModified(
         address[] modifyPools,
-        uint16[] newProtocolFee0,
-        uint16[] newProtocolFee1,
-        bool[]  setProtocolFees,
-        uint128[] token0FeesCollected,
-        uint128[] token1FeesCollected
+        uint16[] protocolFillFee0,
+        uint16[] protocolFillFee1,
+        uint8[]  protocolFeesFlags
+    );
+    event ProtocolFillFeesModified(
+        address[] modifyPools,
+        uint16[] protocolFillFee0,
+        uint16[] protocolFillFee1,
+        uint8[]  protocolFeesFlags
     );
     event ProtocolFeesCollected(
         address[] collectPools,

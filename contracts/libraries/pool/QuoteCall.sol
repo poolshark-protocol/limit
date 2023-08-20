@@ -19,6 +19,7 @@ library QuoteCall {
         mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage rangeTickMap,
         PoolsharkStructs.TickMap storage limitTickMap,
+        PoolsharkStructs.GlobalState storage globalState,
         PoolsharkStructs.QuoteParams memory params,
         PoolsharkStructs.SwapCache memory cache
     ) external view returns (
@@ -26,6 +27,7 @@ library QuoteCall {
         uint256,
         uint160
     ) {
+        cache.state = globalState;
         return Ticks.quote(
             ticks,
             rangeTickMap,

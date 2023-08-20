@@ -79,15 +79,9 @@ contract LimitPool is
         nonReentrant(globalState)
         canoncialOnly
     {
-        MintCache memory cache = IRangePoolStructs.MintCache({
-            state: globalState,
-            position: positions[params.positionId],
-            constants: immutables(),
-            liquidityMinted: 0,
-            priceLower: 0,
-            priceUpper: 0
-        });
-        cache = MintRangeCall.perform(
+        MintCache memory cache;
+        cache.constants = immutables();
+        MintRangeCall.perform(
             positions,
             ticks,
             rangeTickMap,
@@ -104,14 +98,8 @@ contract LimitPool is
         nonReentrant(globalState)
         canoncialOnly
     {
-        BurnCache memory cache = IRangePoolStructs.BurnCache({
-            state: globalState,
-            position: positions[params.positionId],
-            constants: immutables(),
-            liquidityBurned: 0,
-            priceLower: 0,
-            priceUpper: 0
-        });
+        BurnCache memory cache;
+        cache.constants = immutables();
         BurnRangeCall.perform(
             positions,
             ticks,
@@ -131,11 +119,9 @@ contract LimitPool is
         canoncialOnly
     {
         MintLimitCache memory cache;
-        {
-            cache.state = globalState;
-            cache.constants = immutables();
-        }
-        cache = MintLimitCall.perform(
+        cache.constants = immutables();
+        cache.state = globalState;
+        MintLimitCall.perform(
             params.zeroForOne ? positions0 : positions1,
             ticks,
             samples,
@@ -145,7 +131,6 @@ contract LimitPool is
             params,
             cache
         );
-        globalState = cache.state;
     }
 
     function burnLimit(
@@ -154,21 +139,16 @@ contract LimitPool is
         nonReentrant(globalState)
         canoncialOnly
     {
-        if (params.to == address(0)) revert CollectToZeroAddress();
-        BurnLimitCache memory cache = BurnLimitCache({
-            state: globalState,
-            position: params.zeroForOne ? positions0[msg.sender][params.lower][params.upper]
-                                        : positions1[msg.sender][params.lower][params.upper],
-            constants: immutables()
-        });
-        cache = BurnLimitCall.perform(
-            params, 
-            cache, 
-            limitTickMap,
+        BurnLimitCache memory cache;
+        cache.constants = immutables();
+        BurnLimitCall.perform(
+            params.zeroForOne ? positions0 : positions1,
             ticks,
-            params.zeroForOne ? positions0 : positions1
+            limitTickMap,
+            globalState,
+            params, 
+            cache
         );
-        globalState = cache.state;
     }
 
     function swap(
@@ -182,15 +162,13 @@ contract LimitPool is
     ) 
     {
         SwapCache memory cache;
-        cache.state = globalState;
         cache.constants = immutables();
-
         return SwapCall.perform(
             ticks,
-            globalState,
             samples,
             rangeTickMap,
             limitTickMap,
+            globalState,
             params,
             cache
         );
@@ -204,12 +182,12 @@ contract LimitPool is
         uint160
     ) {
         SwapCache memory cache;
-        cache.state = globalState;
         cache.constants = immutables();
         return QuoteCall.perform(
             ticks,
             rangeTickMap,
             limitTickMap,
+            globalState,
             params,
             cache
         );
@@ -221,8 +199,7 @@ contract LimitPool is
         nonReentrant(globalState)
         canoncialOnly 
     {
-        //0.3kb
-        globalState.pool = Samples.expand(
+        Samples.expand(
             samples,
             globalState.pool,
             sampleLengthNext

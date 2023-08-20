@@ -184,8 +184,8 @@ library LimitTicks {
     function remove(
         mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
-        ILimitPoolStructs.UpdateCache memory cache,
-        ILimitPoolStructs.UpdateLimitParams memory params,
+        ILimitPoolStructs.BurnLimitParams memory params,
+        ILimitPoolStructs.BurnLimitCache memory cache,
         PoolsharkStructs.Immutables memory constants
     ) internal {
         // set ticks based on claim and zeroForOne
@@ -196,11 +196,11 @@ library LimitTicks {
             
             if (cache.removeLower) {
                 if (params.zeroForOne) {
-                    tickLower.liquidityDelta -= int128(params.amount);
+                    tickLower.liquidityDelta -= int128(cache.liquidityBurned);
                 } else {
-                    tickLower.liquidityDelta += int128(params.amount);
+                    tickLower.liquidityDelta += int128(cache.liquidityBurned);
                 }
-                tickLower.liquidityAbsolute -= params.amount;
+                tickLower.liquidityAbsolute -= cache.liquidityBurned;
                 ticks[lower].limit = tickLower;
                 clear(ticks, constants, tickMap, lower);
             }
@@ -209,11 +209,11 @@ library LimitTicks {
             PoolsharkStructs.LimitTick memory tickUpper = ticks[upper].limit;
             if (cache.removeUpper) {
                 if (params.zeroForOne) {
-                    tickUpper.liquidityDelta += int128(params.amount);
+                    tickUpper.liquidityDelta += int128(cache.liquidityBurned);
                 } else {
-                    tickUpper.liquidityDelta -= int128(params.amount);
+                    tickUpper.liquidityDelta -= int128(cache.liquidityBurned);
                 }
-                tickUpper.liquidityAbsolute -= params.amount;
+                tickUpper.liquidityAbsolute -= cache.liquidityBurned;
                 ticks[upper].limit = tickUpper;
                 clear(ticks, constants, tickMap, upper);
             }

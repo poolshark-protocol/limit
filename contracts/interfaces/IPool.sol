@@ -51,8 +51,6 @@ interface IPool is PoolsharkStructs {
     function positions(uint32) external view returns (
         uint256 feeGrowthInside0Last,
         uint256 feeGrowthInside1Last,
-        uint128 amount0,
-        uint128 amount1,
         uint128 liquidity,
         int24 lower,
         int24 upper

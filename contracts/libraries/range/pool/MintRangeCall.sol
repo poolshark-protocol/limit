@@ -8,6 +8,9 @@ import '../RangeTokens.sol';
 import '../RangePositions.sol';
 
 library MintRangeCall {
+    using SafeCast for int128;
+    using SafeCast for uint128;
+
     event Mint(
         address indexed recipient,
         int24 lower,
@@ -28,7 +31,11 @@ library MintRangeCall {
         PoolsharkStructs.GlobalState storage globalState,
         IRangePoolStructs.MintCache memory cache,
         IRangePoolStructs.MintParams memory params
-    ) external returns (IRangePoolStructs.MintCache memory) {
+    ) external {
+        // initialize cache
+        cache.state = globalState;
+        cache.position = positions[params.positionId];
+        
         // id of 0 can be passed to create new position
         if (params.positionId > 0) {
             // existing position
@@ -39,7 +46,11 @@ library MintRangeCall {
             params.lower = cache.position.lower;
             params.upper = cache.position.upper;
             // update existing position
-            cache.position = RangePositions.update(
+            (
+                cache.position,
+                cache.amount0,
+                cache.amount1
+            ) = RangePositions.update(
                     ticks,
                     cache.position,
                     cache.state,
@@ -60,12 +71,18 @@ library MintRangeCall {
             cache.position.lower = params.lower;
             cache.position.upper = params.upper;
         }
-        (params, cache) = RangePositions.validate(params, cache);
-        if (params.amount0 > 0) SafeTransfers.transferIn(cache.constants.token0, params.amount0);
-        if (params.amount1 > 0) SafeTransfers.transferIn(cache.constants.token1, params.amount1);
+        // set cache based on bounds
+        cache.priceLower = ConstantProduct.getPriceAtTick(cache.position.lower, cache.constants);
+        cache.priceUpper = ConstantProduct.getPriceAtTick(cache.position.upper, cache.constants);
+
         // compound and transfer remaining back to user
-        if (cache.position.amount0 > 0 || cache.position.amount1 > 0) {
-            (cache.position, cache.state) = RangePositions.compound(
+        if (cache.amount0 > 0 || cache.amount1 > 0) {
+            (
+                cache.position,
+                cache.state,
+                cache.amount0,
+                cache.amount1
+            ) = RangePositions.compound(
                 ticks,
                 tickMap,
                 samples,
@@ -74,10 +91,30 @@ library MintRangeCall {
                 cache.position,
                 IRangePoolStructs.CompoundParams( 
                     cache.priceLower,
-                    cache.priceUpper
+                    cache.priceUpper,
+                    cache.amount0.toUint128(),
+                    cache.amount1.toUint128()
                 )
             );
         }
+        // validate input amounts
+        (params, cache) = RangePositions.validate(params, cache);
+
+        // save changes to storage before transfer in
+        save(positions, globalState, cache, params.positionId);
+        cache.amount0 -= params.amount0.toInt128();
+        cache.amount1 -= params.amount1.toInt128();
+
+        // transfer in amounts
+        if (cache.amount0 < 0) {
+            SafeTransfers.transferIn(cache.constants.token0, (-cache.amount0).toUint128());
+            cache.amount0 = 0;
+        } 
+        if (cache.amount1 < 0) {
+            SafeTransfers.transferIn(cache.constants.token1, (-cache.amount1).toUint128());
+            cache.amount1 = 0;
+        }
+
         // update position with latest fees accrued
         cache = RangePositions.add(
             ticks,
@@ -86,14 +123,17 @@ library MintRangeCall {
             cache,
             params
         );
-        cache.position = Collect.range(
-           cache.position,
-           cache.constants,
-           params.to 
-        );
-        // save changes to storage
+
+        // save changes to storage before transfer out
         save(positions, globalState, cache, params.positionId);
-        return cache;
+
+        // transfer positive amounts back to user
+        Collect.range(
+            cache.constants,
+            params.to,
+            cache.amount0,
+            cache.amount1
+        );
     }
 
     function save(

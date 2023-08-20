@@ -27,16 +27,17 @@ library SwapCall {
 
     function perform(
         mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
-        PoolsharkStructs.GlobalState storage globalState,
         IRangePoolStructs.Sample[65535] storage samples,
         PoolsharkStructs.TickMap storage rangeTickMap,
         PoolsharkStructs.TickMap storage limitTickMap,
+        PoolsharkStructs.GlobalState storage globalState,
         PoolsharkStructs.SwapParams memory params,
         PoolsharkStructs.SwapCache memory cache
     ) external returns (
         int256,
         int256
     ) {
+        cache.state = globalState;
         cache = Ticks.swap(
             ticks,
             samples,

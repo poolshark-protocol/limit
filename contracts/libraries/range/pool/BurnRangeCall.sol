@@ -7,6 +7,8 @@ import '../RangeTokens.sol';
 import '../RangePositions.sol';
 
 library BurnRangeCall {
+    using SafeCast for int128;
+
     event Burn(
         address indexed recipient,
         int24 lower,
@@ -27,10 +29,16 @@ library BurnRangeCall {
         IRangePoolStructs.BurnCache memory cache,
         IRangePoolStructs.BurnParams memory params
     ) external {
+        cache.state = globalState;
+        cache.position = positions[params.positionId];
         if (RangeTokens.balanceOf(cache.constants, msg.sender, params.positionId) == 0)
             require(false, 'PositionNotFound()');
         if (params.burnPercent > 1e38) params.burnPercent = 1e38;
-        cache.position = RangePositions.update(
+        ( 
+            cache.position,
+            cache.amount0,
+            cache.amount1
+        ) = RangePositions.update(
                 ticks,
                 cache.position,
                 cache.state,
@@ -51,8 +59,13 @@ library BurnRangeCall {
         );
         // only compound if burnPercent is zero
         if (params.burnPercent == 0)
-            if (cache.position.amount0 > 0 || cache.position.amount1 > 0) {
-                (cache.position, cache.state) = RangePositions.compound(
+            if (cache.amount0 > 0 || cache.amount1 > 0) {
+                (
+                    cache.position,
+                    cache.state,
+                    cache.amount0,
+                    cache.amount1
+                ) = RangePositions.compound(
                     ticks,
                     tickMap,
                     samples,
@@ -61,13 +74,17 @@ library BurnRangeCall {
                     cache.position,
                     IRangePoolStructs.CompoundParams(
                         cache.priceLower,
-                        cache.priceUpper
+                        cache.priceUpper,
+                        cache.amount0.toUint128(),
+                        cache.amount1.toUint128()
                     )
                 );
             }
-        cache.position = Collect.range(cache.position, cache.constants, params.to);
         // save changes to storage
         save(positions, globalState, cache, params.positionId);
+
+        // transfer amounts to user
+        Collect.range(cache.constants, params.to, cache.amount0, cache.amount1);
     }
 
     function save(

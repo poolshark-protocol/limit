@@ -9,8 +9,6 @@ interface IRangePoolStructs is PoolsharkStructs {
     struct RangePosition {
         uint256 feeGrowthInside0Last;
         uint256 feeGrowthInside1Last;
-        uint128 amount0;
-        uint128 amount1;
         uint128 liquidity;
         int24 lower;
         int24 upper;
@@ -40,6 +38,8 @@ interface IRangePoolStructs is PoolsharkStructs {
     struct CompoundParams {
         uint160 priceLower;
         uint160 priceUpper;
+        uint128 amount0;
+        uint128 amount1;
     }
 
     struct SampleParams {
@@ -78,6 +78,8 @@ interface IRangePoolStructs is PoolsharkStructs {
         uint256 liquidityMinted;
         uint160 priceLower;
         uint160 priceUpper;
+        int128 amount0;
+        int128 amount1;
     }
 
     struct BurnCache {
@@ -87,6 +89,8 @@ interface IRangePoolStructs is PoolsharkStructs {
         uint256 liquidityBurned;
         uint160 priceLower;
         uint160 priceUpper;
+        int128 amount0;
+        int128 amount1;
     }
 
     struct PositionCache {
@@ -108,22 +112,22 @@ interface IRangePoolStructs is PoolsharkStructs {
     }
 
     struct SnapshotCache {
-        int24   tick;
-        uint160 price;
-        uint32  blockTimestamp;
-        uint32  secondsOutsideLower;
-        uint32  secondsOutsideUpper;
-        int56   tickSecondsAccum;
-        int56   tickSecondsAccumLower;
-        int56   tickSecondsAccumUpper;
-        uint128 liquidity;
-        uint160 secondsPerLiquidityAccum;
-        uint160 secondsPerLiquidityAccumLower;
-        uint160 secondsPerLiquidityAccumUpper;
-        uint256 userBalance;
-        uint256 totalSupply;
         RangePosition position;
         SampleState samples;
         PoolsharkStructs.Immutables constants;
+        uint160 price;
+        uint160 secondsPerLiquidityAccum;
+        uint160 secondsPerLiquidityAccumLower;
+        uint160 secondsPerLiquidityAccumUpper;
+        uint128 liquidity;
+        uint128 amount0;
+        uint128 amount1;
+        int56   tickSecondsAccum;
+        int56   tickSecondsAccumLower;
+        int56   tickSecondsAccumUpper;
+        uint32  secondsOutsideLower;
+        uint32  secondsOutsideUpper;
+        uint32  blockTimestamp;
+        int24   tick;
     }
 }

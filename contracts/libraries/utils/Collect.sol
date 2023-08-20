@@ -6,28 +6,23 @@ import '../limit/LimitPositions.sol';
 import '../utils/SafeTransfers.sol';
 
 library Collect {
+    using SafeCast for int128;
 
     function range(
-        IRangePoolStructs.RangePosition memory position,
         PoolsharkStructs.Immutables memory constants,
-        address recipient
-    ) internal returns (
-        IRangePoolStructs.RangePosition memory
-    ) {
-        // store amounts for transferOut
-        uint128 amount0  = position.amount0;
-        uint128 amount1 = position.amount1;
-
-        /// zero out balances and transfer out
+        address recipient,
+        int128 amount0,
+        int128 amount1
+    ) internal {
+        /// @dev - negative balances will revert
         if (amount0 > 0) {
-            position.amount0 = 0;
-            SafeTransfers.transferOut(recipient, constants.token0, amount0);
+            /// @dev - cast to ensure user doesn't owe the pool balance
+            SafeTransfers.transferOut(recipient, constants.token0, amount0.toUint128());
         }
         if (amount1 > 0) {
-            position.amount1 = 0;
-            SafeTransfers.transferOut(recipient, constants.token1, amount1);
+            /// @dev - cast to ensure user doesn't owe the pool balance
+            SafeTransfers.transferOut(recipient, constants.token1, amount1.toUint128());
         }
-        return position;
     }
 
     function burnLimit(
@@ -37,18 +32,17 @@ library Collect {
         ILimitPoolStructs.BurnLimitCache memory
     )    
     {
-        // store amounts for transferOut
-        uint128 amountIn  = cache.position.amountIn;
-        uint128 amountOut = cache.position.amountOut;
+        uint128 amount0 = params.zeroForOne ? cache.amountOut : cache.amountIn;
+        uint128 amount1 = params.zeroForOne ? cache.amountIn : cache.amountOut;
 
         /// zero out balances and transfer out
-        if (amountIn > 0) {
-            cache.position.amountIn = 0;
-            SafeTransfers.transferOut(params.to, params.zeroForOne ? cache.constants.token1 : cache.constants.token0, amountIn);
+        if (amount0 > 0) {
+            cache.amountIn = 0;
+            SafeTransfers.transferOut(params.to, cache.constants.token0, amount0);
         }
-        if (amountOut > 0) {
-            cache.position.amountOut = 0;
-            SafeTransfers.transferOut(params.to, params.zeroForOne ? cache.constants.token0 : cache.constants.token1, amountOut);
+        if (amount1 > 0) {
+            cache.amountOut = 0;
+            SafeTransfers.transferOut(params.to, cache.constants.token1, amount1);
         }
 
         return cache;

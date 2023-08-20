@@ -42,8 +42,8 @@ contract RangePoolERC1155 is
     /// @dev token id => total supply
     mapping(uint256 => uint256) private _totalSupplyById;
 
-    string private constant _NAME = "Poolshark Range LP";
-    string private constant _SYMBOL = "PSHARK-RANGE-LP";
+    string private constant _NAME = "Poolshark LP";
+    string private constant _SYMBOL = "PSHARK-LP";
 
     modifier onlyCanonicalClones(
         PoolsharkStructs.Immutables memory constants

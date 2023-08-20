@@ -79,7 +79,10 @@ contract RangePoolERC1155 is
         uint256 _id,
         uint256 _amount,
         PoolsharkStructs.Immutables memory constants
-    ) external onlyCanonicalClones(constants) {
+    ) external 
+        onlyCanonicalClones(constants)
+        checkERC1155Support(_account)
+    {
         _mint(_account, _id, _amount);
     }
 
@@ -88,7 +91,9 @@ contract RangePoolERC1155 is
         uint256 _id,
         uint256 _amount,
         PoolsharkStructs.Immutables memory constants
-    ) external onlyCanonicalClones(constants) {
+    ) external
+        onlyCanonicalClones(constants)
+    {
         _burn(_account, _id, _amount);
     }
 
@@ -267,7 +272,7 @@ contract RangePoolERC1155 is
         return true;
     }
 
-        function _onlyCanonicalPools(
+    function _onlyCanonicalPools(
         PoolsharkStructs.Immutables memory constants
     ) private view returns (bool) {
         // generate key for pool

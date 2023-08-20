@@ -176,7 +176,10 @@ contract LimitPool is
 
     function quote(
         QuoteParams memory params
-    ) external view override canoncialOnly returns (
+    ) external view override
+        nonReadOnlyReentrant(globalState)
+        canoncialOnly
+    returns (
         uint256,
         uint256,
         uint160
@@ -239,7 +242,9 @@ contract LimitPool is
         );
     }
 
-    function priceBounds(int16 tickSpacing) external pure returns (uint160, uint160) {
+    function priceBounds(
+        int16 tickSpacing
+    ) external pure returns (uint160, uint160) {
         return ConstantProduct.priceBounds(tickSpacing);
     }
 

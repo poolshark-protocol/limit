@@ -13,6 +13,9 @@ import './Samples.sol';
 /// @notice Position management library for ranged liquidity.
 library RangePositions {
     using SafeCast for uint256;
+    using SafeCast for uint128;
+    using SafeCast for int256;
+    using SafeCast for int128;
 
     error NotEnoughPositionLiquidity();
     error InvalidClaimTick();
@@ -45,8 +48,8 @@ library RangePositions {
         int24 upper,
         uint256 indexed tokenId,
         uint128 liquidityBurned,
-        uint128 amount0,
-        uint128 amount1
+        int128 amount0,
+        int128 amount1
     );
 
     event Compound(
@@ -65,9 +68,6 @@ library RangePositions {
         IRangePoolStructs.MintCache memory
     ) {
         RangeTicks.validate(cache.position.lower, cache.position.upper, cache.constants.tickSpacing);
-        
-        cache.priceLower = ConstantProduct.getPriceAtTick(cache.position.lower, cache.constants);
-        cache.priceUpper = ConstantProduct.getPriceAtTick(cache.position.upper, cache.constants);
 
         cache.liquidityMinted = ConstantProduct.getLiquidityForAmounts(
             cache.priceLower,
@@ -166,9 +166,9 @@ library RangePositions {
                 cache.liquidityBurned ,
                 false
             );
-            cache.position.amount0 += amount0Removed;
-            cache.position.amount1 += amount1Removed;
-            cache.position.liquidity -= uint128(cache.liquidityBurned);
+            cache.amount0 += amount0Removed.toInt128();
+            cache.amount1 += amount1Removed.toInt128();
+            cache.position.liquidity -= cache.liquidityBurned.toUint128();
         }
         cache.state = RangeTicks.remove(
             ticks,
@@ -186,8 +186,8 @@ library RangePositions {
             cache.position.upper,
             params.positionId,
             uint128(cache.liquidityBurned),
-            cache.position.amount0,
-            cache.position.amount1
+            cache.amount0,
+            cache.amount1
         );
         if (cache.position.liquidity == 0) {
             cache.position.feeGrowthInside0Last = 0;
@@ -208,15 +208,17 @@ library RangePositions {
         IRangePoolStructs.CompoundParams memory params
     ) internal returns (
         IRangePoolStructs.RangePosition memory,
-        PoolsharkStructs.GlobalState memory
+        PoolsharkStructs.GlobalState memory,
+        int128,
+        int128
     ) {
         // price tells you the ratio so you need to swap into the correct ratio and add liquidity
         uint256 liquidityAmount = ConstantProduct.getLiquidityForAmounts(
             params.priceLower,
             params.priceUpper,
             state.pool.price,
-            position.amount1,
-            position.amount0
+            params.amount1,
+            params.amount0
         );
         if (liquidityAmount > 0) {
             state = RangeTicks.insert(
@@ -237,18 +239,18 @@ library RangePositions {
                 liquidityAmount,
                 true
             );
-            position.amount0 -= (amount0 <= position.amount0) ? uint128(amount0) : position.amount0;
-            position.amount1 -= (amount1 <= position.amount1) ? uint128(amount1) : position.amount1;
+            params.amount0 -= (amount0 <= params.amount0) ? uint128(amount0) : params.amount0;
+            params.amount1 -= (amount1 <= params.amount1) ? uint128(amount1) : params.amount1;
             position.liquidity += uint128(liquidityAmount);
         }
         emit Compound(
             position.lower,
             position.upper,
             uint128(liquidityAmount),
-            position.amount0,
-            position.amount1
+            params.amount0,
+            params.amount1
         );
-        return (position, state);
+        return (position, state, params.amount0.toInt128(), params.amount1.toInt128());
     }
 
     function update(
@@ -258,7 +260,9 @@ library RangePositions {
         PoolsharkStructs.Immutables memory constants,
         IRangePoolStructs.UpdateParams memory params
     ) internal returns (
-        IRangePoolStructs.RangePosition memory
+        IRangePoolStructs.RangePosition memory,
+        int128,
+        int128
     ) {
         IRangePoolStructs.UpdatePositionCache memory cache;
         /// @dev - only true if burn call
@@ -276,29 +280,22 @@ library RangePositions {
             position.upper
         );
 
-        uint128 amount0Fees = uint128(
-            OverflowMath.mulDiv(
-                rangeFeeGrowth0 - position.feeGrowthInside0Last,
-                uint256(position.liquidity),
-                Q128
-            )
-        );
+        int128 amount0Fees = OverflowMath.mulDiv(
+            rangeFeeGrowth0 - position.feeGrowthInside0Last,
+            uint256(position.liquidity),
+            Q128
+        ).toInt256().toInt128();
 
-        uint128 amount1Fees = uint128(
-            OverflowMath.mulDiv(
-                rangeFeeGrowth1 - position.feeGrowthInside1Last,
-                position.liquidity,
-                Q128
-            )
-        );
+        int128 amount1Fees = OverflowMath.mulDiv(
+            rangeFeeGrowth1 - position.feeGrowthInside1Last,
+            position.liquidity,
+            Q128
+        ).toInt256().toInt128();
 
         position.feeGrowthInside0Last = rangeFeeGrowth0;
         position.feeGrowthInside1Last = rangeFeeGrowth1;
 
-        position.amount0 += amount0Fees;
-        position.amount1 += amount1Fees;
-
-        return position;
+        return (position, amount0Fees, amount1Fees);
     }
 
     function rangeFeeGrowth(
@@ -402,8 +399,6 @@ library RangePositions {
         (
             cache.position.feeGrowthInside0Last,
             cache.position.feeGrowthInside1Last,
-            cache.position.amount0,
-            cache.position.amount1,
             cache.position.liquidity,
             cache.position.lower,
             cache.position.upper
@@ -442,31 +437,28 @@ library RangePositions {
         );
 
         // calcuate fees earned
-        cache.position.amount0 += uint128(
+        cache.amount0 += uint128(
             OverflowMath.mulDiv(
                 rangeFeeGrowth0 - cache.position.feeGrowthInside0Last,
                 cache.position.liquidity,
                 Q128
             )
         );
-        cache.position.amount1 += uint128(
+        cache.amount1 += uint128(
             OverflowMath.mulDiv(
                 rangeFeeGrowth1 - cache.position.feeGrowthInside1Last,
                 cache.position.liquidity,
                 Q128
             )
         );
-        if (cache.totalSupply > 0) {
-            cache.position.amount0 = uint128(cache.position.amount0 * cache.userBalance / cache.totalSupply);
-            cache.position.amount1 = uint128(cache.position.amount1 * cache.userBalance / cache.totalSupply);
-        }
+
         cache.tick = ConstantProduct.getTickAtPrice(cache.price, cache.constants);
         if (cache.position.lower >= cache.tick) {
             return (
                 cache.tickSecondsAccumLower - cache.tickSecondsAccumUpper,
                 cache.secondsPerLiquidityAccumLower - cache.secondsPerLiquidityAccumUpper,
-                cache.position.amount0,
-                cache.position.amount1
+                cache.amount0,
+                cache.amount1
             );
         } else if (cache.position.upper >= cache.tick) {
             cache.blockTimestamp = uint32(block.timestamp);
@@ -493,8 +485,8 @@ library RangePositions {
                 cache.secondsPerLiquidityAccum
                   - cache.secondsPerLiquidityAccumLower
                   - cache.secondsPerLiquidityAccumUpper,
-                cache.position.amount0,
-                cache.position.amount1
+                cache.amount0,
+                cache.amount1
             );
         }
     }

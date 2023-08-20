@@ -56,7 +56,7 @@ library BurnLimitCall {
                 cache
             );
         }
-        // save position before transfer call
+        // save position before transfer
         if ((params.zeroForOne ? params.claim != params.upper
                                : params.claim != params.lower))
             params.zeroForOne

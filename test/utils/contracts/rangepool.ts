@@ -9,8 +9,6 @@ export const BN_ZERO = BigNumber.from('0')
 export interface Position {
   feeGrowthInside0Last: BigNumber
   feeGrowthInside1Last: BigNumber
-  amount0: BigNumber
-  amount1: BigNumber
   liquidity: BigNumber
   lower: number
   upper: number

@@ -6,8 +6,6 @@ import '../../base/structs/PoolsharkStructs.sol';
 interface ILimitPoolStructs is PoolsharkStructs {
 
     struct LimitPosition {
-        uint128 amountIn; // token amount already claimed; balance
-        uint128 amountOut; // necessary for non-custodial positions
         uint128 liquidity; // expected amount to be used not actual
         uint32 epochLast;  // epoch when this position was created at
         bool crossedInto; // whether the position was crossed into already
@@ -40,16 +38,6 @@ interface ILimitPoolStructs is PoolsharkStructs {
         bool zeroForOne;
     }
 
-    struct UpdateLimitParams {
-        address owner;
-        address to;
-        uint128 amount;
-        int24 lower;
-        int24 upper;
-        int24 claim;
-        bool zeroForOne;
-    }
-
     struct MintLimitCache {
         GlobalState state;
         LimitPosition position;
@@ -68,18 +56,16 @@ interface ILimitPoolStructs is PoolsharkStructs {
 
     struct BurnLimitCache {
         GlobalState state;
-        LimitPosition position;
-        PoolsharkStructs.Immutables constants;
-    }
-
-    struct UpdateCache {
-        GlobalState state;
         LimitPoolState pool;
         LimitTick claimTick;
         LimitPosition position;
+        PoolsharkStructs.Immutables constants;
         uint160 priceLower;
         uint160 priceClaim;
         uint160 priceUpper;
+        uint128 liquidityBurned;
+        uint128 amountIn;
+        uint128 amountOut;
         bool earlyReturn;
         bool removeLower;
         bool removeUpper;

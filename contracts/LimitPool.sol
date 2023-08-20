@@ -154,21 +154,17 @@ contract LimitPool is
         nonReentrant(globalState)
         canoncialOnly
     {
-        if (params.to == address(0)) revert CollectToZeroAddress();
-        BurnLimitCache memory cache = BurnLimitCache({
-            state: globalState,
-            position: params.zeroForOne ? positions0[msg.sender][params.lower][params.upper]
-                                        : positions1[msg.sender][params.lower][params.upper],
-            constants: immutables()
-        });
-        cache = BurnLimitCall.perform(
-            params, 
-            cache, 
-            limitTickMap,
+        BurnLimitCache memory cache;
+        cache.constants = immutables();
+        BurnLimitCall.perform(
+            params.zeroForOne ? positions0 : positions1,
             ticks,
-            params.zeroForOne ? positions0 : positions1
+            limitTickMap,
+            globalState,
+            params, 
+            cache
         );
-        globalState = cache.state;
+        // globalState = cache.state;
     }
 
     function swap(

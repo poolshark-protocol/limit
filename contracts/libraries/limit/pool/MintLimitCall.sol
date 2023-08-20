@@ -19,7 +19,9 @@ library MintLimitCall {
 
     event Sync(
         uint160 price,
-        uint128 liquidity
+        uint128 liquidity,
+        int24 tickAtPrice,
+        bool isPool0
     );
 
     function perform(
@@ -87,7 +89,7 @@ library MintLimitCall {
                     cache.position.crossedInto = true;
                     // set epoch on start tick to signify position being crossed into
                     /// @auditor - this is safe assuming we have swapped at least this far on the other side
-                    emit Sync(cache.pool.price, cache.pool.liquidity);
+                    emit Sync(cache.pool.price, cache.pool.liquidity, cache.pool.tickAtPrice, params.zeroForOne);
                 }
             } else {
                 uint160 priceUpper = ConstantProduct.getPriceAtTick(params.upper, cache.constants);
@@ -101,7 +103,7 @@ library MintLimitCall {
                     cache.position.crossedInto = true;
                     // set epoch on start tick to signify position being crossed into
                     /// @auditor - this is safe assuming we have swapped at least this far on the other side
-                    emit Sync(cache.pool.price, cache.pool.liquidity);
+                    emit Sync(cache.pool.price, cache.pool.liquidity, cache.pool.tickAtPrice, params.zeroForOne);
                 }
             }
             (cache.pool, cache.position) = LimitPositions.add(

@@ -4,6 +4,7 @@ pragma solidity 0.8.13;
 import '../../interfaces/limit/ILimitPoolStructs.sol';
 import '../limit/LimitPositions.sol';
 import '../utils/SafeTransfers.sol';
+import 'hardhat/console.sol';
 
 library Collect {
 
@@ -37,18 +38,18 @@ library Collect {
         ILimitPoolStructs.BurnLimitCache memory
     )    
     {
-        // store amounts for transferOut
-        uint128 amountIn  = cache.position.amountIn;
-        uint128 amountOut = cache.position.amountOut;
-
+        uint128 amount0 = params.zeroForOne ? cache.amountOut : cache.amountIn;
+        uint128 amount1 = params.zeroForOne ? cache.amountIn : cache.amountOut;
+        console.log('cached amounts', cache.amountIn, cache.amountOut);
+        console.log('cached constants', cache.constants.token0, cache.constants.token1);
         /// zero out balances and transfer out
-        if (amountIn > 0) {
-            cache.position.amountIn = 0;
-            SafeTransfers.transferOut(params.to, params.zeroForOne ? cache.constants.token1 : cache.constants.token0, amountIn);
+        if (amount0 > 0) {
+            cache.amountIn = 0;
+            SafeTransfers.transferOut(params.to, cache.constants.token0, amount0);
         }
-        if (amountOut > 0) {
-            cache.position.amountOut = 0;
-            SafeTransfers.transferOut(params.to, params.zeroForOne ? cache.constants.token0 : cache.constants.token1, amountOut);
+        if (amount1 > 0) {
+            cache.amountOut = 0;
+            SafeTransfers.transferOut(params.to, cache.constants.token1, amount1);
         }
 
         return cache;

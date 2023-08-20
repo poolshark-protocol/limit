@@ -18,13 +18,17 @@ library BurnLimitCall {
     );
 
     function perform(
-        ILimitPoolStructs.BurnLimitParams memory params,
-        ILimitPoolStructs.BurnLimitCache memory cache,
-        PoolsharkStructs.TickMap storage tickMap,
-        mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
         mapping(address => mapping(int24 => mapping(int24 => ILimitPoolStructs.LimitPosition)))
-            storage positions
-    ) external returns (ILimitPoolStructs.BurnLimitCache memory) {
+            storage positions,
+        mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
+        PoolsharkStructs.TickMap storage tickMap,
+        PoolsharkStructs.GlobalState storage globalState,
+        ILimitPoolStructs.BurnLimitParams memory params,
+        ILimitPoolStructs.BurnLimitCache memory cache
+    ) external {
+        // if (params.to == address(0)) require(false, 'CollectToZeroAddress()');
+        cache.state = globalState;
+        cache.position = positions[msg.sender][params.lower][params.upper];
         if (params.lower >= params.upper) require (false, 'InvalidPositionBounds()');
         if (cache.position.epochLast == 0) require(false, 'PositionNotFound()');
         if (cache.position.crossedInto
@@ -34,53 +38,51 @@ library BurnLimitCall {
         {
             // position has been crossed into
             (
-                cache.state,
-                cache.position,
-                params.claim
+                params,
+                cache
             ) = LimitPositions.update(
                 positions,
                 ticks,
                 tickMap,
-                cache.state,
-                ILimitPoolStructs.UpdateLimitParams(
-                    msg.sender,
-                    params.to,
-                    params.burnPercent,
-                    params.lower,
-                    params.upper,
-                    params.claim,
-                    params.zeroForOne
-                ),
-                cache.constants
+                cache,
+                params
             );
         } else {
             // position has not been crossed into
-            (cache.state, cache.position) = LimitPositions.remove(
-                positions,
+            (params, cache) = LimitPositions.remove(
                 ticks,
                 tickMap,
-                cache.state,
-                ILimitPoolStructs.UpdateLimitParams(
-                    msg.sender,
-                    params.to,
-                    params.burnPercent,
-                    params.lower,
-                    params.upper,
-                    params.zeroForOne ? params.lower : params.upper,
-                    params.zeroForOne
-                ),
-                cache.constants
+                params,
+                cache
             );
         }
-        cache = Collect.burnLimit(
-            cache,
-            params
-        );
         if ((params.zeroForOne ? params.claim != params.upper
                                : params.claim != params.lower))
             params.zeroForOne
                 ? positions[msg.sender][params.claim][params.upper] = cache.position
                 : positions[msg.sender][params.lower][params.claim] = cache.position;
-        return cache;
+        cache = Collect.burnLimit(
+            cache,
+            params
+        );
+        console.log('liquidity global check 1', uint24(-cache.state.pool1.tickAtPrice));
+        save(cache, globalState, params.zeroForOne);
+        console.log('liquidity global check 1', uint24(-cache.state.pool1.tickAtPrice));
+    }
+
+    function save(
+        ILimitPoolStructs.BurnLimitCache memory cache,
+        PoolsharkStructs.GlobalState storage globalState,
+        bool zeroForOne
+    ) internal {
+        globalState.epoch = cache.state.epoch;
+        globalState.liquidityGlobal = cache.state.liquidityGlobal;
+        if (zeroForOne) {
+            globalState.pool = cache.state.pool;
+            globalState.pool0 = cache.state.pool0;
+        } else {
+            globalState.pool = cache.state.pool;
+            globalState.pool1 = cache.state.pool1;
+        }
     }
 }

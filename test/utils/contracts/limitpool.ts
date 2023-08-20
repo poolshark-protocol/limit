@@ -16,8 +16,6 @@ export interface RangePosition {
 }
 
 export interface LimitPosition {
-    amountIn: BigNumber
-    amountOut: BigNumber
     liquidity: BigNumber
     epochLast: number
     crossedInto: boolean
@@ -340,6 +338,7 @@ export async function validateMint(params: ValidateMintParams) {
     let lowerTickBefore: LimitTick
     let upperTickBefore: LimitTick
     let positionBefore: LimitPosition
+    let liquidityGlobalBefore = (await hre.props.limitPool.globalState()).liquidityGlobal
     if (zeroForOne) {
         lowerTickBefore = (await hre.props.limitPool.ticks(expectedLower ? expectedLower : lower)).limit
         upperTickBefore = (await hre.props.limitPool.ticks(expectedUpper ? expectedUpper : upper)).limit
@@ -401,6 +400,7 @@ export async function validateMint(params: ValidateMintParams) {
     let lowerTickAfter: LimitTick
     let upperTickAfter: LimitTick
     let positionAfter: LimitPosition
+    let liquidityGlobalAfter = (await hre.props.limitPool.globalState()).liquidityGlobal
     if (zeroForOne) {
         lowerTickAfter = (await hre.props.limitPool.ticks(expectedLower ? expectedLower : lower)).limit
         upperTickAfter = (await hre.props.limitPool.ticks(expectedUpper ? expectedUpper : upper)).limit
@@ -457,6 +457,7 @@ export async function validateMint(params: ValidateMintParams) {
     }
     const positionLiquidityChange = params.positionLiquidityChange ? BigNumber.from(params.positionLiquidityChange) : liquidityIncrease
     expect(positionAfter.liquidity.sub(positionBefore.liquidity)).to.be.equal(positionLiquidityChange)
+    expect(liquidityGlobalAfter.sub(liquidityGlobalBefore)).to.be.equal(positionLiquidityChange)
 }
 
 export async function validateBurn(params: ValidateBurnParams) {
@@ -492,6 +493,7 @@ export async function validateBurn(params: ValidateBurnParams) {
     let upperTickBefore: LimitTick
     let positionBefore: LimitPosition
     let positionSnapshot: LimitPosition
+    let liquidityGlobalBefore = (await hre.props.limitPool.globalState()).liquidityGlobal
     if (zeroForOne) {
         lowerTickBefore = (await hre.props.limitPool.ticks(expectedLower ?? lower)).limit
         upperTickBefore = (await hre.props.limitPool.ticks(upper)).limit
@@ -563,13 +565,14 @@ export async function validateBurn(params: ValidateBurnParams) {
     expect(balanceOutAfter.sub(balanceOutBefore)).to.be.equal(balanceOutIncrease)
 
     if (compareSnapshot) {
-        expect(positionSnapshot.amountIn).to.be.equal(balanceInIncrease)
-        expect(positionSnapshot.amountOut).to.be.equal(balanceOutIncrease)
+        expect(positionSnapshot[0]).to.be.equal(balanceInIncrease)
+        expect(positionSnapshot[1]).to.be.equal(balanceOutIncrease)
     }
 
     let lowerTickAfter: LimitTick
     let upperTickAfter: LimitTick
     let positionAfter: LimitPosition
+    let liquidityGlobalAfter = (await hre.props.limitPool.globalState()).liquidityGlobal
     if (zeroForOne) {
         lowerTickAfter = (await hre.props.limitPool.ticks(expectedLower ?? lower)).limit
         upperTickAfter = (await hre.props.limitPool.ticks(upper)).limit
@@ -632,4 +635,5 @@ export async function validateBurn(params: ValidateBurnParams) {
     expect(positionAfter.liquidity.sub(positionBefore.liquidity)).to.be.equal(
         BN_ZERO.sub(positionLiquidityChange)
     )
+    expect(liquidityGlobalAfter.sub(liquidityGlobalBefore)).to.be.equal(BN_ZERO.sub(positionLiquidityChange))
 }

@@ -11,7 +11,9 @@ abstract contract LimitPoolEvents {
 
     event Sync(
         uint160 price,
-        uint128 liquidity
+        uint128 liquidity,
+        int24 tickAtPrice,
+        bool isPool0
     );
 
     event MintLimit(
@@ -46,19 +48,5 @@ abstract contract LimitPoolEvents {
         uint160 price,
         uint128 liquidity,
         int24 tickAtPrice
-    );
-
-    event ProtocolSwapFeesModified(
-        address[] modifyPools,
-        uint16[] protocolFillFee0,
-        uint16[] protocolFillFee1,
-        uint8[]  protocolFeesFlags
-    );
-
-    event ProtocolFillFeesModified(
-        address[] modifyPools,
-        uint16[] protocolFillFee0,
-        uint16[] protocolFillFee1,
-        uint8[]  protocolFeesFlags
     );
 }

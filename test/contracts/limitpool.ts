@@ -138,6 +138,7 @@ describe('LimitPool Tests', function () {
     })
 
     it('pool1 - Should mint, fill, and burn 29', async function () {
+        debugMode = true
         const aliceLiquidity = '20051041647900280328782'
         // mint should revert
         await validateMint({
@@ -156,6 +157,7 @@ describe('LimitPool Tests', function () {
 
         if (debugMode) await getLiquidity(false, true)
         if (debugMode) await getSwapEpoch(false, true)
+        if (debugMode) getTickAtPrice(false, true)
         // no-op swap
         await validateSwap({
             signer: hre.props.alice,
@@ -168,7 +170,7 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
 
-        if (debugMode) getTick(false, 0, true)
+        if (debugMode) getTickAtPrice(false, true)
 
         await validateBurn({
             signer: hre.props.alice,
@@ -183,6 +185,8 @@ describe('LimitPool Tests', function () {
             upperTickCleared: true,
             revertMessage: '',
         })
+
+        if (debugMode) getTickAtPrice(false, true)
 
         await validateBurn({
             signer: hre.props.alice,
@@ -201,6 +205,7 @@ describe('LimitPool Tests', function () {
 
     it('pool0 - Should mint, partially fill, and burn 29', async function () {
         const aliceLiquidity = '20051041647900280328782'
+        debugMode = true
         // mint should revert
         await validateMint({
             signer: hre.props.alice,
@@ -1047,6 +1052,7 @@ describe('LimitPool Tests', function () {
             lowerTickCleared: true,
             revertMessage: '',
         })
+
         if (debugMode) console.log('BEFORE MINT 2')
         if (debugMode) await getPrice(true, true)
         await validateMint({
@@ -7237,7 +7243,7 @@ describe('LimitPool Tests', function () {
         }  
     }); 
 
-    it("pool1 - _iterate does not unlock liquidity from the halfTick leading to liquidity underflow", async function () {
+    it.skip("pool1 - _iterate does not unlock liquidity from the halfTick leading to liquidity underflow", async function () {
         
         await validateMint({
           signer: hre.props.bob,

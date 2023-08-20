@@ -4,7 +4,6 @@ pragma solidity 0.8.13;
 import '../../interfaces/limit/ILimitPoolStructs.sol';
 import '../limit/LimitPositions.sol';
 import '../utils/SafeTransfers.sol';
-import 'hardhat/console.sol';
 
 library Collect {
 
@@ -40,8 +39,7 @@ library Collect {
     {
         uint128 amount0 = params.zeroForOne ? cache.amountOut : cache.amountIn;
         uint128 amount1 = params.zeroForOne ? cache.amountIn : cache.amountOut;
-        console.log('cached amounts', cache.amountIn, cache.amountOut);
-        console.log('cached constants', cache.constants.token0, cache.constants.token1);
+
         /// zero out balances and transfer out
         if (amount0 > 0) {
             cache.amountIn = 0;

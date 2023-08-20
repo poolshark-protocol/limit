@@ -508,7 +508,7 @@ describe('RangePool Exact In Tests', function () {
       revertMessage: '',
     })
 
-    if (true) {
+    if (balanceCheck) {
       console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
       console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
     }
@@ -572,7 +572,7 @@ describe('RangePool Exact In Tests', function () {
       revertMessage: '',
     })
 
-    if (true) {
+    if (balanceCheck) {
       console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
       console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
     }
@@ -641,7 +641,7 @@ describe('RangePool Exact In Tests', function () {
       revertMessage: '',
     })
     if (debugMode) await getSnapshot(aliceId)
-    await getTickAtPrice()
+    if (debugMode) await getTickAtPrice()
 
     await validateMint({
       signer: hre.props.alice,
@@ -671,7 +671,7 @@ describe('RangePool Exact In Tests', function () {
       revertMessage: '',
     })
  //   if (debugMode) await getSample()
-    if (true) {
+    if (balanceCheck) {
       console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
       console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
     }
@@ -756,7 +756,7 @@ describe('RangePool Exact In Tests', function () {
       revertMessage: '',
     })
 
-    if (true) {
+    if (balanceCheck) {
       console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
       console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
     }
@@ -806,7 +806,7 @@ describe('RangePool Exact In Tests', function () {
       revertMessage: '',
     })
     if (debugMode) await getSnapshot(bobId)
-    console.log('FIRST BURN')
+    if (debugMode) console.log('FIRST BURN')
     await validateBurn({
       signer: hre.props.bob,
       lower: '600',
@@ -819,7 +819,7 @@ describe('RangePool Exact In Tests', function () {
       revertMessage: '',
     })
     if (debugMode) await getSnapshot(bobId)
-    console.log('SECOND BURN')
+    if (debugMode) console.log('SECOND BURN')
     await validateBurn({
       signer: hre.props.bob,
       lower: '600',
@@ -844,7 +844,7 @@ describe('RangePool Exact In Tests', function () {
       revertMessage: '',
     })
 
-    if (true) {
+    if (balanceCheck) {
       console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
       console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
     }
@@ -938,7 +938,7 @@ describe('RangePool Exact In Tests', function () {
       revertMessage: '',
     })
 
-    if (true) {
+    if (balanceCheck) {
       console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
       console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
     }
@@ -1197,7 +1197,7 @@ describe('RangePool Exact In Tests', function () {
       revertMessage: '',
     })
     //console.log(0x6ecc898e89ba37480f21d02d998af048690115c142cefc32028321b6599004de)
-    await getTickAtPrice()
+    if (debugMode) await getTickAtPrice()
     await validateBurn({
       signer: hre.props.alice,
       lower: '73140',
@@ -1387,7 +1387,7 @@ describe('RangePool Exact In Tests', function () {
       balance1Increase: BigNumber.from('6324961650864055083800'),
       revertMessage: '',
     })
-    if (true) {
+    if (balanceCheck) {
       console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
       console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
     }
@@ -1508,7 +1508,7 @@ describe('RangePool Exact In Tests', function () {
         await getTickLiquidity(1000)
     }
 
-    if (true) {
+    if (balanceCheck) {
       console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
       console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
     }
@@ -1516,7 +1516,7 @@ describe('RangePool Exact In Tests', function () {
 
   it('Steal Fees From existing Liquidity Providers ', async function () {
 
-    await getPrice()
+    if (debugMode) await getPrice()
 
     await validateSwap({
         signer: hre.props.alice,
@@ -1574,7 +1574,7 @@ describe('RangePool Exact In Tests', function () {
         balanceOutIncrease: BigNumber.from('23497952294453035875'),
         revertMessage: '',
     })
-    console.log("COMPLETED SWAP 1");
+    if (debugMode) console.log("COMPLETED SWAP 1");
     await validateSwap({
         signer: hre.props.alice,
         recipient: hre.props.alice.address,
@@ -1585,7 +1585,7 @@ describe('RangePool Exact In Tests', function () {
         balanceOutIncrease: BigNumber.from('49974999999999999999'),
         revertMessage: '',
     })
-    console.log("COMPLETED SWAP 2");
+    if (debugMode) console.log("COMPLETED SWAP 2");
     await validateSwap({
         signer: hre.props.alice,
         recipient: hre.props.alice.address,
@@ -1596,7 +1596,7 @@ describe('RangePool Exact In Tests', function () {
         balanceOutIncrease: BigNumber.from('23497952294453035875'),
         revertMessage: '',
     })
-    console.log("COMPLETED SWAP 3");
+    if (debugMode) console.log("COMPLETED SWAP 3");
     await validateSwap({
         signer: hre.props.alice,
         recipient: hre.props.alice.address,
@@ -1609,31 +1609,7 @@ describe('RangePool Exact In Tests', function () {
     })
 
 
-    console.log("COMPLETED SWAP 4");
-
-    await validateSwap({
-        signer: hre.props.alice,
-        recipient: hre.props.alice.address,
-        zeroForOne: false,
-        amount: tokenAmount.div(2),
-        sqrtPriceLimitX96: BigNumber.from('79450223072165328185028130650000'),
-        balanceInDecrease: BigNumber.from('50000000000000000000'),
-        balanceOutIncrease: BigNumber.from('23497952294453035875'),
-        revertMessage: '',
-    })
-    console.log("COMPLETED SWAP 5");
-    await validateSwap({
-        signer: hre.props.alice,
-        recipient: hre.props.alice.address,
-        zeroForOne: true,
-        amount: tokenAmount.div(2),
-        sqrtPriceLimitX96: BigNumber.from('79450223072165328185028130650'),
-        balanceInDecrease: BigNumber.from('23509707148027049401'),
-        balanceOutIncrease: BigNumber.from('49974999999999999999'),
-        revertMessage: '',
-    })
-
-    console.log("COMPLETED SWAP 6");
+    if (debugMode) console.log("COMPLETED SWAP 4");
 
     await validateSwap({
         signer: hre.props.alice,
@@ -1645,7 +1621,7 @@ describe('RangePool Exact In Tests', function () {
         balanceOutIncrease: BigNumber.from('23497952294453035875'),
         revertMessage: '',
     })
-    console.log("COMPLETED SWAP 7");
+    if (debugMode) console.log("COMPLETED SWAP 5");
     await validateSwap({
         signer: hre.props.alice,
         recipient: hre.props.alice.address,
@@ -1657,7 +1633,7 @@ describe('RangePool Exact In Tests', function () {
         revertMessage: '',
     })
 
-    console.log("COMPLETED SWAP 8");
+    if (debugMode) console.log("COMPLETED SWAP 6");
 
     await validateSwap({
         signer: hre.props.alice,
@@ -1669,7 +1645,31 @@ describe('RangePool Exact In Tests', function () {
         balanceOutIncrease: BigNumber.from('23497952294453035875'),
         revertMessage: '',
     })
-    console.log("COMPLETED SWAP 9");
+    if (debugMode) console.log("COMPLETED SWAP 7");
+    await validateSwap({
+        signer: hre.props.alice,
+        recipient: hre.props.alice.address,
+        zeroForOne: true,
+        amount: tokenAmount.div(2),
+        sqrtPriceLimitX96: BigNumber.from('79450223072165328185028130650'),
+        balanceInDecrease: BigNumber.from('23509707148027049401'),
+        balanceOutIncrease: BigNumber.from('49974999999999999999'),
+        revertMessage: '',
+    })
+
+    if (debugMode) console.log("COMPLETED SWAP 8");
+
+    await validateSwap({
+        signer: hre.props.alice,
+        recipient: hre.props.alice.address,
+        zeroForOne: false,
+        amount: tokenAmount.div(2),
+        sqrtPriceLimitX96: BigNumber.from('79450223072165328185028130650000'),
+        balanceInDecrease: BigNumber.from('50000000000000000000'),
+        balanceOutIncrease: BigNumber.from('23497952294453035875'),
+        revertMessage: '',
+    })
+    if (debugMode) console.log("COMPLETED SWAP 9");
     await validateSwap({
         signer: hre.props.alice,
         recipient: hre.props.alice.address,
@@ -1682,7 +1682,7 @@ describe('RangePool Exact In Tests', function () {
     })
 
 
-    console.log("COMPLETED SWAP 10");
+    if (debugMode) console.log("COMPLETED SWAP 10");
 
     await validateSwap({
         signer: hre.props.alice,
@@ -1699,9 +1699,9 @@ describe('RangePool Exact In Tests', function () {
         revertMessage: '',
     })
 
-    console.log("COMPLETED SWAP 11");
+    if (debugMode) console.log("COMPLETED SWAP 11");
 
-    await getTickAtPrice()
+    if (debugMode) await getTickAtPrice()
 
     const bobId = await validateMint({ // Attacker mints position
         signer: hre.props.bob,
@@ -1740,8 +1740,8 @@ describe('RangePool Exact In Tests', function () {
         revertMessage: '',
     })
 
-    console.log("COMPLETED BURN");
-    if (true) {
+    if (debugMode) console.log("COMPLETED BURN");
+    if (balanceCheck) {
         console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
         console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
     }

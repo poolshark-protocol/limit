@@ -65,9 +65,8 @@ library BurnLimitCall {
             cache,
             params
         );
-        console.log('liquidity global check 1', uint24(-cache.state.pool1.tickAtPrice));
+
         save(cache, globalState, params.zeroForOne);
-        console.log('liquidity global check 1', uint24(-cache.state.pool1.tickAtPrice));
     }
 
     function save(

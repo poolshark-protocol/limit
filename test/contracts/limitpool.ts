@@ -138,7 +138,6 @@ describe('LimitPool Tests', function () {
     })
 
     it('pool1 - Should mint, fill, and burn 29', async function () {
-        debugMode = true
         const aliceLiquidity = '20051041647900280328782'
         // mint should revert
         await validateMint({
@@ -205,7 +204,6 @@ describe('LimitPool Tests', function () {
 
     it('pool0 - Should mint, partially fill, and burn 29', async function () {
         const aliceLiquidity = '20051041647900280328782'
-        debugMode = true
         // mint should revert
         await validateMint({
             signer: hre.props.alice,
@@ -6123,7 +6121,7 @@ describe('LimitPool Tests', function () {
             revertMessage: "",
         });
 
-        await getPrice(false, true)
+        if (debugMode) await getPrice(false, true)
 
         await validateBurn({
             signer: hre.props.bob,
@@ -6974,8 +6972,10 @@ describe('LimitPool Tests', function () {
           lowerTickCleared: false,
           revertMessage: "",
         });
-        console.log("MINT #1 Completed");
-        console.log()
+        if (debugMode) {
+            console.log("MINT #1 Completed");
+            console.log()
+        }
 
         // This mint does not undercut
         await validateMint({
@@ -6992,8 +6992,10 @@ describe('LimitPool Tests', function () {
             lowerTickCleared: false,
             revertMessage: "",
           });
-        console.log("MINT #2 Completed");
-        console.log()
+          if (debugMode) {
+            console.log("MINT #2 Completed");
+            console.log()
+        }
 
         await validateBurn({
             signer: hre.props.bob,
@@ -7008,11 +7010,13 @@ describe('LimitPool Tests', function () {
             upperTickCleared: true,
             revertMessage: "",
         });
-        console.log("BURN #1 Completed");
-        console.log()
 
-        await getTickAtPrice(true, true)
-        await getTickAtPrice(false, true)
+        if (debugMode) {
+            console.log("BURN #1 Completed");
+            console.log()
+            await getTickAtPrice(true, true)
+            await getTickAtPrice(false, true)
+        }
 
         // This mint sets the epoch on tick 10 to epoch 0.
         // Sadly, Bob's position on the other side needs tick 10 to have the right epoch!
@@ -7032,10 +7036,12 @@ describe('LimitPool Tests', function () {
             lowerTickCleared: true,
             revertMessage: "",
           });
-        console.log("MINT #3 Completed");
-        console.log()
-        await getTickAtPrice(true, true)
-        await getTickAtPrice(false, true)
+          if (debugMode) {
+            console.log("MINT #3 Completed");
+            console.log()
+            await getTickAtPrice(true, true)
+            await getTickAtPrice(false, true)
+        }
 
        // Claim tick 10 is allowed which causes entry into Positions.remove although position has been partially filled
        // by Mint #3
@@ -7052,7 +7058,12 @@ describe('LimitPool Tests', function () {
             upperTickCleared: true,
             revertMessage: "",
         });
-        console.log("BURN #2 Completed");
+        if (debugMode) {
+            console.log("BURN #2 Completed");
+            console.log()
+            await getTickAtPrice(true, true)
+            await getTickAtPrice(false, true)
+        }
 
         await validateBurn({
             signer: hre.props.alice,
@@ -7092,9 +7103,10 @@ describe('LimitPool Tests', function () {
           revertMessage: "",
         });
 
-
-        console.log("MINT #1 Completed");
-        console.log()
+        if (debugMode) {
+            console.log("MINT #1 Completed");
+            console.log()
+        }
     
         await validateMint({
             signer: hre.props.alice,
@@ -7113,8 +7125,10 @@ describe('LimitPool Tests', function () {
             revertMessage: "",
           });
 
-        console.log("MINT #2 Completed");
-        console.log()
+          if (debugMode) {
+            console.log("MINT #2 Completed");
+            console.log()
+        }
     
         await validateMint({
             signer: hre.props.alice,
@@ -7131,8 +7145,10 @@ describe('LimitPool Tests', function () {
             revertMessage: "",
           });
 
-        console.log("MINT #3 Completed");
-        console.log()
+          if (debugMode) {
+            console.log("MINT #3 Completed");
+            console.log()
+        }
     
         await validateMint({
             signer: hre.props.bob,
@@ -7149,8 +7165,10 @@ describe('LimitPool Tests', function () {
             lowerTickCleared: false,
             revertMessage: "",
           });
-        console.log("MINT #4 Completed");
-        console.log()
+          if (debugMode) {
+            console.log("MINT #4 Completed");
+            console.log()
+        }
 
         await validateBurn({
             signer: hre.props.bob,
@@ -7166,8 +7184,10 @@ describe('LimitPool Tests', function () {
             revertMessage: "",
         });
 
-        console.log("BURN #1 Completed");
-        console.log()
+        if (debugMode) {
+            console.log("BURN #1 Completed");
+            console.log()
+        }
     
         await validateSwap({
             signer: hre.props.alice,
@@ -7180,8 +7200,10 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
 
-        console.log("SWAP #1 Completed");
-        console.log()
+        if (debugMode) {
+            console.log("SWAP #1 Completed");
+            console.log()
+        }
     
         // Swap reverts with underflow 
         await validateSwap({
@@ -7243,7 +7265,7 @@ describe('LimitPool Tests', function () {
         }  
     }); 
 
-    it.skip("pool1 - _iterate does not unlock liquidity from the halfTick leading to liquidity underflow", async function () {
+    it("pool1 - _iterate does not unlock liquidity from the halfTick leading to liquidity underflow", async function () {
         
         await validateMint({
           signer: hre.props.bob,
@@ -7260,8 +7282,10 @@ describe('LimitPool Tests', function () {
           revertMessage: "",
         });
 
-        console.log("MINT #1 Completed");
-        console.log()
+        if (debugMode) {
+            console.log("MINT #1 Completed");
+            console.log()
+        }
     
         await validateMint({
             signer: hre.props.alice,
@@ -7269,17 +7293,22 @@ describe('LimitPool Tests', function () {
             lower: "0",
             upper: "10",
             amount: "20",
+            expectedLower: '10',
+            expectedUpper: '20',
             zeroForOne: true,
             balanceInDecrease:  "20",
-            liquidityIncrease: "0",
+            liquidityIncrease: "16012",
+            positionLiquidityChange: "16012",
             balanceOutIncrease: "12",
-            upperTickCleared: true,
+            upperTickCleared: false,
             lowerTickCleared: true,
             revertMessage: "",
         });
 
-        console.log("MINT #2 Completed");
-        console.log()
+        if (debugMode) {
+            console.log("MINT #2 Completed");
+            console.log()
+        }
     
         await validateMint({
             signer: hre.props.alice,
@@ -7296,8 +7325,10 @@ describe('LimitPool Tests', function () {
             revertMessage: "",
           });
 
-        console.log("MINT #3 Completed");
-        console.log()
+          if (debugMode) {
+            console.log("MINT #3 Completed");
+            console.log()
+        }
     
         await validateMint({
             signer: hre.props.bob,
@@ -7314,8 +7345,10 @@ describe('LimitPool Tests', function () {
             lowerTickCleared: true,
             revertMessage: "",
           });
-        console.log("MINT #4 Completed");
-        console.log()
+          if (debugMode) {
+            console.log("MINT #4 Completed");
+            console.log()
+        }
     
         await validateBurn({
             signer: hre.props.bob,
@@ -7330,8 +7363,10 @@ describe('LimitPool Tests', function () {
             upperTickCleared: false,
             revertMessage: "",
         });
-        console.log("BURN #1 Completed");
-        console.log()
+        if (debugMode) {
+            console.log("BURN #1 Completed");
+            console.log()
+        }
     
         await validateSwap({
             signer: hre.props.alice,
@@ -7343,8 +7378,10 @@ describe('LimitPool Tests', function () {
             balanceOutIncrease: '7',
             revertMessage: '',
         })
-        console.log("SWAP #1 Completed");
-        console.log()
+        if (debugMode) {
+            console.log("SWAP #1 Completed");
+            console.log()
+        }
     
         // Swap reverts with underflow 
         await validateSwap({

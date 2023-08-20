@@ -9,7 +9,6 @@ import './Claims.sol';
 import './EpochMap.sol';
 import '../utils/SafeCast.sol';
 import '../Ticks.sol';
-import 'hardhat/console.sol';
 
 /// @notice Position management library for ranged liquidity.
 /// @notice Position management library for ranged liquidity.
@@ -43,11 +42,8 @@ library LimitPositions {
 
         cache.priceLower = ConstantProduct.getPriceAtTick(params.lower, cache.constants);
         cache.priceUpper = ConstantProduct.getPriceAtTick(params.upper, cache.constants);
-
-        // cannot mint empty position
-        if (params.amount == 0) require (false, 'PositionAmountZero()');
-
         cache.mintSize = uint256(params.mintPercent) * uint256(params.amount) / 1e28;
+
         // calculate L constant
         cache.liquidityMinted = ConstantProduct.getLiquidityForAmounts(
             cache.priceLower,
@@ -178,7 +174,9 @@ library LimitPositions {
             cache.state.epoch += 1;
         }
 
+        /// @dev - for safety
         if (params.lower >= params.upper) {
+            // zero out amount transferred in
             params.amount = 0;
         }
 
@@ -332,8 +330,7 @@ library LimitPositions {
         ILimitPoolStructs.BurnLimitParams memory,
         ILimitPoolStructs.BurnLimitCache memory
     )
-    {           
-        console.log('liquidity global check 1', uint24(-cache.state.pool1.tickAtPrice));
+    {
         (
             params,
             cache
@@ -343,9 +340,7 @@ library LimitPositions {
             tickMap,
             params,
             cache
-        );
-console.log('liquidity global check 1', uint24(-cache.state.pool1.tickAtPrice));
-        
+        );        
 
         if (cache.earlyReturn)
             return (params, cache);
@@ -395,11 +390,9 @@ console.log('liquidity global check 1', uint24(-cache.state.pool1.tickAtPrice));
             cache.position.liquidity -= uint128(cache.liquidityBurned);
             // update global liquidity
             cache.state.liquidityGlobal -= cache.liquidityBurned;
-            console.log('liquidity global sub 1');
         }
         if (params.zeroForOne ? params.claim == params.upper
                               : params.claim == params.lower) {
-            console.log('liquidity global sub 2', cache.state.liquidityGlobal, cache.position.liquidity);
             cache.state.liquidityGlobal -= cache.position.liquidity;
             cache.position.liquidity = 0;
         }
@@ -410,7 +403,6 @@ console.log('liquidity global check 1', uint24(-cache.state.pool1.tickAtPrice));
             if (params.zeroForOne ? params.claim == params.lower 
                                   : params.claim == params.upper) {
                 // subtract remaining position liquidity out from global
-                console.log('liquidity global sub 3');
                 cache.state.liquidityGlobal -= cache.position.liquidity;
             }
             delete positions[msg.sender][params.lower][params.upper];
@@ -435,13 +427,11 @@ console.log('liquidity global check 1', uint24(-cache.state.pool1.tickAtPrice));
             cache.amountIn,
             cache.amountOut
         );
-        // save pool to globalState
+
+        // save pool to state in memory
         if (params.zeroForOne) cache.state.pool0 = cache.pool;
         else cache.state.pool1 = cache.pool;
 
-        console.log('liquidity global check 1', uint24(-cache.state.pool1.tickAtPrice));
-
-        // return cached position in memory and transfer out
         return (params, cache);
     }
 
@@ -510,8 +500,6 @@ console.log('liquidity global check 1', uint24(-cache.state.pool1.tickAtPrice));
             removeLower: false,
             removeUpper: false
         });
-
-        console.log('claimTick check', cache.claimTick.priceAt);
 
         // check claim is valid
         (params, cache) = Claims.validate(

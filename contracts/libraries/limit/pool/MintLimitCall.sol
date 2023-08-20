@@ -34,7 +34,7 @@ library MintLimitCall {
         PoolsharkStructs.GlobalState storage globalState,
         ILimitPoolStructs.MintLimitParams memory params,
         ILimitPoolStructs.MintLimitCache memory cache
-    ) external returns (ILimitPoolStructs.MintLimitCache memory) {
+    ) external {
 
         // resize position if necessary
         (params, cache) = LimitPositions.resize(
@@ -132,8 +132,6 @@ library MintLimitCall {
 
         // save lp side for safe reentrancy
         save(cache, globalState, params.zeroForOne);
-
-        return cache;
     }
 
     function save(

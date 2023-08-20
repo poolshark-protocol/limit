@@ -79,18 +79,15 @@ library Samples {
 
     function expand(
         IRangePoolStructs.Sample[65535] storage samples,
-        PoolsharkStructs.RangePoolState memory state,
+        PoolsharkStructs.RangePoolState storage pool,
         uint16 sampleLengthNext
-    ) internal returns (
-        PoolsharkStructs.RangePoolState memory
-    ) {
-        if (sampleLengthNext <= state.samples.lengthNext) return state;
-        for (uint16 i = state.samples.lengthNext; i < sampleLengthNext; i++) {
+    ) internal {
+        if (sampleLengthNext <= pool.samples.lengthNext) return ;
+        for (uint16 i = pool.samples.lengthNext; i < sampleLengthNext; i++) {
             samples[i].blockTimestamp = 1;
         }
-        state.samples.lengthNext = sampleLengthNext;
+        pool.samples.lengthNext = sampleLengthNext;
         emit SampleLengthIncreased(sampleLengthNext);
-        return state;
     }
 
     function get(

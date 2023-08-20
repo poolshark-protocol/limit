@@ -28,7 +28,9 @@ library MintRangeCall {
         PoolsharkStructs.GlobalState storage globalState,
         IRangePoolStructs.MintCache memory cache,
         IRangePoolStructs.MintParams memory params
-    ) external returns (IRangePoolStructs.MintCache memory) {
+    ) external {
+        cache.state = globalState;
+        cache.position = positions[params.positionId];
         // id of 0 can be passed to create new position
         if (params.positionId > 0) {
             // existing position
@@ -93,7 +95,6 @@ library MintRangeCall {
         );
         // save changes to storage
         save(positions, globalState, cache, params.positionId);
-        return cache;
     }
 
     function save(

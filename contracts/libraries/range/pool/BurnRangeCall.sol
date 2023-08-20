@@ -27,6 +27,8 @@ library BurnRangeCall {
         IRangePoolStructs.BurnCache memory cache,
         IRangePoolStructs.BurnParams memory params
     ) external {
+        cache.state = globalState;
+        cache.position = positions[params.positionId];
         if (RangeTokens.balanceOf(cache.constants, msg.sender, params.positionId) == 0)
             require(false, 'PositionNotFound()');
         if (params.burnPercent > 1e38) params.burnPercent = 1e38;

@@ -18,7 +18,7 @@ interface ILimitPool is ILimitPoolStructs {
     ) external;
 
     function snapshotLimit(
-        BurnLimitParams memory params
+        SnapshotLimitParams memory params
     ) external view returns(
         uint128,
         uint128

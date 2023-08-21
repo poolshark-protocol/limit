@@ -25,7 +25,8 @@ library SnapshotLimitCall {
         mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
         PoolsharkStructs.GlobalState memory state,
-        ILimitPoolStructs.BurnLimitParams memory params
+        PoolsharkStructs.Immutables memory constants,
+        ILimitPoolStructs.SnapshotLimitParams memory params
     ) external view returns (
         uint128,
         uint128
@@ -35,7 +36,16 @@ library SnapshotLimitCall {
             require(false, 'ReentrancyGuardReadOnlyReentrantCall()');
         ILimitPoolStructs.BurnLimitCache memory cache;
         cache.state = state;
-        cache.position = positions[msg.sender][params.lower][params.upper];
+        cache.constants = constants;
+        cache.position = positions[params.owner][params.lower][params.upper];
+        ILimitPoolStructs.BurnLimitParams memory burnParams = ILimitPoolStructs.BurnLimitParams ({
+            to: params.owner,
+            burnPercent: params.burnPercent,
+            lower: params.lower,
+            claim: params.claim,
+            upper: params.upper,
+            zeroForOne: params.zeroForOne
+        });
         if (params.lower >= params.upper) require (false, 'InvalidPositionBounds()');
         if (cache.position.epochLast == 0) require(false, 'PositionNotFound()');
         return LimitPositions.snapshot(
@@ -43,7 +53,7 @@ library SnapshotLimitCall {
             ticks,
             tickMap,
             cache,
-            params
+            burnParams
         );
     }
 }

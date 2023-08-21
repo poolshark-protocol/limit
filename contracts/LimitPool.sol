@@ -263,7 +263,7 @@ contract LimitPool is
     }
 
     function snapshotLimit(
-        BurnLimitParams memory params
+        SnapshotLimitParams memory params
     ) external view override returns(
         uint128,
         uint128
@@ -273,6 +273,7 @@ contract LimitPool is
             ticks,
             limitTickMap,
             globalState,
+            immutables(),
             params
         );
     }

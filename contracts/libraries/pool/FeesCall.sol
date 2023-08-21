@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.13;
 
-import '../../base/structs/PoolsharkStructs.sol';
+import '../../interfaces/structs/PoolsharkStructs.sol';
 import '../../interfaces/limit/ILimitPoolManager.sol';
 import '../utils/SafeTransfers.sol';
 

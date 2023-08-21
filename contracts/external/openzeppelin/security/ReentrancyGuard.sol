@@ -3,7 +3,7 @@
 
 pragma solidity 0.8.13;
 
-import '../../../base/structs/PoolsharkStructs.sol';
+import '../../../interfaces/structs/PoolsharkStructs.sol';
 
 /**
  * @dev Contract module that helps prevent reentrant calls to a function.

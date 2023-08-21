@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.13;
 
-import '../../interfaces/limit/ILimitPoolStructs.sol';
+import '../../interfaces/structs/LimitPoolStructs.sol';
 import './EpochMap.sol';
 import '../TickMap.sol';
 import '../utils/String.sol';
@@ -12,15 +12,15 @@ library Claims {
     using SafeCast for uint256;
 
     function validate(
-        mapping(address => mapping(int24 => mapping(int24 => ILimitPoolStructs.LimitPosition)))
+        mapping(address => mapping(int24 => mapping(int24 => LimitPoolStructs.LimitPosition)))
             storage positions,
-        mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
+        mapping(int24 => LimitPoolStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
-        ILimitPoolStructs.BurnLimitParams memory params,
-        ILimitPoolStructs.BurnLimitCache memory cache
+        LimitPoolStructs.BurnLimitParams memory params,
+        LimitPoolStructs.BurnLimitCache memory cache
     ) internal view returns (
-        ILimitPoolStructs.BurnLimitParams memory,
-        ILimitPoolStructs.BurnLimitCache memory
+        LimitPoolStructs.BurnLimitParams memory,
+        LimitPoolStructs.BurnLimitCache memory
     ) {
         // validate position liquidity
         if (cache.liquidityBurned > cache.position.liquidity) require (false, 'NotEnoughPositionLiquidity()');
@@ -141,18 +141,18 @@ library Claims {
     }
 
     function getDeltas(
-        ILimitPoolStructs.BurnLimitParams memory params,
-        ILimitPoolStructs.BurnLimitCache memory cache,
+        LimitPoolStructs.BurnLimitParams memory params,
+        LimitPoolStructs.BurnLimitCache memory cache,
         PoolsharkStructs.Immutables memory constants
     ) internal pure returns (
-        ILimitPoolStructs.BurnLimitCache memory
+        LimitPoolStructs.BurnLimitCache memory
     ) {
         // if half tick priceAt > 0 add amountOut to amountOutClaimed
         // set claimPriceLast if zero
         if (!cache.position.crossedInto) {
             cache.position.crossedInto = true;
         }
-        ILimitPoolStructs.GetDeltasLocals memory locals;
+        LimitPoolStructs.GetDeltasLocals memory locals;
 
         if (params.claim % constants.tickSpacing != 0)
         // this should pass price at the claim tick

@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.13;
 
-import '../../base/structs/PoolsharkStructs.sol';
+import '../../interfaces/structs/PoolsharkStructs.sol';
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 interface IRangePoolERC1155 is IERC165, PoolsharkStructs {

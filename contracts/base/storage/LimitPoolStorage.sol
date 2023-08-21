@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.13;
 
-import '../../interfaces/range/IRangePoolStructs.sol';
-import '../../interfaces/limit/ILimitPoolStructs.sol';
+import '../../interfaces/structs/RangePoolStructs.sol';
+import '../../interfaces/structs/LimitPoolStructs.sol';
 import '../../interfaces/limit/ILimitPoolFactory.sol';
 import '../../utils/LimitPoolErrors.sol';
 
-abstract contract LimitPoolStorage is ILimitPoolStructs, IRangePoolStructs, LimitPoolErrors {
+abstract contract LimitPoolStorage is LimitPoolStructs, RangePoolStructs, LimitPoolErrors {
     GlobalState public globalState;
     TickMap public rangeTickMap;
     TickMap public limitTickMap;

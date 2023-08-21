@@ -4,7 +4,7 @@ pragma solidity 0.8.13;
 import '../interfaces/IPool.sol';
 import '../interfaces/callbacks/IPoolsharkSwapCallback.sol';
 import '../libraries/utils/SafeTransfers.sol';
-import '../base/structs/PoolsharkStructs.sol';
+import '../interfaces/structs/PoolsharkStructs.sol';
 import '../libraries/solady/LibClone.sol';
 
 contract PoolRouter is

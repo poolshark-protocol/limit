@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPLv3
 pragma solidity 0.8.13;
 
-import '../../interfaces/limit/ILimitPoolStructs.sol';
+import '../../interfaces/structs/LimitPoolStructs.sol';
 import '../../interfaces/limit/ILimitPoolFactory.sol';
-import '../../base/structs/LimitPoolFactoryStructs.sol';
+import '../../interfaces/structs/LimitPoolFactoryStructs.sol';
 import '../../interfaces/limit/ILimitPool.sol';
 import '../math/ConstantProduct.sol';
 import './LimitPositions.sol';
@@ -39,10 +39,10 @@ library LimitTicks {
     }
 
     function insert(
-        mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
+        mapping(int24 => LimitPoolStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
-        ILimitPoolStructs.MintLimitCache memory cache,
-        ILimitPoolStructs.MintLimitParams memory params
+        LimitPoolStructs.MintLimitCache memory cache,
+        LimitPoolStructs.MintLimitParams memory params
     ) internal {
         /// @auditor - validation of ticks is in Positions.validate
         if (cache.liquidityMinted > (uint128(type(int128).max) - cache.state.liquidityGlobal) )
@@ -107,10 +107,10 @@ library LimitTicks {
     }
 
     function insertSingle(
-        ILimitPoolStructs.MintLimitParams memory params,
-        mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
+        LimitPoolStructs.MintLimitParams memory params,
+        mapping(int24 => LimitPoolStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
-        ILimitPoolStructs.MintLimitCache memory cache,
+        LimitPoolStructs.MintLimitCache memory cache,
         PoolsharkStructs.LimitPoolState memory pool,
         PoolsharkStructs.Immutables memory constants
     ) internal returns (
@@ -122,7 +122,7 @@ library LimitTicks {
             uint160 roundedPrice
         ) = TickMap.roundHalf(pool.tickAtPrice, constants, pool.price);
         // update tick to save
-        ILimitPoolStructs.LimitTick memory tick = ticks[tickToSave].limit;
+        LimitPoolStructs.LimitTick memory tick = ticks[tickToSave].limit;
         /// @auditor - tick.priceAt will be zero for tick % tickSpacing == 0
         if (tick.priceAt == 0) {
             if (pool.price != (params.zeroForOne ? cache.priceLower : cache.priceUpper)) {
@@ -138,7 +138,7 @@ library LimitTicks {
             }
             else {
                 // we need to blend the two partial fills into a single tick
-                ILimitPoolStructs.InsertSingleLocals memory locals;
+                LimitPoolStructs.InsertSingleLocals memory locals;
                 if (params.zeroForOne) {
                     // 0 -> 1 positions price moves up so nextFullTick is greater
                     locals.previousFullTick = tickToSave - constants.tickSpacing / 2;
@@ -182,10 +182,10 @@ library LimitTicks {
     }
 
     function remove(
-        mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
+        mapping(int24 => LimitPoolStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
-        ILimitPoolStructs.BurnLimitParams memory params,
-        ILimitPoolStructs.BurnLimitCache memory cache,
+        LimitPoolStructs.BurnLimitParams memory params,
+        LimitPoolStructs.BurnLimitCache memory cache,
         PoolsharkStructs.Immutables memory constants
     ) internal {
         // set ticks based on claim and zeroForOne
@@ -221,13 +221,13 @@ library LimitTicks {
     }
 
      function unlock(
-        ILimitPoolStructs.MintLimitCache memory cache,
+        LimitPoolStructs.MintLimitCache memory cache,
         PoolsharkStructs.LimitPoolState memory pool,
-        mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
+        mapping(int24 => LimitPoolStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
         bool zeroForOne
     ) internal returns (
-        ILimitPoolStructs.MintLimitCache memory,
+        LimitPoolStructs.MintLimitCache memory,
         PoolsharkStructs.LimitPoolState memory
     )
     {
@@ -285,7 +285,7 @@ library LimitTicks {
     }
 
     function _empty(
-        ILimitPoolStructs.Tick memory tick
+        LimitPoolStructs.Tick memory tick
     ) internal pure returns (
         bool
     ) {

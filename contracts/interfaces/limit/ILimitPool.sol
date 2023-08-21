@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.13;
 
-import './ILimitPoolStructs.sol';
-import '../../base/structs/LimitPoolFactoryStructs.sol';
+import '../structs/LimitPoolStructs.sol';
+import '../structs/LimitPoolFactoryStructs.sol';
 
-interface ILimitPool is ILimitPoolStructs {
+interface ILimitPool is LimitPoolStructs {
     function initialize(
         uint160 startPrice
     ) external;

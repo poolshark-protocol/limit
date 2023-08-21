@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.13;
 
-import '../../../interfaces/range/IRangePoolStructs.sol';
+import '../../../interfaces/structs/RangePoolStructs.sol';
 import '../../utils/SafeTransfers.sol';
 import '../../utils/Collect.sol';
 import '../RangeTokens.sol';
@@ -23,14 +23,14 @@ library MintRangeCall {
     );
 
     function perform(
-        mapping(uint256 => IRangePoolStructs.RangePosition)
+        mapping(uint256 => RangePoolStructs.RangePosition)
             storage positions,
         mapping(int24 => PoolsharkStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
-        IRangePoolStructs.Sample[65535] storage samples,
+        RangePoolStructs.Sample[65535] storage samples,
         PoolsharkStructs.GlobalState storage globalState,
-        IRangePoolStructs.MintRangeCache memory cache,
-        IRangePoolStructs.MintRangeParams memory params
+        RangePoolStructs.MintRangeCache memory cache,
+        RangePoolStructs.MintRangeParams memory params
     ) external {
         // initialize cache
         cache.state = globalState;
@@ -55,7 +55,7 @@ library MintRangeCall {
                     cache.position,
                     cache.state,
                     cache.constants,
-                    IRangePoolStructs.UpdateParams(
+                    RangePoolStructs.UpdateParams(
                         params.lower,
                         params.upper,
                         params.positionId,
@@ -89,7 +89,7 @@ library MintRangeCall {
                 cache.state,
                 cache.constants,
                 cache.position,
-                IRangePoolStructs.CompoundRangeParams( 
+                RangePoolStructs.CompoundRangeParams( 
                     cache.priceLower,
                     cache.priceUpper,
                     cache.amount0.toUint128(),
@@ -149,10 +149,10 @@ library MintRangeCall {
     }
 
     function save(
-        mapping(uint256 => IRangePoolStructs.RangePosition)
+        mapping(uint256 => RangePoolStructs.RangePosition)
             storage positions,
         PoolsharkStructs.GlobalState storage globalState,
-        IRangePoolStructs.MintRangeCache memory cache,
+        RangePoolStructs.MintRangeCache memory cache,
         uint32 positionId
     ) internal {
         positions[positionId] = cache.position;

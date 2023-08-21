@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.13;
 
-import './IRangePoolStructs.sol';
+import '../structs/RangePoolStructs.sol';
 import './IRangePoolManager.sol';
 
-interface IRangePool is IRangePoolStructs {
+interface IRangePool is RangePoolStructs {
     function mintRange(
         MintRangeParams memory mintParams
     ) external;

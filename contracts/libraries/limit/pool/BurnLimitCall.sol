@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.13;
 
-import '../../../interfaces/limit/ILimitPoolStructs.sol';
+import '../../../interfaces/structs/LimitPoolStructs.sol';
 import '../LimitPositions.sol';
 import '../../utils/Collect.sol';
 
@@ -18,13 +18,13 @@ library BurnLimitCall {
     );
 
     function perform(
-        mapping(address => mapping(int24 => mapping(int24 => ILimitPoolStructs.LimitPosition)))
+        mapping(address => mapping(int24 => mapping(int24 => LimitPoolStructs.LimitPosition)))
             storage positions,
-        mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
+        mapping(int24 => LimitPoolStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
         PoolsharkStructs.GlobalState storage globalState,
-        ILimitPoolStructs.BurnLimitParams memory params,
-        ILimitPoolStructs.BurnLimitCache memory cache
+        LimitPoolStructs.BurnLimitParams memory params,
+        LimitPoolStructs.BurnLimitCache memory cache
     ) external {
         // if (params.to == address(0)) require(false, 'CollectToZeroAddress()');
         cache.state = globalState;
@@ -73,7 +73,7 @@ library BurnLimitCall {
     }
 
     function save(
-        ILimitPoolStructs.BurnLimitCache memory cache,
+        LimitPoolStructs.BurnLimitCache memory cache,
         PoolsharkStructs.GlobalState storage globalState,
         bool zeroForOne
     ) internal {

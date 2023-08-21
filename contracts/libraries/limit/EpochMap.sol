@@ -2,7 +2,7 @@
 pragma solidity 0.8.13;
 
 import '../math/ConstantProduct.sol';
-import '../../interfaces/limit/ILimitPoolStructs.sol';
+import '../../interfaces/structs/LimitPoolStructs.sol';
 
 library EpochMap {
     function set(

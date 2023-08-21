@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.13;
 
-import '../../base/structs/PoolsharkStructs.sol';
+import './PoolsharkStructs.sol';
 
-interface ILimitPoolStructs is PoolsharkStructs {
+interface LimitPoolStructs is PoolsharkStructs {
 
     struct LimitPosition {
         uint128 liquidity; // expected amount to be used not actual

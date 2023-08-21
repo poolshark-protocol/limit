@@ -7,7 +7,7 @@ import './interfaces/IPool.sol';
 import './interfaces/limit/ILimitPoolManager.sol';
 import './base/storage/LimitPoolStorage.sol';
 import './base/storage/LimitPoolImmutables.sol';
-import './base/structs/LimitPoolFactoryStructs.sol';
+import './interfaces/structs/LimitPoolFactoryStructs.sol';
 import './utils/LimitPoolErrors.sol';
 import './libraries/pool/SwapCall.sol';
 import './libraries/pool/QuoteCall.sol';

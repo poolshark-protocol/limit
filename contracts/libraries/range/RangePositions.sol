@@ -2,7 +2,7 @@
 pragma solidity 0.8.13;
 
 import '../../interfaces/IPool.sol';
-import '../../interfaces/range/IRangePoolStructs.sol';
+import '../../interfaces/structs/RangePoolStructs.sol';
 import '../math/ConstantProduct.sol';
 import './math/FeeMath.sol';
 import '../math/OverflowMath.sol';
@@ -46,11 +46,11 @@ library RangePositions {
     );
 
     function validate(
-        IRangePoolStructs.MintRangeParams memory params,
-        IRangePoolStructs.MintRangeCache memory cache
+        RangePoolStructs.MintRangeParams memory params,
+        RangePoolStructs.MintRangeCache memory cache
     ) internal pure returns (
-        IRangePoolStructs.MintRangeParams memory,
-        IRangePoolStructs.MintRangeCache memory
+        RangePoolStructs.MintRangeParams memory,
+        RangePoolStructs.MintRangeCache memory
     ) {
         RangeTicks.validate(cache.position.lower, cache.position.upper, cache.constants.tickSpacing);
 
@@ -76,12 +76,12 @@ library RangePositions {
 
     function add(
         mapping(int24 => PoolsharkStructs.Tick) storage ticks,
-        IRangePoolStructs.Sample[65535] storage samples,
+        RangePoolStructs.Sample[65535] storage samples,
         PoolsharkStructs.TickMap storage tickMap,
-        IRangePoolStructs.MintRangeCache memory cache,
-        IRangePoolStructs.MintRangeParams memory params
+        RangePoolStructs.MintRangeCache memory cache,
+        RangePoolStructs.MintRangeParams memory params
     ) internal returns (
-        IRangePoolStructs.MintRangeCache memory
+        RangePoolStructs.MintRangeCache memory
     ) {
         if (params.amount0 == 0 && params.amount1 == 0) return cache;
 
@@ -119,12 +119,12 @@ library RangePositions {
 
     function remove(
         mapping(int24 => PoolsharkStructs.Tick) storage ticks,
-        IRangePoolStructs.Sample[65535] storage samples,
+        RangePoolStructs.Sample[65535] storage samples,
         PoolsharkStructs.TickMap storage tickMap,
-        IRangePoolStructs.BurnRangeParams memory params,
-        IRangePoolStructs.BurnRangeCache memory cache
+        RangePoolStructs.BurnRangeParams memory params,
+        RangePoolStructs.BurnRangeCache memory cache
     ) internal returns (
-        IRangePoolStructs.BurnRangeCache memory
+        RangePoolStructs.BurnRangeCache memory
     ) {
         cache.priceLower = ConstantProduct.getPriceAtTick(cache.position.lower, cache.constants);
         cache.priceUpper = ConstantProduct.getPriceAtTick(cache.position.upper, cache.constants);
@@ -175,13 +175,13 @@ library RangePositions {
     function compound(
         mapping(int24 => PoolsharkStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
-        IRangePoolStructs.Sample[65535] storage samples,
+        RangePoolStructs.Sample[65535] storage samples,
         PoolsharkStructs.GlobalState memory state,
         PoolsharkStructs.Immutables memory constants,
-        IRangePoolStructs.RangePosition memory position,
-        IRangePoolStructs.CompoundRangeParams memory params
+        RangePoolStructs.RangePosition memory position,
+        RangePoolStructs.CompoundRangeParams memory params
     ) internal returns (
-        IRangePoolStructs.RangePosition memory,
+        RangePoolStructs.RangePosition memory,
         PoolsharkStructs.GlobalState memory,
         int128,
         int128
@@ -226,16 +226,16 @@ library RangePositions {
 
     function update(
         mapping(int24 => PoolsharkStructs.Tick) storage ticks,
-        IRangePoolStructs.RangePosition memory position,
+        RangePoolStructs.RangePosition memory position,
         PoolsharkStructs.GlobalState memory state,
         PoolsharkStructs.Immutables memory constants,
-        IRangePoolStructs.UpdateParams memory params
+        RangePoolStructs.UpdateParams memory params
     ) internal returns (
-        IRangePoolStructs.RangePosition memory,
+        RangePoolStructs.RangePosition memory,
         int128,
         int128
     ) {
-        IRangePoolStructs.RangePositionCache memory cache;
+        RangePoolStructs.RangePositionCache memory cache;
         /// @dev - only true if burn call
         if (params.burnPercent > 0) {
             cache.liquidityAmount = uint256(params.burnPercent) * position.liquidity / 1e38;
@@ -304,7 +304,7 @@ library RangePositions {
     }
 
     function snapshot(
-        mapping(uint256 => IRangePoolStructs.RangePosition)
+        mapping(uint256 => RangePoolStructs.RangePosition)
             storage positions,
         mapping(int24 => PoolsharkStructs.Tick) storage ticks,
         PoolsharkStructs.GlobalState memory state,
@@ -316,7 +316,7 @@ library RangePositions {
         uint128 feesOwed0,
         uint128 feesOwed1
     ) {
-        IRangePoolStructs.SnapshotRangeCache memory cache;
+        RangePoolStructs.SnapshotRangeCache memory cache;
         cache.position = positions[positionId];
 
         // early return if position empty
@@ -380,7 +380,7 @@ library RangePositions {
                 cache.secondsPerLiquidityAccum
             ) = Samples.getSingle(
                 IPool(address(this)), 
-                IRangePoolStructs.SampleParams(
+                RangePoolStructs.SampleParams(
                     cache.samples.index,
                     cache.samples.length,
                     uint32(block.timestamp),

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPLv3
 pragma solidity 0.8.13;
 
-import '../base/structs/PoolsharkStructs.sol';
+import '../interfaces/structs/PoolsharkStructs.sol';
 import './range/math/FeeMath.sol';
 import './math/OverflowMath.sol';
 import './math/ConstantProduct.sol';
@@ -45,7 +45,7 @@ library Ticks {
     function initialize(
         PoolsharkStructs.TickMap storage rangeTickMap,
         PoolsharkStructs.TickMap storage limitTickMap,
-        IRangePoolStructs.Sample[65535] storage samples,
+        RangePoolStructs.Sample[65535] storage samples,
         PoolsharkStructs.GlobalState memory state,
         PoolsharkStructs.Immutables memory constants,
         uint160 startPrice
@@ -97,7 +97,7 @@ library Ticks {
     
     function swap(
         mapping(int24 => PoolsharkStructs.Tick) storage ticks,
-        IRangePoolStructs.Sample[65535] storage samples,
+        RangePoolStructs.Sample[65535] storage samples,
         PoolsharkStructs.TickMap storage rangeTickMap,
         PoolsharkStructs.TickMap storage limitTickMap,
         PoolsharkStructs.SwapParams memory params,
@@ -369,7 +369,7 @@ library Ticks {
     }
 
     function _cross(
-        mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
+        mapping(int24 => LimitPoolStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage rangeTickMap,
         PoolsharkStructs.TickMap storage limitTickMap,
         PoolsharkStructs.SwapCache memory cache,
@@ -447,7 +447,7 @@ library Ticks {
     }
 
     function _pass(
-        mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
+        mapping(int24 => LimitPoolStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage rangeTickMap,
         PoolsharkStructs.TickMap storage limitTickMap,
         PoolsharkStructs.SwapCache memory cache,

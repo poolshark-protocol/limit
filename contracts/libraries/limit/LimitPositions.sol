@@ -2,8 +2,8 @@
 pragma solidity 0.8.13;
 
 import './LimitTicks.sol';
-import '../../interfaces/range/IRangePoolStructs.sol';
-import '../../interfaces/limit/ILimitPoolStructs.sol';
+import '../../interfaces/structs/RangePoolStructs.sol';
+import '../../interfaces/structs/LimitPoolStructs.sol';
 import '../math/OverflowMath.sol';
 import './Claims.sol';
 import './EpochMap.sol';
@@ -27,15 +27,15 @@ library LimitPositions {
     );
 
     function resize(
-        mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
-        IRangePoolStructs.Sample[65535] storage samples,
+        mapping(int24 => LimitPoolStructs.Tick) storage ticks,
+        RangePoolStructs.Sample[65535] storage samples,
         PoolsharkStructs.TickMap storage rangeTickMap,
         PoolsharkStructs.TickMap storage limitTickMap,
-        ILimitPoolStructs.MintLimitParams memory params,
-        ILimitPoolStructs.MintLimitCache memory cache
+        LimitPoolStructs.MintLimitParams memory params,
+        LimitPoolStructs.MintLimitCache memory cache
     ) internal returns (
-        ILimitPoolStructs.MintLimitParams memory,
-        ILimitPoolStructs.MintLimitCache memory
+        LimitPoolStructs.MintLimitParams memory,
+        LimitPoolStructs.MintLimitCache memory
     )
     {
         ConstantProduct.checkTicks(params.lower, params.upper, cache.constants.tickSpacing);
@@ -187,13 +187,13 @@ library LimitPositions {
     }
 
     function add(
-        ILimitPoolStructs.MintLimitCache memory cache,
-        mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
+        LimitPoolStructs.MintLimitCache memory cache,
+        mapping(int24 => LimitPoolStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
-        ILimitPoolStructs.MintLimitParams memory params
+        LimitPoolStructs.MintLimitParams memory params
     ) internal returns (
         PoolsharkStructs.LimitPoolState memory,
-        ILimitPoolStructs.LimitPosition memory
+        LimitPoolStructs.LimitPosition memory
     ) {
         if (cache.liquidityMinted == 0) return (cache.pool, cache.position);
 
@@ -232,13 +232,13 @@ library LimitPositions {
     //Limitxxx would be easier
 
     function remove(
-        mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
+        mapping(int24 => LimitPoolStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
-        ILimitPoolStructs.BurnLimitParams memory params,
-        ILimitPoolStructs.BurnLimitCache memory cache
+        LimitPoolStructs.BurnLimitParams memory params,
+        LimitPoolStructs.BurnLimitCache memory cache
     ) internal returns (
-        ILimitPoolStructs.BurnLimitParams memory,
-        ILimitPoolStructs.BurnLimitCache memory
+        LimitPoolStructs.BurnLimitParams memory,
+        LimitPoolStructs.BurnLimitCache memory
     ) {
 
         // convert percentage to liquidity amount
@@ -320,15 +320,15 @@ library LimitPositions {
     }
 
     function update(
-        mapping(address => mapping(int24 => mapping(int24 => ILimitPoolStructs.LimitPosition)))
+        mapping(address => mapping(int24 => mapping(int24 => LimitPoolStructs.LimitPosition)))
             storage positions,
-        mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
+        mapping(int24 => LimitPoolStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
-        ILimitPoolStructs.BurnLimitCache memory cache,
-        ILimitPoolStructs.BurnLimitParams memory params
+        LimitPoolStructs.BurnLimitCache memory cache,
+        LimitPoolStructs.BurnLimitParams memory params
     ) internal returns (
-        ILimitPoolStructs.BurnLimitParams memory,
-        ILimitPoolStructs.BurnLimitCache memory
+        LimitPoolStructs.BurnLimitParams memory,
+        LimitPoolStructs.BurnLimitCache memory
     )
     {
         (
@@ -436,12 +436,12 @@ library LimitPositions {
     }
 
     function snapshot(
-        mapping(address => mapping(int24 => mapping(int24 => ILimitPoolStructs.LimitPosition)))
+        mapping(address => mapping(int24 => mapping(int24 => LimitPoolStructs.LimitPosition)))
             storage positions,
         mapping(int24 => PoolsharkStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
-        ILimitPoolStructs.BurnLimitCache memory cache,
-        ILimitPoolStructs.BurnLimitParams memory params
+        LimitPoolStructs.BurnLimitCache memory cache,
+        LimitPoolStructs.BurnLimitParams memory params
     ) internal view returns (
         uint128 amountIn,
         uint128 amountOut
@@ -473,17 +473,17 @@ library LimitPositions {
     }
 
     function _deltas(
-        mapping(address => mapping(int24 => mapping(int24 => ILimitPoolStructs.LimitPosition)))
+        mapping(address => mapping(int24 => mapping(int24 => LimitPoolStructs.LimitPosition)))
             storage positions,
-        mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
+        mapping(int24 => LimitPoolStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
-        ILimitPoolStructs.BurnLimitParams memory params,
-        ILimitPoolStructs.BurnLimitCache memory cache
+        LimitPoolStructs.BurnLimitParams memory params,
+        LimitPoolStructs.BurnLimitCache memory cache
     ) internal view returns (
-        ILimitPoolStructs.BurnLimitParams memory,
-        ILimitPoolStructs.BurnLimitCache memory
+        LimitPoolStructs.BurnLimitParams memory,
+        LimitPoolStructs.BurnLimitCache memory
     ) {
-        cache = ILimitPoolStructs.BurnLimitCache({
+        cache = LimitPoolStructs.BurnLimitCache({
             state: cache.state,
             pool: params.zeroForOne ? cache.state.pool0 : cache.state.pool1,
             claimTick: ticks[params.claim].limit,

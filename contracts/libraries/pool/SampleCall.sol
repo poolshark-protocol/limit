@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.13;
 
-import '../../interfaces/range/IRangePoolStructs.sol';
+import '../../interfaces/structs/RangePoolStructs.sol';
 import '../Samples.sol';
 
 library SampleCall {
@@ -31,7 +31,7 @@ library SampleCall {
             require(false, 'ReentrancyGuardReadOnlyReentrantCall()');
         return Samples.get(
             address(this),
-            IRangePoolStructs.SampleParams(
+            RangePoolStructs.SampleParams(
                 state.pool.samples.index,
                 state.pool.samples.length,
                 uint32(block.timestamp),

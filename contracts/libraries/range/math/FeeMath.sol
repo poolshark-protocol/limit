@@ -4,8 +4,8 @@ pragma solidity 0.8.13;
 import '../../Samples.sol';
 import '../../utils/SafeCast.sol';
 import "../../math/OverflowMath.sol";
-import '../../../base/structs/PoolsharkStructs.sol';
-import "../../../interfaces/range/IRangePoolStructs.sol";
+import '../../../interfaces/structs/PoolsharkStructs.sol';
+import "../../../interfaces/structs/RangePoolStructs.sol";
 
 /// @notice Math library that facilitates fee handling.
 library FeeMath {

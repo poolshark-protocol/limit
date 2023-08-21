@@ -5,7 +5,7 @@ import './math/ConstantProduct.sol';
 import './utils/SafeCast.sol';
 import '../interfaces/IPool.sol';
 import '../interfaces/range/IRangePool.sol';
-import '../interfaces/range/IRangePoolStructs.sol';
+import '../interfaces/structs/RangePoolStructs.sol';
 
 library Samples {
     using SafeCast for uint256;
@@ -26,7 +26,7 @@ library Samples {
     );
 
     function initialize(
-        IRangePoolStructs.Sample[65535] storage samples,
+        RangePoolStructs.Sample[65535] storage samples,
         PoolsharkStructs.RangePoolState memory state
     ) internal returns (
         PoolsharkStructs.RangePoolState memory
@@ -46,7 +46,7 @@ library Samples {
     }
 
     function save(
-        IRangePoolStructs.Sample[65535] storage samples,
+        RangePoolStructs.Sample[65535] storage samples,
         PoolsharkStructs.SampleState memory sampleState,
         uint128 startLiquidity, /// @dev - liquidity from start of block
         int24  tick
@@ -55,7 +55,7 @@ library Samples {
         uint16 sampleLengthNew
     ) {
         // grab the latest sample
-        IRangePoolStructs.Sample memory newSample = samples[sampleState.index];
+        RangePoolStructs.Sample memory newSample = samples[sampleState.index];
 
         // early return if timestamp has not advanced 2 seconds
         if (newSample.blockTimestamp + 2 > uint32(block.timestamp))
@@ -78,7 +78,7 @@ library Samples {
     }
 
     function expand(
-        IRangePoolStructs.Sample[65535] storage samples,
+        RangePoolStructs.Sample[65535] storage samples,
         PoolsharkStructs.RangePoolState storage pool,
         uint16 sampleLengthNext
     ) internal {
@@ -92,7 +92,7 @@ library Samples {
 
     function get(
         address pool,
-        IRangePoolStructs.SampleParams memory params
+        RangePoolStructs.SampleParams memory params
     ) internal view returns (
         int56[]   memory tickSecondsAccum,
         uint160[] memory secondsPerLiquidityAccum,
@@ -145,7 +145,7 @@ library Samples {
         IPool pool,
         uint256 sampleIndex
     ) internal view returns (
-        IRangePoolStructs.Sample memory
+        RangePoolStructs.Sample memory
     ) {
         (
             uint32 blockTimestamp,
@@ -162,13 +162,13 @@ library Samples {
 
     function getSingle(
         IPool pool,
-        IRangePoolStructs.SampleParams memory params,
+        RangePoolStructs.SampleParams memory params,
         uint32 secondsAgo
     ) internal view returns (
         int56   tickSecondsAccum,
         uint160 secondsPerLiquidityAccum
     ) {
-        IRangePoolStructs.Sample memory latest = _poolSample(pool, params.sampleIndex);
+        RangePoolStructs.Sample memory latest = _poolSample(pool, params.sampleIndex);
 
         if (secondsAgo == 0) {
             if (latest.blockTimestamp != uint32(block.timestamp)) {
@@ -189,8 +189,8 @@ library Samples {
 
         // should be getting samples
         (
-            IRangePoolStructs.Sample memory firstSample,
-            IRangePoolStructs.Sample memory secondSample
+            RangePoolStructs.Sample memory firstSample,
+            RangePoolStructs.Sample memory secondSample
         ) = _getAdjacentSamples(
                 pool,
                 latest,
@@ -246,7 +246,7 @@ library Samples {
             secondsPerLiquidityAccum
         ) = getSingle(
                 IPool(address(this)), 
-                IRangePoolStructs.SampleParams(
+                RangePoolStructs.SampleParams(
                     state.pool.samples.index,
                     state.pool.samples.length,
                     uint32(block.timestamp),
@@ -262,7 +262,7 @@ library Samples {
             int56 tickSecondsAccumBase,
         ) = Samples.getSingle(
                 IPool(address(this)), 
-                IRangePoolStructs.SampleParams(
+                RangePoolStructs.SampleParams(
                     state.pool.samples.index,
                     state.pool.samples.length,
                     uint32(block.timestamp),
@@ -335,12 +335,12 @@ library Samples {
     }
 
     function _build(
-        IRangePoolStructs.Sample memory newSample,
+        RangePoolStructs.Sample memory newSample,
         uint32  blockTimestamp,
         int24   tick,
         uint128 liquidity
     ) internal pure returns (
-         IRangePoolStructs.Sample memory
+         RangePoolStructs.Sample memory
     ) {
         int56 timeDelta = int56(uint56(blockTimestamp - newSample.blockTimestamp));
 
@@ -359,8 +359,8 @@ library Samples {
         uint16 sampleIndex,
         uint16 sampleLength
     ) private view returns (
-        IRangePoolStructs.Sample memory firstSample,
-        IRangePoolStructs.Sample memory secondSample
+        RangePoolStructs.Sample memory firstSample,
+        RangePoolStructs.Sample memory secondSample
     ) {
         uint256 oldIndex = (sampleIndex + 1) % sampleLength;
         uint256 newIndex = oldIndex + sampleLength - 1;             
@@ -392,12 +392,12 @@ library Samples {
 
     function _getAdjacentSamples(
         IPool pool,
-        IRangePoolStructs.Sample memory firstSample,
-        IRangePoolStructs.SampleParams memory params,
+        RangePoolStructs.Sample memory firstSample,
+        RangePoolStructs.SampleParams memory params,
         uint32 targetTime
     ) private view returns (
-        IRangePoolStructs.Sample memory,
-        IRangePoolStructs.Sample memory
+        RangePoolStructs.Sample memory,
+        RangePoolStructs.Sample memory
     ) {
         if (_lte(firstSample.blockTimestamp, targetTime)) {
             if (firstSample.blockTimestamp == targetTime) {

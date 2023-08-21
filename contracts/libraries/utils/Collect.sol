@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.13;
 
-import '../../interfaces/limit/ILimitPoolStructs.sol';
+import '../../interfaces/structs/LimitPoolStructs.sol';
 import '../limit/LimitPositions.sol';
 import '../utils/SafeTransfers.sol';
 
@@ -32,10 +32,10 @@ library Collect {
     }
 
     function burnLimit(
-        ILimitPoolStructs.BurnLimitCache memory cache,
-        ILimitPoolStructs.BurnLimitParams memory params
+        LimitPoolStructs.BurnLimitCache memory cache,
+        LimitPoolStructs.BurnLimitParams memory params
     ) internal returns (
-        ILimitPoolStructs.BurnLimitCache memory
+        LimitPoolStructs.BurnLimitCache memory
     )    
     {
         uint128 amount0 = params.zeroForOne ? cache.amountOut : cache.amountIn;

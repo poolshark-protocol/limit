@@ -2,7 +2,7 @@
 pragma solidity 0.8.13;
 
 import './math/ConstantProduct.sol';
-import '../base/structs/PoolsharkStructs.sol';
+import '../interfaces/structs/PoolsharkStructs.sol';
 
 library TickMap {
 

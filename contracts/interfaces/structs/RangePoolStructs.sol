@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPLv3
 pragma solidity 0.8.13;
 
-import "./IRangePoolERC1155.sol";
-import '../../base/structs/PoolsharkStructs.sol';
+import "../range/IRangePoolERC1155.sol";
+import './PoolsharkStructs.sol';
 
-interface IRangePoolStructs is PoolsharkStructs {
+interface RangePoolStructs is PoolsharkStructs {
 
     struct RangePosition {
         uint256 feeGrowthInside0Last;

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.13;
 
-import '../../../interfaces/limit/ILimitPoolStructs.sol';
+import '../../../interfaces/structs/LimitPoolStructs.sol';
 import '../LimitPositions.sol';
 import '../../utils/Collect.sol';
 
@@ -25,15 +25,15 @@ library MintLimitCall {
     );
 
     function perform(
-        mapping(address => mapping(int24 => mapping(int24 => ILimitPoolStructs.LimitPosition)))
+        mapping(address => mapping(int24 => mapping(int24 => LimitPoolStructs.LimitPosition)))
             storage positions,
-        mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
-        IRangePoolStructs.Sample[65535] storage samples,
+        mapping(int24 => LimitPoolStructs.Tick) storage ticks,
+        RangePoolStructs.Sample[65535] storage samples,
         PoolsharkStructs.TickMap storage rangeTickMap,
         PoolsharkStructs.TickMap storage limitTickMap,
         PoolsharkStructs.GlobalState storage globalState,
-        ILimitPoolStructs.MintLimitParams memory params,
-        ILimitPoolStructs.MintLimitCache memory cache
+        LimitPoolStructs.MintLimitParams memory params,
+        LimitPoolStructs.MintLimitCache memory cache
     ) external {
 
         // resize position if necessary
@@ -135,7 +135,7 @@ library MintLimitCall {
     }
 
     function save(
-        ILimitPoolStructs.MintLimitCache memory cache,
+        LimitPoolStructs.MintLimitCache memory cache,
         PoolsharkStructs.GlobalState storage globalState,
         bool zeroForOne
     ) internal {

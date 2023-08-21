@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.13;
 
-import '../../interfaces/limit/ILimitPoolStructs.sol';
+import '../../interfaces/structs/LimitPoolStructs.sol';
 import '../../interfaces/callbacks/IPoolsharkSwapCallback.sol';
 import '../../interfaces/IERC20Minimal.sol';
 import '../Ticks.sol';
@@ -21,8 +21,8 @@ library SwapCall {
     );
 
     function perform(
-        mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
-        IRangePoolStructs.Sample[65535] storage samples,
+        mapping(int24 => LimitPoolStructs.Tick) storage ticks,
+        RangePoolStructs.Sample[65535] storage samples,
         PoolsharkStructs.TickMap storage rangeTickMap,
         PoolsharkStructs.TickMap storage limitTickMap,
         PoolsharkStructs.GlobalState storage globalState,

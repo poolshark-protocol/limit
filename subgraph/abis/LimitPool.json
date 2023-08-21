@@ -58,6 +58,81 @@
     "anonymous": false,
     "inputs": [
       {
+        "indexed": true,
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "positionId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "liquidityBurned",
+        "type": "uint128"
+      },
+      {
+        "indexed": false,
+        "internalType": "int128",
+        "name": "amount0",
+        "type": "int128"
+      },
+      {
+        "indexed": false,
+        "internalType": "int128",
+        "name": "amount1",
+        "type": "int128"
+      }
+    ],
+    "name": "BurnRange",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "amount0",
+        "type": "uint128"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "amount1",
+        "type": "uint128"
+      }
+    ],
+    "name": "CollectRange",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint32",
+        "name": "positionId",
+        "type": "uint32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "liquidityCompounded",
+        "type": "uint128"
+      }
+    ],
+    "name": "CompoundRange",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
         "indexed": false,
         "internalType": "int24",
         "name": "minTick",
@@ -74,6 +149,12 @@
         "internalType": "uint160",
         "name": "startPrice",
         "type": "uint160"
+      },
+      {
+        "indexed": false,
+        "internalType": "int24",
+        "name": "startTick",
+        "type": "int24"
       }
     ],
     "name": "Initialize",
@@ -145,6 +226,87 @@
       },
       {
         "indexed": false,
+        "internalType": "int24",
+        "name": "lower",
+        "type": "int24"
+      },
+      {
+        "indexed": false,
+        "internalType": "int24",
+        "name": "upper",
+        "type": "int24"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint32",
+        "name": "positionId",
+        "type": "uint32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "liquidityMinted",
+        "type": "uint128"
+      },
+      {
+        "indexed": false,
+        "internalType": "int128",
+        "name": "amount0Delta",
+        "type": "int128"
+      },
+      {
+        "indexed": false,
+        "internalType": "int128",
+        "name": "amount1Delta",
+        "type": "int128"
+      }
+    ],
+    "name": "MintRange",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint16",
+        "name": "sampleLengthNext",
+        "type": "uint16"
+      }
+    ],
+    "name": "SampleLengthIncreased",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "int56",
+        "name": "tickSecondsAccum",
+        "type": "int56"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint160",
+        "name": "secondsPerLiquidityAccum",
+        "type": "uint160"
+      }
+    ],
+    "name": "SampleRecorded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      },
+      {
+        "indexed": false,
         "internalType": "bool",
         "name": "zeroForOne",
         "type": "bool"
@@ -175,12 +337,49 @@
       },
       {
         "indexed": false,
+        "internalType": "uint128",
+        "name": "feeAmount",
+        "type": "uint128"
+      },
+      {
+        "indexed": false,
         "internalType": "int24",
         "name": "tickAtPrice",
         "type": "int24"
       }
     ],
     "name": "Swap",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint160",
+        "name": "price",
+        "type": "uint160"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "liquidity",
+        "type": "uint128"
+      },
+      {
+        "indexed": false,
+        "internalType": "int24",
+        "name": "tickAtPrice",
+        "type": "int24"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "isPool0",
+        "type": "bool"
+      }
+    ],
+    "name": "Sync",
     "type": "event"
   }
 ]

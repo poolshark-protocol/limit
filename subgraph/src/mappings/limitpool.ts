@@ -1,9 +1,6 @@
 import {
-    Address,
     BigInt,
     Bytes,
-    ethereum,
-    log,
     store,
 } from '@graphprotocol/graph-ts'
 import {
@@ -13,9 +10,8 @@ import {
     safeLoadToken,
 } from './utils/loads'
 import { ONE_BI } from './utils/constants'
-import { bigInt1e38, convertTokenToDecimal } from './utils/math'
-import { safeMinus } from './utils/deltas'
-import { BIGINT_ONE, BIGINT_ZERO } from './utils/helpers'
+import { convertTokenToDecimal } from './utils/math'
+import { BIGINT_ONE } from './utils/helpers'
 import { BurnLimit, Initialize, MintLimit, Swap } from '../../generated/LimitPoolFactory/LimitPool'
 
 export function handleInitialize(event: Initialize): void {

@@ -13,16 +13,11 @@ import {
   getTickAtPrice,
   getRangeBalanceOf,
   getSnapshot,
-  getTickFeeGrowth,
-  getFeeGrowthGlobal,
-  getRangeFeeGrowth,
-  getPositionFeeGrowth,
   getPrice,
   getRangeLiquidity,
   getTickLiquidity,
 } from '../utils/contracts/rangepool'
-import { RangePoolState, getLiquidity } from '../utils/contracts/limitpool'
-import { debug } from 'console'
+import { RangePoolState } from '../utils/contracts/limitpool'
 
 alice: SignerWithAddress
 describe('RangePool Exact In Tests', function () {

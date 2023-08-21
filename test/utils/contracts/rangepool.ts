@@ -121,14 +121,14 @@ export async function getFeeGrowthGlobal() {
   console.log('feegrowth global:', pool.feeGrowthGlobal0.toString(), pool.feeGrowthGlobal1.toString())
 }
 
-export async function getRangeFeeGrowth(lower: number, upper: number) {
-  const feeGrowth = await hre.props.rangePositionsLib.rangeFeeGrowth(
-    hre.props.limitPool.address,
-    lower,
-    upper
-  )
-  console.log('range fee growth', lower, upper, ':', feeGrowth.feeGrowthInside0.toString(), feeGrowth.feeGrowthInside1.toString())
-}
+// export async function getRangeFeeGrowth(lower: number, upper: number) {
+//   const feeGrowth = await hre.props.rangePositionsLib.rangeFeeGrowth(
+//     hre.props.limitPool.address,
+//     lower,
+//     upper
+//   )
+//   console.log('range fee growth', lower, upper, ':', feeGrowth.feeGrowthInside0.toString(), feeGrowth.feeGrowthInside1.toString())
+// }
 
 export async function getPositionFeeGrowth(positionId: number) {
   const position = await hre.props.limitPool.positions(positionId)
@@ -136,8 +136,7 @@ export async function getPositionFeeGrowth(positionId: number) {
 }
 
 export async function getSnapshot(positionId: number) {
-  const snapshot = await hre.props.rangePositionsLib.snapshot(
-    hre.props.limitPool.address,
+  const snapshot = await hre.props.limitPool.snapshot(
     positionId
   )
   console.log('snapshot for position', positionId, ':')
@@ -146,32 +145,32 @@ export async function getSnapshot(positionId: number) {
   console.log()
 }
 
-// export async function getSample(print = false) {
-//   const sample = await hre.props.limitPool.sample([0])
-//   if(print) {
-//     console.log('sample for [0]:')
-//     console.log('average liquidity:', sample.averageLiquidity.toString())
-//     console.log('average price:', sample.averagePrice.toString())
-//     console.log('average tick:', sample.averageTick.toString())
-//   }
-//   return sample
-// }
+export async function getSample(print = false) {
+  const sample = await hre.props.limitPool.sample([0])
+  if(print) {
+    console.log('sample for [0]:')
+    console.log('average liquidity:', sample.averageLiquidity.toString())
+    console.log('average price:', sample.averagePrice.toString())
+    console.log('average tick:', sample.averageTick.toString())
+  }
+  return sample
+}
 
-// export async function validateSample(params: ValidateSampleParams) {
-//   const secondsPerLiquidityAccum = params.secondsPerLiquidityAccum
-//   const tickSecondsAccum = BigNumber.from(params.tickSecondsAccum)
-//   const averagePrice = BigNumber.from(params.averagePrice)
-//   const averageTick = BigNumber.from(params.averageTick)
-//   const averageLiquidity = BigNumber.from(params.averageLiquidity)
+export async function validateSample(params: ValidateSampleParams) {
+  const secondsPerLiquidityAccum = params.secondsPerLiquidityAccum
+  const tickSecondsAccum = BigNumber.from(params.tickSecondsAccum)
+  const averagePrice = BigNumber.from(params.averagePrice)
+  const averageTick = BigNumber.from(params.averageTick)
+  const averageLiquidity = BigNumber.from(params.averageLiquidity)
 
-//   const sample = await getSample()
+  const sample = await getSample()
 
-//   expect(sample.secondsPerLiquidityAccum[0]).to.be.equal(secondsPerLiquidityAccum)
-//   expect(sample.tickSecondsAccum[0]).to.be.equal(tickSecondsAccum)
-//   expect(sample.averagePrice).to.be.equal(averagePrice)
-//   expect(sample.averageTick).to.be.equal(averageTick)
-//   expect(sample.averageLiquidity).to.be.equal(averageLiquidity)
-// }
+  expect(sample.secondsPerLiquidityAccum[0]).to.be.equal(secondsPerLiquidityAccum)
+  expect(sample.tickSecondsAccum[0]).to.be.equal(tickSecondsAccum)
+  expect(sample.averagePrice).to.be.equal(averagePrice)
+  expect(sample.averageTick).to.be.equal(averageTick)
+  expect(sample.averageLiquidity).to.be.equal(averageLiquidity)
+}
 
 export async function validateSwap(params: ValidateSwapParams) {
   const signer = params.signer
@@ -407,13 +406,15 @@ export async function validateBurn(params: ValidateBurnParams) {
   positionTokenBalanceBefore = await positionToken.balanceOf(signer.address, params.positionId);
   positionBefore = await hre.props.limitPool.positions(params.positionId)
   let burnPercent = params.burnPercent
+  let positionSnapshot: [BigNumber, BigNumber, BigNumber, BigNumber]
   if (!burnPercent) {
     burnPercent = liquidityAmount
                         .mul(ethers.utils.parseUnits('1', 38))
                         .div(positionBefore.liquidity)
-  } 
+  }
 
   if (revertMessage == '') {
+    positionSnapshot = await hre.props.limitPool.snapshot(params.positionId)
     const burnTxn = await hre.props.limitPool
       .connect(signer)
       .burn({

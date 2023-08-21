@@ -477,7 +477,7 @@ export async function validateBurn(params: ValidateBurnParams) {
     const expectedLower = params.expectedLower ? BigNumber.from(params.expectedLower) : null
     const expectedPositionLower = params.expectedPositionLower ? BigNumber.from(params.expectedPositionLower) : null
     const expectedPositionUpper = params.expectedPositionUpper ? BigNumber.from(params.expectedPositionUpper) : null
-    const compareSnapshot = params.compareSnapshot ? params.compareSnapshot : false
+    const compareSnapshot = params.compareSnapshot ? params.compareSnapshot : true
 
     let balanceInBefore
     let balanceOutBefore
@@ -492,7 +492,7 @@ export async function validateBurn(params: ValidateBurnParams) {
     let lowerTickBefore: LimitTick
     let upperTickBefore: LimitTick
     let positionBefore: LimitPosition
-    let positionSnapshot: LimitPosition
+    let positionSnapshot: [BigNumber, BigNumber]
     let liquidityGlobalBefore = (await hre.props.limitPool.globalState()).liquidityGlobal
     if (zeroForOne) {
         lowerTickBefore = (await hre.props.limitPool.ticks(expectedLower ?? lower)).limit
@@ -516,14 +516,14 @@ export async function validateBurn(params: ValidateBurnParams) {
         liquidityAmount = liquidityPercent.mul(positionBefore.liquidity).div(ethers.utils.parseUnits("1",38))
     }
     if (revertMessage == '') {
-        // positionSnapshot = await hre.props.limitPool.snapshotLimit({
-        //     owner: signer.address,
-        //     lower: lower,
-        //     claim: claim,
-        //     upper: upper,
-        //     zeroForOne: zeroForOne,
-        //     burnPercent: liquidityPercent
-        // })
+        positionSnapshot = await hre.props.limitPool.snapshotLimit({
+            owner: signer.address,
+            lower: lower,
+            claim: claim,
+            upper: upper,
+            zeroForOne: zeroForOne,
+            burnPercent: liquidityPercent
+        })
         const burnTxn = await hre.props.limitPool
             .connect(signer)
             .burnLimit({

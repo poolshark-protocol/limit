@@ -17,6 +17,13 @@ interface ILimitPool is ILimitPoolStructs {
         BurnLimitParams memory params
     ) external;
 
+    function snapshotLimit(
+        SnapshotLimitParams memory params
+    ) external view returns(
+        uint128,
+        uint128
+    );
+
     function fees(
         FeesParams memory params
     ) external returns (

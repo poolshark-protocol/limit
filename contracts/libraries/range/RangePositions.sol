@@ -332,95 +332,35 @@ library RangePositions {
         feeGrowthInside1 = feeGrowthGlobal1 - feeGrowthBelow1 - feeGrowthAbove1;
     }
 
-    function rangeFeeGrowth(
-        address pool,
-        int24 lower,
-        int24 upper
-    ) public view returns (
-        uint256 feeGrowthInside0,
-        uint256 feeGrowthInside1
-    ) {
-        RangeTicks.validate(lower, upper, (IPool(pool).immutables()).tickSpacing);
-        (
-            PoolsharkStructs.RangePoolState memory poolState,
-            ,,,,
-        ) = IPool(pool).globalState();
-
-        (
-            PoolsharkStructs.RangeTick memory tickLower
-            ,
-        )
-            = IPool(pool).ticks(lower);
-        (
-            PoolsharkStructs.RangeTick memory tickUpper
-            ,
-        )
-            = IPool(pool).ticks(upper);
-
-        uint256 feeGrowthBelow0;
-        uint256 feeGrowthBelow1;
-        uint256 feeGrowthAbove0;
-        uint256 feeGrowthAbove1;
-
-        if (lower <= poolState.tickAtPrice) {
-            feeGrowthBelow0 = tickLower.feeGrowthOutside0;
-            feeGrowthBelow1 = tickLower.feeGrowthOutside1;
-        } else {
-            feeGrowthBelow0 = poolState.feeGrowthGlobal0 - tickLower.feeGrowthOutside0;
-            feeGrowthBelow1 = poolState.feeGrowthGlobal1 - tickLower.feeGrowthOutside1;
-        }
-
-        if (poolState.tickAtPrice < upper) {
-            feeGrowthAbove0 = tickUpper.feeGrowthOutside0;
-            feeGrowthAbove1 = tickUpper.feeGrowthOutside1;
-        } else {
-            feeGrowthAbove0 = poolState.feeGrowthGlobal0 - tickUpper.feeGrowthOutside0;
-            feeGrowthAbove1 = poolState.feeGrowthGlobal1 - tickUpper.feeGrowthOutside1;
-        }
-        feeGrowthInside0 = poolState.feeGrowthGlobal0 - feeGrowthBelow0 - feeGrowthAbove0;
-        feeGrowthInside1 = poolState.feeGrowthGlobal1 - feeGrowthBelow1 - feeGrowthAbove1;
-    }
-
     function snapshot(
-        address pool,
+        mapping(uint256 => IRangePoolStructs.RangePosition)
+            storage positions,
+        mapping(int24 => PoolsharkStructs.Tick) storage ticks,
+        PoolsharkStructs.GlobalState memory state,
+        PoolsharkStructs.Immutables memory constants,
         uint32 positionId
-    ) external view returns (
+    ) internal view returns (
         int56   tickSecondsAccum,
         uint160 secondsPerLiquidityAccum,
         uint128 feesOwed0,
         uint128 feesOwed1
     ) {
         IRangePoolStructs.SnapshotCache memory cache;
-        (
-            PoolsharkStructs.RangePoolState memory poolState,
-            ,,,,
-        ) = IPool(pool).globalState();
-
-        (
-            cache.position.feeGrowthInside0Last,
-            cache.position.feeGrowthInside1Last,
-            cache.position.liquidity,
-            cache.position.lower,
-            cache.position.upper
-        ) = IPool(pool).positions(positionId);
+        cache.position = positions[positionId];
 
         // early return if position empty
         if (cache.position.liquidity == 0)
             return (0,0,0,0);
 
-        cache.price = poolState.price;
-        cache.liquidity = poolState.liquidity;
-        cache.samples = poolState.samples;
+        cache.price = state.pool.price;
+        cache.liquidity = state.pool.liquidity;
+        cache.samples = state.pool.samples;
 
         // grab lower tick
-        (
-            PoolsharkStructs.RangeTick memory tickLower,
-        ) = IPool(pool).ticks(cache.position.lower);
+        PoolsharkStructs.RangeTick memory tickLower = ticks[cache.position.lower].range;
         
         // grab upper tick
-        (
-            PoolsharkStructs.RangeTick memory tickUpper,
-        ) = IPool(pool).ticks(cache.position.upper);
+        PoolsharkStructs.RangeTick memory tickUpper = ticks[cache.position.upper].range;
 
         cache.tickSecondsAccumLower =  tickLower.tickSecondsAccumOutside;
         cache.secondsPerLiquidityAccumLower = tickLower.secondsPerLiquidityAccumOutside;
@@ -428,10 +368,12 @@ library RangePositions {
         // if both have never been crossed into return 0
         cache.tickSecondsAccumUpper = tickUpper.tickSecondsAccumOutside;
         cache.secondsPerLiquidityAccumUpper = tickUpper.secondsPerLiquidityAccumOutside;
-        cache.constants = IPool(pool).immutables();
+        cache.constants = constants;
 
         (uint256 rangeFeeGrowth0, uint256 rangeFeeGrowth1) = rangeFeeGrowth(
-            pool,
+            tickLower,
+            tickUpper,
+            state,
             cache.position.lower,
             cache.position.upper
         );
@@ -452,7 +394,7 @@ library RangePositions {
             )
         );
 
-        cache.tick = ConstantProduct.getTickAtPrice(cache.price, cache.constants);
+        cache.tick = state.pool.tickAtPrice;
         if (cache.position.lower >= cache.tick) {
             return (
                 cache.tickSecondsAccumLower - cache.tickSecondsAccumUpper,
@@ -466,7 +408,7 @@ library RangePositions {
                 cache.tickSecondsAccum,
                 cache.secondsPerLiquidityAccum
             ) = Samples.getSingle(
-                IPool(pool), 
+                IPool(address(this)), 
                 IRangePoolStructs.SampleParams(
                     cache.samples.index,
                     cache.samples.length,

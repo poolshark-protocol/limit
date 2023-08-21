@@ -28,6 +28,15 @@ interface IRangePool is IRangePoolStructs {
         uint160 priceAfter
     );
 
+    function snapshot(
+        uint32 positionId
+    ) external view returns(
+        int56   tickSecondsAccum,
+        uint160 secondsPerLiquidityAccum,
+        uint128 feesOwed0,
+        uint128 feesOwed1
+    );
+
     function increaseSampleLength(
         uint16 sampleLengthNext
     ) external;

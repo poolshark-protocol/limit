@@ -42,6 +42,11 @@ abstract contract ReentrancyGuard is PoolsharkStructs {
     error ReentrancyGuardReentrantCall();
 
     /**
+     * @dev Unauthorized read-only reentrant call.
+     */
+    error ReentrancyGuardReadOnlyReentrantCall();
+
+    /**
      * @dev Reentrant state invalid.
      */
     error ReentrancyGuardInvalidState();

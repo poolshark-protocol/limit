@@ -28,6 +28,25 @@ interface IPool is PoolsharkStructs {
         uint128 token1Fees
     );
 
+    function sample(
+        uint32[] memory secondsAgo
+    ) external view returns (
+        int56[]   memory tickSecondsAccum,
+        uint160[] memory secondsPerLiquidityAccum,
+        uint160 averagePrice,
+        uint128 averageLiquidity,
+        int24 averageTick
+    );
+
+    function snapshot(
+        uint32 positionId
+    ) external view returns(
+        int56   tickSecondsAccum,
+        uint160 secondsPerLiquidityAccum,
+        uint128 feesOwed0,
+        uint128 feesOwed1
+    );
+
     function globalState() external view returns (
         RangePoolState memory pool,
         LimitPoolState memory pool0,

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GPLv3
 pragma solidity 0.8.13;
 
-import '../math/ConstantProduct.sol';
-import '../utils/SafeCast.sol';
-import '../../interfaces/IPool.sol';
-import '../../interfaces/range/IRangePool.sol';
-import '../../interfaces/range/IRangePoolStructs.sol';
+import './math/ConstantProduct.sol';
+import './utils/SafeCast.sol';
+import '../interfaces/IPool.sol';
+import '../interfaces/range/IRangePool.sol';
+import '../interfaces/range/IRangePoolStructs.sol';
 
 library Samples {
     using SafeCast for uint256;

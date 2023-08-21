@@ -2,7 +2,7 @@
 pragma solidity 0.8.13;
 
 import '../../interfaces/range/IRangePoolStructs.sol';
-import '../range/Samples.sol';
+import '../Samples.sol';
 
 library SampleCall {
     uint8 private constant _ENTERED = 2;

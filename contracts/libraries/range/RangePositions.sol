@@ -8,7 +8,7 @@ import './math/FeeMath.sol';
 import '../math/OverflowMath.sol';
 import '../utils/SafeCast.sol';
 import './RangeTicks.sol';
-import './Samples.sol';
+import '../Samples.sol';
 
 /// @notice Position management library for ranged liquidity.
 library RangePositions {

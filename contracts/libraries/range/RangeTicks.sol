@@ -10,7 +10,7 @@ import './RangePositions.sol';
 import '../math/OverflowMath.sol';
 import '../math/ConstantProduct.sol';
 import '../TickMap.sol';
-import './Samples.sol';
+import '../Samples.sol';
 
 /// @notice Tick management library for range pools
 library RangeTicks {

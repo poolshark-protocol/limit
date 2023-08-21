@@ -10,7 +10,7 @@ import './LimitPositions.sol';
 import '../math/OverflowMath.sol';
 import '../TickMap.sol';
 import './EpochMap.sol';
-import '../range/Samples.sol';
+import '../Samples.sol';
 import '../utils/SafeCast.sol';
 
 /// @notice Tick management library for limit pools

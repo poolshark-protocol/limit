@@ -8,7 +8,7 @@ import './math/ConstantProduct.sol';
 import './TickMap.sol';
 import './utils/SafeCast.sol';
 import './range/math/FeeMath.sol';
-import './range/Samples.sol';
+import './Samples.sol';
 import './limit/EpochMap.sol';
 import './limit/LimitTicks.sol';
 

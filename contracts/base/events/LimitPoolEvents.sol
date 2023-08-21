@@ -16,6 +16,34 @@ abstract contract LimitPoolEvents {
         bool isPool0
     );
 
+    event MintRange(
+        address indexed recipient,
+        int24 lower,
+        int24 upper,
+        uint32 indexed positionId,
+        uint128 liquidityMinted,
+        int128 amount0Delta,
+        int128 amount1Delta
+    );
+
+    event BurnRange(
+        address indexed recipient,
+        uint256 indexed positionId,
+        uint128 liquidityBurned,
+        int128 amount0,
+        int128 amount1
+    );
+
+    event CompoundRange(
+        uint32 indexed positionId,
+        uint128 liquidityCompounded
+    );
+
+    event CollectRange(
+        uint128 amount0,
+        uint128 amount1
+    );
+
     event MintLimit(
         address indexed to,
         int24 lower,
@@ -24,9 +52,7 @@ abstract contract LimitPoolEvents {
         uint32 epochLast,
         uint128 amountIn,
         uint128 amountFilled,
-        uint128 liquidityMinted,
-        uint128 poolLiquidity,
-        uint160 poolPrice
+        uint128 liquidityMinted
     );
 
     event BurnLimit(
@@ -47,6 +73,16 @@ abstract contract LimitPoolEvents {
         uint256 amountOut,
         uint160 price,
         uint128 liquidity,
+        uint128 feeAmount,
         int24 tickAtPrice
+    );
+
+    event SampleRecorded(
+        int56 tickSecondsAccum,
+        uint160 secondsPerLiquidityAccum
+    );
+
+    event SampleLengthIncreased(
+        uint16 sampleLengthNext
     );
 }

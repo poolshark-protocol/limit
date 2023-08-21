@@ -15,7 +15,7 @@ import './libraries/pool/FeesCall.sol';
 import './libraries/pool/SampleCall.sol';
 import './libraries/range/pool/MintRangeCall.sol';
 import './libraries/range/pool/BurnRangeCall.sol';
-import './libraries/range/pool/SnapshotCall.sol';
+import './libraries/range/pool/SnapshotRangeCall.sol';
 import './libraries/limit/pool/MintLimitCall.sol';
 import './libraries/limit/pool/BurnLimitCall.sol';
 import './libraries/limit/pool/SnapshotLimitCall.sol';
@@ -76,13 +76,13 @@ contract LimitPool is
         );
     }
 
-    function mint(
-        MintParams memory params
+    function mintRange(
+        MintRangeParams memory params
     ) external override
         nonReentrant(globalState)
         canoncialOnly
     {
-        MintCache memory cache;
+        MintRangeCache memory cache;
         cache.constants = immutables();
         MintRangeCall.perform(
             positions,
@@ -95,13 +95,13 @@ contract LimitPool is
         );
     }
 
-    function burn(
-        BurnParams memory params
+    function burnRange(
+        BurnRangeParams memory params
     ) external override
         nonReentrant(globalState)
         canoncialOnly
     {
-        BurnCache memory cache;
+        BurnRangeCache memory cache;
         cache.constants = immutables();
         BurnRangeCall.perform(
             positions,
@@ -245,7 +245,7 @@ contract LimitPool is
         );
     }
 
-    function snapshot(
+    function snapshotRange(
         uint32 positionId 
     ) external view override returns (
         int56   tickSecondsAccum,
@@ -253,7 +253,7 @@ contract LimitPool is
         uint128 feesOwed0,
         uint128 feesOwed1
     ) {
-        return SnapshotCall.perform(
+        return SnapshotRangeCall.perform(
             positions,
             ticks,
             globalState,

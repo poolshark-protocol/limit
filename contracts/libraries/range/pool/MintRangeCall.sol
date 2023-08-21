@@ -8,18 +8,18 @@ import '../RangeTokens.sol';
 import '../RangePositions.sol';
 
 library MintRangeCall {
+    using SafeCast for uint256;
     using SafeCast for int128;
     using SafeCast for uint128;
 
-    event Mint(
+    event MintRange(
         address indexed recipient,
         int24 lower,
         int24 upper,
-        uint256 indexed tokenId,
-        uint128 tokenMinted,
+        uint32 indexed positionId,
         uint128 liquidityMinted,
-        uint128 amount0,
-        uint128 amount1
+        int128 amount0Delta,
+        int128 amount1Delta
     );
 
     function perform(
@@ -29,8 +29,8 @@ library MintRangeCall {
         PoolsharkStructs.TickMap storage tickMap,
         IRangePoolStructs.Sample[65535] storage samples,
         PoolsharkStructs.GlobalState storage globalState,
-        IRangePoolStructs.MintCache memory cache,
-        IRangePoolStructs.MintParams memory params
+        IRangePoolStructs.MintRangeCache memory cache,
+        IRangePoolStructs.MintRangeParams memory params
     ) external {
         // initialize cache
         cache.state = globalState;
@@ -89,11 +89,12 @@ library MintRangeCall {
                 cache.state,
                 cache.constants,
                 cache.position,
-                IRangePoolStructs.CompoundParams( 
+                IRangePoolStructs.CompoundRangeParams( 
                     cache.priceLower,
                     cache.priceUpper,
                     cache.amount0.toUint128(),
-                    cache.amount1.toUint128()
+                    cache.amount1.toUint128(),
+                    params.positionId
                 )
             );
         }
@@ -104,6 +105,16 @@ library MintRangeCall {
         save(positions, globalState, cache, params.positionId);
         cache.amount0 -= params.amount0.toInt128();
         cache.amount1 -= params.amount1.toInt128();
+
+        emit MintRange(
+            params.to,
+            cache.position.lower,
+            cache.position.upper,
+            params.positionId,
+            cache.liquidityMinted.toUint128(),
+            -cache.amount0, /// @dev - emit balance delta from pool POV
+            -cache.amount1
+        );
 
         // transfer in amounts
         if (cache.amount0 < 0) {
@@ -128,19 +139,20 @@ library MintRangeCall {
         save(positions, globalState, cache, params.positionId);
 
         // transfer positive amounts back to user
-        Collect.range(
-            cache.constants,
-            params.to,
-            cache.amount0,
-            cache.amount1
-        );
+        if (cache.amount0 > 0 || cache.amount1 > 0)
+            Collect.range(
+                cache.constants,
+                params.to,
+                cache.amount0,
+                cache.amount1
+            );
     }
 
     function save(
         mapping(uint256 => IRangePoolStructs.RangePosition)
             storage positions,
         PoolsharkStructs.GlobalState storage globalState,
-        IRangePoolStructs.MintCache memory cache,
+        IRangePoolStructs.MintRangeCache memory cache,
         uint32 positionId
     ) internal {
         positions[positionId] = cache.position;

@@ -38,13 +38,20 @@ interface IPool is PoolsharkStructs {
         int24 averageTick
     );
 
-    function snapshot(
+    function snapshotRange(
         uint32 positionId
     ) external view returns(
         int56   tickSecondsAccum,
         uint160 secondsPerLiquidityAccum,
         uint128 feesOwed0,
         uint128 feesOwed1
+    );
+
+    function snapshotLimit(
+        SnapshotLimitParams memory params
+    ) external view returns(
+        uint128,
+        uint128
     );
 
     function globalState() external view returns (

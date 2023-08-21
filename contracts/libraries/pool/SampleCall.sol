@@ -6,15 +6,14 @@ import '../range/Samples.sol';
 
 library SampleCall {
     uint8 private constant _ENTERED = 2;
+    
+    event SampleRecorded(
+        int56 tickSecondsAccum,
+        uint160 secondsPerLiquidityAccum
+    );
 
-    event Swap(
-        address indexed recipient,
-        bool zeroForOne,
-        uint256 amountIn,
-        uint256 amountOut,
-        uint160 price,
-        uint128 liquidity,
-        int24 tickAtPrice
+    event SampleLengthIncreased(
+        uint16 sampleLengthNext
     );
 
     function perform(

@@ -29,15 +29,6 @@ interface ILimitPoolStructs is PoolsharkStructs {
         bool zeroForOne;
     }
 
-    struct SnapshotLimitParams {
-        address owner;
-        uint128 burnPercent;
-        int24 lower;
-        int24 upper;
-        int24 claim;
-        bool zeroForOne;
-    }
-
     struct MintLimitCache {
         GlobalState state;
         LimitPosition position;

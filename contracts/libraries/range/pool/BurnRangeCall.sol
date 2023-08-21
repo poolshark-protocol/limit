@@ -9,7 +9,7 @@ import '../RangePositions.sol';
 library BurnRangeCall {
     using SafeCast for int128;
 
-    event Burn(
+    event BurnRange(
         address indexed recipient,
         int24 lower,
         int24 upper,
@@ -26,8 +26,8 @@ library BurnRangeCall {
         PoolsharkStructs.TickMap storage tickMap,
         IRangePoolStructs.Sample[65535] storage samples,
         PoolsharkStructs.GlobalState storage globalState,
-        IRangePoolStructs.BurnCache memory cache,
-        IRangePoolStructs.BurnParams memory params
+        IRangePoolStructs.BurnRangeCache memory cache,
+        IRangePoolStructs.BurnRangeParams memory params
     ) external {
         cache.state = globalState;
         cache.position = positions[params.positionId];
@@ -72,11 +72,12 @@ library BurnRangeCall {
                     cache.state,
                     cache.constants,
                     cache.position,
-                    IRangePoolStructs.CompoundParams(
+                    IRangePoolStructs.CompoundRangeParams(
                         cache.priceLower,
                         cache.priceUpper,
                         cache.amount0.toUint128(),
-                        cache.amount1.toUint128()
+                        cache.amount1.toUint128(),
+                        params.positionId
                     )
                 );
             }
@@ -84,14 +85,20 @@ library BurnRangeCall {
         save(positions, globalState, cache, params.positionId);
 
         // transfer amounts to user
-        Collect.range(cache.constants, params.to, cache.amount0, cache.amount1);
+        if (cache.amount0 > 0 || cache.amount1 > 0)
+            Collect.range(
+                cache.constants,
+                params.to,
+                cache.amount0,
+                cache.amount1
+            );
     }
 
     function save(
         mapping(uint256 => IRangePoolStructs.RangePosition)
             storage positions,
         PoolsharkStructs.GlobalState storage globalState,
-        IRangePoolStructs.BurnCache memory cache,
+        IRangePoolStructs.BurnRangeCache memory cache,
         uint32 positionId
     ) internal {
         positions[positionId] = cache.position;

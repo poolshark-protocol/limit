@@ -9,20 +9,15 @@ import '../utils/Collect.sol';
 import '../utils/SafeTransfers.sol';
 
 library SwapCall {
-    event SwapPool0(
+    event Swap(
         address indexed recipient,
-        uint128 amountIn,
-        uint128 amountOut,
-        uint160 priceLimit,
-        uint160 newPrice
-    );
-
-    event SwapPool1(
-        address indexed recipient,
-        uint128 amountIn,
-        uint128 amountOut,
-        uint160 priceLimit,
-        uint160 newPrice
+        bool zeroForOne,
+        uint256 amountIn,
+        uint256 amountOut,
+        uint160 price,
+        uint128 liquidity,
+        uint128 feeAmount,
+        int24 tickAtPrice
     );
 
     function perform(

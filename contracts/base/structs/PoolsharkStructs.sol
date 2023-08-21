@@ -89,6 +89,15 @@ interface PoolsharkStructs {
         uint16 protocolFillFee1;
         uint8 setFeesFlags;
     }
+
+    struct SnapshotLimitParams {
+        address owner;
+        uint128 burnPercent;
+        int24 lower;
+        int24 upper;
+        int24 claim;
+        bool zeroForOne;
+    }
     
     struct Immutables {
         address owner;

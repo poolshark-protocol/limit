@@ -15,7 +15,7 @@ import {
     Ticks,
     FeesCall,
     SampleCall,
-    SnapshotCall,
+    SnapshotRangeCall,
     SnapshotLimitCall,
 } from '../../../typechain'
 import { InitialSetup } from './initialSetup'
@@ -44,7 +44,7 @@ export interface BeforeEachProps {
     mintRangeCall: MintRangeCall
     rangePositionsLib: RangePositions
     rangePoolERC1155: RangePoolERC1155
-    snapshotCall: SnapshotCall
+    snapshotRangeCall: SnapshotRangeCall
     //limit
     burnLimitCall: BurnLimitCall
     mintLimitCall: MintLimitCall
@@ -103,7 +103,7 @@ export class GetBeforeEach {
         let mintRangeCall: MintRangeCall
         let rangePositionsLib: RangePositions
         let rangePoolERC1155: RangePoolERC1155
-        let snapshotCall: SnapshotCall
+        let snapshotRangeCall: SnapshotRangeCall
         //limit
         let burnLimitCall: BurnLimitCall
         let mintLimitCall: MintLimitCall
@@ -138,7 +138,7 @@ export class GetBeforeEach {
             //range
             burnRangeCall,
             mintRangeCall,
-            snapshotCall,
+            snapshotRangeCall,
             rangePositionsLib,
             rangePoolERC1155,
             //limit

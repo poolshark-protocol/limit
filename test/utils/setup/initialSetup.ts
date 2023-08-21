@@ -2,7 +2,7 @@ import { SUPPORTED_NETWORKS } from '../../../scripts/constants/supportedNetworks
 import { DeployAssist } from '../../../scripts/util/deployAssist'
 import { ContractDeploymentsKeys } from '../../../scripts/util/files/contractDeploymentKeys'
 import { ContractDeploymentsJson } from '../../../scripts/util/files/contractDeploymentsJson'
-import { BurnLimitCall__factory, LimitPool__factory, MintLimitCall__factory, LimitPositions__factory, QuoteCall__factory, RangePoolERC1155__factory, LimitTicks__factory, FeesCall__factory, SampleCall__factory, SnapshotCall__factory, SnapshotLimitCall__factory } from '../../../typechain'
+import { BurnLimitCall__factory, LimitPool__factory, MintLimitCall__factory, LimitPositions__factory, QuoteCall__factory, RangePoolERC1155__factory, LimitTicks__factory, FeesCall__factory, SampleCall__factory, SnapshotRangeCall__factory, SnapshotLimitCall__factory } from '../../../typechain'
 import { BurnRangeCall__factory } from '../../../typechain'
 import { SwapCall__factory } from '../../../typechain'
 import { MintRangeCall__factory } from '../../../typechain'
@@ -247,8 +247,8 @@ export class InitialSetup {
         await this.deployAssist.deployContractWithRetry(
             network,
             // @ts-ignore
-            SnapshotCall__factory,
-            'snapshotCall',
+            SnapshotRangeCall__factory,
+            'snapshotRangeCall',
             []
         )
 
@@ -265,7 +265,7 @@ export class InitialSetup {
                 'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address,
                 'contracts/libraries/range/pool/MintRangeCall.sol:MintRangeCall': hre.props.mintRangeCall.address,
                 'contracts/libraries/range/pool/BurnRangeCall.sol:BurnRangeCall': hre.props.burnRangeCall.address,
-                'contracts/libraries/range/pool/SnapshotCall.sol:SnapshotCall': hre.props.snapshotCall.address,
+                'contracts/libraries/range/pool/SnapshotRangeCall.sol:SnapshotRangeCall': hre.props.snapshotRangeCall.address,
                 'contracts/libraries/limit/pool/MintLimitCall.sol:MintLimitCall': hre.props.mintLimitCall.address,
                 'contracts/libraries/limit/pool/BurnLimitCall.sol:BurnLimitCall': hre.props.burnLimitCall.address,
                 'contracts/libraries/limit/pool/SnapshotLimitCall.sol:SnapshotLimitCall': hre.props.snapshotLimitCall.address,

@@ -32,40 +32,25 @@ library RangePositions {
     uint256 internal constant Q96 = 0x1000000000000000000000000;
     uint256 internal constant Q128 = 0x100000000000000000000000000000000;
 
-    event Mint(
+    event BurnRange(
         address indexed recipient,
-        int24 lower,
-        int24 upper,
-        uint256 indexed tokenId,
-        uint128 liquidityMinted,
-        uint128 amount0,
-        uint128 amount1
-    );
-
-    event Burn(
-        address indexed recipient,
-        int24 lower,
-        int24 upper,
-        uint256 indexed tokenId,
+        uint256 indexed positionId,
         uint128 liquidityBurned,
         int128 amount0,
         int128 amount1
     );
 
-    event Compound(
-        int24 indexed lower,
-        int24 indexed upper,
-        uint128 liquidityCompounded,
-        uint128 positionAmount0,
-        uint128 positionAmount1
+    event CompoundRange(
+        uint32 indexed positionId,
+        uint128 liquidityCompounded
     );
 
     function validate(
-        IRangePoolStructs.MintParams memory params,
-        IRangePoolStructs.MintCache memory cache
+        IRangePoolStructs.MintRangeParams memory params,
+        IRangePoolStructs.MintRangeCache memory cache
     ) internal pure returns (
-        IRangePoolStructs.MintParams memory,
-        IRangePoolStructs.MintCache memory
+        IRangePoolStructs.MintRangeParams memory,
+        IRangePoolStructs.MintRangeCache memory
     ) {
         RangeTicks.validate(cache.position.lower, cache.position.upper, cache.constants.tickSpacing);
 
@@ -93,10 +78,10 @@ library RangePositions {
         mapping(int24 => PoolsharkStructs.Tick) storage ticks,
         IRangePoolStructs.Sample[65535] storage samples,
         PoolsharkStructs.TickMap storage tickMap,
-        IRangePoolStructs.MintCache memory cache,
-        IRangePoolStructs.MintParams memory params
+        IRangePoolStructs.MintRangeCache memory cache,
+        IRangePoolStructs.MintRangeParams memory params
     ) internal returns (
-        IRangePoolStructs.MintCache memory
+        IRangePoolStructs.MintRangeCache memory
     ) {
         if (params.amount0 == 0 && params.amount1 == 0) return cache;
 
@@ -129,15 +114,6 @@ library RangePositions {
             );
         }
         cache.position.liquidity += uint128(cache.liquidityMinted);
-        emit Mint(
-            params.to,
-            cache.position.lower,
-            cache.position.upper,
-            params.positionId,
-            cache.liquidityMinted.toUint128(),
-            params.amount0,
-            params.amount1
-        );
         return cache;
     }
 
@@ -145,10 +121,10 @@ library RangePositions {
         mapping(int24 => PoolsharkStructs.Tick) storage ticks,
         IRangePoolStructs.Sample[65535] storage samples,
         PoolsharkStructs.TickMap storage tickMap,
-        IRangePoolStructs.BurnParams memory params,
-        IRangePoolStructs.BurnCache memory cache
+        IRangePoolStructs.BurnRangeParams memory params,
+        IRangePoolStructs.BurnRangeCache memory cache
     ) internal returns (
-        IRangePoolStructs.BurnCache memory
+        IRangePoolStructs.BurnRangeCache memory
     ) {
         cache.priceLower = ConstantProduct.getPriceAtTick(cache.position.lower, cache.constants);
         cache.priceUpper = ConstantProduct.getPriceAtTick(cache.position.upper, cache.constants);
@@ -180,10 +156,8 @@ library RangePositions {
             cache.position.upper,
             uint128(cache.liquidityBurned)
         );
-        emit Burn(
+        emit BurnRange(
             params.to,
-            cache.position.lower,
-            cache.position.upper,
             params.positionId,
             uint128(cache.liquidityBurned),
             cache.amount0,
@@ -205,7 +179,7 @@ library RangePositions {
         PoolsharkStructs.GlobalState memory state,
         PoolsharkStructs.Immutables memory constants,
         IRangePoolStructs.RangePosition memory position,
-        IRangePoolStructs.CompoundParams memory params
+        IRangePoolStructs.CompoundRangeParams memory params
     ) internal returns (
         IRangePoolStructs.RangePosition memory,
         PoolsharkStructs.GlobalState memory,
@@ -243,12 +217,9 @@ library RangePositions {
             params.amount1 -= (amount1 <= params.amount1) ? uint128(amount1) : params.amount1;
             position.liquidity += uint128(liquidityAmount);
         }
-        emit Compound(
-            position.lower,
-            position.upper,
-            uint128(liquidityAmount),
-            params.amount0,
-            params.amount1
+        emit CompoundRange(
+            params.positionId,
+            uint128(liquidityAmount)
         );
         return (position, state, params.amount0.toInt128(), params.amount1.toInt128());
     }
@@ -264,7 +235,7 @@ library RangePositions {
         int128,
         int128
     ) {
-        IRangePoolStructs.UpdatePositionCache memory cache;
+        IRangePoolStructs.RangePositionCache memory cache;
         /// @dev - only true if burn call
         if (params.burnPercent > 0) {
             cache.liquidityAmount = uint256(params.burnPercent) * position.liquidity / 1e38;
@@ -345,7 +316,7 @@ library RangePositions {
         uint128 feesOwed0,
         uint128 feesOwed1
     ) {
-        IRangePoolStructs.SnapshotCache memory cache;
+        IRangePoolStructs.SnapshotRangeCache memory cache;
         cache.position = positions[positionId];
 
         // early return if position empty

@@ -8,6 +8,11 @@ import '../utils/SafeTransfers.sol';
 library Collect {
     using SafeCast for int128;
 
+    event CollectRange(
+        uint128 amount0,
+        uint128 amount1
+    );
+
     function range(
         PoolsharkStructs.Immutables memory constants,
         address recipient,
@@ -23,6 +28,7 @@ library Collect {
             /// @dev - cast to ensure user doesn't owe the pool balance
             SafeTransfers.transferOut(recipient, constants.token1, amount1.toUint128());
         }
+        emit CollectRange(amount0.toUint128(), amount1.toUint128());
     }
 
     function burnLimit(
@@ -44,7 +50,6 @@ library Collect {
             cache.amountOut = 0;
             SafeTransfers.transferOut(params.to, cache.constants.token1, amount1);
         }
-
         return cache;
     }
 }

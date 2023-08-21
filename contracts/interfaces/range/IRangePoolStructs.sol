@@ -14,7 +14,7 @@ interface IRangePoolStructs is PoolsharkStructs {
         int24 upper;
     }
 
-    struct MintParams {
+    struct MintRangeParams {
         address to;
         int24 lower;
         int24 upper;
@@ -23,17 +23,18 @@ interface IRangePoolStructs is PoolsharkStructs {
         uint128 amount1;
     }
 
-    struct BurnParams {
+    struct BurnRangeParams {
         address to;
         uint32 positionId;
         uint128 burnPercent;
     }
 
-    struct CompoundParams {
+    struct CompoundRangeParams {
         uint160 priceLower;
         uint160 priceUpper;
         uint128 amount0;
         uint128 amount1;
+        uint32 positionId;
     }
 
     struct SampleParams {
@@ -46,18 +47,6 @@ interface IRangePoolStructs is PoolsharkStructs {
         PoolsharkStructs.Immutables constants;
     }
 
-    struct AddParams {
-        GlobalState state;
-        MintParams mint;
-        uint128 amount;
-        uint128 liquidity;
-    }
-
-    struct RemoveParams {
-        uint128 tokenBurned;
-        PoolsharkStructs.Immutables constants;
-    }
-
     struct UpdateParams {
         int24 lower;
         int24 upper;
@@ -65,7 +54,7 @@ interface IRangePoolStructs is PoolsharkStructs {
         uint128 burnPercent;
     }
 
-    struct MintCache {
+    struct MintRangeCache {
         GlobalState state;
         RangePosition position;
         PoolsharkStructs.Immutables constants;
@@ -76,7 +65,7 @@ interface IRangePoolStructs is PoolsharkStructs {
         int128 amount1;
     }
 
-    struct BurnCache {
+    struct BurnRangeCache {
         GlobalState state;
         RangePosition position;
         PoolsharkStructs.Immutables constants;
@@ -87,15 +76,7 @@ interface IRangePoolStructs is PoolsharkStructs {
         int128 amount1;
     }
 
-    struct PositionCache {
-        uint256 liquidityAmount;
-        uint160 priceLower;
-        uint160 priceUpper;
-        uint128 amount0;
-        uint128 amount1;
-    }
-
-    struct UpdatePositionCache {
+    struct RangePositionCache {
         uint256 liquidityAmount;
         uint256 rangeFeeGrowth0;
         uint256 rangeFeeGrowth1;
@@ -105,7 +86,7 @@ interface IRangePoolStructs is PoolsharkStructs {
         uint128 feesBurned1;
     }
 
-    struct SnapshotCache {
+    struct SnapshotRangeCache {
         RangePosition position;
         SampleState samples;
         PoolsharkStructs.Immutables constants;

@@ -136,7 +136,7 @@ export async function getPositionFeeGrowth(positionId: number) {
 }
 
 export async function getSnapshot(positionId: number) {
-  const snapshot = await hre.props.limitPool.snapshot(
+  const snapshot = await hre.props.limitPool.snapshotRange(
     positionId
   )
   console.log('snapshot for position', positionId, ':')
@@ -325,7 +325,7 @@ export async function validateMint(params: ValidateMintParams): Promise<number> 
   if (revertMessage == '') {
     const txn = await hre.props.limitPool
       .connect(params.signer)
-      .mint({
+      .mintRange({
         to: recipient,
         lower: lower,
         upper: upper,
@@ -338,7 +338,7 @@ export async function validateMint(params: ValidateMintParams): Promise<number> 
     await expect(
       hre.props.limitPool
         .connect(params.signer)
-        .mint({
+        .mintRange({
           to: recipient,
           lower: lower,
           upper: upper,
@@ -414,10 +414,10 @@ export async function validateBurn(params: ValidateBurnParams) {
   }
 
   if (revertMessage == '') {
-    positionSnapshot = await hre.props.limitPool.snapshot(params.positionId)
+    positionSnapshot = await hre.props.limitPool.snapshotRange(params.positionId)
     const burnTxn = await hre.props.limitPool
       .connect(signer)
-      .burn({
+      .burnRange({
         to: params.signer.address,
         positionId: params.positionId,
         burnPercent: burnPercent
@@ -425,7 +425,7 @@ export async function validateBurn(params: ValidateBurnParams) {
     await burnTxn.wait()
   } else {
     await expect(
-      hre.props.limitPool.connect(signer).burn({
+      hre.props.limitPool.connect(signer).burnRange({
         to: params.signer.address,
         positionId: params.positionId,
         burnPercent: burnPercent,

@@ -5,7 +5,7 @@ import '../../../interfaces/limit/ILimitPoolStructs.sol';
 import '../RangePositions.sol';
 import '../../utils/Collect.sol';
 
-library SnapshotCall {
+library SnapshotRangeCall {
     uint8 private constant _ENTERED = 2;
 
     event Burn(

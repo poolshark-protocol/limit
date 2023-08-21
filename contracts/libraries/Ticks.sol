@@ -145,7 +145,7 @@ library Ticks {
             cache.averagePrice,
             cache.secondsPerLiquidityAccum,
             cache.tickSecondsAccum
-         ) = Samples.getLatestPrice(cache.state, cache.constants, cache.liquidity);
+         ) = Samples.getLatest(cache.state, cache.constants, cache.liquidity);
         // increment swap epoch
         cache.state.epoch += 1;
         // grab latest sample and store in cache for _cross
@@ -246,7 +246,7 @@ library Ticks {
             cache.averagePrice,
             cache.secondsPerLiquidityAccum,
             cache.tickSecondsAccum
-         ) = Samples.getLatestPrice(cache.state, cache.constants, cache.liquidity);
+         ) = Samples.getLatest(cache.state, cache.constants, cache.liquidity);
         while (cache.cross) {
             cache = _quoteSingle(cache, params.priceLimit, params.zeroForOne);
             if (cache.cross) {

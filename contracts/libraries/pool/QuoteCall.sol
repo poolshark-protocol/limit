@@ -5,6 +5,8 @@ import '../../interfaces/limit/ILimitPoolStructs.sol';
 import '../Ticks.sol';
 
 library QuoteCall {
+    uint8 private constant _ENTERED = 2;
+
     event Swap(
         address indexed recipient,
         bool zeroForOne,
@@ -27,6 +29,8 @@ library QuoteCall {
         uint256,
         uint160
     ) {
+        if (cache.state.unlocked == _ENTERED)
+            require(false, 'ReentrancyGuardReadOnlyReentrantCall()');
         cache.state = globalState;
         return Ticks.quote(
             ticks,

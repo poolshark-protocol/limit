@@ -5,6 +5,8 @@ import '../../interfaces/range/IRangePoolStructs.sol';
 import '../range/Samples.sol';
 
 library SampleCall {
+    uint8 private constant _ENTERED = 2;
+
     event Swap(
         address indexed recipient,
         bool zeroForOne,
@@ -26,6 +28,8 @@ library SampleCall {
         uint128 averageLiquidity,
         int24 averageTick
     ) {
+        if (state.unlocked == _ENTERED)
+            require(false, 'ReentrancyGuardReadOnlyReentrantCall()');
         return Samples.get(
             address(this),
             IRangePoolStructs.SampleParams(

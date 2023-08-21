@@ -29,12 +29,6 @@ interface IRangePoolStructs is PoolsharkStructs {
         uint128 burnPercent;
     }
 
-    struct SnapshotParams {
-        address owner;
-        int24 lower;
-        int24 upper;
-    }
-
     struct CompoundParams {
         uint160 priceLower;
         uint160 priceUpper;

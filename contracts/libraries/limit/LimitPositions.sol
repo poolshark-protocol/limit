@@ -438,11 +438,11 @@ library LimitPositions {
     function snapshot(
         mapping(address => mapping(int24 => mapping(int24 => ILimitPoolStructs.LimitPosition)))
             storage positions,
-        mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
+        mapping(int24 => PoolsharkStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
         ILimitPoolStructs.BurnLimitCache memory cache,
         ILimitPoolStructs.BurnLimitParams memory params
-    ) external view returns (
+    ) internal view returns (
         uint128 amountIn,
         uint128 amountOut
     ) {

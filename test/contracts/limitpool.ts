@@ -204,6 +204,7 @@ describe('LimitPool Tests', function () {
 
     it('pool0 - Should mint, partially fill, and burn 29', async function () {
         const aliceLiquidity = '20051041647900280328782'
+        
         // mint should revert
         await validateMint({
             signer: hre.props.alice,

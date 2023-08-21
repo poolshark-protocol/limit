@@ -14,6 +14,9 @@ import {
     RangePoolERC1155,
     Ticks,
     FeesCall,
+    SampleCall,
+    SnapshotCall,
+    SnapshotLimitCall,
 } from '../../../typechain'
 import { InitialSetup } from './initialSetup'
 import { MintRangeCall } from '../../../typechain'
@@ -35,14 +38,17 @@ export interface BeforeEachProps {
     swapCall: SwapCall
     quoteCall: QuoteCall
     feesCall: FeesCall
+    sampleCall: SampleCall
     //range
     burnRangeCall: BurnRangeCall
     mintRangeCall: MintRangeCall
     rangePositionsLib: RangePositions
     rangePoolERC1155: RangePoolERC1155
+    snapshotCall: SnapshotCall
     //limit
     burnLimitCall: BurnLimitCall
     mintLimitCall: MintLimitCall
+    snapshotLimitCall: SnapshotLimitCall
     limitPositionsLib: LimitPositions
     //shared
     tokenA: Token20
@@ -91,15 +97,18 @@ export class GetBeforeEach {
         let swapCall: SwapCall
         let quoteCall: QuoteCall
         let feesCall: FeesCall
+        let sampleCall: SampleCall
         //range
-        let burnCall: BurnRangeCall
-        let mintCall: MintRangeCall
-        let positionsLib: RangePositions
+        let burnRangeCall: BurnRangeCall
+        let mintRangeCall: MintRangeCall
+        let rangePositionsLib: RangePositions
         let rangePoolERC1155: RangePoolERC1155
+        let snapshotCall: SnapshotCall
         //limit
         let burnLimitCall: BurnLimitCall
         let mintLimitCall: MintLimitCall
-        let positionsLimitLib: LimitPositions
+        let limitPositionsLib: LimitPositions
+        let snapshotLimitCall: SnapshotLimitCall
         //shared
         let tokenA: Token20
         let tokenB: Token20
@@ -125,15 +134,18 @@ export class GetBeforeEach {
             swapCall,
             quoteCall,
             feesCall,
+            sampleCall,
             //range
-            burnRangeCall: burnCall,
-            mintRangeCall: mintCall,
-            rangePositionsLib: positionsLib,
+            burnRangeCall,
+            mintRangeCall,
+            snapshotCall,
+            rangePositionsLib,
             rangePoolERC1155,
             //limit
             burnLimitCall,
             mintLimitCall,
-            limitPositionsLib: positionsLimitLib,
+            limitPositionsLib,
+            snapshotLimitCall,
             //shared
             tokenA,
             tokenB,

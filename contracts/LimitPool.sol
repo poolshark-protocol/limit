@@ -12,10 +12,13 @@ import './utils/LimitPoolErrors.sol';
 import './libraries/pool/SwapCall.sol';
 import './libraries/pool/QuoteCall.sol';
 import './libraries/pool/FeesCall.sol';
+import './libraries/pool/SampleCall.sol';
 import './libraries/range/pool/MintRangeCall.sol';
 import './libraries/range/pool/BurnRangeCall.sol';
+import './libraries/range/pool/SnapshotCall.sol';
 import './libraries/limit/pool/MintLimitCall.sol';
 import './libraries/limit/pool/BurnLimitCall.sol';
+import './libraries/limit/pool/SnapshotLimitCall.sol';
 import './libraries/math/ConstantProduct.sol';
 import './libraries/solady/LibClone.sol';
 import './external/openzeppelin/security/ReentrancyGuard.sol';
@@ -174,28 +177,6 @@ contract LimitPool is
         );
     }
 
-    function quote(
-        QuoteParams memory params
-    ) external view override
-        nonReadOnlyReentrant(globalState)
-        canoncialOnly
-    returns (
-        uint256,
-        uint256,
-        uint160
-    ) {
-        SwapCache memory cache;
-        cache.constants = immutables();
-        return QuoteCall.perform(
-            ticks,
-            rangeTickMap,
-            limitTickMap,
-            globalState,
-            params,
-            cache
-        );
-    }
-
     function increaseSampleLength(
         uint16 sampleLengthNext
     ) external override
@@ -223,6 +204,76 @@ contract LimitPool is
             globalState,
             params,
             immutables()
+        );
+    }
+
+    function quote(
+        QuoteParams memory params
+    ) external view override
+    returns (
+        uint256,
+        uint256,
+        uint160
+    ) {
+        SwapCache memory cache;
+        cache.constants = immutables();
+        return QuoteCall.perform(
+            ticks,
+            rangeTickMap,
+            limitTickMap,
+            globalState,
+            params,
+            cache
+        );
+    }
+
+    function sample(
+        uint32[] memory secondsAgo
+    ) external view
+    returns(
+        int56[]   memory tickSecondsAccum,
+        uint160[] memory secondsPerLiquidityAccum,
+        uint160 averagePrice,
+        uint128 averageLiquidity,
+        int24 averageTick
+    ) 
+    {
+        return SampleCall.perform(
+            globalState,
+            immutables(),
+            secondsAgo
+        );
+    }
+
+    function snapshot(
+        uint32 positionId 
+    ) external view override returns (
+        int56   tickSecondsAccum,
+        uint160 secondsPerLiquidityAccum,
+        uint128 feesOwed0,
+        uint128 feesOwed1
+    ) {
+        return SnapshotCall.perform(
+            positions,
+            ticks,
+            globalState,
+            immutables(),
+            positionId
+        );
+    }
+
+    function snapshotLimit(
+        BurnLimitParams memory params
+    ) external view override returns(
+        uint128,
+        uint128
+    ) {
+        return SnapshotLimitCall.perform(
+            params.zeroForOne ? positions0 : positions1,
+            ticks,
+            limitTickMap,
+            globalState,
+            params
         );
     }
 

@@ -64,12 +64,6 @@ abstract contract ReentrancyGuard is PoolsharkStructs {
         _nonReentrantAfter(state);
     }
 
-    modifier nonReadOnlyReentrant(GlobalState memory state) {
-        _nonReadOnlyReentrant(state);
-        _;
-        _nonReadOnlyReentrant(state);
-    }
-
     function _nonReentrantBefore(GlobalState storage state) private {
         // On the first call to nonReentrant, _status will be _NOT_ENTERED
         if (state.unlocked == _ENTERED) {
@@ -85,13 +79,6 @@ abstract contract ReentrancyGuard is PoolsharkStructs {
         // By storing the original value once again, a refund is triggered (see
         // https://eips.ethereum.org/EIPS/eip-2200)
         state.unlocked = _NOT_ENTERED;
-    }
-
-    function _nonReadOnlyReentrant(GlobalState memory state) private pure {
-        // On the first call to nonReentrant, _status will be _NOT_ENTERED
-        if (state.unlocked == _ENTERED) {
-            revert ReentrancyGuardReadOnlyReentrantCall();
-        }
     }
 
     /**

@@ -231,7 +231,7 @@ library Samples {
         }
     }
 
-    function getLatestPrice(
+    function getLatest(
         PoolsharkStructs.GlobalState memory state,
         PoolsharkStructs.Immutables memory constants,
         uint256 liquidity

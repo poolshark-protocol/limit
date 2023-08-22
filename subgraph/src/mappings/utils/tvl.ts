@@ -1,7 +1,7 @@
 /* eslint-disable prefer-const */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { BigDecimal, log } from '@graphprotocol/graph-ts'
-import { BasePrice, RangePoolFactory, RangePool, Token } from '../../../generated/schema'
+import { BasePrice, LimitPoolFactory, LimitPool, Token } from '../../../generated/schema'
 import { AmountType, getAdjustedAmounts } from './price'
 import { ZERO_ADDRESS } from '../../constants/constants'
 import { safeLoadBasePrice, safeLoadToken } from './loads'
@@ -10,8 +10,8 @@ import { safeLoadBasePrice, safeLoadToken } from './loads'
 class UpdateDerivedTVLAmountsRet {
   token0: Token
   token1: Token
-  pool: RangePool
-  factory: RangePoolFactory
+  pool: LimitPool
+  factory: LimitPoolFactory
 }
 /**
  * Updates all dervived TVL values. This includes all ETH and USD
@@ -32,9 +32,9 @@ class UpdateDerivedTVLAmountsRet {
 export function updateDerivedTVLAmounts(
   token0: Token,
   token1: Token,
-  pool: RangePool,
-  factory: RangePoolFactory,
-  oldRangePoolTotalValueLockedEth: BigDecimal
+  pool: LimitPool,
+  factory: LimitPoolFactory,
+  oldLimitPoolTotalValueLockedEth: BigDecimal
 ): UpdateDerivedTVLAmountsRet {
   let basePrice = safeLoadBasePrice('eth').entity
 
@@ -59,7 +59,7 @@ export function updateDerivedTVLAmounts(
   pool.totalValueLockedEth = amounts.eth
   pool.totalValueLockedUsd = amounts.usd
   // Reset factory amounts before adding new TVL value.
-  factory.totalValueLockedEth = factory.totalValueLockedEth.minus(oldRangePoolTotalValueLockedEth)
+  factory.totalValueLockedEth = factory.totalValueLockedEth.minus(oldLimitPoolTotalValueLockedEth)
 
   // Add new TVL based on pool.
   factory.totalValueLockedEth = factory.totalValueLockedEth.plus(amounts.eth)

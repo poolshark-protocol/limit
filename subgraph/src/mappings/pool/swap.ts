@@ -18,14 +18,14 @@ export function handleSwap(event: Swap): void {
     let senderParam = event.transaction.from
 
     let loadBasePrice = safeLoadBasePrice('eth')
-    let loadRangePool = safeLoadLimitPool(poolAddress)
+    let loadLimitPool = safeLoadLimitPool(poolAddress)
     let basePrice = loadBasePrice.entity
-    let pool = loadRangePool.entity
+    let pool = loadLimitPool.entity
 
-    let loadRangePoolFactory = safeLoadLimitPoolFactory(pool.factory)
+    let loadLimitPoolFactory = safeLoadLimitPoolFactory(pool.factory)
     let loadToken0 = safeLoadToken(pool.token0)
     let loadToken1 = safeLoadToken(pool.token1)
-    let factory = loadRangePoolFactory.entity
+    let factory = loadLimitPoolFactory.entity
     let token0 = loadToken0.entity
     let token1 = loadToken1.entity
 

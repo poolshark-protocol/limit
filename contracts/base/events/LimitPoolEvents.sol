@@ -45,13 +45,13 @@ abstract contract LimitPoolEvents {
         uint128 liquidityCompounded
     );
 
-    //
+    // DONE
     event CollectRange(
         uint128 amount0,
         uint128 amount1
     );
 
-    //
+    // DONE
     event MintLimit(
         address indexed to,
         int24 lower,
@@ -63,7 +63,7 @@ abstract contract LimitPoolEvents {
         uint128 liquidityMinted
     );
 
-    //
+    // DONE
     event BurnLimit(
         address indexed to,
         int24 lower,
@@ -94,7 +94,7 @@ abstract contract LimitPoolEvents {
         int24 tick
     );
 
-    //
+    // when we cross limit tick L-delta and L-absolute are zero
     event SyncLimitTick(
         uint32 epoch,
         int24 tick,
@@ -111,4 +111,6 @@ abstract contract LimitPoolEvents {
     event SampleLengthIncreased(
         uint16 sampleLengthNext
     );
+
+    //dib;t forget liquidityGlobal
 }

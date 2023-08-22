@@ -14,7 +14,7 @@ export function handleBurnRange(event: BurnRange): void {
     let positionIdParam = event.params.positionId
     let liquidityBurnedParam = event.params.liquidityBurned
     let amount0Param = event.params.amount0
-    let amoun1Param = event.params.amount1
+    let amount1Param = event.params.amount1
     let poolAddress = event.address.toHex()
     let msgSender = event.transaction.from
 
@@ -24,8 +24,8 @@ export function handleBurnRange(event: BurnRange): void {
     )
     let position = loadPosition.entity
 
-    let lower = BigInt.fromI32(position.lower)
-    let upper = BigInt.fromI32(position.upper)
+    let lower = position.lower
+    let upper = position.upper
 
     // log burn action
     let loadBurnLog = safeLoadBurnLog(event.transaction.hash, poolAddress, positionIdParam)
@@ -41,14 +41,14 @@ export function handleBurnRange(event: BurnRange): void {
     burnLog.liquidityBurned = burnLog.liquidityBurned.plus(liquidityBurnedParam)
 
     let loadBasePrice = safeLoadBasePrice('eth')
-    let loadRangePool = safeLoadLimitPool(poolAddress)
+    let loadLimitPool = safeLoadLimitPool(poolAddress)
     let basePrice = loadBasePrice.entity
-    let pool = loadRangePool.entity
+    let pool = loadLimitPool.entity
 
-    let loadRangePoolFactory = safeLoadLimitPoolFactory(pool.factory)
+    let loadLimitPoolFactory = safeLoadLimitPoolFactory(pool.factory)
     let loadToken0 = safeLoadToken(pool.token0)
     let loadToken1 = safeLoadToken(pool.token1)
-    let factory = loadRangePoolFactory.entity
+    let factory = loadLimitPoolFactory.entity
     let token0 = loadToken0.entity
     let token1 = loadToken1.entity
 
@@ -64,8 +64,8 @@ export function handleBurnRange(event: BurnRange): void {
     let upperTick = loadUpperTick.entity
 
     // convert amounts to decimal values
-    let amount0 = convertTokenToDecimal(event.params.amount0, token0.decimals)
-    let amount1 = convertTokenToDecimal(event.params.amount1, token1.decimals)
+    let amount0 = convertTokenToDecimal(amount0Param, token0.decimals)
+    let amount1 = convertTokenToDecimal(amount1Param, token1.decimals)
     let amountUsd = amount0
         .times(token0.ethPrice.times(basePrice.USD))
         .plus(amount1.times(token1.ethPrice.times(basePrice.USD)))

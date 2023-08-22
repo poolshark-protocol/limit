@@ -1,10 +1,7 @@
 import { safeLoadManager, safeLoadLimitPoolFactory } from './utils/loads'
 import { BigInt, log } from '@graphprotocol/graph-ts'
 import { FACTORY_ADDRESS } from '../constants/constants'
-import { FactoryChanged, FeeToTransfer, ImplementationEnabled, OwnerTransfer, TickSpacingEnabled } from '../../generated/LimitPoolManager/LimitPoolManager'
-
-export function handleTickSpacingEnabled(event: TickSpacingEnabled): void {
-}
+import { FactoryChanged, FeeToTransfer, ImplementationEnabled, OwnerTransfer } from '../../generated/LimitPoolManager/LimitPoolManager'
 
 export function handleImplementationEnabled(event: ImplementationEnabled): void {
 }

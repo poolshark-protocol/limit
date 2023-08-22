@@ -1,8 +1,10 @@
 import { store, BigInt } from "@graphprotocol/graph-ts"
 import { BurnLimit } from "../../../generated/LimitPoolFactory/LimitPool"
 import { ONE_BI } from "../utils/constants"
-import { convertTokenToDecimal } from "../utils/helpers"
-import { safeLoadLimitPool, safeLoadLimitPosition, safeLoadToken } from "../utils/loads"
+import { BIGINT_ZERO, convertTokenToDecimal } from "../utils/helpers"
+import { safeLoadBasePrice, safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadLimitPosition, safeLoadLimitTick, safeLoadToken } from "../utils/loads"
+import { findEthPerToken } from "../utils/price"
+import { updateDerivedTVLAmounts } from "../utils/tvl"
 
 export function handleBurnLimit(event: BurnLimit): void {
     let msgSender = event.transaction.from.toHex()
@@ -20,17 +22,31 @@ export function handleBurnLimit(event: BurnLimit): void {
     let claim = BigInt.fromI32(claimParam)
     let upper = BigInt.fromI32(upperParam)
 
-    let loadLimitPool = safeLoadLimitPool(poolAddress)
-    let loadPosition = safeLoadLimitPosition(
-        poolAddress,
-        msgSender,
-        lower,
-        upper,
-        zeroForOneParam
-    )
+    let loadBasePrice = safeLoadBasePrice('eth') // 1
+    let loadLimitPool = safeLoadLimitPool(poolAddress) // 2
 
-    let position  = loadPosition.entity
     let pool      = loadLimitPool.entity
+    let basePrice = loadBasePrice.entity
+    
+    let loadLimitPoolFactory = safeLoadLimitPoolFactory(pool.factory) // 3
+    let loadPosition = safeLoadLimitPosition(poolAddress, msgSender, lower, upper, zeroForOneParam) // 4
+    let loadLowerTick = safeLoadLimitTick(poolAddress, lower) // 5
+    let loadUpperTick = safeLoadLimitTick(poolAddress, upper) // 6
+    let loadTokenIn = safeLoadToken(zeroForOneParam ? pool.token1 : pool.token0) // 7
+    let loadTokenOut = safeLoadToken(zeroForOneParam ? pool.token0 : pool.token1) // 8
+
+    let factory = loadLimitPoolFactory.entity
+    let position  = loadPosition.entity
+    let lowerTick = loadLowerTick.entity
+    let upperTick = loadUpperTick.entity
+    let tokenIn = loadTokenIn.entity
+    let tokenOut = loadTokenOut.entity
+
+    // update txn counts
+    pool.txnCount = pool.txnCount.plus(ONE_BI)
+    tokenIn.txnCount = tokenIn.txnCount.plus(ONE_BI)
+    tokenOut.txnCount = tokenOut.txnCount.plus(ONE_BI)
+    factory.txnCount = factory.txnCount.plus(ONE_BI)
 
     if (!loadPosition.exists) {
         //throw an error
@@ -53,17 +69,53 @@ export function handleBurnLimit(event: BurnLimit): void {
     }
     // update pool stats
     pool.liquidityGlobal = pool.liquidityGlobal.minus(liquidityBurnedParam)
-    pool.txnCount = pool.txnCount.plus(ONE_BI)
+
+    // grab tick epochs
+    let lowerTickEpoch = zeroForOneParam ? lowerTick.epochLast0 : lowerTick.epochLast1
+    let upperTickEpoch = zeroForOneParam ? upperTick.epochLast0 : upperTick.epochLast1
+ 
     if (zeroForOneParam) {
-        let tokenIn = safeLoadToken(pool.token1).entity
-        let tokenOut = safeLoadToken(pool.token0).entity
-        pool.totalValueLocked0 = pool.totalValueLocked0.minus(convertTokenToDecimal(tokenOutBurnedParam, tokenOut.decimals))
-        pool.totalValueLocked1 = pool.totalValueLocked1.minus(convertTokenToDecimal(tokenInClaimedParam, tokenIn.decimals))
+        if (lowerTickEpoch.le(position.epochLast)) {
+            // lower tick has not been crossed yet
+            lowerTick.liquidityDelta = lowerTick.liquidityDelta.minus(liquidityBurnedParam)
+            lowerTick.liquidityAbsolute = lowerTick.liquidityAbsolute.minus(liquidityBurnedParam)
+            if (lowerTick.liquidityAbsolute.equals(BIGINT_ZERO)) {
+                store.remove('LimitTick', lowerTick.id)
+            } else {
+                lowerTick.save() // 1
+            }
+        }
+        if (upperTickEpoch.le(position.epochLast)) {
+            // upper tick has not been crossed yet
+            upperTick.liquidityDelta = upperTick.liquidityDelta.plus(liquidityBurnedParam)
+            upperTick.liquidityAbsolute = upperTick.liquidityAbsolute.minus(liquidityBurnedParam)
+            if (upperTick.liquidityAbsolute.equals(BIGINT_ZERO)) {
+                store.remove('LimitTick', upperTick.id)
+            } else {
+                upperTick.save() // 2
+            }
+        }
     } else {
-        let tokenIn = safeLoadToken(pool.token0).entity
-        let tokenOut = safeLoadToken(pool.token1).entity
-        pool.totalValueLocked1 = pool.totalValueLocked1.minus(convertTokenToDecimal(tokenOutBurnedParam, tokenOut.decimals))
-        pool.totalValueLocked0 = pool.totalValueLocked0.minus(convertTokenToDecimal(tokenInClaimedParam, tokenIn.decimals))
+        if (lowerTickEpoch.le(position.epochLast)) {
+            // lower tick has not been crossed yet
+            lowerTick.liquidityDelta = lowerTick.liquidityDelta.plus(liquidityBurnedParam)
+            lowerTick.liquidityAbsolute = lowerTick.liquidityAbsolute.minus(liquidityBurnedParam)
+            if (lowerTick.liquidityAbsolute.equals(BIGINT_ZERO)) {
+                store.remove('LimitTick', lowerTick.id)
+            } else {
+                lowerTick.save() // 1
+            }
+        }
+        if (upperTickEpoch.le(position.epochLast)) {
+            // upper tick has not been crossed yet
+            upperTick.liquidityDelta = upperTick.liquidityDelta.minus(liquidityBurnedParam)
+            upperTick.liquidityAbsolute = upperTick.liquidityAbsolute.minus(liquidityBurnedParam)
+            if (upperTick.liquidityAbsolute.equals(BIGINT_ZERO)) {
+                store.remove('LimitTick', upperTick.id)
+            } else {
+                upperTick.save() // 2
+            }
+        }
     }
 
     // shrink position to new size
@@ -72,6 +124,44 @@ export function handleBurnLimit(event: BurnLimit): void {
     } else {
         position.upper = claim
     }
-    pool.save()
-    position.save()
+
+    // tvl adjustments
+    let amountIn = convertTokenToDecimal(tokenInClaimedParam, tokenIn.decimals)
+    let amountOut = convertTokenToDecimal(tokenOutBurnedParam, tokenOut.decimals)
+    tokenIn.totalValueLocked = tokenIn.totalValueLocked.minus(amountIn)
+    tokenOut.totalValueLocked = tokenOut.totalValueLocked.minus(amountOut)
+    pool.totalValueLocked0 = pool.totalValueLocked0.minus(zeroForOneParam ? amountOut : amountIn)
+    pool.totalValueLocked1 = pool.totalValueLocked1.minus(zeroForOneParam ? amountIn : amountOut)
+
+    // eth price updates
+    tokenIn.ethPrice = findEthPerToken(tokenIn, tokenOut, basePrice)
+    tokenOut.ethPrice = findEthPerToken(tokenOut, tokenIn, basePrice)
+    tokenIn.usdPrice = tokenIn.ethPrice.times(basePrice.USD)
+    tokenOut.usdPrice = tokenOut.ethPrice.times(basePrice.USD)
+
+    // tvl updates
+    let oldPoolTotalValueLockedEth = pool.totalValueLockedEth
+    let updateTvlRet = updateDerivedTVLAmounts(
+        zeroForOneParam ? tokenOut : tokenIn,
+        zeroForOneParam ? tokenIn : tokenOut,
+        pool,
+        factory,
+        oldPoolTotalValueLockedEth
+    )
+    if (zeroForOneParam) {
+        tokenIn = updateTvlRet.token1
+        tokenOut = updateTvlRet.token0
+    } else {
+        tokenIn = updateTvlRet.token0
+        tokenOut = updateTvlRet.token1
+    }
+    pool = updateTvlRet.pool
+    factory = updateTvlRet.factory
+
+    basePrice.save() // 3
+    pool.save() // 4
+    factory.save() // 5
+    position.save() // 6
+    tokenIn.save() // 7
+    tokenOut.save() // 8
 }

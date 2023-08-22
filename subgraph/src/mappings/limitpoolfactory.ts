@@ -6,11 +6,9 @@ import {
     fetchTokenName,
     fetchTokenDecimals,
 } from './utils/helpers'
-import { safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadTick, safeLoadToken, safeLoadFeeTier } from './utils/loads'
-import { Address, BigInt, Bytes, ethereum } from '@graphprotocol/graph-ts'
+import { safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadToken } from './utils/loads'
+import { BigInt } from '@graphprotocol/graph-ts'
 import { FACTORY_ADDRESS, ONE_BI } from './utils/constants'
-import { FeeTier } from '../../generated/schema'
-import { RangePoolERC1155 } from '../../../typechain'
 
 export function handlePoolCreated(event: PoolCreated): void {
     // grab event parameters

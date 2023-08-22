@@ -1,5 +1,6 @@
 import { Sync } from "../../../generated/LimitPoolFactory/LimitPool"
 import { safeLoadLimitPool, safeLoadLimitTick } from "../utils/loads"
+import { BigInt } from "@graphprotocol/graph-ts"
 
 export function handleSync(event: Sync): void {
     let priceParam = event.params.price
@@ -11,7 +12,7 @@ export function handleSync(event: Sync): void {
     let msgSender = event.transaction.from
 
     let loadLimitPool = safeLoadLimitPool(poolAddress)
-    let loadTick = safeLoadLimitTick(poolAddress, tickAtPriceParam)
+    let loadTick = safeLoadLimitTick(poolAddress, BigInt.fromI32(tickAtPriceParam))
 
     let tick = loadTick.entity
     let pool      = loadLimitPool.entity

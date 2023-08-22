@@ -2,7 +2,7 @@ import { safeLoadRangePosition, safeLoadLimitPool, safeLoadLimitPoolFactory, saf
 import {
     BigInt
 } from '@graphprotocol/graph-ts'
-import { BIGINT_ONE, convertTokenToDecimal } from "../utils/helpers"
+import { BIGINT_ONE } from "../utils/helpers"
 import { CompoundRange } from "../../../generated/LimitPoolFactory/LimitPool"
 
 export function handleCompoundRange(event: CompoundRange): void {
@@ -18,8 +18,8 @@ export function handleCompoundRange(event: CompoundRange): void {
     )
     let position = loadPosition.entity
 
-    let lower = BigInt.fromI32(position.lower)
-    let upper = BigInt.fromI32(position.upper)
+    let lower = position.lower
+    let upper = position.upper
 
     // log compound action
     let loadCompoundRangeLog = safeLoadCompoundRangeLog(event.transaction.hash, poolAddress, positionIdParam)
@@ -31,9 +31,9 @@ export function handleCompoundRange(event: CompoundRange): void {
     }
     compoundLog.liquidityCompounded = compoundLog.liquidityCompounded.plus(liquidityCompoundedParam)
 
-    let loadRangePool = safeLoadLimitPool(poolAddress)
-    let pool = loadRangePool.entity
-    let loadRangePoolFactory = safeLoadLimitPoolFactory(pool.factory)
+    let loadLimitPool = safeLoadLimitPool(poolAddress)
+    let pool = loadLimitPool.entity
+    let loadLimitPoolFactory = safeLoadLimitPoolFactory(pool.factory)
     let loadToken0 = safeLoadToken(pool.token0)
     let loadToken1 = safeLoadToken(pool.token1)
     let loadLowerTick = safeLoadRangeTick(poolAddress, lower)
@@ -41,7 +41,7 @@ export function handleCompoundRange(event: CompoundRange): void {
 
     let lowerTick = loadLowerTick.entity
     let upperTick = loadUpperTick.entity
-    let factory = loadRangePoolFactory.entity
+    let factory = loadLimitPoolFactory.entity
     let token0 = loadToken0.entity
     let token1 = loadToken1.entity
 

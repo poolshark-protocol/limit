@@ -230,6 +230,13 @@ type LimitTick @entity {
     epochLast1: BigInt!
 }
 
+type PoolRouter @entity {
+    id: ID!
+
+    limitPoolFactory: Bytes!
+    coverPoolFactory: Bytes!
+}
+
 type MintRangeLog @entity {
     id: ID!
 

@@ -1,5 +1,5 @@
 import { Address, BigDecimal, BigInt, Bytes, ethereum, log } from '@graphprotocol/graph-ts'
-import { LimitPool, LimitPoolFactory, LimitPoolManager, LimitPosition, Token, FeeTier, BasePrice, RangePosition, RangeTick, Transaction, LimitTick, Swap, CompoundRangeLog, MintRangeLog, BurnRangeLog } from '../../../generated/schema'
+import { LimitPool, LimitPoolFactory, LimitPoolManager, LimitPosition, Token, FeeTier, BasePrice, RangePosition, RangeTick, Transaction, LimitTick, Swap, CompoundRangeLog, MintRangeLog, BurnRangeLog, PoolRouter } from '../../../generated/schema'
 import { ONE_BD, ONE_BI } from './constants'
 import {
     fetchTokenSymbol,
@@ -218,6 +218,25 @@ export function safeLoadLimitPool(poolAddress: string): LoadLimitPoolRet {
 
     return {
         entity: coverPoolEntity,
+        exists: exists,
+    }
+}
+
+class LoadPoolRouterRet {
+    entity: PoolRouter
+    exists: boolean
+}
+export function safeLoadPoolRouter(routerAddress: string): LoadPoolRouterRet {
+    let exists = true
+    let poolRouterEntity = PoolRouter.load(routerAddress)
+
+    if (!poolRouterEntity) {
+        poolRouterEntity = new PoolRouter(routerAddress)
+        exists = false
+    }
+
+    return {
+        entity: poolRouterEntity,
         exists: exists,
     }
 }

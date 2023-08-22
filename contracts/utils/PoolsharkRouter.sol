@@ -2,27 +2,26 @@
 pragma solidity 0.8.13;
 
 import '../interfaces/IPool.sol';
-import '../interfaces/callbacks/IPoolsharkSwapCallback.sol';
+import '../interfaces/callbacks/ILimitPoolSwapCallback.sol';
 import '../libraries/utils/SafeTransfers.sol';
 import '../libraries/utils/SafeCast.sol';
 import '../interfaces/structs/PoolsharkStructs.sol';
 import '../libraries/solady/LibClone.sol';
 
 contract PoolsharkRouter is
-    IPoolsharkSwapCallback,
+    ILimitPoolSwapCallback,
     PoolsharkStructs
 {
     using SafeCast for uint256;
     using SafeCast for int256;
 
-    //TODO: call to the manager to get these
-    address public immutable factory;
-    address public immutable implementation;
+    address public immutable limitPoolFactory;
+    address public immutable coverPoolFactory;
 
     event RouterDeployed(
         address router,
-        address factory,
-        address implementation
+        address limitPoolFactory,
+        address coverPoolFactory
     );
 
     struct SwapCallbackData {
@@ -30,24 +29,29 @@ contract PoolsharkRouter is
     }
 
     constructor(
-        address factory_,
-        address implementation_
+        address limitPoolFactory_,
+        address coverPoolFactory_
     ) {
-        factory = factory_;
-        implementation = implementation_;
-        emit RouterDeployed(address(this), factory, implementation);
+        limitPoolFactory = limitPoolFactory_;
+        coverPoolFactory = coverPoolFactory_;
+        emit RouterDeployed(
+            address(this),
+            limitPoolFactory,
+            coverPoolFactory
+        );
     }
 
-    /// @inheritdoc IPoolsharkSwapCallback
-    function poolsharkSwapCallback(
+    /// @inheritdoc ILimitPoolSwapCallback
+    function limitPoolSwapCallback(
         int256 amount0Delta,
         int256 amount1Delta,
         bytes calldata data
     ) external override {
         PoolsharkStructs.Immutables memory constants = IPool(msg.sender).immutables();
+
         // generate key for pool
         bytes32 key = keccak256(abi.encode(
-            implementation,
+            constants.poolImpl,
             constants.token0,
             constants.token1,
             constants.swapFee
@@ -55,7 +59,7 @@ contract PoolsharkRouter is
 
         // compute address
         address predictedAddress = LibClone.predictDeterministicAddress(
-            implementation,
+            constants.poolImpl,
             abi.encodePacked(
                 constants.owner,
                 constants.token0,
@@ -68,7 +72,7 @@ contract PoolsharkRouter is
                 constants.swapFee
             ),
             key,
-            factory
+            limitPoolFactory
         );
 
         // revert on sender mismatch
@@ -85,6 +89,53 @@ contract PoolsharkRouter is
         }
     }
 
+    // function coverPoolSwapCallback(
+    //     int256 amount0Delta,
+    //     int256 amount1Delta,
+    //     bytes calldata data
+    // ) external override {
+    //     PoolsharkStructs.Immutables memory constants = ICoverPool(msg.sender).immutables();
+
+    //     // generate key for pool
+    //     bytes32 key = keccak256(abi.encode(
+    //         implementation,
+    //         constants.token0,
+    //         constants.token1,
+    //         constants.swapFee
+    //     ));
+
+    //     // compute address
+    //     address predictedAddress = LibClone.predictDeterministicAddress(
+    //         constants.poolImpl,
+    //         abi.encodePacked(
+    //             constants.owner,
+    //             constants.token0,
+    //             constants.token1,
+    //             constants.poolToken,
+    //             constants.bounds.min,
+    //             constants.bounds.max,
+    //             constants.genesisTime,
+    //             constants.tickSpacing,
+    //             constants.swapFee
+    //         ),
+    //         key,
+    //         limitPoolFactory
+    //     );
+
+    //     // revert on sender mismatch
+    //     if (msg.sender != predictedAddress) require(false, 'InvalidCallerAddress()');
+
+    //     // decode original sender
+    //     SwapCallbackData memory _data = abi.decode(data, (SwapCallbackData));
+        
+    //     // transfer from swap caller
+    //     if (amount0Delta < 0) {
+    //         SafeTransfers.transferInto(constants.token0, _data.sender, uint256(-amount0Delta));
+    //     } else {
+    //         SafeTransfers.transferInto(constants.token1, _data.sender, uint256(-amount1Delta));
+    //     }
+    // }
+
     function multiQuote(
         address[] memory pools,
         QuoteParams[] memory params 
@@ -94,6 +145,18 @@ contract PoolsharkRouter is
     {
         if (pools.length != params.length) require(false, 'InputArrayLengthsMismatch()');
         results = new QuoteResults[](pools.length);
+        for (uint i = 0; i < pools.length;) {
+            results[i].pool = pools[i];
+            (
+                results[i].amountIn,
+                results[i].amountOut,
+                results[i].priceAfter
+            ) = IPool(pools[i]).quote(params[i]);
+
+            unchecked {
+                ++i;
+            }
+        }
         for (uint i = 0; i < pools.length;) {
             results[i].pool = pools[i];
             (

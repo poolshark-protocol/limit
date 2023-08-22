@@ -2,7 +2,7 @@
 pragma solidity 0.8.13;
 
 import '../../interfaces/structs/LimitPoolStructs.sol';
-import '../../interfaces/callbacks/IPoolsharkSwapCallback.sol';
+import '../../interfaces/callbacks/ILimitPoolSwapCallback.sol';
 import '../../interfaces/IERC20Minimal.sol';
 import '../Ticks.sol';
 import '../utils/Collect.sol';
@@ -52,7 +52,7 @@ library SwapCall {
 
         // check balance and execute callback
         uint256 balanceStart = balance(params, cache);
-        IPoolsharkSwapCallback(msg.sender).poolsharkSwapCallback(
+        ILimitPoolSwapCallback(msg.sender).limitPoolSwapCallback(
             params.zeroForOne ? -int256(cache.input) : int256(cache.output),
             params.zeroForOne ? int256(cache.output) : -int256(cache.input),
             params.callbackData

@@ -302,7 +302,7 @@ export class InitialSetup {
             'poolRouter',
             [
               hre.props.limitPoolFactory.address,
-              hre.props.limitPoolImpl.address
+              hre.props.limitPoolImpl.address //TODO: needs to be coverPoolFactory
             ]
         )
 

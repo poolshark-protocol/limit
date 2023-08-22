@@ -283,6 +283,7 @@ contract LimitPool is
     ) {
         return Immutables(
             owner(),
+            original,
             factory,
             PriceBounds(minPrice(), maxPrice()),
             token0(),

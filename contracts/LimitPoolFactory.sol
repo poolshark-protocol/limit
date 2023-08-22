@@ -69,7 +69,7 @@ contract LimitPoolFactory is
         ));
 
         // check if pool already exists
-        if (limitPools[key] != address(0)) revert PoolAlreadyExists();
+        if (pools[key] != address(0)) revert PoolAlreadyExists();
 
         // set immutables
         constants.owner = owner;
@@ -79,10 +79,6 @@ contract LimitPoolFactory is
             constants.bounds.min,
             constants.bounds.max
         ) = ILimitPool(poolImpl).priceBounds(constants.tickSpacing);
-
-        // calculate token address
-
-        // pass this address into a clone of RangePoolERC1155
 
         // take that ERC1155 contract address and pass that into pool
         // launch pool token
@@ -113,7 +109,7 @@ contract LimitPoolFactory is
         ILimitPool(pool).initialize(startPrice);
 
         // save pool in mapping
-        limitPools[key] = pool;
+        pools[key] = pool;
 
         emit PoolCreated(
             pool,
@@ -161,7 +157,7 @@ contract LimitPoolFactory is
             swapFee
         ));
 
-        pool = limitPools[key];
+        pool = pools[key];
 
         poolToken = LibClone.predictDeterministicAddress(
             tokenImpl,

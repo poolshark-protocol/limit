@@ -108,6 +108,7 @@ interface PoolsharkStructs {
     
     struct Immutables {
         address owner;
+        address poolImpl;
         address factory;
         PriceBounds bounds;
         address token0;

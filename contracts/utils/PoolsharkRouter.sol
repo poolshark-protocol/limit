@@ -138,12 +138,23 @@ contract PoolsharkRouter is
 
     function multiQuote(
         address[] memory pools,
-        QuoteParams[] memory params 
+        QuoteParams[] memory params,
+        bool sortResults 
     ) external view returns (
         QuoteResults[] memory results
     )
     {
         if (pools.length != params.length) require(false, 'InputArrayLengthsMismatch()');
+        if (sortResults) {
+            // if sorting results check for matching params
+            for (uint i = 0; i < pools.length;) {
+                if (i > 0) {
+                    if (params[i].zeroForOne != params[0].zeroForOne) require (false, 'ZeroForOneParamMismatch()');
+                    if (params[i].exactIn != params[0].exactIn) require(false, 'ExactInParamMismatch()');
+                    if (params[i].amount != params[0].amount) require(false, 'AmountParamMisMatch()');
+                }
+            }
+        }
         results = new QuoteResults[](pools.length);
         for (uint i = 0; i < pools.length;) {
             results[i].pool = pools[i];
@@ -157,17 +168,9 @@ contract PoolsharkRouter is
                 ++i;
             }
         }
-        for (uint i = 0; i < pools.length;) {
-            results[i].pool = pools[i];
-            (
-                results[i].amountIn,
-                results[i].amountOut,
-                results[i].priceAfter
-            ) = IPool(pools[i]).quote(params[i]);
-
-            unchecked {
-                ++i;
-            }
+        // sort if true
+        if (sortResults) {
+            results = sortQuoteResults(params, results);
         }
     }
 
@@ -222,5 +225,52 @@ contract PoolsharkRouter is
                 ++i;
             }
         }
+    }
+
+    function sortQuoteResults(
+        QuoteParams[] memory params,
+        QuoteResults[] memory results
+    ) internal pure returns (
+        QuoteResults[] memory sortedResults
+    ) {
+            sortedResults = new QuoteResults[](results.length);
+            for (uint sorted = 0; sorted < results.length;) {
+                // if exactIn, sort by most output
+                // if exactOut, sort by least input
+                uint256 sortAmount = params[0].exactIn ? 0 : type(uint256).max;
+                uint256 sortIndex = type(uint256).max;
+                for (uint index = 0; index < (results.length - sorted);) {
+                    // check if result already sorted
+                    if (results[index].priceAfter > 0) {
+                        if (params[0].exactIn) {
+                            if (results[index].amountOut >= sortAmount) {
+                                sortIndex = index;
+                                sortAmount = results[index].amountOut;
+                            }
+                        } else {
+                           if (results[index].amountIn <= sortAmount) {
+                                sortIndex = index;
+                                sortAmount = results[index].amountIn;
+                            }
+                        }
+                    }
+                    if (sortIndex != type(uint256).max) {
+                        // add the sorted result
+                        sortedResults[sorted] = results[sortIndex];
+
+                        // indicate this result was already sorted
+                        results[sortIndex].priceAfter = 0;
+                    }
+
+                    // continue finding nth element
+                    unchecked {
+                        ++index;
+                    }
+                }
+                // find next sorted element
+                unchecked {
+                    ++sorted;
+                }
+            }
     }
 }

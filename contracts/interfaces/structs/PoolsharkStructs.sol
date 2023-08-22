@@ -98,6 +98,13 @@ interface PoolsharkStructs {
         int24 claim;
         bool zeroForOne;
     }
+
+    struct QuoteResults {
+        address pool;
+        uint256 amountIn;
+        uint256 amountOut;
+        uint160 priceAfter;
+    }
     
     struct Immutables {
         address owner;

@@ -13,7 +13,7 @@ import {
     RangePositions__factory,
     LimitPoolManager__factory,
     TickMap__factory,
-    PoolRouter__factory
+    PoolsharkRouter__factory
 } from '../../../typechain'
 
 // import {abi as factoryAbi} from '../../../artifacts/contracts/LimitPoolFactory.sol/LimitPoolFactory.json'
@@ -298,7 +298,7 @@ export class InitialSetup {
         await this.deployAssist.deployContractWithRetry(
             network,
             // @ts-ignore
-            PoolRouter__factory,
+            PoolsharkRouter__factory,
             'poolRouter',
             [
               hre.props.limitPoolFactory.address,

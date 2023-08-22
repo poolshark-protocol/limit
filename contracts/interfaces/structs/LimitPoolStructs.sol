@@ -57,6 +57,7 @@ interface LimitPoolStructs is PoolsharkStructs {
         uint128 liquidityBurned;
         uint128 amountIn;
         uint128 amountOut;
+        int24 claim;
         bool earlyReturn;
         bool removeLower;
         bool removeUpper;

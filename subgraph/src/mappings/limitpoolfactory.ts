@@ -67,6 +67,7 @@ export function handlePoolCreated(event: PoolCreated): void {
     pool.tickSpacing = tickSpacingParam
     pool.factory = factory.id
     pool.implementation = poolImplParam.concat(tokenImplParam)
+    pool.samplesLength = BigInt.fromString('5')
 
     // creation stats
     pool.createdAtBlockNumber = event.block.number

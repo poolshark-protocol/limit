@@ -26,6 +26,12 @@ library LimitTicks {
 
     uint256 internal constant Q96 = 0x1000000000000000000000000;
 
+    event SyncLimitLiquidity(
+        uint128 liquidityAdded,
+        int24 tick,
+        bool zeroForOne
+    );
+
     function validate(
         int24 lower,
         int24 upper,
@@ -172,6 +178,7 @@ library LimitTicks {
         if ((tickToSave != (params.zeroForOne ? params.lower : params.upper))) {
             tick.liquidityDelta += int128(pool.liquidity);
             tick.liquidityAbsolute += pool.liquidity;
+            emit SyncLimitLiquidity(pool.liquidity, tickToSave, params.zeroForOne);
             pool.liquidity = 0;
         }
         ticks[tickToSave].limit = tick;

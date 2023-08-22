@@ -1,8 +1,8 @@
-import { Sync } from "../../../generated/LimitPoolFactory/LimitPool"
+import { SyncLimitPool } from "../../../generated/LimitPoolFactory/LimitPool"
 import { safeLoadLimitPool, safeLoadLimitTick } from "../utils/loads"
 import { BigInt } from "@graphprotocol/graph-ts"
 
-export function handleSync(event: Sync): void {
+export function handleSyncLimitPool(event: SyncLimitPool): void {
     let priceParam = event.params.price
     let liquidityParam = event.params.liquidity
     let epochLastParam = event.params.epoch

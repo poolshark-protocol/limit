@@ -23,7 +23,13 @@
       {
         "indexed": false,
         "internalType": "int24",
-        "name": "claim",
+        "name": "oldClaim",
+        "type": "int24"
+      },
+      {
+        "indexed": false,
+        "internalType": "int24",
+        "name": "newClaim",
         "type": "int24"
       },
       {
@@ -307,12 +313,6 @@
       },
       {
         "indexed": false,
-        "internalType": "bool",
-        "name": "zeroForOne",
-        "type": "bool"
-      },
-      {
-        "indexed": false,
         "internalType": "uint256",
         "name": "amountIn",
         "type": "uint256"
@@ -322,6 +322,18 @@
         "internalType": "uint256",
         "name": "amountOut",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint200",
+        "name": "feeGrowthGlobal0",
+        "type": "uint200"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint200",
+        "name": "feeGrowthGlobal1",
+        "type": "uint200"
       },
       {
         "indexed": false,
@@ -346,9 +358,46 @@
         "internalType": "int24",
         "name": "tickAtPrice",
         "type": "int24"
+      },
+      {
+        "indexed": true,
+        "internalType": "bool",
+        "name": "zeroForOne",
+        "type": "bool"
+      },
+      {
+        "indexed": true,
+        "internalType": "bool",
+        "name": "exactIn",
+        "type": "bool"
       }
     ],
     "name": "Swap",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "liquidityAdded",
+        "type": "uint128"
+      },
+      {
+        "indexed": false,
+        "internalType": "int24",
+        "name": "tick",
+        "type": "int24"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "zeroForOne",
+        "type": "bool"
+      }
+    ],
+    "name": "SyncLimitLiquidity",
     "type": "event"
   },
   {
@@ -385,7 +434,7 @@
         "type": "bool"
       }
     ],
-    "name": "Sync",
+    "name": "SyncLimitPool",
     "type": "event"
   },
   {

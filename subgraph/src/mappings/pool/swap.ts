@@ -7,24 +7,28 @@ import { updateDerivedTVLAmounts } from "../utils/tvl"
 import { Swap } from "../../../generated/LimitPoolFactory/LimitPool"
 
 export function handleSwap(event: Swap): void {
+    let recipientParam = event.params.recipient
     let amountInParam = event.params.amountIn
     let amountOutParam = event.params.amountOut
-    let liquidityParam = event.params.liquidity
-    let tickAtPriceParam = event.params.tickAtPrice
+    let feeGrowthGlobal0Param = event.params.feeGrowthGlobal0
+    let feeGrowthGlobal1Param = event.params.feeGrowthGlobal1
     let priceParam = event.params.price
-    let recipientParam = event.params.recipient
+    let liquidityParam = event.params.liquidity
+    let feeAmountParam = event.params.feeAmount
+    let tickAtPriceParam = event.params.tickAtPrice
     let zeroForOneParam = event.params.zeroForOne
+    let exactInParam = event.params.exactIn
     let poolAddress = event.address.toHex()
-    let senderParam = event.transaction.from
+    let msgSender = event.transaction.from
 
-    let loadBasePrice = safeLoadBasePrice('eth')
-    let loadLimitPool = safeLoadLimitPool(poolAddress)
+    let loadBasePrice = safeLoadBasePrice('eth') // 1
+    let loadLimitPool = safeLoadLimitPool(poolAddress) // 2
     let basePrice = loadBasePrice.entity
     let pool = loadLimitPool.entity
 
-    let loadLimitPoolFactory = safeLoadLimitPoolFactory(pool.factory)
-    let loadToken0 = safeLoadToken(pool.token0)
-    let loadToken1 = safeLoadToken(pool.token1)
+    let loadLimitPoolFactory = safeLoadLimitPoolFactory(pool.factory) // 3
+    let loadToken0 = safeLoadToken(pool.token0) // 4
+    let loadToken1 = safeLoadToken(pool.token1) // 5
     let factory = loadLimitPoolFactory.entity
     let token0 = loadToken0.entity
     let token1 = loadToken1.entity
@@ -41,6 +45,8 @@ export function handleSwap(event: Swap): void {
     pool.liquidity = liquidityParam
     pool.tickAtPrice = BigInt.fromI32(tickAtPriceParam)
     pool.poolPrice = priceParam
+    pool.feeGrowthGlobal0 = feeGrowthGlobal0Param
+    pool.feeGrowthGlobal1 = feeGrowthGlobal1Param
 
     let prices = sqrtPriceX96ToTokenPrices(pool.poolPrice, token0, token1)
     pool.price0 = prices[0]
@@ -54,7 +60,6 @@ export function handleSwap(event: Swap): void {
     token1.usdPrice = token1.ethPrice.times(basePrice.USD)
 
     let oldPoolTVLEth = pool.totalValueLockedEth
-    //TODO: adjust value locked correctly
     pool.totalValueLocked0 = pool.totalValueLocked0.plus(amount0)
     pool.totalValueLocked1 = pool.totalValueLocked1.plus(amount1)
     token0.totalValueLocked = token0.totalValueLocked.plus(amount0)
@@ -71,11 +76,20 @@ export function handleSwap(event: Swap): void {
     let volumeAmounts: AmountType = getAdjustedAmounts(amount0Abs, token0, amount1Abs, token1, basePrice)
     let volumeEth = volumeAmounts.eth.div(TWO_BD)
     let volumeUsd = volumeAmounts.usd.div(TWO_BD)
-    // not being indexed for now
+    //TODO: not being indexed for now
     let volumeUsdUntracked = volumeAmounts.usdUntracked.div(TWO_BD)
 
-    let feesEth = volumeEth.times(BigDecimal.fromString(pool.feeTier)).div(BigDecimal.fromString('1000000'))
-    let feesUsd = volumeUsd.times(BigDecimal.fromString(pool.feeTier)).div(BigDecimal.fromString('1000000'))
+    let feesEth: BigDecimal
+    let feesUsd: BigDecimal
+    if (zeroForOneParam == exactInParam) {
+        let feeAmount =  convertTokenToDecimal(feeAmountParam, token1.decimals)
+        feesEth = (feeAmount).times(token1.ethPrice)
+        feesUsd = (feeAmount).times(token1.usdPrice)
+    } else {
+        let feeAmount =  convertTokenToDecimal(feeAmountParam, token0.decimals)
+        feesEth = (feeAmount).times(token0.ethPrice)
+        feesUsd = (feeAmount).times(token0.usdPrice)
+    }
 
     factory.txnCount = factory.txnCount.plus(ONE_BI)
     pool.txnCount = pool.txnCount.plus(ONE_BI)
@@ -105,8 +119,8 @@ export function handleSwap(event: Swap): void {
     token1.volumeEth = token1.volumeEth.plus(volumeEth)
 
     // save swap transaction
-    let transaction = safeLoadTransaction(event).entity
-    let loadSwap = safeLoadSwap(event, pool)
+    let transaction = safeLoadTransaction(event).entity // 6
+    let loadSwap = safeLoadSwap(event, pool) // 7
     let swap = loadSwap.entity
     if (!loadSwap.exists) {
         swap.transaction = transaction.id

@@ -96,6 +96,13 @@ type LimitPool @entity {
     pool1Liquidity: BigInt!
     tickAtPrice: BigInt!
 
+    # fee growth
+    feeGrowthGlobal0: BigInt!
+    feeGrowthGlobal1: BigInt!
+
+    # samples
+    samplesLength: BigInt!
+
     # price and volume states
     price0: BigDecimal!
     price1: BigDecimal!
@@ -210,6 +217,8 @@ type LimitTick @entity {
     id: ID!
     pool: LimitPool!
     index: BigInt!
+    # whether the tick is active in the tickMap
+    active: Boolean!
     price0: BigDecimal!
     price1: BigDecimal!
 

@@ -9,7 +9,8 @@ import { updateDerivedTVLAmounts } from "../utils/tvl"
 export function handleBurnLimit(event: BurnLimit): void {
     let msgSender = event.transaction.from.toHex()
     let lowerParam = event.params.lower
-    let claimParam = event.params.claim
+    let oldClaimParam = event.params.oldClaim
+    let newClaimParam = event.params.newClaim
     let upperParam = event.params.upper
     let zeroForOneParam = event.params.zeroForOne
     let liquidityBurnedParam = event.params.liquidityBurned
@@ -19,7 +20,7 @@ export function handleBurnLimit(event: BurnLimit): void {
     let senderParam = event.transaction.from
 
     let lower = BigInt.fromI32(lowerParam)
-    let claim = BigInt.fromI32(claimParam)
+    let newClaim = BigInt.fromI32(newClaimParam)
     let upper = BigInt.fromI32(upperParam)
 
     let loadBasePrice = safeLoadBasePrice('eth') // 1
@@ -52,48 +53,59 @@ export function handleBurnLimit(event: BurnLimit): void {
         //throw an error
     }
     if (position.liquidity == liquidityBurnedParam || 
-            (zeroForOneParam ? claim.equals(upper) : claim.equals(lower))) {
+            (zeroForOneParam ? newClaim.equals(upper) : newClaim.equals(lower))) {
         store.remove('Position', position.id)
     } else {
         // update id if position is shrunk
-        if (claim != (zeroForOneParam ? lower : upper)) {
+        if (newClaim.notEqual(zeroForOneParam ? lower : upper)) {
             position.id = poolAddress
                             .concat(msgSender)
-                            .concat(zeroForOneParam ? lower.toString() : claim.toString())
-                            .concat(zeroForOneParam ? claim.toString() : upper.toString())
+                            .concat(zeroForOneParam ? lower.toString() : newClaim.toString())
+                            .concat(zeroForOneParam ? newClaim.toString() : upper.toString())
                             .concat(zeroForOneParam.toString())
         }
         position.liquidity = position.liquidity.minus(liquidityBurnedParam)
         position.amountFilled = position.amountFilled.minus(tokenInClaimedParam)
         position.amountIn = position.amountIn.minus(tokenOutBurnedParam)
+        // shrink position to new size
+        if (zeroForOneParam) {
+            position.lower = newClaim
+        } else {
+            position.upper = newClaim
+        }
+        position.save()
     }
-    // update pool stats
-    pool.liquidityGlobal = pool.liquidityGlobal.minus(liquidityBurnedParam)
+
+    // update pool liquidity global
+    if (newClaim.equals(zeroForOneParam ? upper : lower)) {
+        pool.liquidityGlobal = pool.liquidityGlobal.minus(position.liquidity)
+    } else {
+        pool.liquidityGlobal = pool.liquidityGlobal.minus(liquidityBurnedParam)
+    }
 
     // grab tick epochs
     let lowerTickEpoch = zeroForOneParam ? lowerTick.epochLast0 : lowerTick.epochLast1
     let upperTickEpoch = zeroForOneParam ? upperTick.epochLast0 : upperTick.epochLast1
  
+    /// @note - we do not store liquidity delta on half ticks
     if (zeroForOneParam) {
         if (lowerTickEpoch.le(position.epochLast)) {
             // lower tick has not been crossed yet
             lowerTick.liquidityDelta = lowerTick.liquidityDelta.minus(liquidityBurnedParam)
             lowerTick.liquidityAbsolute = lowerTick.liquidityAbsolute.minus(liquidityBurnedParam)
             if (lowerTick.liquidityAbsolute.equals(BIGINT_ZERO)) {
-                store.remove('LimitTick', lowerTick.id)
-            } else {
-                lowerTick.save() // 1
+                lowerTick.active = false
             }
+            lowerTick.save()
         }
         if (upperTickEpoch.le(position.epochLast)) {
             // upper tick has not been crossed yet
             upperTick.liquidityDelta = upperTick.liquidityDelta.plus(liquidityBurnedParam)
             upperTick.liquidityAbsolute = upperTick.liquidityAbsolute.minus(liquidityBurnedParam)
             if (upperTick.liquidityAbsolute.equals(BIGINT_ZERO)) {
-                store.remove('LimitTick', upperTick.id)
-            } else {
-                upperTick.save() // 2
+                upperTick.active = false
             }
+            upperTick.save()
         }
     } else {
         if (lowerTickEpoch.le(position.epochLast)) {
@@ -117,13 +129,9 @@ export function handleBurnLimit(event: BurnLimit): void {
             }
         }
     }
+    //TODO: update claim tick liquidity
 
-    // shrink position to new size
-    if (zeroForOneParam) {
-        position.lower = claim
-    } else {
-        position.upper = claim
-    }
+
 
     // tvl adjustments
     let amountIn = convertTokenToDecimal(tokenInClaimedParam, tokenIn.decimals)
@@ -161,7 +169,6 @@ export function handleBurnLimit(event: BurnLimit): void {
     basePrice.save() // 3
     pool.save() // 4
     factory.save() // 5
-    position.save() // 6
     tokenIn.save() // 7
     tokenOut.save() // 8
 }

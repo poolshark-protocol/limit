@@ -17,7 +17,7 @@ library MintLimitCall {
         uint128 liquidityMinted
     );
 
-    event Sync(
+    event SyncLimitPool(
         uint160 price,
         uint128 liquidity,
         uint32 epoch,
@@ -90,7 +90,7 @@ library MintLimitCall {
                     cache.position.crossedInto = true;
                     // set epoch on start tick to signify position being crossed into
                     /// @auditor - this is safe assuming we have swapped at least this far on the other side
-                    emit Sync(cache.pool.price, cache.pool.liquidity, cache.state.epoch, cache.pool.tickAtPrice, params.zeroForOne);
+                    emit SyncLimitPool(cache.pool.price, cache.pool.liquidity, cache.state.epoch, cache.pool.tickAtPrice, params.zeroForOne);
                 }
             } else {
                 uint160 priceUpper = ConstantProduct.getPriceAtTick(params.upper, cache.constants);
@@ -104,7 +104,7 @@ library MintLimitCall {
                     cache.position.crossedInto = true;
                     // set epoch on start tick to signify position being crossed into
                     /// @auditor - this is safe assuming we have swapped at least this far on the other side
-                    emit Sync(cache.pool.price, cache.pool.liquidity, cache.state.epoch, cache.pool.tickAtPrice, params.zeroForOne);
+                    emit SyncLimitPool(cache.pool.price, cache.pool.liquidity, cache.state.epoch, cache.pool.tickAtPrice, params.zeroForOne);
                 }
             }
             (cache.pool, cache.position) = LimitPositions.add(

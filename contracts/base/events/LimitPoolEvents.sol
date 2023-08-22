@@ -10,13 +10,30 @@ abstract contract LimitPoolEvents {
         int24 startTick
     );
 
-    //DONE
-    event Sync(
+    // DONE
+    event Swap(
+        address indexed recipient,
+        uint256 amountIn,
+        uint256 amountOut,
+        uint200 feeGrowthGlobal0,
+        uint200 feeGrowthGlobal1,
         uint160 price,
         uint128 liquidity,
-        uint32 epoch,
+        uint128 feeAmount,
         int24 tickAtPrice,
-        bool isPool0
+        bool indexed zeroForOne,
+        bool indexed exactIn
+    );
+
+    //
+    event SampleRecorded(
+        int56 tickSecondsAccum,
+        uint160 secondsPerLiquidityAccum
+    );
+
+    //
+    event SampleLengthIncreased(
+        uint16 sampleLengthNext
     );
 
     //DONE
@@ -52,6 +69,13 @@ abstract contract LimitPoolEvents {
     );
 
     // DONE
+    event SyncRangeTick(
+        uint200 feeGrowthOutside0,
+        uint200 feeGrowthOutside1,
+        int24 tick
+    );
+
+    // DONE
     event MintLimit(
         address indexed to,
         int24 lower,
@@ -68,49 +92,37 @@ abstract contract LimitPoolEvents {
         address indexed to,
         int24 lower,
         int24 upper,
-        int24 claim,
+        int24 oldClaim,
+        int24 newClaim,
         bool zeroForOne,
         uint128 liquidityBurned,
         uint128 tokenInClaimed,
         uint128 tokenOutBurned
     );
 
-    //
-    event Swap(
-        address indexed recipient,
-        bool zeroForOne,
-        uint256 amountIn,
-        uint256 amountOut,
+    //DONE
+    event SyncLimitPool(
         uint160 price,
         uint128 liquidity,
-        uint128 feeAmount,
-        int24 tickAtPrice
+        uint32 epoch,
+        int24 tickAtPrice,
+        bool isPool0
     );
 
-    //
-    event SyncRangeTick(
-        uint200 feeGrowthOutside0,
-        uint200 feeGrowthOutside1,
-        int24 tick
+    event SyncLimitLiquidity(
+        uint128 liquidityAdded,
+        int24 tick,
+        bool zeroForOne
     );
 
-    // when we cross limit tick L-delta and L-absolute are zero
+    // DONE
     event SyncLimitTick(
         uint32 epoch,
         int24 tick,
         bool zeroForOne
     );
 
-    //
-    event SampleRecorded(
-        int56 tickSecondsAccum,
-        uint160 secondsPerLiquidityAccum
-    );
 
-    //
-    event SampleLengthIncreased(
-        uint16 sampleLengthNext
-    );
 
     //dib;t forget liquidityGlobal
 }

@@ -33,7 +33,6 @@ library Ticks {
 
     event Swap(
         address indexed recipient,
-        bool zeroForOne,
         uint256 amountIn,
         uint256 amountOut,
         uint200 feeGrowthGlobal0,
@@ -41,7 +40,9 @@ library Ticks {
         uint160 price,
         uint128 liquidity,
         uint128 feeAmount,
-        int24 tickAtPrice
+        int24 tickAtPrice,
+        bool indexed zeroForOne,
+        bool indexed exactIn
     );
 
     event SyncRangeTick(
@@ -199,7 +200,6 @@ library Ticks {
         }
         emit Swap(
             params.to,
-            params.zeroForOne,
             cache.input,
             cache.output,
             cache.state.pool.feeGrowthGlobal0,
@@ -207,7 +207,9 @@ library Ticks {
             cache.price.toUint160(),
             cache.liquidity.toUint128(),
             cache.feeAmount,
-            cache.state.pool.tickAtPrice
+            cache.state.pool.tickAtPrice,
+            params.zeroForOne,
+            params.exactIn
         );
         return cache;
     }

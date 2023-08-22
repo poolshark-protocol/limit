@@ -19,7 +19,8 @@ library LimitPositions {
         address indexed to,
         int24 lower,
         int24 upper,
-        int24 claim,
+        int24 oldClaim,
+        int24 newClaim,
         bool zeroForOne,
         uint128 liquidityBurned,
         uint128 tokenInClaimed,
@@ -243,7 +244,7 @@ library LimitPositions {
 
         // convert percentage to liquidity amount
         cache.liquidityBurned = _convert(cache.position.liquidity, params.burnPercent);
-
+        params.claim = params.zeroForOne ? params.lower : params.upper;
         // early return if no liquidity to remove
         if (cache.liquidityBurned == 0) return (params, cache);
         if (cache.liquidityBurned > cache.position.liquidity) {
@@ -285,7 +286,6 @@ library LimitPositions {
             tickMap,
             params,
             cache,
-
             cache.constants
         );
 
@@ -305,7 +305,8 @@ library LimitPositions {
                     params.to,
                     params.lower,
                     params.upper,
-                    params.zeroForOne ? params.lower : params.upper,
+                    params.claim,
+                    params.claim,
                     params.zeroForOne,
                     cache.liquidityBurned,
                     0,
@@ -414,13 +415,16 @@ library LimitPositions {
         }
 
         // round back claim tick for storage
-        if (params.claim % cache.constants.tickSpacing != 0)
+        if (params.claim % cache.constants.tickSpacing != 0) {
+            cache.claim = params.claim;
             params.claim = TickMap.roundBack(params.claim, cache.constants, params.zeroForOne, cache.priceClaim);
+        }
         
         emit BurnLimit(
             params.to,
             params.lower,
             params.upper,
+            cache.claim,
             params.claim,
             params.zeroForOne,
             cache.liquidityBurned,
@@ -496,6 +500,7 @@ library LimitPositions {
             liquidityBurned: _convert(cache.position.liquidity, params.burnPercent),
             amountIn: 0,
             amountOut: 0,
+            claim: params.claim,
             earlyReturn: false,
             removeLower: false,
             removeUpper: false

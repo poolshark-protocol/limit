@@ -368,6 +368,12 @@
       },
       {
         "indexed": false,
+        "internalType": "uint32",
+        "name": "epoch",
+        "type": "uint32"
+      },
+      {
+        "indexed": false,
         "internalType": "int24",
         "name": "tickAtPrice",
         "type": "int24"
@@ -380,6 +386,56 @@
       }
     ],
     "name": "Sync",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint32",
+        "name": "epoch",
+        "type": "uint32"
+      },
+      {
+        "indexed": false,
+        "internalType": "int24",
+        "name": "tick",
+        "type": "int24"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "zeroForOne",
+        "type": "bool"
+      }
+    ],
+    "name": "SyncLimitTick",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint200",
+        "name": "feeGrowthOutside0",
+        "type": "uint200"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint200",
+        "name": "feeGrowthOutside1",
+        "type": "uint200"
+      },
+      {
+        "indexed": false,
+        "internalType": "int24",
+        "name": "tick",
+        "type": "int24"
+      }
+    ],
+    "name": "SyncRangeTick",
     "type": "event"
   }
 ]

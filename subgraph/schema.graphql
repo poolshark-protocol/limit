@@ -16,12 +16,13 @@ type LimitPoolManager @entity {
     owner: Bytes!
     feeTo: Bytes!
     # factory: LimitPoolFactory!
-    FeeTier: [FeeTier!]!
+    feeTiers: [FeeTier!]!
+    implementations: [LimitPoolImpl!]!
 }
 
 type BasePrice @entity {
     id: ID!
-    ethUsd: BigDecimal!
+    USD: BigDecimal!
 }
 
 type FeeTier @entity {
@@ -36,34 +37,66 @@ type FeeTier @entity {
 }
 
 type Token @entity {
-    # token address
-    id: ID!
-    name: String!
-    symbol: String!
-    decimals: BigInt!
+  # token address
+  id: ID!
+
+  # mirrored from the smart contract
+  symbol: String!
+  name: String!
+  decimals: BigInt!
+
+  # price
+  ethPrice: BigDecimal!
+  usdPrice: BigDecimal!
+  
+  pools: [LimitPool!]!
+
+  # token specific volume
+  volume: BigDecimal!
+  volumeUsd: BigDecimal!
+  volumeEth: BigDecimal!
+  txnCount: BigInt!
+
+  feesUsdTotal: BigDecimal!
+  feesEthTotal: BigDecimal!
+
+  # liquidity across all pairs
+  totalValueLocked: BigDecimal!
+  totalValueLockedEth: BigDecimal!
+  totalValueLockedUsd: BigDecimal!
+
+  # for base price tracking
+  whitelistPools: [LimitPool!]!
 }
 
 type LimitPool @entity {
     # poolAddress
     id: ID!
+
+    # pool tokens
     token0: Token!
     token1: Token!
-    # factory: LimitPoolFactory!
 
     # pool setup
     feeTier: FeeTier!
+    swapFee: BigInt!
     tickSpacing: BigInt!
-    genesisTime: BigInt!
+    factory: LimitPoolFactory!
+    implementation: LimitPoolImpl!
 
     liquidity: BigInt!
     liquidityGlobal: BigInt!
+    positionIdNext: BigInt!
     epoch: BigInt!
-
+    poolPrice: BigInt!
     pool0Price: BigInt!
     pool1Price: BigInt!
+    poolLiquidity: BigInt!
     pool0Liquidity: BigInt!
     pool1Liquidity: BigInt!
+    tickAtPrice: BigInt!
 
+    # price and volume states
     price0: BigDecimal!
     price1: BigDecimal!
     volumeToken0: BigDecimal!
@@ -74,6 +107,7 @@ type LimitPool @entity {
     feesEth: BigDecimal!
     txnCount: BigInt!
 
+    # tvl stats
     totalValueLocked0: BigDecimal!
     totalValueLocked1: BigDecimal!
     totalValueLockedUsd: BigDecimal!
@@ -105,12 +139,117 @@ type LimitPosition @entity {
     tokenOut: Token!
 }
 
-type Tick @entity {
+type RangePosition @entity {
+    id: ID!
+    lower: BigInt!
+    upper: BigInt!
+    pool: LimitPool!
+    positionId: BigInt!
+    liquidity: BigInt!
+    # creation stats
+    createdAtTimestamp: BigInt!
+    createdAtBlockNumber: BigInt!
+    updatedAtTimestamp: BigInt!
+    updatedAtBlockNumber: BigInt!
+}
+
+type Swap @entity {
+    # txn hash + '-' + indexed count
+    id: ID!
+    transaction: Transaction!
+    recipient: Bytes!
+    timestamp: BigInt!
+    pool: LimitPool!
+    zeroForOne: Boolean!
+    amount0: BigDecimal!
+    amount1: BigDecimal!
+    amountUsd: BigDecimal!
+    priceAfter: BigInt!
+    tickAfter: BigInt!
+    txnIndex: BigInt
+}
+
+type Transaction @entity {
+    # txn hash
+    id: ID!
+    sender: Bytes!
+    blockNumber: BigInt!
+    timestamp: BigInt!
+    gasLimit: BigInt!
+    gasPrice: BigInt!
+    swaps: [Swap!]! @derivedFrom(field: "transaction")
+}
+
+type LimitPoolImpl @entity {
+    # pool impl + token impl
+    id: ID!
+
+    name: String!
+    poolImpl: Bytes!
+    tokenImpl: Bytes!
+}
+
+type RangeTick @entity {
     # poolAddress + index
     id: ID!
     pool: LimitPool!
     index: BigInt!
     price0: BigDecimal!
     price1: BigDecimal!
+    
+    liquidityDelta: BigInt!
+    liquidityAbsolute: BigInt!
+
+    # fee growth
+    feeGrowthOutside0: BigInt!
+    feeGrowthOutside1: BigInt!
+}
+
+type LimitTick @entity {
+    # poolAddress + index
+    id: ID!
+    pool: LimitPool!
+    index: BigInt!
+    price0: BigDecimal!
+    price1: BigDecimal!
+
+    liquidityDelta: BigInt!
+    liquidityAbsolute: BigInt!
+
+    # epoch last
     epochLast: BigInt!
 }
+
+type MintRangeLog @entity {
+    id: ID!
+
+    sender: Bytes!
+    recipient: Bytes!
+    lower: BigInt!
+    upper: BigInt!
+    positionId: BigInt!
+    liquidityMinted: BigInt!
+    pool: LimitPool!
+}
+
+type BurnRangeLog @entity {
+    id: ID!
+
+    owner: Bytes!
+    recipient: Bytes!
+    lower: BigInt!
+    upper: BigInt!
+    positionId: BigInt!
+    liquidityBurned: BigInt!
+    pool: LimitPool!
+}
+
+type CompoundRangeLog @entity {
+    id: ID!
+
+    sender: Bytes!
+    pool: LimitPool!
+    liquidityCompounded: BigInt!
+    positionId: BigInt!
+}
+

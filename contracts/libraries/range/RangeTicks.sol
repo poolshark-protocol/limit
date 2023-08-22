@@ -28,6 +28,12 @@ library RangeTicks {
         int24 maxTick
     );
 
+    event SyncRangeTick(
+        uint200 feeGrowthOutside0,
+        uint200 feeGrowthOutside1,
+        int24 tick
+    );
+
     uint256 internal constant Q96 = 0x1000000000000000000000000;
     uint256 internal constant Q128 = 0x100000000000000000000000000000000;
 
@@ -92,6 +98,11 @@ library RangeTicks {
                     int128(amount),             // liquidityDelta
                     amount                      // liquidityAbsolute
                 );
+                emit SyncRangeTick(
+                    state.pool.feeGrowthGlobal0,
+                    state.pool.feeGrowthGlobal1,
+                    lower
+                );
             } else {
                 ticks[lower].range.liquidityDelta = int128(amount);
                 ticks[lower].range.liquidityAbsolute += amount;
@@ -126,6 +137,11 @@ library RangeTicks {
                     tickSecondsAccum,
                     -int128(amount),
                     amount
+                );
+                emit SyncRangeTick(
+                    state.pool.feeGrowthGlobal0,
+                    state.pool.feeGrowthGlobal1,
+                    upper
                 );
             } else {
                 ticks[upper].range.liquidityDelta = -int128(amount);

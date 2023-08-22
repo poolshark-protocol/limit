@@ -36,10 +36,18 @@ library Ticks {
         bool zeroForOne,
         uint256 amountIn,
         uint256 amountOut,
+        uint200 feeGrowthGlobal0,
+        uint200 feeGrowthGlobal1,
         uint160 price,
         uint128 liquidity,
         uint128 feeAmount,
         int24 tickAtPrice
+    );
+
+    event SyncRangeTick(
+        uint200 feeGrowthOutside0,
+        uint200 feeGrowthOutside1,
+        int24 tick
     );
 
     function initialize(
@@ -194,6 +202,8 @@ library Ticks {
             params.zeroForOne,
             cache.input,
             cache.output,
+            cache.state.pool.feeGrowthGlobal0,
+            cache.state.pool.feeGrowthGlobal1,
             cache.price.toUint160(),
             cache.liquidity.toUint128(),
             cache.feeAmount,
@@ -388,6 +398,11 @@ library Ticks {
                 crossTick.secondsPerLiquidityAccumOutside = cache.secondsPerLiquidityAccum - crossTick.secondsPerLiquidityAccumOutside;
                 ticks[cache.crossTick].range = crossTick;
                 int128 liquidityDelta = crossTick.liquidityDelta;
+                emit SyncRangeTick(
+                    crossTick.feeGrowthOutside0,
+                    crossTick.feeGrowthOutside1,
+                    cache.crossTick
+                );
                 if (params.zeroForOne) {
                     unchecked {
                         if (liquidityDelta >= 0){

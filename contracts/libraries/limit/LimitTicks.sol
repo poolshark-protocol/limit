@@ -146,12 +146,9 @@ library LimitTicks {
                     // calculate amountOut filled across both partial fills
                     locals.amountOutExact = ConstantProduct.getDy(pool.liquidity, locals.pricePrevious, pool.price, false);
                     locals.amountOutExact += ConstantProduct.getDy(uint128(tick.liquidityDelta), locals.pricePrevious, tick.priceAt, false);
+                    // add current pool liquidity to partial tick
                     uint128 combinedLiquidity = pool.liquidity + uint128(tick.liquidityDelta);
-                    /// @auditor - the opposing amount calculated is off by 1/100 millionth
-                    ///            (i.e. since we're using exactOut we lose precision on exactInput amount)
-                    ///            the expected dy to the next tick is either exact or slightly more
-                    ///            the expected dx to the next tick is 1/100 millionth less after the blend
-                    // advance price past closest full tick using amountOut filled
+                    // advance price based on combined fill
                     tick.priceAt = ConstantProduct.getNewPrice(uint256(locals.pricePrevious), combinedLiquidity, locals.amountOutExact, false, true).toUint160();
                     // dx to the next tick is less than before the tick blend
                     EpochMap.set(tickToSave, params.zeroForOne, cache.state.epoch, tickMap, constants);
@@ -164,7 +161,7 @@ library LimitTicks {
                     locals.amountOutExact += ConstantProduct.getDx(uint128(tick.liquidityDelta), tick.priceAt, locals.pricePrevious, false);
                     // add current pool liquidity to partial tick
                     uint128 combinedLiquidity = pool.liquidity + uint128(tick.liquidityDelta);
-                    // advance price past closest full tick using amountOut filled
+                    // advance price based on combined fill
                     tick.priceAt = ConstantProduct.getNewPrice(uint256(locals.pricePrevious), combinedLiquidity, locals.amountOutExact, true, true).toUint160();
                     // mark epoch for second partial fill positions
                     EpochMap.set(tickToSave, params.zeroForOne, cache.state.epoch, tickMap, constants);

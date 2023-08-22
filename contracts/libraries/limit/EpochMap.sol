@@ -5,6 +5,12 @@ import '../math/ConstantProduct.sol';
 import '../../interfaces/structs/LimitPoolStructs.sol';
 
 library EpochMap {
+    event SyncLimitTick(
+        uint32 epoch,
+        int24 tick,
+        bool zeroForOne
+    );
+
     function set(
         int24  tick,
         bool zeroForOne,
@@ -28,6 +34,8 @@ library EpochMap {
         // store word in map
         zeroForOne ? tickMap.epochs0[volumeIndex][blockIndex][wordIndex] = epochValue
                    : tickMap.epochs1[volumeIndex][blockIndex][wordIndex] = epochValue;
+
+        emit SyncLimitTick(uint32(epoch), tick, zeroForOne);
     }
 
     function get(

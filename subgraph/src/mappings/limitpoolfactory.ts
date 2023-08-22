@@ -1,6 +1,6 @@
 import { log } from '@graphprotocol/graph-ts'
 import { PoolCreated } from '../../generated/LimitPoolFactory/LimitPoolFactory'
-import { LimitPoolTemplate } from '../../generated/templates'
+import { LimitPoolTemplate, RangePoolERC1155Template } from '../../generated/templates'
 import {
     fetchTokenSymbol,
     fetchTokenName,
@@ -10,27 +10,31 @@ import { safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadTick, safeLoadToke
 import { Address, BigInt, Bytes, ethereum } from '@graphprotocol/graph-ts'
 import { FACTORY_ADDRESS, ONE_BI } from './utils/constants'
 import { FeeTier } from '../../generated/schema'
+import { RangePoolERC1155 } from '../../../typechain'
 
 export function handlePoolCreated(event: PoolCreated): void {
     // grab event parameters
     let poolAddressParam = event.params.pool
-    let implementationParam = event.params.implementation
-    let token0Param = event.params.token0
-    let token1Param = event.params.token1
+    let poolTokenParam = event.params.token
+    let poolImplParam = event.params.poolImpl.toHex()
+    let tokenImplParam = event.params.tokenImpl.toHex()
+    let token0Param = event.params.token0.toHex()
+    let token1Param = event.params.token1.toHex()
+    let swapFeeParam = BigInt.fromI32(event.params.swapFee)
     let tickSpacingParam = BigInt.fromI32(event.params.tickSpacing)
 
     // load from store
     let loadLimitPool = safeLoadLimitPool(poolAddressParam.toHex())
     let loadLimitPoolFactory = safeLoadLimitPoolFactory(FACTORY_ADDRESS)
-    let loadToken0 = safeLoadToken(event.params.token0.toHexString())
-    let loadToken1 = safeLoadToken(event.params.token1.toHexString())
+    let loadToken0 = safeLoadToken(token0Param)
+    let loadToken1 = safeLoadToken(token1Param)
 
     let token0 = loadToken0.entity
     let token1 = loadToken1.entity
     let pool = loadLimitPool.entity
     let factory = loadLimitPoolFactory.entity
 
-    // fetch info if null
+
     if (!loadToken0.exists) {
         token0.symbol = fetchTokenSymbol(event.params.token0)
         token0.name = fetchTokenName(event.params.token0)
@@ -55,9 +59,18 @@ export function handlePoolCreated(event: PoolCreated): void {
         token1.decimals = decimals
     }
 
-    pool.tickSpacing = tickSpacingParam
+    // pool tokens
     pool.token0 = token0.id
     pool.token1 = token1.id
+
+    // pool setup
+    pool.feeTier = swapFeeParam.toString()
+    pool.swapFee = swapFeeParam
+    pool.tickSpacing = tickSpacingParam
+    pool.factory = factory.id
+    pool.implementation = poolImplParam.concat(tokenImplParam)
+
+    // creation stats
     pool.createdAtBlockNumber = event.block.number
     pool.createdAtTimestamp   = event.block.timestamp
     pool.updatedAtBlockNumber = event.block.number
@@ -71,6 +84,7 @@ export function handlePoolCreated(event: PoolCreated): void {
     token0.save()
     token1.save()
 
-    // create the tracked contract based on the template
-    LimitPoolTemplate.create(event.params.pool)
+    // tracked events based on template
+    LimitPoolTemplate.create(poolAddressParam)
+    RangePoolERC1155Template.create(poolTokenParam)
 }

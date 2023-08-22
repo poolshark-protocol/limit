@@ -31,7 +31,6 @@ export function handleInitialize(event: Initialize): void {
     let minTick = loadMinTick.entity
     let maxTick = loadMaxTick.entity
 
-    pool.genesisTime = event.block.timestamp
     pool.pool0Price = startPriceParam
     pool.pool1Price = startPriceParam
 

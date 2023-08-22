@@ -2,7 +2,8 @@
 pragma solidity 0.8.13;
 
 abstract contract LimitPoolEvents {
-    event Initialize(
+    //DONE
+    event Initialize( 
         int24 minTick,
         int24 maxTick,
         uint160 startPrice,
@@ -12,10 +13,12 @@ abstract contract LimitPoolEvents {
     event Sync(
         uint160 price,
         uint128 liquidity,
+        uint32 epoch,
         int24 tickAtPrice,
         bool isPool0
     );
 
+    //DONE
     event MintRange(
         address indexed recipient,
         int24 lower,
@@ -26,6 +29,7 @@ abstract contract LimitPoolEvents {
         int128 amount1Delta
     );
 
+    //DONE
     event BurnRange(
         address indexed recipient,
         uint256 indexed positionId,
@@ -34,16 +38,19 @@ abstract contract LimitPoolEvents {
         int128 amount1
     );
 
+    //DONE
     event CompoundRange(
         uint32 indexed positionId,
         uint128 liquidityCompounded
     );
 
+    //
     event CollectRange(
         uint128 amount0,
         uint128 amount1
     );
 
+    //
     event MintLimit(
         address indexed to,
         int24 lower,
@@ -55,6 +62,7 @@ abstract contract LimitPoolEvents {
         uint128 liquidityMinted
     );
 
+    //
     event BurnLimit(
         address indexed to,
         int24 lower,
@@ -66,6 +74,7 @@ abstract contract LimitPoolEvents {
         uint128 tokenOutBurned
     );
 
+    //
     event Swap(
         address indexed recipient,
         bool zeroForOne,
@@ -77,11 +86,27 @@ abstract contract LimitPoolEvents {
         int24 tickAtPrice
     );
 
+    //
+    event SyncRangeTick(
+        uint200 feeGrowthOutside0,
+        uint200 feeGrowthOutside1,
+        int24 tick
+    );
+
+    //
+    event SyncLimitTick(
+        uint32 epoch,
+        int24 tick,
+        bool zeroForOne
+    );
+
+    //
     event SampleRecorded(
         int56 tickSecondsAccum,
         uint160 secondsPerLiquidityAccum
     );
 
+    //
     event SampleLengthIncreased(
         uint16 sampleLengthNext
     );

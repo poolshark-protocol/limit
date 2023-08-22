@@ -217,7 +217,8 @@ type LimitTick @entity {
     liquidityAbsolute: BigInt!
 
     # epoch last
-    epochLast: BigInt!
+    epochLast0: BigInt!
+    epochLast1: BigInt!
 }
 
 type MintRangeLog @entity {

@@ -88,19 +88,6 @@ library EpochMap {
         }
     }
 
-    function _tick (
-        uint256 tickIndex,
-        PoolsharkStructs.Immutables memory constants
-    ) internal pure returns (
-        int24 tick
-    ) {
-        unchecked {
-            if (tickIndex > uint24(_round(ConstantProduct.MAX_TICK, constants.tickSpacing) * 2) * 2) 
-                require(false, 'TickIndexOverflow()');
-            tick = int24(int256(tickIndex) * (constants.tickSpacing / 2) + _round(ConstantProduct.MIN_TICK, constants.tickSpacing / 2));
-        }
-    }
-
     function _round(
         int24 tick,
         int24 tickSpacing

@@ -16,6 +16,7 @@ contract LimitPoolFactory is
     LimitPoolFactoryErrors
 {
     using LibClone for address;
+    using SafeCast for uint256;
 
     address immutable public owner;
     address immutable public original;
@@ -74,7 +75,7 @@ contract LimitPoolFactory is
         // set immutables
         constants.owner = owner;
         constants.factory = original;
-        constants.genesisTime = uint32(block.timestamp);
+        constants.genesisTime = block.timestamp.toUint32();
         (
             constants.bounds.min,
             constants.bounds.max

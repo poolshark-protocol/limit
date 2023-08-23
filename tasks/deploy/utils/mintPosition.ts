@@ -1,6 +1,7 @@
 import { BigNumber } from 'ethers'
 import { BN_ZERO, getLiquidity, getPrice, validateBurn, validateMint, validateSwap, } from '../../../test/utils/contracts/limitpool'
 import { InitialSetup } from '../../../test/utils/setup/initialSetup'
+import { validateMint as validateMintRange } from '../../../test/utils/contracts/rangepool'
 import { mintSigners20 } from '../../../test/utils/token'
 import { getNonce } from '../../utils'
 
@@ -33,25 +34,37 @@ export class MintPosition {
         await mintSigners20(hre.props.token0, token0Amount.mul(10), [hre.props.alice])
         await mintSigners20(hre.props.token1, token1Amount.mul(10), [hre.props.alice])
 
-        const liquidityAmount = '199760153929825488153727'
+        const liquidityAmount = '49802891105937278098768'
 
         // await getPrice(true)
     // 0x34e800D1456d87A5F62B774AD98cea54a3A40048
     // 0x1DcF623EDf118E4B21b4C5Dc263bb735E170F9B8
-        await validateMint({
+        // await validateMint({
+        //     signer: hre.props.alice,
+        //     recipient: hre.props.alice.address,
+        //     lower: '60',
+        //     upper: '100',
+        //     amount: token1Amount,
+        //     zeroForOne: false,
+        //     balanceInDecrease: token1Amount,
+        //     liquidityIncrease: liquidityAmount,
+        //     upperTickCleared: false,
+        //     lowerTickCleared: true,
+        //     revertMessage: '',
+        // })
+
+        const aliceId = await validateMintRange({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
-            lower: '60',
-            upper: '100',
-            amount: token1Amount,
-            zeroForOne: false,
-            balanceInDecrease: token1Amount,
-            liquidityIncrease: liquidityAmount,
-            upperTickCleared: false,
-            lowerTickCleared: true,
+            lower: '-887270',
+            upper: '887270',
+            amount0: token0Amount,
+            amount1: token1Amount,
+            balance0Decrease: token0Amount,
+            balance1Decrease: token1Amount,
+            liquidityIncrease: BN_ZERO,
             revertMessage: '',
-        })
-
+          })
         //         await validateSwap({
         // signer: hre.props.alice,
         // recipient: hre.props.alice.address,

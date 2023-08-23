@@ -93,45 +93,32 @@ export function handleBurnLimit(event: BurnLimit): void {
             // lower tick has not been crossed yet
             lowerTick.liquidityDelta = lowerTick.liquidityDelta.minus(liquidityBurnedParam)
             lowerTick.liquidityAbsolute = lowerTick.liquidityAbsolute.minus(liquidityBurnedParam)
-            if (lowerTick.liquidityAbsolute.equals(BIGINT_ZERO)) {
-                lowerTick.active = false
-            }
-            lowerTick.save()
         }
         if (upperTickEpoch.le(position.epochLast)) {
             // upper tick has not been crossed yet
             upperTick.liquidityDelta = upperTick.liquidityDelta.plus(liquidityBurnedParam)
-            upperTick.liquidityAbsolute = upperTick.liquidityAbsolute.minus(liquidityBurnedParam)
-            if (upperTick.liquidityAbsolute.equals(BIGINT_ZERO)) {
-                upperTick.active = false
-            }
-            upperTick.save()
+            upperTick.liquidityAbsolute = upperTick.liquidityAbsolute.minus(liquidityBurnedParam) 
         }
     } else {
         if (lowerTickEpoch.le(position.epochLast)) {
             // lower tick has not been crossed yet
             lowerTick.liquidityDelta = lowerTick.liquidityDelta.plus(liquidityBurnedParam)
             lowerTick.liquidityAbsolute = lowerTick.liquidityAbsolute.minus(liquidityBurnedParam)
-            if (lowerTick.liquidityAbsolute.equals(BIGINT_ZERO)) {
-                store.remove('LimitTick', lowerTick.id)
-            } else {
-                lowerTick.save() // 1
-            }
         }
         if (upperTickEpoch.le(position.epochLast)) {
             // upper tick has not been crossed yet
             upperTick.liquidityDelta = upperTick.liquidityDelta.minus(liquidityBurnedParam)
             upperTick.liquidityAbsolute = upperTick.liquidityAbsolute.minus(liquidityBurnedParam)
-            if (upperTick.liquidityAbsolute.equals(BIGINT_ZERO)) {
-                store.remove('LimitTick', upperTick.id)
-            } else {
-                upperTick.save() // 2
-            }
         }
     }
-    //TODO: update claim tick liquidity
-
-
+    if (lowerTick.liquidityAbsolute.equals(BIGINT_ZERO)) {
+        lowerTick.active = false
+    }
+    if (upperTick.liquidityAbsolute.equals(BIGINT_ZERO)) {
+        upperTick.active = false
+    }
+    lowerTick.save() // 1
+    upperTick.save() // 2
 
     // tvl adjustments
     let amountIn = convertTokenToDecimal(tokenInClaimedParam, tokenIn.decimals)

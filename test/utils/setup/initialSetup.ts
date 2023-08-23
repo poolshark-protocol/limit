@@ -390,10 +390,21 @@ export class InitialSetup {
             )
         ).contractAddress
 
+        const rangePoolERC1155Address = (
+            await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
+                {
+                    networkName: hre.network.name,
+                    objectName: 'rangePoolERC1155',
+                },
+                'readLimitPoolSetup'
+            )
+        ).contractAddress
+
         hre.props.token0 = await hre.ethers.getContractAt('Token20', token0Address)
         hre.props.token1 = await hre.ethers.getContractAt('Token20', token1Address)
         hre.props.limitPool = await hre.ethers.getContractAt('LimitPool', limitPoolAddress)
         hre.props.limitPoolFactory = await hre.ethers.getContractAt('LimitPoolFactory', limitPoolFactoryAddress)
+        hre.props.limitPoolToken = await hre.ethers.getContractAt('RangePoolERC1155', rangePoolERC1155Address)
 
         return nonce
     }

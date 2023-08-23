@@ -15,7 +15,7 @@ export function handleSyncLimitPool(event: SyncLimitPool): void {
     let loadTick = safeLoadLimitTick(poolAddress, BigInt.fromI32(tickAtPriceParam))
 
     let tick = loadTick.entity
-    let pool      = loadLimitPool.entity
+    let pool = loadLimitPool.entity
 
     // increase tvl count
     if (isPool0Param) {
@@ -26,6 +26,9 @@ export function handleSyncLimitPool(event: SyncLimitPool): void {
         tick.epochLast1 = epochLastParam
         pool.pool1Price = priceParam
         pool.pool1Liquidity = liquidityParam
+    }
+    if (tick.index == pool.tickAtPrice) {
+        tick.active = false
     }
     pool.save()
     tick.save()

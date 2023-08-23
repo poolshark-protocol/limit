@@ -367,7 +367,7 @@ export async function validateMint(params: ValidateMintParams) {
                 upper: upper,
                 zeroForOne: zeroForOne,
                 mintPercent: mintPercent
-            })
+            }, {gasLimit: 3000000})
         await txn.wait()
     } else {
         await expect(

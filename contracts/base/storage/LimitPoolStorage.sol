@@ -10,7 +10,6 @@ abstract contract LimitPoolStorage is LimitPoolStructs, RangePoolStructs, LimitP
     GlobalState public globalState;
     TickMap public rangeTickMap;
     TickMap public limitTickMap;
-    address public feeTo;
     Sample[65535] public samples;
     mapping(int24 => Tick) public ticks;
     mapping(uint256 => RangePosition) public positions; /// @dev - positions owned by the pool

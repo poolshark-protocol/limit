@@ -82,6 +82,7 @@ export function handleMintRange(event: MintRange): void {
         position.lower = lower
         position.upper = upper
         position.pool = pool.id
+        position.positionId = positionIdParam
         position.createdAtBlockNumber = event.block.number
         position.createdAtTimestamp = event.block.timestamp
     }

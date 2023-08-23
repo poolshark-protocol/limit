@@ -27,5 +27,5 @@ task(INCREASE_SAMPLES)
 
         await increaseSamples.increaseSamples.postDeployment()
 
-        console.log('Cover pool deployment complete.\n')
+        console.log('Limit pool deployment complete.\n')
     })

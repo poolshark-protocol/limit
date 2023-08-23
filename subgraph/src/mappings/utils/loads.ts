@@ -103,7 +103,6 @@ export function safeLoadManager(address: string): LoadManagerRet {
         exists: exists,
     }
 }
-
 class LoadFeeTierRet {
     entity: FeeTier
     exists: boolean
@@ -174,6 +173,7 @@ export function safeLoadLimitTick(address: string, index: BigInt): LoadLimitTick
         // 1.0001^tick is token1/token0.
         tickEntity.price0 = bigDecimalExponated(BigDecimal.fromString('1.0001'), BigInt.fromI32(tickEntity.index.toI32()))
         tickEntity.price1 = safeDiv(ONE_BD, tickEntity.price0)
+        tickEntity.active = false
         exists = false
     }
 

@@ -8,9 +8,9 @@ dataSources:
     name: LimitPoolFactory
     network: arbitrum-goerli
     source:
-        address: '0x64E92DB1F309F6A5455F331c0c8F3F0F96a9896C'
+        address: '0x852deB31cBeCD1Cf96f7119a2512854aEB9cfe25'
         abi: LimitPoolFactory
-        startBlock: 32687100
+        startBlock: 36178350
     mapping:
         kind: ethereum/events
         apiVersion: 0.0.6
@@ -37,9 +37,9 @@ dataSources:
     name: LimitPoolManager
     network: arbitrum-goerli
     source:
-        address: '0x42a1CAef9B0EFE5491Fc788616B65cfc72D1C067'
+        address: '0xd4778502Df61a2005085dBc38C88Db13FE95C638'
         abi: LimitPoolManager
-        startBlock: 32687100
+        startBlock: 36178350
     mapping:
         kind: ethereum/events
         apiVersion: 0.0.6
@@ -56,6 +56,8 @@ dataSources:
               handler: handleFeeTierEnabled
             - event: ImplementationEnabled(bytes32,address,address)
               handler: handleImplementationEnabled
+            - event: FactoryChanged(indexed address,indexed address)
+              handler: handleFactoryChanged
             - event: FeeToTransfer(indexed address,indexed address)
               handler: handleFeeToTransfer
             - event: OwnerTransfer(indexed address,indexed address)
@@ -66,15 +68,14 @@ dataSources:
               handler: handleProtocolFillFeesModified
             - event: ProtocolSwapFeesModified(address[],uint16[],uint16[])
               handler: ProtocolSwapFeesModified
-            - event: FactoryChanged(indexed address,indexed address)
-              handler: handleFactoryChanged
+
   - kind: ethereum/contract
     name: PoolsharkRouter
     network: arbitrum-goerli
     source:
-        address: '0x64E92DB1F309F6A5455F331c0c8F3F0F96a9896C'
+        address: '0xDeaCe8fd9e599a13c6cF0f2d6E418FE1BB8E5853'
         abi: PoolsharkRouter
-        startBlock: 32687100
+        startBlock: 36178350
     mapping:
         kind: ethereum/events
         apiVersion: 0.0.6

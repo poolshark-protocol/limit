@@ -48,6 +48,19 @@ export function handleMintLimit(event: MintLimit): void {
     tokenOut.txnCount = tokenOut.txnCount.plus(ONE_BI)
     factory.txnCount = factory.txnCount.plus(ONE_BI)
 
+    if (zeroForOneParam) {
+        if (upperTick.index > pool.tickAtPrice) {
+            upperTick.active = false
+        }
+        lowerTick.active = true
+    } else {
+        if (lowerTick.index < pool.tickAtPrice) {
+            lowerTick.active = true
+        }
+    }
+
+    if ()
+
     // increase liquidity count
     if (!loadPosition.exists) {
         if (zeroForOneParam) {

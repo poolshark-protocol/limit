@@ -1,10 +1,38 @@
-import { safeLoadManager, safeLoadLimitPoolFactory } from './utils/loads'
+import { safeLoadManager, safeLoadLimitPoolFactory, safeLoadFeeTier } from './utils/loads'
 import { BigInt, log } from '@graphprotocol/graph-ts'
 import { FACTORY_ADDRESS } from '../constants/constants'
-import { FactoryChanged, FeeToTransfer, ImplementationEnabled, OwnerTransfer } from '../../generated/LimitPoolManager/LimitPoolManager'
+import { FactoryChanged, FeeTierEnabled, FeeToTransfer, ImplementationEnabled, OwnerTransfer } from '../../generated/LimitPoolManager/LimitPoolManager'
+
+export function handleFeeTierEnabled(event: FeeTierEnabled): void {
+    let swapFeeParam     = event.params.swapFee
+    let tickSpacingParam = event.params.tickSpacing
+
+    let loadManager = safeLoadManager(event.address.toHex())
+    let loadFeeTier = safeLoadFeeTier(BigInt.fromI32(swapFeeParam))
+
+    let manager = loadManager.entity
+    let feeTier = loadFeeTier.entity
+
+    if(!loadFeeTier.exists) {
+        feeTier.feeAmount = BigInt.fromString(feeTier.id)
+        feeTier.tickSpacing = BigInt.fromI32(tickSpacingParam)
+        feeTier.createdAtTimestamp = event.block.timestamp
+        feeTier.createdAtBlockNumber = event.block.number
+        feeTier.save()
+        let managerFeeTiers = manager.feeTiers
+        managerFeeTiers.push(feeTier.id)
+        manager.feeTiers = managerFeeTiers
+        manager.save()
+    } else {
+        //something went wrong
+
+    }
+}
 
 export function handleImplementationEnabled(event: ImplementationEnabled): void {
 }
+
+
 
 export function handleFactoryChanged(event: FactoryChanged): void {
     let loadLimitPoolFactory = safeLoadLimitPoolFactory(FACTORY_ADDRESS)

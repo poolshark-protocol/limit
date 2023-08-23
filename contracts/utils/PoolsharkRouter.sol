@@ -152,6 +152,7 @@ contract PoolsharkRouter is
                     if (params[i].zeroForOne != params[0].zeroForOne) require (false, 'ZeroForOneParamMismatch()');
                     if (params[i].exactIn != params[0].exactIn) require(false, 'ExactInParamMismatch()');
                     if (params[i].amount != params[0].amount) require(false, 'AmountParamMisMatch()');
+                    /// @dev - priceLimit values are allowed to be different
                 }
             }
         }

@@ -13,6 +13,7 @@ export function handleSyncLimitLiquidity(event: SyncLimitLiquidity): void {
 
     let tick = loadTick.entity
 
+    tick.active = true
     tick.liquidityDelta = tick.liquidityDelta.plus(liquidityAddedParam)
     tick.liquidityAbsolute = tick.liquidityAbsolute.plus(liquidityAddedParam)
 

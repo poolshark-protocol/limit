@@ -1,7 +1,7 @@
 import { RouterDeployed } from "../../generated/PoolsharkRouter/PoolsharkRouter";
 import { safeLoadPoolRouter } from "./utils/loads";
 
-export function handleRouterDeploy(event: RouterDeployed): void {
+export function handleRouterDeployed(event: RouterDeployed): void {
     let routerParam = event.params.router
     let limitPoolFactoryParam = event.params.limitPoolFactory
     let coverPoolFactoryParam = event.params.coverPoolFactory

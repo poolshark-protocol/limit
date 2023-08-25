@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPLv3
 pragma solidity 0.8.13;
 
-import "../range/IRangePoolERC1155.sol";
 import './PoolsharkStructs.sol';
 
 interface RangePoolStructs is PoolsharkStructs {

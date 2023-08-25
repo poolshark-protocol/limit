@@ -4,7 +4,7 @@ pragma solidity 0.8.13;
 import '../../../interfaces/structs/RangePoolStructs.sol';
 import '../../utils/SafeTransfers.sol';
 import '../../utils/Collect.sol';
-import '../RangeTokens.sol';
+import '../../utils/PositionTokens.sol';
 import '../RangePositions.sol';
 
 library MintRangeCall {
@@ -34,12 +34,12 @@ library MintRangeCall {
     ) external {
         // initialize cache
         cache.state = globalState;
-        cache.position = positions[params.positionId];
-        
+
         // id of 0 can be passed to create new position
         if (params.positionId > 0) {
+            cache.position = positions[params.positionId];
             // existing position
-            if (RangeTokens.balanceOf(cache.constants, msg.sender, params.positionId) == 0)
+            if (PositionTokens.balanceOf(cache.constants, msg.sender, params.positionId) == 0)
                 // check for balance held
                 require(false, 'PositionNotFound()');
             // set bounds as defined by position

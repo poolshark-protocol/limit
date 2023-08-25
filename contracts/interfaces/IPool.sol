@@ -16,8 +16,8 @@ interface IPool is PoolsharkStructs {
     function quote(
         QuoteParams memory params
     ) external view returns (
-        uint256 inAmount,
-        uint256 outAmount,
+        int256 inAmount,
+        int256 outAmount,
         uint160 priceAfter
     );
 

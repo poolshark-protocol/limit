@@ -2,6 +2,7 @@
 pragma solidity 0.8.13;
 
 import '../../interfaces/IPool.sol';
+import '../../interfaces/IPositionERC1155.sol';
 import '../../interfaces/structs/RangePoolStructs.sol';
 import '../math/ConstantProduct.sol';
 import './math/FeeMath.sol';
@@ -106,7 +107,7 @@ library RangePositions {
             cache.position.upper
         );
         if (cache.position.liquidity == 0) {
-            IRangePoolERC1155(cache.constants.poolToken).mint(
+            IPositionERC1155(cache.constants.poolToken).mint(
                 params.to,
                 params.positionId,
                 1,
@@ -240,7 +241,7 @@ library RangePositions {
         if (params.burnPercent > 0) {
             cache.liquidityAmount = uint256(params.burnPercent) * position.liquidity / 1e38;
             if (position.liquidity == cache.liquidityAmount)
-                IRangePoolERC1155(constants.poolToken).burn(msg.sender, params.positionId, 1, constants);
+                IPositionERC1155(constants.poolToken).burn(msg.sender, params.positionId, 1, constants);
         }
 
         (uint256 rangeFeeGrowth0, uint256 rangeFeeGrowth1) = rangeFeeGrowth(

@@ -6,12 +6,12 @@ import {
     Token20,
     LimitPoolManager,
     TickMap,
-    PoolRouter,
+    PoolsharkRouter,
     RangePositions,
     LimitPositions,
     BurnLimitCall,
     MintLimitCall,
-    RangePoolERC1155,
+    PositionERC1155,
     Ticks,
     FeesCall,
     SampleCall,
@@ -29,10 +29,10 @@ export interface BeforeEachProps {
     limitPool: LimitPool
     limitPool2: LimitPool
     limitPoolImpl: LimitPool
-    limitPoolToken: RangePoolERC1155
+    limitPoolToken: PositionERC1155
     limitPoolManager: LimitPoolManager
     limitPoolFactory: LimitPoolFactory
-    poolRouter: PoolRouter
+    poolRouter: PoolsharkRouter
     ticksLib: Ticks
     tickMapLib: TickMap
     swapCall: SwapCall
@@ -43,7 +43,7 @@ export interface BeforeEachProps {
     burnRangeCall: BurnRangeCall
     mintRangeCall: MintRangeCall
     rangePositionsLib: RangePositions
-    rangePoolERC1155: RangePoolERC1155
+    positionERC1155: PositionERC1155
     snapshotRangeCall: SnapshotRangeCall
     //limit
     burnLimitCall: BurnLimitCall
@@ -88,10 +88,10 @@ export class GetBeforeEach {
         let limitPool: LimitPool
         let limitPool2: LimitPool
         let limitPoolImpl: LimitPool
-        let limitPoolToken: RangePoolERC1155
+        let limitPoolToken: PositionERC1155
         let limitPoolManager: LimitPoolManager
         let limitPoolFactory: LimitPoolFactory
-        let poolRouter: PoolRouter
+        let poolRouter: PoolsharkRouter
         let tickMapLib: TickMap
         let ticksLib: Ticks
         let swapCall: SwapCall
@@ -102,7 +102,7 @@ export class GetBeforeEach {
         let burnRangeCall: BurnRangeCall
         let mintRangeCall: MintRangeCall
         let rangePositionsLib: RangePositions
-        let rangePoolERC1155: RangePoolERC1155
+        let positionERC1155: PositionERC1155
         let snapshotRangeCall: SnapshotRangeCall
         //limit
         let burnLimitCall: BurnLimitCall
@@ -140,7 +140,7 @@ export class GetBeforeEach {
             mintRangeCall,
             snapshotRangeCall,
             rangePositionsLib,
-            rangePoolERC1155,
+            positionERC1155,
             //limit
             burnLimitCall,
             mintLimitCall,

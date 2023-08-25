@@ -123,7 +123,6 @@ contract LimitPool is
     {
         MintLimitCache memory cache;
         cache.constants = immutables();
-        cache.state = globalState;
         MintLimitCall.perform(
             params.zeroForOne ? positions0 : positions1,
             ticks,

@@ -2,7 +2,7 @@ import { SUPPORTED_NETWORKS } from '../../../scripts/constants/supportedNetworks
 import { DeployAssist } from '../../../scripts/util/deployAssist'
 import { ContractDeploymentsKeys } from '../../../scripts/util/files/contractDeploymentKeys'
 import { ContractDeploymentsJson } from '../../../scripts/util/files/contractDeploymentsJson'
-import { BurnLimitCall__factory, LimitPool__factory, MintLimitCall__factory, LimitPositions__factory, QuoteCall__factory, RangePoolERC1155__factory, LimitTicks__factory, FeesCall__factory, SampleCall__factory, SnapshotRangeCall__factory, SnapshotLimitCall__factory } from '../../../typechain'
+import { BurnLimitCall__factory, LimitPool__factory, MintLimitCall__factory, LimitPositions__factory, QuoteCall__factory, PositionERC1155__factory, LimitTicks__factory, FeesCall__factory, SampleCall__factory, SnapshotRangeCall__factory, SnapshotLimitCall__factory } from '../../../typechain'
 import { BurnRangeCall__factory } from '../../../typechain'
 import { SwapCall__factory } from '../../../typechain'
 import { MintRangeCall__factory } from '../../../typechain'
@@ -145,6 +145,10 @@ export class InitialSetup {
             LimitPositions__factory,
             'limitPositionsLib',
             [],
+            {
+                'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address
+            }
+
         )
 
         await this.deployAssist.deployContractWithRetry(
@@ -199,7 +203,7 @@ export class InitialSetup {
             'mintLimitCall',
             [],
             {
-                'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address,
+                'contracts/libraries/limit/LimitPositions.sol:LimitPositions': hre.props.limitPositionsLib.address
             }
         )
 
@@ -279,8 +283,8 @@ export class InitialSetup {
         await this.deployAssist.deployContractWithRetry(
             network,
             // @ts-ignore
-            RangePoolERC1155__factory,
-            'rangePoolERC1155',
+            PositionERC1155__factory,
+            'positionERC1155',
             [
               hre.props.limitPoolFactory.address
             ]
@@ -289,7 +293,7 @@ export class InitialSetup {
         const enableImplTxn = await hre.props.limitPoolManager.enableImplementation(
             this.constantProductString,
             hre.props.limitPoolImpl.address,
-            hre.props.rangePoolERC1155.address
+            hre.props.positionERC1155.address
         )
         await enableImplTxn.wait();
 
@@ -333,7 +337,7 @@ export class InitialSetup {
             '500'
         )
         hre.props.limitPool = await hre.ethers.getContractAt('LimitPool', limitPoolAddress)
-        hre.props.limitPoolToken = await hre.ethers.getContractAt('RangePoolERC1155', limitPoolTokenAddress)
+        hre.props.limitPoolToken = await hre.ethers.getContractAt('PositionERC1155', limitPoolTokenAddress)
 
         await this.deployAssist.saveContractDeployment(
             network,
@@ -390,11 +394,11 @@ export class InitialSetup {
             )
         ).contractAddress
 
-        const rangePoolERC1155Address = (
+        const positionERC1155Address = (
             await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
                 {
                     networkName: hre.network.name,
-                    objectName: 'rangePoolERC1155',
+                    objectName: 'positionERC1155',
                 },
                 'readLimitPoolSetup'
             )
@@ -404,7 +408,7 @@ export class InitialSetup {
         hre.props.token1 = await hre.ethers.getContractAt('Token20', token1Address)
         hre.props.limitPool = await hre.ethers.getContractAt('LimitPool', limitPoolAddress)
         hre.props.limitPoolFactory = await hre.ethers.getContractAt('LimitPoolFactory', limitPoolFactoryAddress)
-        hre.props.limitPoolToken = await hre.ethers.getContractAt('RangePoolERC1155', rangePoolERC1155Address)
+        hre.props.limitPoolToken = await hre.ethers.getContractAt('PositionERC1155', positionERC1155Address)
 
         return nonce
     }

@@ -2,6 +2,7 @@
 pragma solidity 0.8.13;
 
 import './LimitTicks.sol';
+import '../../interfaces/IPositionERC1155.sol';
 import '../../interfaces/structs/RangePoolStructs.sol';
 import '../../interfaces/structs/LimitPoolStructs.sol';
 import '../math/OverflowMath.sol';
@@ -17,6 +18,7 @@ library LimitPositions {
 
     event BurnLimit(
         address indexed to,
+        uint32 positionId,
         int24 lower,
         int24 upper,
         int24 oldClaim,
@@ -34,7 +36,7 @@ library LimitPositions {
         PoolsharkStructs.TickMap storage limitTickMap,
         LimitPoolStructs.MintLimitParams memory params,
         LimitPoolStructs.MintLimitCache memory cache
-    ) internal returns (
+    ) external returns (
         LimitPoolStructs.MintLimitParams memory,
         LimitPoolStructs.MintLimitCache memory
     )
@@ -200,6 +202,7 @@ library LimitPositions {
 
         if (cache.position.liquidity == 0) {
             cache.position.epochLast = cache.state.epoch;
+            IPositionERC1155(cache.constants.poolToken).mint(msg.sender, params.positionId, 1, cache.constants);
         } else {
             // safety check in case we somehow get here
             if (
@@ -209,7 +212,7 @@ library LimitPositions {
                     : EpochMap.get(params.upper, params.zeroForOne, tickMap, cache.constants)
                             > cache.position.epochLast
             ) {
-                require (false, string.concat('UpdatePositionFirstAt(', String.from(params.lower), ', ', String.from(params.upper), ')'));
+                require (false, 'PositionAlreadyEntered()');
             }
             /// @auditor maybe this shouldn't be a revert but rather just not mint the position?
         }
@@ -230,8 +233,6 @@ library LimitPositions {
         return (cache.pool, cache.position);
     }
 
-    //Limitxxx would be easier
-
     function remove(
         mapping(int24 => LimitPoolStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
@@ -244,7 +245,7 @@ library LimitPositions {
 
         // convert percentage to liquidity amount
         cache.liquidityBurned = _convert(cache.position.liquidity, params.burnPercent);
-        params.claim = params.zeroForOne ? params.lower : params.upper;
+        params.claim = params.zeroForOne ? cache.position.lower : cache.position.upper;
         // early return if no liquidity to remove
         if (cache.liquidityBurned == 0) return (params, cache);
         if (cache.liquidityBurned > cache.position.liquidity) {
@@ -252,9 +253,9 @@ library LimitPositions {
         }
         /// @dev - validate position has not been crossed into
         if (params.zeroForOne) {
-            if (EpochMap.get(params.lower, params.zeroForOne, tickMap, cache.constants)
+            if (EpochMap.get(cache.position.lower, params.zeroForOne, tickMap, cache.constants)
                         > cache.position.epochLast) {
-                int24 nextTick = TickMap.next(tickMap, params.lower, cache.constants.tickSpacing, false);
+                int24 nextTick = TickMap.next(tickMap, cache.position.lower, cache.constants.tickSpacing, false);
                 if (cache.pool.price > cache.priceLower ||
                     EpochMap.get(nextTick, params.zeroForOne, tickMap, cache.constants)
                         > cache.position.epochLast) {
@@ -267,9 +268,9 @@ library LimitPositions {
             // if pool price is further along
             // OR next tick has a greater epoch
         } else {
-            if (EpochMap.get(params.upper, params.zeroForOne, tickMap, cache.constants)
+            if (EpochMap.get(cache.position.upper, params.zeroForOne, tickMap, cache.constants)
                         > cache.position.epochLast) {
-                int24 previousTick = TickMap.previous(tickMap, params.upper, cache.constants.tickSpacing, false);
+                int24 previousTick = TickMap.previous(tickMap, cache.position.upper, cache.constants.tickSpacing, false);
                 if (cache.pool.price < cache.priceUpper ||
                     EpochMap.get(previousTick, params.zeroForOne, tickMap, cache.constants)
                         > cache.position.epochLast) {
@@ -300,11 +301,16 @@ library LimitPositions {
 
         cache.position.liquidity -= uint128(cache.liquidityBurned);
 
+        if (cache.position.liquidity == 0) {
+
+        }
+
         if (cache.liquidityBurned > 0) {
             emit BurnLimit(
                     params.to,
-                    params.lower,
-                    params.upper,
+                    params.positionId,
+                    cache.position.lower,
+                    cache.position.upper,
                     params.claim,
                     params.claim,
                     params.zeroForOne,
@@ -321,9 +327,7 @@ library LimitPositions {
     }
 
     function update(
-        mapping(address => mapping(int24 => mapping(int24 => LimitPoolStructs.LimitPosition)))
-            storage positions,
-        mapping(int24 => LimitPoolStructs.Tick) storage ticks,
+        mapping(int24 => PoolsharkStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
         LimitPoolStructs.BurnLimitCache memory cache,
         LimitPoolStructs.BurnLimitParams memory params
@@ -336,7 +340,6 @@ library LimitPositions {
             params,
             cache
         ) = _deltas(
-            positions,
             ticks,
             tickMap,
             params,
@@ -355,7 +358,7 @@ library LimitPositions {
         }
 
         if (cache.liquidityBurned > 0) {
-            if (params.claim == (params.zeroForOne ? params.upper : params.lower)) {
+            if (params.claim == (params.zeroForOne ? cache.position.upper : cache.position.lower)) {
                 // only remove once if final tick of position
                 cache.removeLower = false;
                 cache.removeUpper = false;
@@ -364,7 +367,7 @@ library LimitPositions {
                                   : cache.removeLower = true;
             }
             if (params.zeroForOne) {
-                if (params.claim == params.lower && 
+                if (params.claim == cache.position.lower && 
                     cache.pool.price < cache.priceLower
                 ) {
                     cache.removeLower = true;
@@ -372,7 +375,7 @@ library LimitPositions {
                     cache.pool.price < cache.priceClaim)
                     cache.removeLower = true;
             } else {
-                if (params.claim == params.upper &&
+                if (params.claim == cache.position.upper &&
                     cache.pool.price > cache.priceUpper
                 )
                     cache.removeUpper = true;
@@ -392,21 +395,20 @@ library LimitPositions {
             // update global liquidity
             cache.state.liquidityGlobal -= cache.liquidityBurned;
         }
-        if (params.zeroForOne ? params.claim == params.upper
-                              : params.claim == params.lower) {
+        if (params.zeroForOne ? params.claim == cache.position.upper
+                              : params.claim == cache.position.lower) {
             cache.state.liquidityGlobal -= cache.position.liquidity;
             cache.position.liquidity = 0;
         }
         // clear out old position
-        if (params.zeroForOne ? params.claim != params.lower 
-                              : params.claim != params.upper) {
+        if (params.zeroForOne ? params.claim != cache.position.lower 
+                              : params.claim != cache.position.upper) {
             /// @dev - this also clears out position end claims
-            if (params.zeroForOne ? params.claim == params.lower 
-                                  : params.claim == params.upper) {
+            if (params.zeroForOne ? params.claim == cache.position.lower 
+                                  : params.claim == cache.position.upper) {
                 // subtract remaining position liquidity out from global
                 cache.state.liquidityGlobal -= cache.position.liquidity;
             }
-            delete positions[msg.sender][params.lower][params.upper];
         }
         // clear position if empty
         if (cache.position.liquidity == 0) {
@@ -422,8 +424,9 @@ library LimitPositions {
         
         emit BurnLimit(
             params.to,
-            params.lower,
-            params.upper,
+            params.positionId,
+            cache.position.lower,
+            cache.position.upper,
             cache.claim,
             params.claim,
             params.zeroForOne,
@@ -440,8 +443,6 @@ library LimitPositions {
     }
 
     function snapshot(
-        mapping(address => mapping(int24 => mapping(int24 => LimitPoolStructs.LimitPosition)))
-            storage positions,
         mapping(int24 => PoolsharkStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
         LimitPoolStructs.BurnLimitCache memory cache,
@@ -454,7 +455,6 @@ library LimitPositions {
             params,
             cache
         ) = _deltas(
-            positions,
             ticks,
             tickMap,
             params,
@@ -477,8 +477,6 @@ library LimitPositions {
     }
 
     function _deltas(
-        mapping(address => mapping(int24 => mapping(int24 => LimitPoolStructs.LimitPosition)))
-            storage positions,
         mapping(int24 => LimitPoolStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
         LimitPoolStructs.BurnLimitParams memory params,
@@ -493,10 +491,10 @@ library LimitPositions {
             claimTick: ticks[params.claim].limit,
             position: cache.position,
             constants: cache.constants,
-            priceLower: ConstantProduct.getPriceAtTick(params.lower, cache.constants),
+            priceLower: ConstantProduct.getPriceAtTick(cache.position.lower, cache.constants),
             priceClaim: ticks[params.claim].limit.priceAt == 0 ? ConstantProduct.getPriceAtTick(params.claim, cache.constants)
                                                                : ticks[params.claim].limit.priceAt,
-            priceUpper: ConstantProduct.getPriceAtTick(params.upper, cache.constants),
+            priceUpper: ConstantProduct.getPriceAtTick(cache.position.upper, cache.constants),
             liquidityBurned: _convert(cache.position.liquidity, params.burnPercent),
             amountIn: 0,
             amountOut: 0,
@@ -508,7 +506,6 @@ library LimitPositions {
 
         // check claim is valid
         (params, cache) = Claims.validate(
-            positions,
             ticks,
             tickMap,
             params,

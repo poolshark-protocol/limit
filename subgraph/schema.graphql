@@ -131,9 +131,6 @@ type LimitPosition @entity {
     # poolAddress + owner + lower + upper
     id: ID!
     pool: LimitPool!
-    txnHash: Bytes!
-    createdBy: Bytes!
-    createdAtTimestamp: BigInt!
     epochLast: BigInt!
     claimPriceLast: BigInt!
     owner: Bytes!
@@ -144,15 +141,23 @@ type LimitPosition @entity {
     amountFilled: BigInt!
     tokenIn: Token!
     tokenOut: Token!
+
+    txnHash: Bytes!
+    createdBy: Bytes!
+    createdAtTimestamp: BigInt!
 }
 
 type RangePosition @entity {
     id: ID!
+
+    # position data
+    owner: Bytes!
+    positionId: BigInt!
     lower: BigInt!
     upper: BigInt!
-    pool: LimitPool!
-    positionId: BigInt!
     liquidity: BigInt!
+    pool: LimitPool!
+
     # creation stats
     createdAtTimestamp: BigInt!
     createdAtBlockNumber: BigInt!

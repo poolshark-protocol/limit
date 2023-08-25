@@ -79,6 +79,7 @@ export function handleMintRange(event: MintRange): void {
     upperTick.liquidityAbsolute = upperTick.liquidityAbsolute.plus(liquidityMintedParam)
 
     if (!loadPosition.exists) {
+        position.owner = recipientParam
         position.lower = lower
         position.upper = upper
         position.pool = pool.id

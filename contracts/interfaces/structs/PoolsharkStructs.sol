@@ -93,16 +93,15 @@ interface PoolsharkStructs {
     struct SnapshotLimitParams {
         address owner;
         uint128 burnPercent;
-        int24 lower;
-        int24 upper;
+        uint32 positionId;
         int24 claim;
         bool zeroForOne;
     }
 
     struct QuoteResults {
         address pool;
-        uint256 amountIn;
-        uint256 amountOut;
+        int256 amountIn;
+        int256 amountOut;
         uint160 priceAfter;
     }
     

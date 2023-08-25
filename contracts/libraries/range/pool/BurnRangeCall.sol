@@ -3,7 +3,7 @@ pragma solidity 0.8.13;
 
 import '../../../interfaces/structs/RangePoolStructs.sol';
 import '../../utils/Collect.sol';
-import '../RangeTokens.sol';
+import '../../utils/PositionTokens.sol';
 import '../RangePositions.sol';
 
 library BurnRangeCall {
@@ -29,9 +29,16 @@ library BurnRangeCall {
         RangePoolStructs.BurnRangeCache memory cache,
         RangePoolStructs.BurnRangeParams memory params
     ) external {
+        // check for invalid receiver
+        if (params.to == address(0))
+            require(false, 'CollectToZeroAddress()');
+        
+        // initialize cache
         cache.state = globalState;
         cache.position = positions[params.positionId];
-        if (RangeTokens.balanceOf(cache.constants, msg.sender, params.positionId) == 0)
+
+        // check positionId owner
+        if (PositionTokens.balanceOf(cache.constants, msg.sender, params.positionId) == 0)
             require(false, 'PositionNotFound()');
         if (params.burnPercent > 1e38) params.burnPercent = 1e38;
         ( 

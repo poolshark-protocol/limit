@@ -193,8 +193,8 @@ library LimitTicks {
         PoolsharkStructs.Immutables memory constants
     ) internal {
         // set ticks based on claim and zeroForOne
-        int24 lower = params.zeroForOne ? params.claim : params.lower;
-        int24 upper = params.zeroForOne ? params.upper : params.claim;
+        int24 lower = params.zeroForOne ? params.claim : cache.position.lower;
+        int24 upper = params.zeroForOne ? cache.position.upper : params.claim;
         {    
             PoolsharkStructs.LimitTick memory tickLower = ticks[lower].limit;
             

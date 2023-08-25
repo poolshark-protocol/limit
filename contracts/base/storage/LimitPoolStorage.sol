@@ -13,6 +13,6 @@ abstract contract LimitPoolStorage is LimitPoolStructs, RangePoolStructs, LimitP
     Sample[65535] public samples;
     mapping(int24 => Tick) public ticks;
     mapping(uint256 => RangePosition) public positions; /// @dev - positions owned by the pool
-    mapping(address => mapping(int24 => mapping(int24 => LimitPosition))) public positions0; //positions with token0 deposited
-    mapping(address => mapping(int24 => mapping(int24 => LimitPosition))) public positions1; //positions with token1 deposited
+    mapping(uint256 => LimitPosition) public positions0; //positions with token0 deposited
+    mapping(uint256 => LimitPosition) public positions1; //positions with token1 deposited
 }

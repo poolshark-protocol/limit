@@ -2,7 +2,6 @@
 pragma solidity 0.8.13;
 
 import '../structs/RangePoolStructs.sol';
-import './IRangePoolERC1155.sol';
 
 interface IRangePoolManager {
     function owner() external view returns (address);

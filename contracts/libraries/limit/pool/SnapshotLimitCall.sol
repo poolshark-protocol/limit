@@ -20,7 +20,7 @@ library SnapshotLimitCall {
     );
 
     function perform(
-        mapping(address => mapping(int24 => mapping(int24 => LimitPoolStructs.LimitPosition)))
+        mapping(uint256 => LimitPoolStructs.LimitPosition)
             storage positions,
         mapping(int24 => LimitPoolStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
@@ -37,19 +37,16 @@ library SnapshotLimitCall {
         LimitPoolStructs.BurnLimitCache memory cache;
         cache.state = state;
         cache.constants = constants;
-        cache.position = positions[params.owner][params.lower][params.upper];
+        cache.position = positions[params.positionId];
         LimitPoolStructs.BurnLimitParams memory burnParams = LimitPoolStructs.BurnLimitParams ({
             to: params.owner,
             burnPercent: params.burnPercent,
-            lower: params.lower,
+            positionId: params.positionId,
             claim: params.claim,
-            upper: params.upper,
             zeroForOne: params.zeroForOne
         });
-        if (params.lower >= params.upper) require (false, 'InvalidPositionBounds()');
         if (cache.position.epochLast == 0) require(false, 'PositionNotFound()');
         return LimitPositions.snapshot(
-            positions,
             ticks,
             tickMap,
             cache,

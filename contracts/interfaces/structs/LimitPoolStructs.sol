@@ -8,13 +8,16 @@ interface LimitPoolStructs is PoolsharkStructs {
     struct LimitPosition {
         uint128 liquidity; // expected amount to be used not actual
         uint32 epochLast;  // epoch when this position was created at
-        bool crossedInto; // whether the position was crossed into already
+        int24 lower;       // lower price tick of position range
+        int24 upper;       // upper price tick of position range
+        bool crossedInto;  // whether the position was crossed into already
     }
 
     struct MintLimitParams {
         address to;
         uint128 amount;
         uint96 mintPercent;
+        uint32 positionId;
         int24 lower;
         int24 upper;
         bool zeroForOne;
@@ -23,9 +26,8 @@ interface LimitPoolStructs is PoolsharkStructs {
     struct BurnLimitParams {
         address to;
         uint128 burnPercent;
-        int24 lower;
+        uint32 positionId;
         int24 claim;
-        int24 upper;
         bool zeroForOne;
     }
 

@@ -238,7 +238,7 @@ contract PoolsharkRouter is
             for (uint sorted = 0; sorted < results.length;) {
                 // if exactIn, sort by most output
                 // if exactOut, sort by least input
-                uint256 sortAmount = params[0].exactIn ? 0 : type(uint256).max;
+                int256 sortAmount = params[0].exactIn ? int256(0) : type(int256).max;
                 uint256 sortIndex = type(uint256).max;
                 for (uint index = 0; index < (results.length - sorted);) {
                     // check if result already sorted

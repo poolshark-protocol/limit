@@ -146,10 +146,10 @@ templates:
                 handler: handleSyncLimitTick
     # ERC-1155 events
     - kind: ethereum/contract
-      name: RangePoolERC1155Template
+      name: PositionERC1155Template
       network: arbitrum-goerli
       source:
-          abi: RangePoolERC1155
+          abi: PositionERC1155
       mapping:
           kind: ethereum/events
           apiVersion: 0.0.6
@@ -160,8 +160,8 @@ templates:
               - RangePool
               - RangePosition
           abis:
-              - name: RangePoolERC1155
-                file: ./abis/RangePoolERC1155.json
+              - name: PositionERC1155
+                file: ./abis/PositionERC1155.json
           eventHandlers:
               - event: TransferSingle(indexed address,indexed address,indexed address,uint256,uint256)
                 handler: handleTransferSingle

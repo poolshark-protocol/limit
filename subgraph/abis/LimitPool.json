@@ -10,6 +10,12 @@
       },
       {
         "indexed": false,
+        "internalType": "uint32",
+        "name": "positionId",
+        "type": "uint32"
+      },
+      {
+        "indexed": false,
         "internalType": "int24",
         "name": "lower",
         "type": "int24"
@@ -192,6 +198,12 @@
         "internalType": "bool",
         "name": "zeroForOne",
         "type": "bool"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint32",
+        "name": "positionId",
+        "type": "uint32"
       },
       {
         "indexed": false,

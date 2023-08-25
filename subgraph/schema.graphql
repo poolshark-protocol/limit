@@ -130,13 +130,14 @@ type LimitPool @entity {
 type LimitPosition @entity {
     # poolAddress + owner + lower + upper
     id: ID!
-    pool: LimitPool!
-    epochLast: BigInt!
-    claimPriceLast: BigInt!
+    positionId: BigInt!
     owner: Bytes!
     lower: BigInt!
     upper: BigInt!
     liquidity: BigInt!
+    pool: LimitPool!
+    epochLast: BigInt!
+    claimPriceLast: BigInt!
     amountIn: BigInt!
     amountFilled: BigInt!
     tokenIn: Token!

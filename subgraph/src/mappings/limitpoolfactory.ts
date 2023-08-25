@@ -1,6 +1,6 @@
 import { log } from '@graphprotocol/graph-ts'
 import { PoolCreated } from '../../generated/LimitPoolFactory/LimitPoolFactory'
-import { LimitPoolTemplate, RangePoolERC1155Template } from '../../generated/templates'
+import { LimitPoolTemplate, PositionERC1155Template } from '../../generated/templates'
 import {
     fetchTokenSymbol,
     fetchTokenName,
@@ -85,5 +85,5 @@ export function handlePoolCreated(event: PoolCreated): void {
 
     // tracked events based on template
     LimitPoolTemplate.create(poolAddressParam)
-    RangePoolERC1155Template.create(poolTokenParam)
+    PositionERC1155Template.create(poolTokenParam)
 }

@@ -8,6 +8,7 @@ import { updateDerivedTVLAmounts } from "../utils/tvl"
 
 export function handleBurnLimit(event: BurnLimit): void {
     let msgSender = event.transaction.from.toHex()
+    let positionIdParam = event.params.positionId
     let lowerParam = event.params.lower
     let oldClaimParam = event.params.oldClaim
     let newClaimParam = event.params.newClaim
@@ -30,7 +31,7 @@ export function handleBurnLimit(event: BurnLimit): void {
     let basePrice = loadBasePrice.entity
     
     let loadLimitPoolFactory = safeLoadLimitPoolFactory(pool.factory) // 3
-    let loadPosition = safeLoadLimitPosition(poolAddress, msgSender, lower, upper, zeroForOneParam) // 4
+    let loadPosition = safeLoadLimitPosition(poolAddress, positionIdParam) // 4
     let loadLowerTick = safeLoadLimitTick(poolAddress, lower) // 5
     let loadUpperTick = safeLoadLimitTick(poolAddress, upper) // 6
     let loadTokenIn = safeLoadToken(zeroForOneParam ? pool.token1 : pool.token0) // 7
@@ -56,14 +57,6 @@ export function handleBurnLimit(event: BurnLimit): void {
             (zeroForOneParam ? newClaim.equals(upper) : newClaim.equals(lower))) {
         store.remove('Position', position.id)
     } else {
-        // update id if position is shrunk
-        if (newClaim.notEqual(zeroForOneParam ? lower : upper)) {
-            position.id = poolAddress
-                            .concat(msgSender)
-                            .concat(zeroForOneParam ? lower.toString() : newClaim.toString())
-                            .concat(zeroForOneParam ? newClaim.toString() : upper.toString())
-                            .concat(zeroForOneParam.toString())
-        }
         position.liquidity = position.liquidity.minus(liquidityBurnedParam)
         position.amountFilled = position.amountFilled.minus(tokenInClaimedParam)
         position.amountIn = position.amountIn.minus(tokenOutBurnedParam)

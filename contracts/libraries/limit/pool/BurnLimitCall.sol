@@ -10,9 +10,11 @@ import '../../utils/PositionTokens.sol';
 library BurnLimitCall {
     event BurnLimit(
         address indexed to,
+        uint32 positionId,
         int24 lower,
         int24 upper,
-        int24 claim,
+        int24 oldClaim,
+        int24 newClaim,
         bool zeroForOne,
         uint128 liquidityBurned,
         uint128 tokenInClaimed,

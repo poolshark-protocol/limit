@@ -247,25 +247,18 @@ class LoadLimitPositionRet {
 }
 export function safeLoadLimitPosition(
     poolAddress: string,
-    owner: string,
-    lower: BigInt,
-    upper: BigInt,
-    zeroForOne: boolean
+    positionId: BigInt
 ): LoadLimitPositionRet {
     let exists = true
     let fromToken: string
 
-    let positionId = poolAddress
-        .concat(owner)
-        .concat(lower.toString())
-        .concat(upper.toString())
-        .concat(zeroForOne.toString())
+    let limitPositionId = poolAddress
+        .concat(positionId.toString())
 
-    let positionEntity = LimitPosition.load(positionId)
+    let positionEntity = LimitPosition.load(limitPositionId)
 
     if (!positionEntity) {
-        positionEntity = new LimitPosition(positionId)
-        positionEntity.epochLast = ONE_BI
+        positionEntity = new LimitPosition(limitPositionId)
         exists = false
     }
 

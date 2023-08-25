@@ -2,7 +2,6 @@
 pragma solidity 0.8.13;
 
 abstract contract LimitPoolEvents {
-    //DONE
     event Initialize( 
         int24 minTick,
         int24 maxTick,
@@ -10,7 +9,6 @@ abstract contract LimitPoolEvents {
         int24 startTick
     );
 
-    // DONE
     event Swap(
         address indexed recipient,
         uint256 amountIn,
@@ -25,18 +23,17 @@ abstract contract LimitPoolEvents {
         bool indexed exactIn
     );
 
-    //
+
     event SampleRecorded(
         int56 tickSecondsAccum,
         uint160 secondsPerLiquidityAccum
     );
 
-    //
+
     event SampleLengthIncreased(
         uint16 sampleLengthNext
     );
 
-    //DONE
     event MintRange(
         address indexed recipient,
         int24 lower,
@@ -47,7 +44,6 @@ abstract contract LimitPoolEvents {
         int128 amount1Delta
     );
 
-    //DONE
     event BurnRange(
         address indexed recipient,
         uint256 indexed positionId,
@@ -56,40 +52,37 @@ abstract contract LimitPoolEvents {
         int128 amount1
     );
 
-    //DONE
     event CompoundRange(
         uint32 indexed positionId,
         uint128 liquidityCompounded
     );
 
-    // DONE
     event CollectRange(
         uint128 amount0,
         uint128 amount1
     );
 
-    // DONE
     event SyncRangeTick(
         uint200 feeGrowthOutside0,
         uint200 feeGrowthOutside1,
         int24 tick
     );
 
-    // DONE
     event MintLimit(
         address indexed to,
         int24 lower,
         int24 upper,
         bool zeroForOne,
+        uint32 positionId,
         uint32 epochLast,
         uint128 amountIn,
         uint128 amountFilled,
         uint128 liquidityMinted
     );
 
-    // DONE
     event BurnLimit(
         address indexed to,
+        uint32 positionId,
         int24 lower,
         int24 upper,
         int24 oldClaim,
@@ -100,7 +93,6 @@ abstract contract LimitPoolEvents {
         uint128 tokenOutBurned
     );
 
-    //DONE
     event SyncLimitPool(
         uint160 price,
         uint128 liquidity,
@@ -115,14 +107,9 @@ abstract contract LimitPoolEvents {
         bool zeroForOne
     );
 
-    // DONE
     event SyncLimitTick(
         uint32 epoch,
         int24 tick,
         bool zeroForOne
     );
-
-
-
-    //dib;t forget liquidityGlobal
 }

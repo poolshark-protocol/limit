@@ -4,7 +4,7 @@ import {
 } from '@graphprotocol/graph-ts'
 import { MintLimit } from "../../../generated/LimitPoolFactory/LimitPool"
 import { ONE_BI } from "../utils/constants"
-import { convertTokenToDecimal } from "../utils/helpers"
+import { BIGINT_ONE, convertTokenToDecimal } from "../utils/helpers"
 import { safeLoadBasePrice, safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadLimitPosition, safeLoadLimitTick, safeLoadToken } from "../utils/loads"
 import { findEthPerToken } from '../utils/price'
 import { updateDerivedTVLAmounts } from '../utils/tvl'
@@ -12,7 +12,8 @@ import { updateDerivedTVLAmounts } from '../utils/tvl'
 export function handleMintLimit(event: MintLimit): void {
     let ownerParam = event.params.to.toHex()
     let lowerParam = event.params.lower
-    let upperParam = event.params.upper 
+    let upperParam = event.params.upper
+    let positionIdParam = event.params.positionId
     let zeroForOneParam = event.params.zeroForOne
     let epochLastParam = event.params.epochLast
     let amountInParam = event.params.amountIn
@@ -30,7 +31,7 @@ export function handleMintLimit(event: MintLimit): void {
     let basePrice = loadBasePrice.entity
 
     let loadLimitPoolFactory = safeLoadLimitPoolFactory(pool.factory) // 3
-    let loadPosition = safeLoadLimitPosition(poolAddress, ownerParam, lower, upper, zeroForOneParam) // 4
+    let loadPosition = safeLoadLimitPosition(poolAddress, positionIdParam) // 4
     let loadLowerTick = safeLoadLimitTick(poolAddress, lower) // 5
     let loadUpperTick = safeLoadLimitTick(poolAddress, upper) // 6
     let loadTokenIn = safeLoadToken(zeroForOneParam ? pool.token0 : pool.token1) // 7
@@ -67,6 +68,7 @@ export function handleMintLimit(event: MintLimit): void {
             position.tokenIn = pool.token1
             position.tokenOut = pool.token0
         }
+        position.positionId = positionIdParam
         position.lower = lower
         position.upper = upper
         position.owner = Bytes.fromHexString(ownerParam) as Bytes
@@ -80,6 +82,10 @@ export function handleMintLimit(event: MintLimit): void {
     position.liquidity = position.liquidity.plus(liquidityMintedParam)
     position.amountIn = amountInParam
     position.amountFilled = amountFilledParam
+
+    if (positionIdParam >= pool.positionIdNext) {
+        pool.positionIdNext = positionIdParam.plus(BIGINT_ONE)
+    }
 
     let amountIn = convertTokenToDecimal(amountInParam, tokenIn.decimals)
     let amountOut = convertTokenToDecimal(amountFilledParam, tokenOut.decimals)

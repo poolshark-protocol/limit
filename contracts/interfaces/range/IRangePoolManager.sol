@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.13;
 
-import './IRangePoolStructs.sol';
-import './IRangePoolERC1155.sol';
+import '../structs/RangePoolStructs.sol';
 
 interface IRangePoolManager {
     function owner() external view returns (address);

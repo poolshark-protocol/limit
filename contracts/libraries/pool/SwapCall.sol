@@ -1,33 +1,28 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.13;
 
-import '../../interfaces/limit/ILimitPoolStructs.sol';
-import '../../interfaces/callbacks/IPoolsharkSwapCallback.sol';
+import '../../interfaces/structs/LimitPoolStructs.sol';
+import '../../interfaces/callbacks/ILimitPoolSwapCallback.sol';
 import '../../interfaces/IERC20Minimal.sol';
 import '../Ticks.sol';
 import '../utils/Collect.sol';
 import '../utils/SafeTransfers.sol';
 
 library SwapCall {
-    event SwapPool0(
+    event Swap(
         address indexed recipient,
-        uint128 amountIn,
-        uint128 amountOut,
-        uint160 priceLimit,
-        uint160 newPrice
-    );
-
-    event SwapPool1(
-        address indexed recipient,
-        uint128 amountIn,
-        uint128 amountOut,
-        uint160 priceLimit,
-        uint160 newPrice
+        bool zeroForOne,
+        uint256 amountIn,
+        uint256 amountOut,
+        uint160 price,
+        uint128 liquidity,
+        uint128 feeAmount,
+        int24 tickAtPrice
     );
 
     function perform(
-        mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
-        IRangePoolStructs.Sample[65535] storage samples,
+        mapping(int24 => LimitPoolStructs.Tick) storage ticks,
+        RangePoolStructs.Sample[65535] storage samples,
         PoolsharkStructs.TickMap storage rangeTickMap,
         PoolsharkStructs.TickMap storage limitTickMap,
         PoolsharkStructs.GlobalState storage globalState,
@@ -57,7 +52,7 @@ library SwapCall {
 
         // check balance and execute callback
         uint256 balanceStart = balance(params, cache);
-        IPoolsharkSwapCallback(msg.sender).poolsharkSwapCallback(
+        ILimitPoolSwapCallback(msg.sender).limitPoolSwapCallback(
             params.zeroForOne ? -int256(cache.input) : int256(cache.output),
             params.zeroForOne ? int256(cache.output) : -int256(cache.input),
             params.callbackData

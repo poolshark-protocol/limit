@@ -4,7 +4,7 @@ pragma solidity 0.8.13;
 import './LimitPool.sol';
 import './interfaces/limit/ILimitPoolFactory.sol';
 import './base/events/LimitPoolFactoryEvents.sol';
-import './base/structs/PoolsharkStructs.sol';
+import './interfaces/structs/PoolsharkStructs.sol';
 import './utils/LimitPoolErrors.sol';
 import './libraries/solady/LibClone.sol';
 import './libraries/math/ConstantProduct.sol';
@@ -16,6 +16,7 @@ contract LimitPoolFactory is
     LimitPoolFactoryErrors
 {
     using LibClone for address;
+    using SafeCast for uint256;
 
     address immutable public owner;
     address immutable public original;
@@ -69,20 +70,16 @@ contract LimitPoolFactory is
         ));
 
         // check if pool already exists
-        if (limitPools[key] != address(0)) revert PoolAlreadyExists();
+        if (pools[key] != address(0)) revert PoolAlreadyExists();
 
         // set immutables
         constants.owner = owner;
         constants.factory = original;
-        constants.genesisTime = uint32(block.timestamp);
+        constants.genesisTime = block.timestamp.toUint32();
         (
             constants.bounds.min,
             constants.bounds.max
         ) = ILimitPool(poolImpl).priceBounds(constants.tickSpacing);
-
-        // calculate token address
-
-        // pass this address into a clone of RangePoolERC1155
 
         // take that ERC1155 contract address and pass that into pool
         // launch pool token
@@ -113,7 +110,7 @@ contract LimitPoolFactory is
         ILimitPool(pool).initialize(startPrice);
 
         // save pool in mapping
-        limitPools[key] = pool;
+        pools[key] = pool;
 
         emit PoolCreated(
             pool,
@@ -161,7 +158,7 @@ contract LimitPoolFactory is
             swapFee
         ));
 
-        pool = limitPools[key];
+        pool = pools[key];
 
         poolToken = LibClone.predictDeterministicAddress(
             tokenImpl,

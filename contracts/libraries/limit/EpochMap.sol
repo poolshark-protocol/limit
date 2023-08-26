@@ -2,9 +2,15 @@
 pragma solidity 0.8.13;
 
 import '../math/ConstantProduct.sol';
-import '../../interfaces/limit/ILimitPoolStructs.sol';
+import '../../interfaces/structs/LimitPoolStructs.sol';
 
 library EpochMap {
+    event SyncLimitTick(
+        uint32 epoch,
+        int24 tick,
+        bool zeroForOne
+    );
+
     function set(
         int24  tick,
         bool zeroForOne,
@@ -28,6 +34,8 @@ library EpochMap {
         // store word in map
         zeroForOne ? tickMap.epochs0[volumeIndex][blockIndex][wordIndex] = epochValue
                    : tickMap.epochs1[volumeIndex][blockIndex][wordIndex] = epochValue;
+
+        emit SyncLimitTick(uint32(epoch), tick, zeroForOne);
     }
 
     function get(
@@ -77,19 +85,6 @@ library EpochMap {
             blockIndex = tickIndex >> 11;      // 2^8 words per block
             volumeIndex = tickIndex >> 19;     // 2^8 blocks per volume
             if (blockIndex > 2046) require (false, 'BlockIndexOverflow()');
-        }
-    }
-
-    function _tick (
-        uint256 tickIndex,
-        PoolsharkStructs.Immutables memory constants
-    ) internal pure returns (
-        int24 tick
-    ) {
-        unchecked {
-            if (tickIndex > uint24(_round(ConstantProduct.MAX_TICK, constants.tickSpacing) * 2) * 2) 
-                require(false, 'TickIndexOverflow()');
-            tick = int24(int256(tickIndex) * (constants.tickSpacing / 2) + _round(ConstantProduct.MIN_TICK, constants.tickSpacing / 2));
         }
     }
 

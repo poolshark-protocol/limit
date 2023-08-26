@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.13;
 
-import '../../../interfaces/limit/ILimitPoolStructs.sol';
+import '../../../interfaces/structs/LimitPoolStructs.sol';
 import '../LimitPositions.sol';
 import '../../utils/Collect.sol';
+import '../../utils/PositionTokens.sol';
 
 library MintLimitCall {
     event MintLimit(
@@ -11,30 +12,40 @@ library MintLimitCall {
         int24 lower,
         int24 upper,
         bool zeroForOne,
+        uint32 positionId,
         uint32 epochLast,
         uint128 amountIn,
         uint128 amountFilled,
         uint128 liquidityMinted
     );
 
-    event Sync(
+    event SyncLimitPool(
         uint160 price,
         uint128 liquidity,
+        uint32 epoch,
         int24 tickAtPrice,
         bool isPool0
     );
 
     function perform(
-        mapping(address => mapping(int24 => mapping(int24 => ILimitPoolStructs.LimitPosition)))
+        mapping(uint256 => LimitPoolStructs.LimitPosition)
             storage positions,
-        mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
-        IRangePoolStructs.Sample[65535] storage samples,
+        mapping(int24 => LimitPoolStructs.Tick) storage ticks,
+        RangePoolStructs.Sample[65535] storage samples,
         PoolsharkStructs.TickMap storage rangeTickMap,
         PoolsharkStructs.TickMap storage limitTickMap,
         PoolsharkStructs.GlobalState storage globalState,
-        ILimitPoolStructs.MintLimitParams memory params,
-        ILimitPoolStructs.MintLimitCache memory cache
+        LimitPoolStructs.MintLimitParams memory params,
+        LimitPoolStructs.MintLimitCache memory cache
     ) external {
+        if (params.positionId > 0) {
+            if (PositionTokens.balanceOf(cache.constants, msg.sender, params.positionId) == 0)
+                // check for balance held
+                require(false, 'PositionNotFound()');
+            cache.position = positions[params.positionId];
+        }
+
+        cache.state = globalState;
 
         // resize position if necessary
         (params, cache) = LimitPositions.resize(
@@ -45,6 +56,18 @@ library MintLimitCall {
             params,
             cache
         );
+
+        if (params.positionId == 0 ||                       // new position
+                params.lower != cache.position.lower ||     // lower mismatch
+                params.upper != cache.position.upper) {     // upper mismatch
+            LimitPoolStructs.LimitPosition memory newPosition;
+            newPosition.lower = params.lower;
+            newPosition.upper = params.upper;
+            // use new position in cache
+            cache.position = newPosition;
+            params.positionId = cache.state.positionIdNext;
+            cache.state.positionIdNext += 1;
+        }
 
         // save state for reentrancy safety
         save(cache, globalState, !params.zeroForOne);
@@ -66,9 +89,6 @@ library MintLimitCall {
         // mint position if amount is left
         if (params.amount > 0 && params.lower < params.upper) {
             cache.pool = params.zeroForOne ? cache.state.pool0 : cache.state.pool1;
-            // load position given params
-            cache.position = positions[params.to][params.lower][params.upper];
-            
             // bump to the next tick if there is no liquidity
             if (cache.pool.liquidity == 0) {
                 /// @dev - this makes sure to have liquidity unlocked if undercutting
@@ -89,7 +109,7 @@ library MintLimitCall {
                     cache.position.crossedInto = true;
                     // set epoch on start tick to signify position being crossed into
                     /// @auditor - this is safe assuming we have swapped at least this far on the other side
-                    emit Sync(cache.pool.price, cache.pool.liquidity, cache.pool.tickAtPrice, params.zeroForOne);
+                    emit SyncLimitPool(cache.pool.price, cache.pool.liquidity, cache.state.epoch, cache.pool.tickAtPrice, params.zeroForOne);
                 }
             } else {
                 uint160 priceUpper = ConstantProduct.getPriceAtTick(params.upper, cache.constants);
@@ -103,7 +123,7 @@ library MintLimitCall {
                     cache.position.crossedInto = true;
                     // set epoch on start tick to signify position being crossed into
                     /// @auditor - this is safe assuming we have swapped at least this far on the other side
-                    emit Sync(cache.pool.price, cache.pool.liquidity, cache.pool.tickAtPrice, params.zeroForOne);
+                    emit SyncLimitPool(cache.pool.price, cache.pool.liquidity, cache.state.epoch, cache.pool.tickAtPrice, params.zeroForOne);
                 }
             }
             (cache.pool, cache.position) = LimitPositions.add(
@@ -114,7 +134,7 @@ library MintLimitCall {
             );
 
             // save position to storage
-            positions[params.to][params.lower][params.upper] = cache.position;
+            positions[params.positionId] = cache.position;
 
             params.zeroForOne ? cache.state.pool0 = cache.pool : cache.state.pool1 = cache.pool;
 
@@ -123,6 +143,7 @@ library MintLimitCall {
                 params.lower,
                 params.upper,
                 params.zeroForOne,
+                params.positionId,
                 cache.position.epochLast,
                 uint128(params.amount + cache.swapCache.input),
                 uint128(cache.swapCache.output),
@@ -135,12 +156,13 @@ library MintLimitCall {
     }
 
     function save(
-        ILimitPoolStructs.MintLimitCache memory cache,
+        LimitPoolStructs.MintLimitCache memory cache,
         PoolsharkStructs.GlobalState storage globalState,
         bool zeroForOne
     ) internal {
         globalState.epoch = cache.state.epoch;
         globalState.liquidityGlobal = cache.state.liquidityGlobal;
+        globalState.positionIdNext = cache.state.positionIdNext;
         if (zeroForOne) {
             globalState.pool = cache.state.pool;
             globalState.pool0 = cache.state.pool0;

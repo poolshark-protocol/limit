@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.13;
 
-import '../base/structs/PoolsharkStructs.sol';
+import '../interfaces/structs/PoolsharkStructs.sol';
 
 interface IPool is PoolsharkStructs {
     function immutables() external view returns (Immutables memory);
@@ -16,8 +16,8 @@ interface IPool is PoolsharkStructs {
     function quote(
         QuoteParams memory params
     ) external view returns (
-        uint256 inAmount,
-        uint256 outAmount,
+        int256 inAmount,
+        int256 outAmount,
         uint160 priceAfter
     );
 
@@ -38,13 +38,20 @@ interface IPool is PoolsharkStructs {
         int24 averageTick
     );
 
-    function snapshot(
+    function snapshotRange(
         uint32 positionId
     ) external view returns(
         int56   tickSecondsAccum,
         uint160 secondsPerLiquidityAccum,
         uint128 feesOwed0,
         uint128 feesOwed1
+    );
+
+    function snapshotLimit(
+        SnapshotLimitParams memory params
+    ) external view returns(
+        uint128,
+        uint128
     );
 
     function globalState() external view returns (

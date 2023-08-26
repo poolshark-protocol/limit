@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.13;
 
-import './IRangePoolStructs.sol';
+import '../structs/RangePoolStructs.sol';
 import './IRangePoolManager.sol';
 
-interface IRangePool is IRangePoolStructs {
-    function mint(
-        MintParams memory mintParams
+interface IRangePool is RangePoolStructs {
+    function mintRange(
+        MintRangeParams memory mintParams
     ) external;
 
-    function burn(
-        BurnParams memory burnParams
+    function burnRange(
+        BurnRangeParams memory burnParams
     ) external;
 
     function swap(
@@ -28,7 +28,7 @@ interface IRangePool is IRangePoolStructs {
         uint160 priceAfter
     );
 
-    function snapshot(
+    function snapshotRange(
         uint32 positionId
     ) external view returns(
         int56   tickSecondsAccum,

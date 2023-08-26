@@ -27,5 +27,5 @@ task(DEPLOY_LIMITPOOLS)
 
         await deployLimitPools.deployLimitPools.postDeployment()
 
-        console.log('Cover pool deployment complete.\n')
+        console.log('Limit pool deployment complete.\n')
     })

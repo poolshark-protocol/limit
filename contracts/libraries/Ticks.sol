@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: GPLv3
 pragma solidity 0.8.13;
 
-import '../base/structs/PoolsharkStructs.sol';
+import '../interfaces/structs/PoolsharkStructs.sol';
 import './range/math/FeeMath.sol';
 import './math/OverflowMath.sol';
 import './math/ConstantProduct.sol';
 import './TickMap.sol';
 import './utils/SafeCast.sol';
 import './range/math/FeeMath.sol';
-import './range/Samples.sol';
+import './Samples.sol';
 import './limit/EpochMap.sol';
 import './limit/LimitTicks.sol';
 
@@ -33,19 +33,28 @@ library Ticks {
 
     event Swap(
         address indexed recipient,
-        bool zeroForOne,
         uint256 amountIn,
         uint256 amountOut,
+        uint200 feeGrowthGlobal0,
+        uint200 feeGrowthGlobal1,
         uint160 price,
         uint128 liquidity,
         uint128 feeAmount,
-        int24 tickAtPrice
+        int24 tickAtPrice,
+        bool indexed zeroForOne,
+        bool indexed exactIn
+    );
+
+    event SyncRangeTick(
+        uint200 feeGrowthOutside0,
+        uint200 feeGrowthOutside1,
+        int24 tick
     );
 
     function initialize(
         PoolsharkStructs.TickMap storage rangeTickMap,
         PoolsharkStructs.TickMap storage limitTickMap,
-        IRangePoolStructs.Sample[65535] storage samples,
+        RangePoolStructs.Sample[65535] storage samples,
         PoolsharkStructs.GlobalState memory state,
         PoolsharkStructs.Immutables memory constants,
         uint160 startPrice
@@ -97,7 +106,7 @@ library Ticks {
     
     function swap(
         mapping(int24 => PoolsharkStructs.Tick) storage ticks,
-        IRangePoolStructs.Sample[65535] storage samples,
+        RangePoolStructs.Sample[65535] storage samples,
         PoolsharkStructs.TickMap storage rangeTickMap,
         PoolsharkStructs.TickMap storage limitTickMap,
         PoolsharkStructs.SwapParams memory params,
@@ -146,8 +155,7 @@ library Ticks {
             cache.secondsPerLiquidityAccum,
             cache.tickSecondsAccum
          ) = Samples.getLatest(cache.state, cache.constants, cache.liquidity);
-        // increment swap epoch
-        cache.state.epoch += 1;
+
         // grab latest sample and store in cache for _cross
         while (cache.cross) {
             // handle price being at cross tick
@@ -191,13 +199,16 @@ library Ticks {
         }
         emit Swap(
             params.to,
-            params.zeroForOne,
             cache.input,
             cache.output,
+            cache.state.pool.feeGrowthGlobal0,
+            cache.state.pool.feeGrowthGlobal1,
             cache.price.toUint160(),
             cache.liquidity.toUint128(),
             cache.feeAmount,
-            cache.state.pool.tickAtPrice
+            cache.state.pool.tickAtPrice,
+            params.zeroForOne,
+            params.exactIn
         );
         return cache;
     }
@@ -369,7 +380,7 @@ library Ticks {
     }
 
     function _cross(
-        mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
+        mapping(int24 => LimitPoolStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage rangeTickMap,
         PoolsharkStructs.TickMap storage limitTickMap,
         PoolsharkStructs.SwapCache memory cache,
@@ -388,6 +399,11 @@ library Ticks {
                 crossTick.secondsPerLiquidityAccumOutside = cache.secondsPerLiquidityAccum - crossTick.secondsPerLiquidityAccumOutside;
                 ticks[cache.crossTick].range = crossTick;
                 int128 liquidityDelta = crossTick.liquidityDelta;
+                emit SyncRangeTick(
+                    crossTick.feeGrowthOutside0,
+                    crossTick.feeGrowthOutside1,
+                    cache.crossTick
+                );
                 if (params.zeroForOne) {
                     unchecked {
                         if (liquidityDelta >= 0){
@@ -447,7 +463,7 @@ library Ticks {
     }
 
     function _pass(
-        mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
+        mapping(int24 => LimitPoolStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage rangeTickMap,
         PoolsharkStructs.TickMap storage limitTickMap,
         PoolsharkStructs.SwapCache memory cache,

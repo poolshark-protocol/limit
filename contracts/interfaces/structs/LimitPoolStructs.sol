@@ -1,20 +1,23 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.13;
 
-import '../../base/structs/PoolsharkStructs.sol';
+import './PoolsharkStructs.sol';
 
-interface ILimitPoolStructs is PoolsharkStructs {
+interface LimitPoolStructs is PoolsharkStructs {
 
     struct LimitPosition {
         uint128 liquidity; // expected amount to be used not actual
         uint32 epochLast;  // epoch when this position was created at
-        bool crossedInto; // whether the position was crossed into already
+        int24 lower;       // lower price tick of position range
+        int24 upper;       // upper price tick of position range
+        bool crossedInto;  // whether the position was crossed into already
     }
 
     struct MintLimitParams {
         address to;
         uint128 amount;
         uint96 mintPercent;
+        uint32 positionId;
         int24 lower;
         int24 upper;
         bool zeroForOne;
@@ -23,17 +26,7 @@ interface ILimitPoolStructs is PoolsharkStructs {
     struct BurnLimitParams {
         address to;
         uint128 burnPercent;
-        int24 lower;
-        int24 claim;
-        int24 upper;
-        bool zeroForOne;
-    }
-
-    struct SnapshotLimitParams {
-        address owner;
-        uint128 burnPercent;
-        int24 lower;
-        int24 upper;
+        uint32 positionId;
         int24 claim;
         bool zeroForOne;
     }
@@ -66,7 +59,7 @@ interface ILimitPoolStructs is PoolsharkStructs {
         uint128 liquidityBurned;
         uint128 amountIn;
         uint128 amountOut;
-        bool earlyReturn;
+        int24 claim;
         bool removeLower;
         bool removeUpper;
     }

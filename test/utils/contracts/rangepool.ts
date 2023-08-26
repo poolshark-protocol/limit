@@ -1,7 +1,7 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { expect } from 'chai'
 import { BigNumber, Contract } from 'ethers'
-import { RangePoolERC1155 } from '../../../typechain'
+import { PositionERC1155 } from '../../../typechain'
 import { RangePoolState, RangeTick, Tick } from './limitpool'
 
 export const Q64x96 = BigNumber.from('2').pow(96)
@@ -136,7 +136,7 @@ export async function getPositionFeeGrowth(positionId: number) {
 }
 
 export async function getSnapshot(positionId: number) {
-  const snapshot = await hre.props.limitPool.snapshot(
+  const snapshot = await hre.props.limitPool.snapshotRange(
     positionId
   )
   console.log('snapshot for position', positionId, ':')
@@ -318,14 +318,14 @@ export async function validateMint(params: ValidateMintParams): Promise<number> 
   upperTickBefore = (await hre.props.limitPool.ticks(upper)).range
 
   positionBefore = await hre.props.limitPool.positions(positionId)
-  positionTokens = await hre.ethers.getContractAt('RangePoolERC1155', hre.props.limitPoolToken.address);
+  positionTokens = await hre.ethers.getContractAt('PositionERC1155', hre.props.limitPoolToken.address);
   positionTokenBalanceBefore = await positionTokens.balanceOf(signer.address, expectedPositionId);
   if (params.positionId)
     expect(positionTokenBalanceBefore).to.be.equal(1)
   if (revertMessage == '') {
     const txn = await hre.props.limitPool
       .connect(params.signer)
-      .mint({
+      .mintRange({
         to: recipient,
         lower: lower,
         upper: upper,
@@ -338,7 +338,7 @@ export async function validateMint(params: ValidateMintParams): Promise<number> 
     await expect(
       hre.props.limitPool
         .connect(params.signer)
-        .mint({
+        .mintRange({
           to: recipient,
           lower: lower,
           upper: upper,
@@ -365,7 +365,7 @@ export async function validateMint(params: ValidateMintParams): Promise<number> 
   upperTickAfter = (await hre.props.limitPool.ticks(upper)).range
 
   positionAfter = await hre.props.limitPool.positions(expectedPositionId)
-  positionTokens = await hre.ethers.getContractAt('RangePoolERC1155', hre.props.limitPoolToken.address);
+  positionTokens = await hre.ethers.getContractAt('PositionERC1155', hre.props.limitPoolToken.address);
   positionTokenBalanceAfter = await positionTokens.balanceOf(signer.address, expectedPositionId);
   if (!params.positionId)
     expect(positionTokenBalanceAfter.sub(positionTokenBalanceBefore)).to.be.equal(BigNumber.from(1))
@@ -396,13 +396,13 @@ export async function validateBurn(params: ValidateBurnParams) {
   let lowerTickBefore: RangeTick
   let upperTickBefore: RangeTick
   let positionBefore: Position
-  let positionToken: RangePoolERC1155
+  let positionToken: PositionERC1155
   let positionTokenBalanceBefore: BigNumber
   let positionTokenTotalSupply: BigNumber
   lowerTickBefore = (await hre.props.limitPool.ticks(lower)).range
   upperTickBefore = (await hre.props.limitPool.ticks(upper)).range
   // check position token balance
-  positionToken = await hre.ethers.getContractAt('RangePoolERC1155', hre.props.limitPoolToken.address);
+  positionToken = await hre.ethers.getContractAt('PositionERC1155', hre.props.limitPoolToken.address);
   positionTokenBalanceBefore = await positionToken.balanceOf(signer.address, params.positionId);
   positionBefore = await hre.props.limitPool.positions(params.positionId)
   let burnPercent = params.burnPercent
@@ -414,10 +414,10 @@ export async function validateBurn(params: ValidateBurnParams) {
   }
 
   if (revertMessage == '') {
-    positionSnapshot = await hre.props.limitPool.snapshot(params.positionId)
+    positionSnapshot = await hre.props.limitPool.snapshotRange(params.positionId)
     const burnTxn = await hre.props.limitPool
       .connect(signer)
-      .burn({
+      .burnRange({
         to: params.signer.address,
         positionId: params.positionId,
         burnPercent: burnPercent
@@ -425,7 +425,7 @@ export async function validateBurn(params: ValidateBurnParams) {
     await burnTxn.wait()
   } else {
     await expect(
-      hre.props.limitPool.connect(signer).burn({
+      hre.props.limitPool.connect(signer).burnRange({
         to: params.signer.address,
         positionId: params.positionId,
         burnPercent: burnPercent,

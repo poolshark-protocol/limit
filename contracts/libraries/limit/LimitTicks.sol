@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: GPLv3
 pragma solidity 0.8.13;
 
-import '../../interfaces/limit/ILimitPoolStructs.sol';
+import '../../interfaces/structs/LimitPoolStructs.sol';
 import '../../interfaces/limit/ILimitPoolFactory.sol';
-import '../../base/structs/LimitPoolFactoryStructs.sol';
+import '../../interfaces/structs/LimitPoolFactoryStructs.sol';
 import '../../interfaces/limit/ILimitPool.sol';
 import '../math/ConstantProduct.sol';
 import './LimitPositions.sol';
 import '../math/OverflowMath.sol';
 import '../TickMap.sol';
 import './EpochMap.sol';
-import '../range/Samples.sol';
+import '../Samples.sol';
 import '../utils/SafeCast.sol';
 
 /// @notice Tick management library for limit pools
@@ -26,6 +26,12 @@ library LimitTicks {
 
     uint256 internal constant Q96 = 0x1000000000000000000000000;
 
+    event SyncLimitLiquidity(
+        uint128 liquidityAdded,
+        int24 tick,
+        bool zeroForOne
+    );
+
     function validate(
         int24 lower,
         int24 upper,
@@ -39,10 +45,10 @@ library LimitTicks {
     }
 
     function insert(
-        mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
+        mapping(int24 => LimitPoolStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
-        ILimitPoolStructs.MintLimitCache memory cache,
-        ILimitPoolStructs.MintLimitParams memory params
+        LimitPoolStructs.MintLimitCache memory cache,
+        LimitPoolStructs.MintLimitParams memory params
     ) internal {
         /// @auditor - validation of ticks is in Positions.validate
         if (cache.liquidityMinted > (uint128(type(int128).max) - cache.state.liquidityGlobal) )
@@ -107,10 +113,10 @@ library LimitTicks {
     }
 
     function insertSingle(
-        ILimitPoolStructs.MintLimitParams memory params,
-        mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
+        LimitPoolStructs.MintLimitParams memory params,
+        mapping(int24 => LimitPoolStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
-        ILimitPoolStructs.MintLimitCache memory cache,
+        LimitPoolStructs.MintLimitCache memory cache,
         PoolsharkStructs.LimitPoolState memory pool,
         PoolsharkStructs.Immutables memory constants
     ) internal returns (
@@ -122,7 +128,7 @@ library LimitTicks {
             uint160 roundedPrice
         ) = TickMap.roundHalf(pool.tickAtPrice, constants, pool.price);
         // update tick to save
-        ILimitPoolStructs.LimitTick memory tick = ticks[tickToSave].limit;
+        LimitPoolStructs.LimitTick memory tick = ticks[tickToSave].limit;
         /// @auditor - tick.priceAt will be zero for tick % tickSpacing == 0
         if (tick.priceAt == 0) {
             if (pool.price != (params.zeroForOne ? cache.priceLower : cache.priceUpper)) {
@@ -138,7 +144,7 @@ library LimitTicks {
             }
             else {
                 // we need to blend the two partial fills into a single tick
-                ILimitPoolStructs.InsertSingleLocals memory locals;
+                LimitPoolStructs.InsertSingleLocals memory locals;
                 if (params.zeroForOne) {
                     // 0 -> 1 positions price moves up so nextFullTick is greater
                     locals.previousFullTick = tickToSave - constants.tickSpacing / 2;
@@ -146,12 +152,9 @@ library LimitTicks {
                     // calculate amountOut filled across both partial fills
                     locals.amountOutExact = ConstantProduct.getDy(pool.liquidity, locals.pricePrevious, pool.price, false);
                     locals.amountOutExact += ConstantProduct.getDy(uint128(tick.liquidityDelta), locals.pricePrevious, tick.priceAt, false);
+                    // add current pool liquidity to partial tick
                     uint128 combinedLiquidity = pool.liquidity + uint128(tick.liquidityDelta);
-                    /// @auditor - the opposing amount calculated is off by 1/100 millionth
-                    ///            (i.e. since we're using exactOut we lose precision on exactInput amount)
-                    ///            the expected dy to the next tick is either exact or slightly more
-                    ///            the expected dx to the next tick is 1/100 millionth less after the blend
-                    // advance price past closest full tick using amountOut filled
+                    // advance price based on combined fill
                     tick.priceAt = ConstantProduct.getNewPrice(uint256(locals.pricePrevious), combinedLiquidity, locals.amountOutExact, false, true).toUint160();
                     // dx to the next tick is less than before the tick blend
                     EpochMap.set(tickToSave, params.zeroForOne, cache.state.epoch, tickMap, constants);
@@ -164,7 +167,7 @@ library LimitTicks {
                     locals.amountOutExact += ConstantProduct.getDx(uint128(tick.liquidityDelta), tick.priceAt, locals.pricePrevious, false);
                     // add current pool liquidity to partial tick
                     uint128 combinedLiquidity = pool.liquidity + uint128(tick.liquidityDelta);
-                    // advance price past closest full tick using amountOut filled
+                    // advance price based on combined fill
                     tick.priceAt = ConstantProduct.getNewPrice(uint256(locals.pricePrevious), combinedLiquidity, locals.amountOutExact, true, true).toUint160();
                     // mark epoch for second partial fill positions
                     EpochMap.set(tickToSave, params.zeroForOne, cache.state.epoch, tickMap, constants);
@@ -175,6 +178,7 @@ library LimitTicks {
         if ((tickToSave != (params.zeroForOne ? params.lower : params.upper))) {
             tick.liquidityDelta += int128(pool.liquidity);
             tick.liquidityAbsolute += pool.liquidity;
+            emit SyncLimitLiquidity(pool.liquidity, tickToSave, params.zeroForOne);
             pool.liquidity = 0;
         }
         ticks[tickToSave].limit = tick;
@@ -182,15 +186,15 @@ library LimitTicks {
     }
 
     function remove(
-        mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
+        mapping(int24 => LimitPoolStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
-        ILimitPoolStructs.BurnLimitParams memory params,
-        ILimitPoolStructs.BurnLimitCache memory cache,
+        LimitPoolStructs.BurnLimitParams memory params,
+        LimitPoolStructs.BurnLimitCache memory cache,
         PoolsharkStructs.Immutables memory constants
     ) internal {
         // set ticks based on claim and zeroForOne
-        int24 lower = params.zeroForOne ? params.claim : params.lower;
-        int24 upper = params.zeroForOne ? params.upper : params.claim;
+        int24 lower = params.zeroForOne ? params.claim : cache.position.lower;
+        int24 upper = params.zeroForOne ? cache.position.upper : params.claim;
         {    
             PoolsharkStructs.LimitTick memory tickLower = ticks[lower].limit;
             
@@ -221,13 +225,13 @@ library LimitTicks {
     }
 
      function unlock(
-        ILimitPoolStructs.MintLimitCache memory cache,
+        LimitPoolStructs.MintLimitCache memory cache,
         PoolsharkStructs.LimitPoolState memory pool,
-        mapping(int24 => ILimitPoolStructs.Tick) storage ticks,
+        mapping(int24 => LimitPoolStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
         bool zeroForOne
     ) internal returns (
-        ILimitPoolStructs.MintLimitCache memory,
+        LimitPoolStructs.MintLimitCache memory,
         PoolsharkStructs.LimitPoolState memory
     )
     {
@@ -285,7 +289,7 @@ library LimitTicks {
     }
 
     function _empty(
-        ILimitPoolStructs.Tick memory tick
+        LimitPoolStructs.Tick memory tick
     ) internal pure returns (
         bool
     ) {

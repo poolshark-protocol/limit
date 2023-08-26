@@ -1,12 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.13;
 
-import '../../interfaces/limit/ILimitPoolStructs.sol';
+import '../../interfaces/structs/LimitPoolStructs.sol';
 import '../limit/LimitPositions.sol';
 import '../utils/SafeTransfers.sol';
 
 library Collect {
     using SafeCast for int128;
+
+    event CollectRange(
+        uint128 amount0,
+        uint128 amount1
+    );
 
     function range(
         PoolsharkStructs.Immutables memory constants,
@@ -23,13 +28,14 @@ library Collect {
             /// @dev - cast to ensure user doesn't owe the pool balance
             SafeTransfers.transferOut(recipient, constants.token1, amount1.toUint128());
         }
+        emit CollectRange(amount0.toUint128(), amount1.toUint128());
     }
 
     function burnLimit(
-        ILimitPoolStructs.BurnLimitCache memory cache,
-        ILimitPoolStructs.BurnLimitParams memory params
+        LimitPoolStructs.BurnLimitCache memory cache,
+        LimitPoolStructs.BurnLimitParams memory params
     ) internal returns (
-        ILimitPoolStructs.BurnLimitCache memory
+        LimitPoolStructs.BurnLimitCache memory
     )    
     {
         uint128 amount0 = params.zeroForOne ? cache.amountOut : cache.amountIn;
@@ -44,7 +50,6 @@ library Collect {
             cache.amountOut = 0;
             SafeTransfers.transferOut(params.to, cache.constants.token1, amount1);
         }
-
         return cache;
     }
 }

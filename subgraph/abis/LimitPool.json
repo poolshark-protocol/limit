@@ -10,6 +10,12 @@
       },
       {
         "indexed": false,
+        "internalType": "uint32",
+        "name": "positionId",
+        "type": "uint32"
+      },
+      {
+        "indexed": false,
         "internalType": "int24",
         "name": "lower",
         "type": "int24"
@@ -23,7 +29,13 @@
       {
         "indexed": false,
         "internalType": "int24",
-        "name": "claim",
+        "name": "oldClaim",
+        "type": "int24"
+      },
+      {
+        "indexed": false,
+        "internalType": "int24",
+        "name": "newClaim",
         "type": "int24"
       },
       {
@@ -58,6 +70,81 @@
     "anonymous": false,
     "inputs": [
       {
+        "indexed": true,
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "positionId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "liquidityBurned",
+        "type": "uint128"
+      },
+      {
+        "indexed": false,
+        "internalType": "int128",
+        "name": "amount0",
+        "type": "int128"
+      },
+      {
+        "indexed": false,
+        "internalType": "int128",
+        "name": "amount1",
+        "type": "int128"
+      }
+    ],
+    "name": "BurnRange",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "amount0",
+        "type": "uint128"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "amount1",
+        "type": "uint128"
+      }
+    ],
+    "name": "CollectRange",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint32",
+        "name": "positionId",
+        "type": "uint32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "liquidityCompounded",
+        "type": "uint128"
+      }
+    ],
+    "name": "CompoundRange",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
         "indexed": false,
         "internalType": "int24",
         "name": "minTick",
@@ -74,6 +161,12 @@
         "internalType": "uint160",
         "name": "startPrice",
         "type": "uint160"
+      },
+      {
+        "indexed": false,
+        "internalType": "int24",
+        "name": "startTick",
+        "type": "int24"
       }
     ],
     "name": "Initialize",
@@ -105,6 +198,12 @@
         "internalType": "bool",
         "name": "zeroForOne",
         "type": "bool"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint32",
+        "name": "positionId",
+        "type": "uint32"
       },
       {
         "indexed": false,
@@ -145,9 +244,84 @@
       },
       {
         "indexed": false,
-        "internalType": "bool",
-        "name": "zeroForOne",
-        "type": "bool"
+        "internalType": "int24",
+        "name": "lower",
+        "type": "int24"
+      },
+      {
+        "indexed": false,
+        "internalType": "int24",
+        "name": "upper",
+        "type": "int24"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint32",
+        "name": "positionId",
+        "type": "uint32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "liquidityMinted",
+        "type": "uint128"
+      },
+      {
+        "indexed": false,
+        "internalType": "int128",
+        "name": "amount0Delta",
+        "type": "int128"
+      },
+      {
+        "indexed": false,
+        "internalType": "int128",
+        "name": "amount1Delta",
+        "type": "int128"
+      }
+    ],
+    "name": "MintRange",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint16",
+        "name": "sampleLengthNext",
+        "type": "uint16"
+      }
+    ],
+    "name": "SampleLengthIncreased",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "int56",
+        "name": "tickSecondsAccum",
+        "type": "int56"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint160",
+        "name": "secondsPerLiquidityAccum",
+        "type": "uint160"
+      }
+    ],
+    "name": "SampleRecorded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
       },
       {
         "indexed": false,
@@ -163,6 +337,18 @@
       },
       {
         "indexed": false,
+        "internalType": "uint200",
+        "name": "feeGrowthGlobal0",
+        "type": "uint200"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint200",
+        "name": "feeGrowthGlobal1",
+        "type": "uint200"
+      },
+      {
+        "indexed": false,
         "internalType": "uint160",
         "name": "price",
         "type": "uint160"
@@ -175,12 +361,142 @@
       },
       {
         "indexed": false,
+        "internalType": "uint128",
+        "name": "feeAmount",
+        "type": "uint128"
+      },
+      {
+        "indexed": false,
         "internalType": "int24",
         "name": "tickAtPrice",
         "type": "int24"
+      },
+      {
+        "indexed": true,
+        "internalType": "bool",
+        "name": "zeroForOne",
+        "type": "bool"
+      },
+      {
+        "indexed": true,
+        "internalType": "bool",
+        "name": "exactIn",
+        "type": "bool"
       }
     ],
     "name": "Swap",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "liquidityAdded",
+        "type": "uint128"
+      },
+      {
+        "indexed": false,
+        "internalType": "int24",
+        "name": "tick",
+        "type": "int24"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "zeroForOne",
+        "type": "bool"
+      }
+    ],
+    "name": "SyncLimitLiquidity",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint160",
+        "name": "price",
+        "type": "uint160"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "liquidity",
+        "type": "uint128"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint32",
+        "name": "epoch",
+        "type": "uint32"
+      },
+      {
+        "indexed": false,
+        "internalType": "int24",
+        "name": "tickAtPrice",
+        "type": "int24"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "isPool0",
+        "type": "bool"
+      }
+    ],
+    "name": "SyncLimitPool",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint32",
+        "name": "epoch",
+        "type": "uint32"
+      },
+      {
+        "indexed": false,
+        "internalType": "int24",
+        "name": "tick",
+        "type": "int24"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "zeroForOne",
+        "type": "bool"
+      }
+    ],
+    "name": "SyncLimitTick",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint200",
+        "name": "feeGrowthOutside0",
+        "type": "uint200"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint200",
+        "name": "feeGrowthOutside1",
+        "type": "uint200"
+      },
+      {
+        "indexed": false,
+        "internalType": "int24",
+        "name": "tick",
+        "type": "int24"
+      }
+    ],
+    "name": "SyncRangeTick",
     "type": "event"
   }
 ]

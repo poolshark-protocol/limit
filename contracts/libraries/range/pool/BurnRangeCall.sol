@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.13;
 
-import '../../../interfaces/range/IRangePoolStructs.sol';
+import '../../../interfaces/structs/RangePoolStructs.sol';
 import '../../utils/Collect.sol';
-import '../RangeTokens.sol';
+import '../../utils/PositionTokens.sol';
 import '../RangePositions.sol';
 
 library BurnRangeCall {
     using SafeCast for int128;
 
-    event Burn(
+    event BurnRange(
         address indexed recipient,
         int24 lower,
         int24 upper,
@@ -20,18 +20,25 @@ library BurnRangeCall {
     );
 
     function perform(
-        mapping(uint256 => IRangePoolStructs.RangePosition)
+        mapping(uint256 => RangePoolStructs.RangePosition)
             storage positions,
         mapping(int24 => PoolsharkStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
-        IRangePoolStructs.Sample[65535] storage samples,
+        RangePoolStructs.Sample[65535] storage samples,
         PoolsharkStructs.GlobalState storage globalState,
-        IRangePoolStructs.BurnCache memory cache,
-        IRangePoolStructs.BurnParams memory params
+        RangePoolStructs.BurnRangeCache memory cache,
+        RangePoolStructs.BurnRangeParams memory params
     ) external {
+        // check for invalid receiver
+        if (params.to == address(0))
+            require(false, 'CollectToZeroAddress()');
+        
+        // initialize cache
         cache.state = globalState;
         cache.position = positions[params.positionId];
-        if (RangeTokens.balanceOf(cache.constants, msg.sender, params.positionId) == 0)
+
+        // check positionId owner
+        if (PositionTokens.balanceOf(cache.constants, msg.sender, params.positionId) == 0)
             require(false, 'PositionNotFound()');
         if (params.burnPercent > 1e38) params.burnPercent = 1e38;
         ( 
@@ -43,7 +50,7 @@ library BurnRangeCall {
                 cache.position,
                 cache.state,
                 cache.constants,
-                IRangePoolStructs.UpdateParams(
+                RangePoolStructs.UpdateParams(
                     cache.position.lower,
                     cache.position.upper,
                     params.positionId,
@@ -72,11 +79,12 @@ library BurnRangeCall {
                     cache.state,
                     cache.constants,
                     cache.position,
-                    IRangePoolStructs.CompoundParams(
+                    RangePoolStructs.CompoundRangeParams(
                         cache.priceLower,
                         cache.priceUpper,
                         cache.amount0.toUint128(),
-                        cache.amount1.toUint128()
+                        cache.amount1.toUint128(),
+                        params.positionId
                     )
                 );
             }
@@ -84,14 +92,20 @@ library BurnRangeCall {
         save(positions, globalState, cache, params.positionId);
 
         // transfer amounts to user
-        Collect.range(cache.constants, params.to, cache.amount0, cache.amount1);
+        if (cache.amount0 > 0 || cache.amount1 > 0)
+            Collect.range(
+                cache.constants,
+                params.to,
+                cache.amount0,
+                cache.amount1
+            );
     }
 
     function save(
-        mapping(uint256 => IRangePoolStructs.RangePosition)
+        mapping(uint256 => RangePoolStructs.RangePosition)
             storage positions,
         PoolsharkStructs.GlobalState storage globalState,
-        IRangePoolStructs.BurnCache memory cache,
+        RangePoolStructs.BurnRangeCache memory cache,
         uint32 positionId
     ) internal {
         positions[positionId] = cache.position;

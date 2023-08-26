@@ -3,9 +3,9 @@
 pragma solidity 0.8.13;
 
 import '../interfaces/IPool.sol';
-import "./RangePoolErrors.sol";
-import '../base/storage/RangePoolERC1155Immutables.sol';
-import "../interfaces/range/IRangePoolERC1155.sol";
+import "./LimitPoolErrors.sol";
+import '../base/storage/PositionERC1155Immutables.sol';
+import "../interfaces/IPositionERC1155.sol";
 import '../libraries/solady/LibClone.sol';
 
 // needs to be deployed as a separate clone
@@ -16,10 +16,10 @@ import '../libraries/solady/LibClone.sol';
 // emitting msg.sender will give the pool address
 // can verify the owner is the pool address designated based on immutables
 
-contract RangePoolERC1155 is
-    IRangePoolERC1155,
-    RangePoolERC1155Immutables,
-    RangePoolERC1155Errors 
+contract PositionERC1155 is
+    IPositionERC1155,
+    PositionERC1155Immutables,
+    PositionERC1155Errors 
 {
     error OwnerOnly();
 
@@ -54,7 +54,9 @@ contract RangePoolERC1155 is
     }
 
     modifier checkApproval(address _from, address _spender) {
-        if (!_isApprovedForAll(_from, _spender)) revert SpenderNotApproved(_from, _spender);
+        if (_from != _spender)
+            if(!_isApprovedForAll(_from, _spender)) 
+                revert SpenderNotApproved(_from, _spender);
         _;
     }
 
@@ -313,7 +315,7 @@ contract RangePoolERC1155 is
         if (_target.code.length == 0) return true;
         bytes memory encodedParams = abi.encodeWithSelector(
             IERC165.supportsInterface.selector,
-            type(IRangePoolERC1155).interfaceId
+            type(IPositionERC1155).interfaceId
         );
         (bool success, bytes memory result) = _target.staticcall{gas: 30_000}(encodedParams);
         if (result.length < 32) return false;

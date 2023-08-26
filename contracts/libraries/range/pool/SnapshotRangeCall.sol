@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.13;
 
-import '../../../interfaces/limit/ILimitPoolStructs.sol';
+import '../../../interfaces/structs/LimitPoolStructs.sol';
 import '../RangePositions.sol';
 import '../../utils/Collect.sol';
 
-library SnapshotCall {
+library SnapshotRangeCall {
     uint8 private constant _ENTERED = 2;
 
     event Burn(
@@ -19,7 +19,7 @@ library SnapshotCall {
     );
 
     function perform(
-        mapping(uint256 => IRangePoolStructs.RangePosition)
+        mapping(uint256 => RangePoolStructs.RangePosition)
             storage positions,
         mapping(int24 => PoolsharkStructs.Tick) storage ticks,
         PoolsharkStructs.GlobalState memory state,

@@ -11,7 +11,19 @@
       {
         "indexed": false,
         "internalType": "address",
-        "name": "implementation",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "poolImpl",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "tokenImpl",
         "type": "address"
       },
       {
@@ -28,6 +40,12 @@
       },
       {
         "indexed": true,
+        "internalType": "uint16",
+        "name": "swapFee",
+        "type": "uint16"
+      },
+      {
+        "indexed": false,
         "internalType": "int16",
         "name": "tickSpacing",
         "type": "int16"

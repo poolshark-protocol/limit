@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPLv3
 pragma solidity 0.8.13;
 
-import '../../base/structs/PoolsharkStructs.sol';
-import '../../interfaces/range/IRangePoolStructs.sol';
+import '../../interfaces/structs/PoolsharkStructs.sol';
+import '../../interfaces/structs/RangePoolStructs.sol';
 import '../../interfaces/range/IRangePoolFactory.sol';
 import '../../interfaces/range/IRangePool.sol';
 import './math/FeeMath.sol';
@@ -10,7 +10,7 @@ import './RangePositions.sol';
 import '../math/OverflowMath.sol';
 import '../math/ConstantProduct.sol';
 import '../TickMap.sol';
-import './Samples.sol';
+import '../Samples.sol';
 
 /// @notice Tick management library for range pools
 library RangeTicks {
@@ -26,6 +26,12 @@ library RangeTicks {
         int24 tickAtPrice,
         int24 minTick,
         int24 maxTick
+    );
+
+    event SyncRangeTick(
+        uint200 feeGrowthOutside0,
+        uint200 feeGrowthOutside1,
+        int24 tick
     );
 
     uint256 internal constant Q96 = 0x1000000000000000000000000;
@@ -45,7 +51,7 @@ library RangeTicks {
 
     function insert(
         mapping(int24 => PoolsharkStructs.Tick) storage ticks,
-        IRangePoolStructs.Sample[65535] storage samples,
+        RangePoolStructs.Sample[65535] storage samples,
         PoolsharkStructs.TickMap storage tickMap,
         PoolsharkStructs.GlobalState memory state,
         PoolsharkStructs.Immutables memory constants,
@@ -73,7 +79,7 @@ library RangeTicks {
                     uint160 secondsPerLiquidityAccum
                 ) = Samples.getSingle(
                         IPool(address(this)), 
-                        IRangePoolStructs.SampleParams(
+                        RangePoolStructs.SampleParams(
                             state.pool.samples.index,
                             state.pool.samples.length,
                             uint32(block.timestamp),
@@ -92,6 +98,11 @@ library RangeTicks {
                     int128(amount),             // liquidityDelta
                     amount                      // liquidityAbsolute
                 );
+                emit SyncRangeTick(
+                    state.pool.feeGrowthGlobal0,
+                    state.pool.feeGrowthGlobal1,
+                    lower
+                );
             } else {
                 ticks[lower].range.liquidityDelta = int128(amount);
                 ticks[lower].range.liquidityAbsolute += amount;
@@ -108,7 +119,7 @@ library RangeTicks {
                     uint160 secondsPerLiquidityAccum
                 ) = Samples.getSingle(
                         IPool(address(this)), 
-                        IRangePoolStructs.SampleParams(
+                        RangePoolStructs.SampleParams(
                             state.pool.samples.index,
                             state.pool.samples.length,
                             uint32(block.timestamp),
@@ -126,6 +137,11 @@ library RangeTicks {
                     tickSecondsAccum,
                     -int128(amount),
                     amount
+                );
+                emit SyncRangeTick(
+                    state.pool.feeGrowthGlobal0,
+                    state.pool.feeGrowthGlobal1,
+                    upper
                 );
             } else {
                 ticks[upper].range.liquidityDelta = -int128(amount);
@@ -151,7 +167,7 @@ library RangeTicks {
 
     function remove(
         mapping(int24 => PoolsharkStructs.Tick) storage ticks,
-        IRangePoolStructs.Sample[65535] storage samples,
+        RangePoolStructs.Sample[65535] storage samples,
         PoolsharkStructs.TickMap storage tickMap,
         PoolsharkStructs.GlobalState memory state,
         PoolsharkStructs.Immutables memory constants, 
@@ -219,7 +235,7 @@ library RangeTicks {
     }
 
     function _empty(
-        ILimitPoolStructs.Tick memory tick
+        LimitPoolStructs.Tick memory tick
     ) internal pure returns (
         bool
     ) {

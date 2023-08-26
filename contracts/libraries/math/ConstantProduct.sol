@@ -2,8 +2,8 @@
 pragma solidity 0.8.13;
 
 import './OverflowMath.sol';
-import '../../interfaces/limit/ILimitPoolStructs.sol';
-import '../../base/structs/PoolsharkStructs.sol';
+import '../../interfaces/structs/LimitPoolStructs.sol';
+import '../../interfaces/structs/PoolsharkStructs.sol';
 
 /// @notice Math library that facilitates ranged liquidity calculations.
 library ConstantProduct {

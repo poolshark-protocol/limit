@@ -1,20 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.13;
 
-import '../../interfaces/range/IRangePoolStructs.sol';
-import '../range/Samples.sol';
+import '../../interfaces/structs/RangePoolStructs.sol';
+import '../Samples.sol';
 
 library SampleCall {
     uint8 private constant _ENTERED = 2;
+    
+    event SampleRecorded(
+        int56 tickSecondsAccum,
+        uint160 secondsPerLiquidityAccum
+    );
 
-    event Swap(
-        address indexed recipient,
-        bool zeroForOne,
-        uint256 amountIn,
-        uint256 amountOut,
-        uint160 price,
-        uint128 liquidity,
-        int24 tickAtPrice
+    event SampleLengthIncreased(
+        uint16 sampleLengthNext
     );
 
     function perform(
@@ -32,7 +31,7 @@ library SampleCall {
             require(false, 'ReentrancyGuardReadOnlyReentrantCall()');
         return Samples.get(
             address(this),
-            IRangePoolStructs.SampleParams(
+            RangePoolStructs.SampleParams(
                 state.pool.samples.index,
                 state.pool.samples.length,
                 uint32(block.timestamp),

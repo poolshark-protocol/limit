@@ -43,30 +43,18 @@ library BurnLimitCall {
             require(false, 'PositionNotFound()');
         if (cache.position.epochLast == 0)
             require(false, 'PositionNotFound()');
-        if (cache.position.crossedInto
-            || params.claim != (params.zeroForOne ? cache.position.lower : cache.position.upper)
-            || cache.position.epochLast < (params.zeroForOne ? EpochMap.get(cache.position.lower, params.zeroForOne, tickMap, cache.constants)
-                                                             : EpochMap.get(cache.position.upper, params.zeroForOne, tickMap, cache.constants)))
-        {
-            // position has been crossed into
-            (
-                params,
-                cache
-            ) = LimitPositions.update(
-                ticks,
-                tickMap,
-                cache,
-                params
-            );
-        } else {
-            // position has not been crossed into
-            (params, cache) = LimitPositions.remove(
-                ticks,
-                tickMap,
-                params,
-                cache
-            );
-        }
+        
+        // update position
+        (
+            params,
+            cache
+        ) = LimitPositions.update(
+            ticks,
+            tickMap,
+            cache,
+            params
+        );
+
         // save position before transfer
         if ((params.zeroForOne ? params.claim != cache.position.upper
                                : params.claim != cache.position.lower)) {

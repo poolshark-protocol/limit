@@ -234,91 +234,6 @@ library LimitPositions {
         return (cache.pool, cache.position);
     }
 
-    function remove(
-        mapping(int24 => LimitPoolStructs.Tick) storage ticks,
-        PoolsharkStructs.TickMap storage tickMap,
-        LimitPoolStructs.BurnLimitParams memory params,
-        LimitPoolStructs.BurnLimitCache memory cache
-    ) internal returns (
-        LimitPoolStructs.BurnLimitParams memory,
-        LimitPoolStructs.BurnLimitCache memory
-    ) {
-
-        // initialize cache values
-        cache.liquidityBurned = _convert(cache.position.liquidity, params.burnPercent);
-        cache.pool = params.zeroForOne ? cache.state.pool0 : cache.state.pool1;
-        cache.removeLower = true;
-        cache.removeUpper = true;
-        cache.priceLower = ConstantProduct.getPriceAtTick(cache.position.lower, cache.constants);
-        cache.priceUpper = ConstantProduct.getPriceAtTick(cache.position.upper, cache.constants);
-
-        // hard set claim tick
-        params.claim = params.zeroForOne ? cache.position.lower : cache.position.upper;
-        cache.claim = params.claim;
-
-        // early return if no liquidity to remove
-        if (cache.liquidityBurned == 0) return (params, cache);
-        if (cache.liquidityBurned > cache.position.liquidity) {
-            require (false, 'NotEnoughPositionLiquidity()');
-        }
-
-        // validate position has not been crossed into
-        if (params.zeroForOne) {
-            if (EpochMap.get(cache.position.lower, params.zeroForOne, tickMap, cache.constants)
-                        > cache.position.epochLast) {
-                require (false, 'WrongTickClaimedAt7()');
-            }
-        } else {
-            if (EpochMap.get(cache.position.upper, params.zeroForOne, tickMap, cache.constants)
-                        > cache.position.epochLast) {
-                require (false, 'WrongTickClaimedAt8()');
-            }
-        }
-
-        LimitTicks.remove(
-            ticks,
-            tickMap,
-            params,
-            cache,
-            cache.constants
-        );
-
-        // update liquidity global
-        cache.state.liquidityGlobal -= cache.liquidityBurned;
-
-        cache.amountOut += uint128(
-            params.zeroForOne
-                ? ConstantProduct.getDx(cache.liquidityBurned, cache.priceLower, cache.priceUpper, false)
-                : ConstantProduct.getDy(cache.liquidityBurned, cache.priceLower, cache.priceUpper, false)
-        );
-
-        cache.position.liquidity -= uint128(cache.liquidityBurned);
-
-        if (cache.position.liquidity == 0) {
-
-        }
-
-        if (cache.liquidityBurned > 0) {
-            emit BurnLimit(
-                    params.to,
-                    params.positionId,
-                    cache.position.lower,
-                    cache.position.upper,
-                    params.claim,
-                    params.claim,
-                    params.zeroForOne,
-                    cache.liquidityBurned,
-                    0,
-                    cache.amountOut
-            );
-        }
-        // save pool state to memory
-        if (params.zeroForOne) cache.state.pool0 = cache.pool;
-        else cache.state.pool1 = cache.pool;
-
-        return (params, cache);
-    }
-
     function update(
         mapping(int24 => PoolsharkStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
@@ -337,10 +252,7 @@ library LimitPositions {
             tickMap,
             params,
             cache
-        );        
-
-        if (cache.earlyReturn)
-            return (params, cache);
+        );
 
         // update pool liquidity
         if (cache.priceClaim == cache.pool.price && cache.liquidityBurned > 0) {
@@ -454,18 +366,6 @@ library LimitPositions {
             cache
         );
 
-        if (cache.earlyReturn)
-            return (cache.amountIn, cache.amountOut);
-
-        if (cache.liquidityBurned > 0) {
-            cache.position.liquidity -= uint128(cache.liquidityBurned);
-        }
-        
-        // clear position values if empty
-        if (cache.position.liquidity == 0) {
-            cache.position.epochLast = 0;
-            cache.position.crossedInto = false;
-        }    
         return (cache.amountIn, cache.amountOut);
     }
 
@@ -492,7 +392,6 @@ library LimitPositions {
             amountIn: 0,
             amountOut: 0,
             claim: params.claim,
-            earlyReturn: false,
             removeLower: false,
             removeUpper: false
         });
@@ -505,17 +404,12 @@ library LimitPositions {
             cache
         );
 
-        if (cache.earlyReturn) {
-            return (params, cache);
-        }
-
         // calculate position deltas
         cache = Claims.getDeltas(params, cache, cache.constants);
 
         return (params, cache);
     }
 
-    
     function _convert(
         uint128 liquidity,
         uint128 percent

@@ -7626,21 +7626,129 @@ describe('LimitPool Tests', function () {
         });
     }); 
 
-    it.skip("pool1 - should remove liquidity when position not crossed into", async function () {
-        
+    it("pool0 - should remove liquidity when position not crossed into", async function () {
+
         const bobId = await validateMint({
           signer: hre.props.bob,
           recipient: hre.props.bob.address,
           lower: "0",
           upper: "10",
           amount: "20",
-          zeroForOne: false,
+          zeroForOne: true,
           balanceInDecrease: "20",
-          liquidityIncrease: "39992",
+          liquidityIncrease: "40012",
           balanceOutIncrease: "0",
-          upperTickCleared: true,
+          upperTickCleared: false,
           lowerTickCleared: true,
           revertMessage: "",
+        });
+
+        const bobId2 = await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: "20",
+            upper: "30",
+            amount: "20",
+            zeroForOne: true,
+            balanceInDecrease: "20",
+            liquidityIncrease: "40052",
+            balanceOutIncrease: "0",
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: "",
+        });
+
+        await validateBurn({
+            signer: hre.props.bob,
+            positionId: bobId2,
+            lower: "20",
+            upper: "30",
+            claim: "20",
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: true,
+            balanceInIncrease: "0",
+            balanceOutIncrease: "19",
+            lowerTickCleared: false,
+            upperTickCleared: false,
+            revertMessage: "",
+        });
+
+        await validateBurn({
+            signer: hre.props.bob,
+            positionId: bobId,
+            lower: "0",
+            upper: "10",
+            claim: "0",
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: true,
+            balanceInIncrease: "0",
+            balanceOutIncrease: "19",
+            lowerTickCleared: true,
+            upperTickCleared: false,
+            revertMessage: "",
+        });
+    });
+
+    it("pool1 - should remove liquidity when position not crossed into", async function () {
+        
+        const bobId = await validateMint({
+          signer: hre.props.bob,
+          recipient: hre.props.bob.address,
+          lower: "-10",
+          upper: "0",
+          amount: "20",
+          zeroForOne: false,
+          balanceInDecrease: "20",
+          liquidityIncrease: "40012",
+          balanceOutIncrease: "0",
+          upperTickCleared: true,
+          lowerTickCleared: false,
+          revertMessage: "",
+        });
+
+        const bobId2 = await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: "-30",
+            upper: "-20",
+            amount: "20",
+            zeroForOne: false,
+            balanceInDecrease: "20",
+            liquidityIncrease: "40052",
+            balanceOutIncrease: "0",
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: "",
+        });
+
+        await validateBurn({
+            signer: hre.props.bob,
+            positionId: bobId2,
+            lower: "-30",
+            upper: "-20",
+            claim: "-20",
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: false,
+            balanceInIncrease: "0",
+            balanceOutIncrease: "19",
+            lowerTickCleared: false,
+            upperTickCleared: false,
+            revertMessage: "",
+        });
+
+        await validateBurn({
+            signer: hre.props.bob,
+            positionId: bobId,
+            lower: "-10",
+            upper: "0",
+            claim: "0",
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: false,
+            balanceInIncrease: "0",
+            balanceOutIncrease: "19",
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: "",
         });
     });
 })

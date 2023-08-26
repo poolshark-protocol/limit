@@ -244,42 +244,34 @@ library LimitPositions {
         LimitPoolStructs.BurnLimitCache memory
     ) {
 
-        // convert percentage to liquidity amount
+        // initialize cache values
         cache.liquidityBurned = _convert(cache.position.liquidity, params.burnPercent);
+        cache.pool = params.zeroForOne ? cache.state.pool0 : cache.state.pool1;
+        cache.removeLower = true;
+        cache.removeUpper = true;
+        cache.priceLower = ConstantProduct.getPriceAtTick(cache.position.lower, cache.constants);
+        cache.priceUpper = ConstantProduct.getPriceAtTick(cache.position.upper, cache.constants);
+
+        // hard set claim tick
         params.claim = params.zeroForOne ? cache.position.lower : cache.position.upper;
+        cache.claim = params.claim;
+
         // early return if no liquidity to remove
         if (cache.liquidityBurned == 0) return (params, cache);
         if (cache.liquidityBurned > cache.position.liquidity) {
             require (false, 'NotEnoughPositionLiquidity()');
         }
-        /// @dev - validate position has not been crossed into
+
+        // validate position has not been crossed into
         if (params.zeroForOne) {
             if (EpochMap.get(cache.position.lower, params.zeroForOne, tickMap, cache.constants)
                         > cache.position.epochLast) {
-                int24 nextTick = TickMap.next(tickMap, cache.position.lower, cache.constants.tickSpacing, false);
-                if (cache.pool.price > cache.priceLower ||
-                    EpochMap.get(nextTick, params.zeroForOne, tickMap, cache.constants)
-                        > cache.position.epochLast) {
-                    require (false, 'WrongTickClaimedAt7()');            
-                }
-                if (cache.pool.price == cache.priceLower) {
-                    cache.pool.liquidity -= cache.liquidityBurned;
-                }
+                require (false, 'WrongTickClaimedAt7()');
             }
-            // if pool price is further along
-            // OR next tick has a greater epoch
         } else {
             if (EpochMap.get(cache.position.upper, params.zeroForOne, tickMap, cache.constants)
                         > cache.position.epochLast) {
-                int24 previousTick = TickMap.previous(tickMap, cache.position.upper, cache.constants.tickSpacing, false);
-                if (cache.pool.price < cache.priceUpper ||
-                    EpochMap.get(previousTick, params.zeroForOne, tickMap, cache.constants)
-                        > cache.position.epochLast) {
-                    require (false, 'WrongTickClaimedAt8()');            
-                }
-                if (cache.pool.price == cache.priceUpper) {
-                    cache.pool.liquidity -= cache.liquidityBurned;
-                }
+                require (false, 'WrongTickClaimedAt8()');
             }
         }
 

@@ -41,8 +41,6 @@ library BurnLimitCall {
         // check positionId owner
         if (PositionTokens.balanceOf(cache.constants, msg.sender, params.positionId) == 0)
             require(false, 'PositionNotFound()');
-        if (cache.position.epochLast == 0)
-            require(false, 'PositionNotFound()');
         
         // update position
         (

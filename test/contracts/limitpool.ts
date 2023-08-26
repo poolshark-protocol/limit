@@ -7625,4 +7625,22 @@ describe('LimitPool Tests', function () {
             revertMessage: "",
         });
     }); 
+
+    it.skip("pool1 - should remove liquidity when position not crossed into", async function () {
+        
+        const bobId = await validateMint({
+          signer: hre.props.bob,
+          recipient: hre.props.bob.address,
+          lower: "0",
+          upper: "10",
+          amount: "20",
+          zeroForOne: false,
+          balanceInDecrease: "20",
+          liquidityIncrease: "39992",
+          balanceOutIncrease: "0",
+          upperTickCleared: true,
+          lowerTickCleared: true,
+          revertMessage: "",
+        });
+    });
 })

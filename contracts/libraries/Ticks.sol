@@ -155,8 +155,7 @@ library Ticks {
             cache.secondsPerLiquidityAccum,
             cache.tickSecondsAccum
          ) = Samples.getLatest(cache.state, cache.constants, cache.liquidity);
-        // increment swap epoch
-        cache.state.epoch += 1;
+
         // grab latest sample and store in cache for _cross
         while (cache.cross) {
             // handle price being at cross tick

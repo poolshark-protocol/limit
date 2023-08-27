@@ -1335,7 +1335,7 @@ describe('LimitPool Tests', function () {
             expectedLower: '150',
             revertMessage: '',
         })
-        // return
+
         if (debugMode) await getPrice(true, true)
         if (debugMode) console.log('BEFORE BURN 1')
         if (debugMode) await getTick(false, 21000, true)

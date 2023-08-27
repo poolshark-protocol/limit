@@ -31,15 +31,19 @@ const config: HardhatUserConfig = {
             url: process.env.GOERLI_URL || '',
             accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
             timeout: 60000,
-            allowUnlimitedContractSize: true,
         },
         arb_goerli: {
             chainId: 421613,
-            gasPrice: 10000000000,
+            gasPrice: 10_000_000_000,
             url: process.env.ARBITRUM_GOERLI_URL || '',
             accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
             timeout: 60000,
-            allowUnlimitedContractSize: true,
+        },
+        scrollSepolia: {
+            url: "https://sepolia-rpc.scroll.io/" || "",
+            gasPrice: 2_000_000_000,
+            accounts:
+              process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
         },
         op_goerli: {
             chainId: 420,
@@ -47,7 +51,6 @@ const config: HardhatUserConfig = {
             url: process.env.OPTIMISM_GOERLI_URL || '',
             accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
             timeout: 60000,
-            allowUnlimitedContractSize: true,
         },
     },
     etherscan: {

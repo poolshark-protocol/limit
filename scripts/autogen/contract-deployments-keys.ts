@@ -1,93 +1,100 @@
-    
-    import { ContractDeploymentsKey } from '../util/files/contractDeploymentsJson'
+import { ContractDeploymentsKey } from "../util/files/contractDeploymentsJson";
 
-    export const CONTRACT_DEPLOYMENT_KEYS: ContractDeploymentsKey[] = [
+export const CONTRACT_DEPLOYMENT_KEYS: ContractDeploymentsKey[] = [
     {
-        networkName: 'arb_goerli',
+        networkName: 'undefined',
+        objectName: 'tokenA'
+    },
+    {
+        networkName: 'undefined',
+        objectName: 'tokenB'
+    },
+    {
+        networkName: 'undefined',
         objectName: 'token0'
     },
     {
-        networkName: 'arb_goerli',
-        objectName: 'token1'
+        networkName: 'undefined',
+        objectName: 'tokenB'
     },
     {
-        networkName: 'arb_goerli',
+        networkName: 'undefined',
         objectName: 'tickMapLib'
     },
     {
-        networkName: 'arb_goerli',
+        networkName: 'undefined',
         objectName: 'ticksLib'
     },
     {
-        networkName: 'arb_goerli',
+        networkName: 'undefined',
         objectName: 'rangePositionsLib'
     },
     {
-        networkName: 'arb_goerli',
+        networkName: 'undefined',
         objectName: 'limitPositionsLib'
     },
     {
-        networkName: 'arb_goerli',
+        networkName: 'undefined',
         objectName: 'limitPoolManager'
     },
     {
-        networkName: 'arb_goerli',
+        networkName: 'undefined',
         objectName: 'limitPoolFactory'
     },
     {
-        networkName: 'arb_goerli',
+        networkName: 'undefined',
         objectName: 'swapCall'
     },
     {
-        networkName: 'arb_goerli',
+        networkName: 'undefined',
         objectName: 'mintRangeCall'
     },
     {
-        networkName: 'arb_goerli',
+        networkName: 'undefined',
         objectName: 'burnRangeCall'
     },
     {
-        networkName: 'arb_goerli',
+        networkName: 'undefined',
         objectName: 'mintLimitCall'
     },
     {
-        networkName: 'arb_goerli',
+        networkName: 'undefined',
         objectName: 'burnLimitCall'
     },
     {
-        networkName: 'arb_goerli',
+        networkName: 'undefined',
         objectName: 'snapshotLimitCall'
     },
     {
-        networkName: 'arb_goerli',
+        networkName: 'undefined',
         objectName: 'quoteCall'
     },
     {
-        networkName: 'arb_goerli',
+        networkName: 'undefined',
         objectName: 'feesCall'
     },
     {
-        networkName: 'arb_goerli',
+        networkName: 'undefined',
         objectName: 'sampleCall'
     },
     {
-        networkName: 'arb_goerli',
+        networkName: 'undefined',
         objectName: 'snapshotRangeCall'
     },
     {
-        networkName: 'arb_goerli',
+        networkName: 'undefined',
         objectName: 'limitPoolImpl'
     },
     {
-        networkName: 'arb_goerli',
-        objectName: 'rangePoolERC1155'
+        networkName: 'undefined',
+        objectName: 'positionERC1155'
     },
     {
-        networkName: 'arb_goerli',
+        networkName: 'undefined',
         objectName: 'poolRouter'
     },
     {
-        networkName: 'arb_goerli',
+        networkName: 'undefined',
         objectName: 'limitPool'
     },
 ];

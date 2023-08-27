@@ -82,32 +82,32 @@ library Claims {
 
             // if we cleared the final tick of their position, this is the wrong claim tick
             if (params.zeroForOne) {
-                uint32 endTickAccumEpoch = EpochMap.get(cache.position.upper, params.zeroForOne, tickMap, cache.constants);
-                if (endTickAccumEpoch > cache.position.epochLast) {
+                uint32 endTickEpoch = EpochMap.get(cache.position.upper, params.zeroForOne, tickMap, cache.constants);
+                if (endTickEpoch > cache.position.epochLast) {
                     params.claim = cache.position.upper;
                     cache.priceClaim = cache.priceUpper;
                     cache.claimTick = ticks[cache.position.upper].limit;
                     cache.liquidityBurned = cache.position.liquidity;
                 } else {
                     int24 claimTickNext = TickMap.next(tickMap, params.claim, cache.constants.tickSpacing, false);
-                    uint32 claimTickNextAccumEpoch = EpochMap.get(claimTickNext, params.zeroForOne, tickMap, cache.constants);
+                    uint32 claimTickNextEpoch = EpochMap.get(claimTickNext, params.zeroForOne, tickMap, cache.constants);
                     ///@dev - next swapEpoch should not be greater
-                    if (claimTickNextAccumEpoch > cache.position.epochLast) {
+                    if (claimTickNextEpoch > cache.position.epochLast) {
                         require (false, 'WrongTickClaimedAt5()');
                     }
                 }
             } else {
-                uint32 endTickAccumEpoch = EpochMap.get(cache.position.lower, params.zeroForOne, tickMap, cache.constants);
-                if (endTickAccumEpoch > cache.position.epochLast) {
+                uint32 endTickEpoch = EpochMap.get(cache.position.lower, params.zeroForOne, tickMap, cache.constants);
+                if (endTickEpoch > cache.position.epochLast) {
                     params.claim = cache.position.lower;
                     cache.priceClaim = cache.priceLower;
                     cache.claimTick = ticks[cache.position.lower].limit;
                     cache.liquidityBurned = cache.position.liquidity;
                 } else {
                     int24 claimTickNext = TickMap.previous(tickMap, params.claim, cache.constants.tickSpacing, false);
-                    uint32 claimTickNextAccumEpoch = EpochMap.get(claimTickNext, params.zeroForOne, tickMap, cache.constants);
+                    uint32 claimTickNextEpoch = EpochMap.get(claimTickNext, params.zeroForOne, tickMap, cache.constants);
                     ///@dev - next swapEpoch should not be greater
-                    if (claimTickNextAccumEpoch > cache.position.epochLast) {
+                    if (claimTickNextEpoch > cache.position.epochLast) {
                         require (false, 'WrongTickClaimedAt5()');
                     }
                 }

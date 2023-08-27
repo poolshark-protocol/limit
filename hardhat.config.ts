@@ -40,8 +40,9 @@ const config: HardhatUserConfig = {
             timeout: 60000,
         },
         scrollSepolia: {
+            chainId: 534351,
             url: "https://sepolia-rpc.scroll.io/" || "",
-            gasPrice: 2_000_000_000,
+            gasPrice: 1_500_000_000,
             accounts:
               process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
         },
@@ -53,8 +54,21 @@ const config: HardhatUserConfig = {
             timeout: 60000,
         },
     },
-    etherscan: {
-        apiKey: process.env.ARBITRUM_GOERLI_API_KEY,
+    etherscan: { 
+        apiKey: {
+            arbitrumGoerli: process.env.ARBITRUM_GOERLI_API_KEY,
+            scrollSepolia: 'abc',
+        },
+        customChains: [
+            {
+              network: 'scrollSepolia',
+              chainId: 534351,
+              urls: {
+                apiURL: 'https://sepolia-blockscout.scroll.io/api',
+                browserURL: 'https://sepolia-blockscout.scroll.io/',
+              },
+            },
+        ],
     },
 }
 export default config

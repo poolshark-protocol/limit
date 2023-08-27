@@ -264,29 +264,35 @@ library LimitPositions {
 
         if (cache.liquidityBurned > 0) {
             if (params.claim == (params.zeroForOne ? cache.position.upper : cache.position.lower)) {
-                // only remove once if final tick of position
+                // if claim is final tick no liquidity to remove
                 cache.removeLower = false;
                 cache.removeUpper = false;
             } else {
+                // else remove liquidity from final tick
                 params.zeroForOne ? cache.removeUpper = true 
                                   : cache.removeLower = true;
-            }
-            if (params.zeroForOne) {
-                if (params.claim == cache.position.lower && 
-                    cache.pool.price < cache.priceLower
-                ) {
-                    cache.removeLower = true;
-                } else if (params.claim % cache.constants.tickSpacing != 0 && 
-                    cache.pool.price < cache.priceClaim)
-                    cache.removeLower = true;
-            } else {
-                if (params.claim == cache.position.upper &&
-                    cache.pool.price > cache.priceUpper
-                )
-                    cache.removeUpper = true;
-                else if (params.claim % cache.constants.tickSpacing != 0 &&
-                            cache.pool.price > cache.priceClaim)
-                    cache.removeUpper = true;
+                if (params.zeroForOne) {
+
+                    if (params.claim == cache.position.lower && 
+                        cache.pool.price < cache.priceLower
+                    ) {
+                        // full tick price was touched
+                        cache.removeLower = true;
+                    } else if (params.claim % cache.constants.tickSpacing != 0 && 
+                                    cache.pool.price < cache.priceClaim)
+                        // half tick was created
+                        cache.removeLower = true;
+                } else {
+                    if (params.claim == cache.position.upper &&
+                        cache.pool.price > cache.priceUpper
+                    )
+                        // full tick price was touched
+                        cache.removeUpper = true;
+                    else if (params.claim % cache.constants.tickSpacing != 0 &&
+                                    cache.pool.price > cache.priceClaim)
+                        // half tick was created
+                        cache.removeUpper = true;
+                }
             }
             LimitTicks.remove(
                 ticks,

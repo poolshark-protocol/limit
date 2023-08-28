@@ -38,7 +38,6 @@ contract LimitPool is
     event SimulateMint(bytes b);
     event SimulateMint(bytes4 b);
     event SimulateMint(bool b);
-    event SimulateBurn(int24 lower, int24 upper, bool positionExists);
 
     modifier ownerOnly() {
         _onlyOwner();
@@ -82,8 +81,6 @@ contract LimitPool is
             startPrice
         );
     }
-
-    
 
     function mintRange(
         MintRangeParams memory params
@@ -312,7 +309,7 @@ contract LimitPool is
             cache.constants = immutables();
         }
 
-        (lower, upper, positionCreated) = EchidnaMintLimitCall.getResizedTicks(
+        try EchidnaMintLimitCall.getResizedTicks(
             params.zeroForOne ? positions0 : positions1,
             ticks,
             samples,
@@ -321,12 +318,23 @@ contract LimitPool is
             globalState,
             params,
             cache
-        );
-        
-        if (lower == 0 && upper == 0) {
-            lower = -8388608;
-            upper = -8388608;
-            positionCreated = false;
+        ) {
+        } catch (bytes memory data) {
+            emit SimulateMint(data);
+            bytes4 sig;
+            assembly {
+                sig := mload(add(data, 0x20))
+            }
+            
+            // SimulateMint error
+            if (sig == hex"5cc1f67b") {
+                (, lower, upper, positionCreated) = abi.decode(abi.encodePacked(bytes28(0), data),(bytes32,int24,int24,bool));
+            }
+            else {
+                lower = -8388608;
+                upper = -8388608;
+                positionCreated = false;
+            }
         }
     }
 
@@ -337,19 +345,28 @@ contract LimitPool is
         BurnLimitCache memory cache;
         cache.constants = immutables();
 
-        (lower, upper, positionExists) = EchidnaBurnLimitCall.getResizedTicks(
+        try EchidnaBurnLimitCall.getResizedTicks(
             params.zeroForOne ? positions0 : positions1,
             ticks,
             limitTickMap,
             globalState,
             params, 
             cache
-        ); 
-        
-        if (lower == 0 && upper == 0) {
-            lower = -8388608;
-            upper = -8388608;
-            positionExists = false;
+        ) {
+        } catch (bytes memory data) {
+            bytes4 sig;
+            assembly {
+                sig := mload(add(data, 0x20))
+            }
+            // SimulateBurn error
+            if (sig == hex"97dd6e0a") {
+                (, lower, upper, positionExists) = abi.decode(abi.encodePacked(bytes28(0), data),(bytes32,int24,int24,bool));
+            }
+             else {
+                lower = -8388608;
+                upper = -8388608;
+                positionExists = false;
+            }
         }
     }
 
@@ -390,23 +407,5 @@ contract LimitPool is
 
     function _onlyFactory() private view {
         if (msg.sender != factory) revert FactoryOnly();
-    }
-
-   
-
-    function save(
-        LimitPoolStructs.BurnLimitCache memory cache,
-        PoolsharkStructs.GlobalState storage globalState,
-        bool zeroForOne
-    ) internal {
-        globalState.epoch = cache.state.epoch;
-        globalState.liquidityGlobal = cache.state.liquidityGlobal;
-        if (zeroForOne) {
-            globalState.pool = cache.state.pool;
-            globalState.pool0 = cache.state.pool0;
-        } else {
-            globalState.pool = cache.state.pool;
-            globalState.pool1 = cache.state.pool1;
-        }
     }
 }

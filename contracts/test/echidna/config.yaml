@@ -1,4 +1,7 @@
-testMode: "assertion"
-#codeSize max code size for deployed contratcs (default 24576, per EIP-170)
-#100,000 bytes
-codeSize: 0x23544
+testMode: assertion
+corpusDir: corpus
+codeSize: 0x2281f
+testLimit: 100000000
+deployContracts: [["0x1f", "EchidnaMintLimitCall"], ["0x2f", "EchidnaBurnLimitCall"]]
+cryticArgs: ["--compile-libraries=(EchidnaMintLimitCall,0x1f) --compile-libraries=(EchidnaBurnLimitCall,0x2f)"]
+shrinkLimit: 625

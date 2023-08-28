@@ -21,7 +21,7 @@ library EchidnaBurnLimitCall {
         uint128 tokenOutBurned
     );
 
-    event SimulateBurn(int24 lower, int24 upper, bool positionExists);
+    error SimulateBurn(int24 lower, int24 upper, bool positionExists);
 
     // Echidna funcs
     function getResizedTicks(
@@ -32,11 +32,7 @@ library EchidnaBurnLimitCall {
         PoolsharkStructs.GlobalState storage globalState,
         LimitPoolStructs.BurnLimitParams memory params,
         LimitPoolStructs.BurnLimitCache memory cache
-    ) internal returns (
-        int24,
-        int24,
-        bool
-    ){
+    ) external {
         // check for invalid receiver
         if (params.to == address(0))
             require(false, 'CollectToZeroAddress()');
@@ -88,9 +84,7 @@ library EchidnaBurnLimitCall {
             params
         );
 
-        emit SimulateBurn(lower, upper, positionExists);
-
-        return (lower, upper, positionExists);
+        revert SimulateBurn(lower, upper, positionExists);
     }
 
     function save(

@@ -10,7 +10,7 @@ import '../../interfaces/IERC20Minimal.sol';
 
 library EchidnaMintLimitCall {
 
-    error SimulateMint(int24 lower, int24 upper, bool positionCreated);
+    event SimulateMint(int24 lower, int24 upper, bool positionCreated);
 
     event MintLimit(
         address indexed to,
@@ -42,7 +42,7 @@ library EchidnaMintLimitCall {
         PoolsharkStructs.GlobalState storage globalState,
         LimitPoolStructs.MintLimitParams memory params,
         LimitPoolStructs.MintLimitCache memory cache
-    ) external {
+    ) internal {
         if (params.positionId > 0) {
             if (PositionTokens.balanceOf(cache.constants, msg.sender, params.positionId) == 0)
                 // check for balance held
@@ -209,7 +209,11 @@ library EchidnaMintLimitCall {
         PoolsharkStructs.GlobalState storage globalState,
         LimitPoolStructs.MintLimitParams memory params,
         LimitPoolStructs.MintLimitCache memory cache
-    ) external {
+    ) internal returns (
+        int24,
+        int24,
+        bool
+    ) {
         bool positionCreated = false;
         if (params.positionId > 0) {
             if (PositionTokens.balanceOf(cache.constants, msg.sender, params.positionId) == 0)
@@ -332,6 +336,8 @@ library EchidnaMintLimitCall {
         // save lp side for safe reentrancy
         save(cache, globalState, params.zeroForOne);
     
-        revert SimulateMint(params.lower, params.upper, positionCreated);
+        emit SimulateMint(params.lower, params.upper, positionCreated);
+
+        return (params.lower, params.upper, positionCreated);
     }
 }

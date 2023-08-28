@@ -17,7 +17,9 @@ import './libraries/range/pool/MintRangeCall.sol';
 import './libraries/range/pool/BurnRangeCall.sol';
 import './libraries/range/pool/SnapshotRangeCall.sol';
 import './libraries/limit/pool/MintLimitCall.sol';
+import './test/echidna/EchidnaMintLimitCall.sol';
 import './libraries/limit/pool/BurnLimitCall.sol';
+import './test/echidna/EchidnaBurnLimitCall.sol';
 import './libraries/limit/pool/SnapshotLimitCall.sol';
 import './libraries/math/ConstantProduct.sol';
 import './libraries/solady/LibClone.sol';
@@ -32,6 +34,11 @@ contract LimitPool is
     LimitPoolImmutables,
     ReentrancyGuard
 {
+
+    event SimulateMint(bytes b);
+    event SimulateMint(bytes4 b);
+    event SimulateMint(bool b);
+    event SimulateBurn(int24 lower, int24 upper, bool positionExists);
 
     modifier ownerOnly() {
         _onlyOwner();
@@ -75,6 +82,8 @@ contract LimitPool is
             startPrice
         );
     }
+
+    
 
     function mintRange(
         MintRangeParams memory params
@@ -123,7 +132,7 @@ contract LimitPool is
     {
         MintLimitCache memory cache;
         cache.constants = immutables();
-        MintLimitCall.perform(
+        EchidnaMintLimitCall.perform(
             params.zeroForOne ? positions0 : positions1,
             ticks,
             samples,
@@ -294,6 +303,56 @@ contract LimitPool is
         );
     }
 
+    function getResizedTicksForMint(
+        MintLimitParams memory params
+    ) external returns (int24 lower, int24 upper, bool positionCreated){
+        MintLimitCache memory cache;
+        {
+            cache.state = globalState;
+            cache.constants = immutables();
+        }
+
+        (lower, upper, positionCreated) = EchidnaMintLimitCall.getResizedTicks(
+            params.zeroForOne ? positions0 : positions1,
+            ticks,
+            samples,
+            rangeTickMap,
+            limitTickMap,
+            globalState,
+            params,
+            cache
+        );
+        
+        if (lower == 0 && upper == 0) {
+            lower = -8388608;
+            upper = -8388608;
+            positionCreated = false;
+        }
+    }
+
+    function getResizedTicksForBurn(
+        BurnLimitParams memory params
+    ) external returns (int24 lower, int24 upper, bool positionExists){
+        if (params.to == address(0)) revert CollectToZeroAddress();
+        BurnLimitCache memory cache;
+        cache.constants = immutables();
+
+        (lower, upper, positionExists) = EchidnaBurnLimitCall.getResizedTicks(
+            params.zeroForOne ? positions0 : positions1,
+            ticks,
+            limitTickMap,
+            globalState,
+            params, 
+            cache
+        ); 
+        
+        if (lower == 0 && upper == 0) {
+            lower = -8388608;
+            upper = -8388608;
+            positionExists = false;
+        }
+    }
+
     function priceBounds(
         int16 tickSpacing
     ) external pure returns (uint160, uint160) {
@@ -331,5 +390,23 @@ contract LimitPool is
 
     function _onlyFactory() private view {
         if (msg.sender != factory) revert FactoryOnly();
+    }
+
+   
+
+    function save(
+        LimitPoolStructs.BurnLimitCache memory cache,
+        PoolsharkStructs.GlobalState storage globalState,
+        bool zeroForOne
+    ) internal {
+        globalState.epoch = cache.state.epoch;
+        globalState.liquidityGlobal = cache.state.liquidityGlobal;
+        if (zeroForOne) {
+            globalState.pool = cache.state.pool;
+            globalState.pool0 = cache.state.pool0;
+        } else {
+            globalState.pool = cache.state.pool;
+            globalState.pool1 = cache.state.pool1;
+        }
     }
 }

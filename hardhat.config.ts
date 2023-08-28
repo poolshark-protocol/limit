@@ -6,9 +6,7 @@ import '@nomiclabs/hardhat-waffle'
 import '@typechain/hardhat'
 require('solidity-coverage')
 require('hardhat-contract-sizer')
-import { handleHardhatTasks } from './taskHandler'
 
-handleHardhatTasks()
 dotenv.config()
 const config: HardhatUserConfig = {
     solidity: {

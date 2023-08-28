@@ -1,0 +1,4 @@
+testMode: "assertion"
+#codeSize max code size for deployed contratcs (default 24576, per EIP-170)
+#100,000 bytes
+codeSize: 0x23544

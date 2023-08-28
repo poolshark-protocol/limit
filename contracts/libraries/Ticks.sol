@@ -112,7 +112,7 @@ library Ticks {
         PoolsharkStructs.TickMap storage limitTickMap,
         PoolsharkStructs.SwapParams memory params,
         PoolsharkStructs.SwapCache memory cache
-    ) external returns (
+    ) internal returns (
         PoolsharkStructs.SwapCache memory
     )
     {   

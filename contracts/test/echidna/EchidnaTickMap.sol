@@ -2,7 +2,7 @@
 pragma solidity 0.8.13;
 
 
-import './EchidnaLimitPool.sol';
+import '../../LimitPool.sol';
 import '../../LimitPoolFactory.sol';
 import '../../utils/LimitPoolManager.sol';
 import '../Token20.sol';

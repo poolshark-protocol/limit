@@ -292,7 +292,7 @@
         },
         "poolRouter": {
             "contractName": "PoolsharkRouter",
-            "contractAddress": "0x4b6918454f16c991ee5e090940f9209EED3b7097",
+            "contractAddress": "0x201241296F0b91F3dC7266e17B9F4C306E0403d0",
             "constructorArguments": [
                 "0x96F8d308dB8F86FCcbef8c57df7BbaD6Ee4C7D89",
                 "0xFA807ce77b103129597CcE4a7Bf7F504F9e7BD9e"

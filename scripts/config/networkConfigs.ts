@@ -33,4 +33,11 @@ export const NETWORK_CONFIGS: NetworkConfigs = {
         url: process.env.GOERLI_URL || '',
         accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
+    arb_goerli: {
+        chainId: 421613,
+        gas: 9000000,
+        gasPrice: 10_000_000_000,
+        url: process.env.ARBITRUM_GOERLI_URL || '',
+        accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+    },
 }

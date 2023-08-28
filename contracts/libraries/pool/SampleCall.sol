@@ -20,7 +20,7 @@ library SampleCall {
         PoolsharkStructs.GlobalState memory state,
         PoolsharkStructs.Immutables memory constants,
         uint32[] memory secondsAgo
-    ) external view returns (
+    ) internal view returns (
         int56[]   memory tickSecondsAccum,
         uint160[] memory secondsPerLiquidityAccum,
         uint160 averagePrice,

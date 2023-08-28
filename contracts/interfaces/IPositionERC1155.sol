@@ -3,7 +3,7 @@
 pragma solidity 0.8.13;
 
 import '../interfaces/structs/PoolsharkStructs.sol';
-import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import "../external/openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 interface IPositionERC1155 is IERC165, PoolsharkStructs {
     event TransferSingle(

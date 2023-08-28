@@ -29,7 +29,7 @@ library BurnLimitCall {
         PoolsharkStructs.GlobalState storage globalState,
         LimitPoolStructs.BurnLimitParams memory params,
         LimitPoolStructs.BurnLimitCache memory cache
-    ) external {
+    ) internal {
         // check for invalid receiver
         if (params.to == address(0))
             require(false, 'CollectToZeroAddress()');

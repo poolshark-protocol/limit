@@ -25,7 +25,7 @@ library SnapshotRangeCall {
         PoolsharkStructs.GlobalState memory state,
         PoolsharkStructs.Immutables memory constants,
         uint32 positionId
-    ) external view returns (
+    ) internal view returns (
         int56,
         uint160,
         uint128,

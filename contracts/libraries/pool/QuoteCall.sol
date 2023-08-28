@@ -24,7 +24,7 @@ library QuoteCall {
         PoolsharkStructs.GlobalState storage globalState,
         PoolsharkStructs.QuoteParams memory params,
         PoolsharkStructs.SwapCache memory cache
-    ) external view returns (
+    ) internal returns (
         uint256,
         uint256,
         uint160

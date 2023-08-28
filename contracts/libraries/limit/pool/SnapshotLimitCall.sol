@@ -29,7 +29,7 @@ library SnapshotLimitCall {
         PoolsharkStructs.GlobalState memory state,
         PoolsharkStructs.Immutables memory constants,
         LimitPoolStructs.SnapshotLimitParams memory params
-    ) external view returns (
+    ) internal view returns (
         uint128,
         uint128
     )

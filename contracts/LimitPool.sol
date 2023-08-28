@@ -208,7 +208,7 @@ contract LimitPool is
 
     function quote(
         QuoteParams memory params
-    ) external view override
+    ) external override
     returns (
         uint256,
         uint256,

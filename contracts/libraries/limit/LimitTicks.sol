@@ -141,6 +141,7 @@ library LimitTicks {
             // if empty just save the pool price
             if (tick.priceAt == 0) {
                 tick.priceAt = pool.price;
+                EchidnaAssertions.assertTickAtPriceDivisibleByTickSpacing(tickToSave, ticks[tickToSave].limit.priceAt, constants.tickSpacing);
             }
             else {
                 // we need to blend the two partial fills into a single tick
@@ -204,6 +205,7 @@ library LimitTicks {
                 } else {
                     tickLower.liquidityDelta += int128(cache.liquidityBurned);
                 }
+                EchidnaAssertions.assertLiquidityAbsoluteUnderflows(tickLower.liquidityAbsolute, cache.liquidityBurned, 'TSL-1');
                 tickLower.liquidityAbsolute -= cache.liquidityBurned;
                 ticks[lower].limit = tickLower;
                 clear(ticks, constants, tickMap, lower);
@@ -217,6 +219,7 @@ library LimitTicks {
                 } else {
                     tickUpper.liquidityDelta -= int128(cache.liquidityBurned);
                 }
+                EchidnaAssertions.assertLiquidityAbsoluteUnderflows(tickUpper.liquidityAbsolute, cache.liquidityBurned, 'TSL-2');
                 tickUpper.liquidityAbsolute -= cache.liquidityBurned;
                 ticks[upper].limit = tickUpper;
                 clear(ticks, constants, tickMap, upper);
@@ -253,6 +256,7 @@ library LimitTicks {
         }
 
         // increment pool liquidity
+        EchidnaAssertions.assertPositiveLiquidityOnUnlock(ticks[pool.tickAtPrice].limit.liquidityDelta);
         pool.liquidity += uint128(ticks[pool.tickAtPrice].limit.liquidityDelta);
         int24 tickToClear = pool.tickAtPrice;
         uint160 tickPriceAt = ticks[pool.tickAtPrice].limit.priceAt;

@@ -23,7 +23,7 @@ library FeesCall {
         PoolsharkStructs.GlobalState storage globalState,
         PoolsharkStructs.FeesParams memory params,
         PoolsharkStructs.Immutables memory constants
-    ) external returns (
+    ) internal returns (
         uint128 token0Fees,
         uint128 token1Fees
     ) {

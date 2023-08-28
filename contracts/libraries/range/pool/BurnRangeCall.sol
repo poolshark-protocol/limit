@@ -28,7 +28,7 @@ library BurnRangeCall {
         PoolsharkStructs.GlobalState storage globalState,
         RangePoolStructs.BurnRangeCache memory cache,
         RangePoolStructs.BurnRangeParams memory params
-    ) external {
+    ) internal {
         // check for invalid receiver
         if (params.to == address(0))
             require(false, 'CollectToZeroAddress()');

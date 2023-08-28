@@ -10,6 +10,7 @@ import './Claims.sol';
 import './EpochMap.sol';
 import '../utils/SafeCast.sol';
 import '../Ticks.sol';
+import '../../test/echidna/EchidnaAssertions.sol';
 
 /// @notice Position management library for ranged liquidity.
 /// @notice Position management library for ranged liquidity.
@@ -36,7 +37,7 @@ library LimitPositions {
         PoolsharkStructs.TickMap storage limitTickMap,
         LimitPoolStructs.MintLimitParams memory params,
         LimitPoolStructs.MintLimitCache memory cache
-    ) external returns (
+    ) internal returns (
         LimitPoolStructs.MintLimitParams memory,
         LimitPoolStructs.MintLimitCache memory
     )
@@ -259,6 +260,7 @@ library LimitPositions {
             // handle pool.price at edge of range
             if (params.zeroForOne ? cache.priceClaim < cache.priceUpper
                                   : cache.priceClaim > cache.priceLower)
+                EchidnaAssertions.assertLiquidityUnderflows(cache.pool.liquidity, cache.liquidityBurned, "PLU-3");
                 cache.pool.liquidity -= cache.liquidityBurned;
         }
 
@@ -304,10 +306,12 @@ library LimitPositions {
             // update position liquidity
             cache.position.liquidity -= uint128(cache.liquidityBurned);
             // update global liquidity
+            EchidnaAssertions.assertLiquidityGlobalUnderflows(cache.state.liquidityGlobal, cache.liquidityBurned, "LGU-2");
             cache.state.liquidityGlobal -= cache.liquidityBurned;
         }
         if (params.zeroForOne ? params.claim == cache.position.upper
                               : params.claim == cache.position.lower) {
+            EchidnaAssertions.assertLiquidityGlobalUnderflows(cache.state.liquidityGlobal, cache.position.liquidity, "LGU-3");
             cache.state.liquidityGlobal -= cache.position.liquidity;
             cache.position.liquidity = 0;
         }
@@ -318,6 +322,7 @@ library LimitPositions {
             if (params.zeroForOne ? params.claim == cache.position.lower 
                                   : params.claim == cache.position.upper) {
                 // subtract remaining position liquidity out from global
+                EchidnaAssertions.assertLiquidityGlobalUnderflows(cache.state.liquidityGlobal, cache.position.liquidity, "LGU-4");
                 cache.state.liquidityGlobal -= cache.position.liquidity;
             }
         }

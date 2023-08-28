@@ -37,7 +37,7 @@ library MintLimitCall {
         PoolsharkStructs.GlobalState storage globalState,
         LimitPoolStructs.MintLimitParams memory params,
         LimitPoolStructs.MintLimitCache memory cache
-    ) external {
+    ) internal {
         if (params.positionId > 0) {
             if (PositionTokens.balanceOf(cache.constants, msg.sender, params.positionId) == 0)
                 // check for balance held

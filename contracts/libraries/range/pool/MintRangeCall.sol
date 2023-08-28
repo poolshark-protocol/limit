@@ -31,7 +31,7 @@ library MintRangeCall {
         PoolsharkStructs.GlobalState storage globalState,
         RangePoolStructs.MintRangeCache memory cache,
         RangePoolStructs.MintRangeParams memory params
-    ) external {
+    ) internal {
         // initialize cache
         cache.state = globalState;
 

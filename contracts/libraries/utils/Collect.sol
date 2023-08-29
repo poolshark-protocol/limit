@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.13;
 
+import '../../interfaces/IERC20Minimal.sol';
 import '../../interfaces/structs/LimitPoolStructs.sol';
 import '../limit/LimitPositions.sol';
 import '../utils/SafeTransfers.sol';
@@ -44,12 +45,36 @@ library Collect {
         /// zero out balances and transfer out
         if (amount0 > 0) {
             cache.amountIn = 0;
+            EchidnaAssertions.assertPoolBalanceExceeded(
+                balance(cache.constants.token0),
+                amount0
+            );
             SafeTransfers.transferOut(params.to, cache.constants.token0, amount0);
         }
         if (amount1 > 0) {
             cache.amountOut = 0;
+            EchidnaAssertions.assertPoolBalanceExceeded(
+                balance(cache.constants.token1),
+                amount1
+            );
             SafeTransfers.transferOut(params.to, cache.constants.token1, amount1);
         }
         return cache;
+    }
+
+        function balance(
+        address token
+    ) private view returns (uint256) {
+        (
+            bool success,
+            bytes memory data
+        ) = token.staticcall(
+                                    abi.encodeWithSelector(
+                                        IERC20Minimal.balanceOf.selector,
+                                        address(this)
+                                    )
+                                );
+        require(success && data.length >= 32);
+        return abi.decode(data, (uint256));
     }
 }

@@ -12,3 +12,5 @@ tar xvf echidna.tar.gz
 solc-select install 0.8.13
 solc-select use 0.8.13
 nohup ./echidna contracts/EchidnaPool.sol --config contracts/test/echidna/config.yaml --corpus-dir corpus --workers 12 &
+top -o %MEM -c
+tail -f nohup.out -n 100

@@ -1,0 +1,9 @@
+
+env = "prod"
+
+vpc_id = "vpc-927711ef"
+
+db_port = 5500
+
+bastion_logs_bucket_name = "bastion-host-logs"
+bastion_pubkey = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDTTlddzAOoLWIVVcd30bxtEO+CP3/DB8nM/U2V2aJ6Q568/uEfV1ylF0qI6wg5xsdC+Gllw14laJqai2akjAZstsef2MnXR5qII8FXMWIk228Yw+/XotXw1nH+crUKEEuJr93J10PEVDJf4OYrvPbU99xNXQtUbLVIBplCf9uQm75QLh0fIMOtPRX/NlXw/LS7k5Q57G5NbYz3biIax5ZSnZtGEA/hdLh7nQFZqaMz7sVHNisZPQBOSEaF8+Q9d8gXooqJAt1s9r/XSPXNhDSmnZS/4GTfBpO3+3L+B/43p8++B47Me6PakF5tH9ArbjT6M53WXNzZ/Awdg77hU00NuBFRlXZK06M+GYyG7TOG2R2in2UhJt9KZP6+Mr+ucRlwuGHm1fz8gUoBcp/hVgiLcB7nZCYERKFpphRpd7Um8sNqx/XpWsoOSqp2B0yzPwjoVDHUsJLCjaaCVpe0u3T9ciUaXKevKnYABzXZkZ9AGHfM8MhqNBHZXMassBnf610= alphaqi@alphaqi-ProLiant-DL380p-Gen8"

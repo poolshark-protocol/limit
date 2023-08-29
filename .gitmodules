@@ -1,0 +1,3 @@
+[submodule "workspaces/modules/terraform-aws-bastion"]
+	path = workspaces/modules/terraform-aws-bastion
+	url = https://github.com/Guimove/terraform-aws-bastion

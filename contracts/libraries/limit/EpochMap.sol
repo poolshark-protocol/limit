@@ -16,7 +16,7 @@ library EpochMap {
         bool zeroForOne,
         uint256 epoch,
         PoolsharkStructs.TickMap storage tickMap,
-        PoolsharkStructs.Immutables memory constants
+        PoolsharkStructs.LimitImmutables memory constants
     ) internal {
         (
             uint256 tickIndex,
@@ -42,7 +42,7 @@ library EpochMap {
         int24 tick,
         bool zeroForOne,
         PoolsharkStructs.TickMap storage tickMap,
-        PoolsharkStructs.Immutables memory constants
+        PoolsharkStructs.LimitImmutables memory constants
     ) internal view returns (
         uint32 epoch
     ) {
@@ -64,7 +64,7 @@ library EpochMap {
 
     function getIndices(
         int24 tick,
-        PoolsharkStructs.Immutables memory constants
+        PoolsharkStructs.LimitImmutables memory constants
     ) internal pure returns (
             uint256 tickIndex,
             uint256 wordIndex,

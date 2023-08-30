@@ -27,7 +27,7 @@ library SnapshotLimitCall {
         mapping(int24 => LimitPoolStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
         PoolsharkStructs.GlobalState memory state,
-        PoolsharkStructs.Immutables memory constants,
+        PoolsharkStructs.LimitImmutables memory constants,
         LimitPoolStructs.SnapshotLimitParams memory params
     ) external view returns (
         uint128,

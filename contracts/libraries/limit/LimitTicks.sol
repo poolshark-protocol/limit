@@ -118,7 +118,7 @@ library LimitTicks {
         PoolsharkStructs.TickMap storage tickMap,
         LimitPoolStructs.MintLimitCache memory cache,
         PoolsharkStructs.LimitPoolState memory pool,
-        PoolsharkStructs.Immutables memory constants
+        PoolsharkStructs.LimitImmutables memory constants
     ) internal returns (
         PoolsharkStructs.LimitPoolState memory
     ){
@@ -190,7 +190,7 @@ library LimitTicks {
         PoolsharkStructs.TickMap storage tickMap,
         LimitPoolStructs.BurnLimitParams memory params,
         LimitPoolStructs.BurnLimitCache memory cache,
-        PoolsharkStructs.Immutables memory constants
+        PoolsharkStructs.LimitImmutables memory constants
     ) internal {
         // set ticks based on claim and zeroForOne
         int24 lower = params.zeroForOne ? params.claim : cache.position.lower;
@@ -275,7 +275,7 @@ library LimitTicks {
 
     function clear(
         mapping(int24 => PoolsharkStructs.Tick) storage ticks,
-        PoolsharkStructs.Immutables memory constants,
+        PoolsharkStructs.LimitImmutables memory constants,
         PoolsharkStructs.TickMap storage tickMap,
         int24 tickToClear
     ) internal {

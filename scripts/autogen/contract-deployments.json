@@ -136,10 +136,10 @@
         },
         "poolRouter": {
             "contractName": "PoolsharkRouter",
-            "contractAddress": "0xb6ECCa9CDe4D91f8447ca2f165e07931Dc03E1e3",
+            "contractAddress": "0x379CBEa9234cAe9e106bC2a86b39610dC56dbAe2",
             "constructorArguments": [
                 "0x658e23AffE417B8b67ae56e2EF2d88B8aa85a1E0",
-                "0xA661Ea22e9DD5424E2d6bdB62A55c102FA0f5158"
+                "0xD1f805fB8206FFE1B76E16c002a34739BE66f977"
             ],
             "created": "2023-08-28T13:36:00.443Z"
         },

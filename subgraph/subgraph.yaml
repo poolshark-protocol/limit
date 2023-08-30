@@ -72,9 +72,9 @@ dataSources:
     name: PoolsharkRouter
     network: arbitrum-goerli
     source:
-        address: '0x94e24E5706724E898541038254eA4081bBc73490'
+        address: '0x379CBEa9234cAe9e106bC2a86b39610dC56dbAe2'
         abi: PoolsharkRouter
-        startBlock: 37381982
+        startBlock: 37758995
     mapping:
         kind: ethereum/events
         apiVersion: 0.0.6

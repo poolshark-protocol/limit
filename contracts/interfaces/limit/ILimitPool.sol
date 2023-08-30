@@ -31,6 +31,11 @@ interface ILimitPool is LimitPoolStructs {
         uint128 token1Fees
     );
 
+    function immutables(
+    ) external view returns(
+        LimitImmutables memory
+    );
+
     function priceBounds(
         int16 tickSpacing
     ) external pure returns (

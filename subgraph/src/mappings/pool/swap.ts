@@ -21,9 +21,7 @@ export function handleSwap(event: Swap): void {
     let poolAddress = event.address.toHex()
     let msgSender = event.transaction.from
 
-    let loadBasePrice = safeLoadBasePrice('eth') // 1
     let loadLimitPool = safeLoadLimitPool(poolAddress) // 2
-    let basePrice = loadBasePrice.entity
     let pool = loadLimitPool.entity
 
     let loadLimitPoolFactory = safeLoadLimitPoolFactory(pool.factory) // 3
@@ -52,6 +50,9 @@ export function handleSwap(event: Swap): void {
     pool.price0 = prices[0]
     pool.price1 = prices[1]
     pool.save()
+
+    let loadBasePrice = safeLoadBasePrice('eth') // 1
+    let basePrice = loadBasePrice.entity
 
     // price updates
     token0.ethPrice = findEthPerToken(token0, token1, basePrice)

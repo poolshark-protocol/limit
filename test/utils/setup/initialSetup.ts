@@ -37,72 +37,72 @@ export class InitialSetup {
     public async initialLimitPoolSetup(): Promise<number> {
         const network = SUPPORTED_NETWORKS[hre.network.name.toUpperCase()]
         
-        const token0Address = (
-            await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
-              {
-                networkName: hre.network.name,
-                objectName: 'token0',
-              },
-              'readLimitPoolSetup'
-            )
-          ).contractAddress
-          const token1Address = (
-            await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
-              {
-                networkName: hre.network.name,
-                objectName: 'token1',
-              },
-              'readLimitPoolSetup'
-            )
-          ).contractAddress
-          hre.props.token0 = await hre.ethers.getContractAt('Token20', token0Address)
-          hre.props.token1 = await hre.ethers.getContractAt('Token20', token1Address)
-        // await this.deployAssist.deployContractWithRetry(
-        //     network,
-        //     // @ts-ignore
-        //     Token20__factory,
-        //     'tokenA',
-        //     ['Wrapped Ether', 'WETH', this.token0Decimals]
-        //   )
+        // const token0Address = (
+        //     await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
+        //       {
+        //         networkName: hre.network.name,
+        //         objectName: 'token0',
+        //       },
+        //       'readLimitPoolSetup'
+        //     )
+        //   ).contractAddress
+        //   const token1Address = (
+        //     await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
+        //       {
+        //         networkName: hre.network.name,
+        //         objectName: 'token1',
+        //       },
+        //       'readLimitPoolSetup'
+        //     )
+        //   ).contractAddress
+        //   hre.props.token0 = await hre.ethers.getContractAt('Token20', token0Address)
+        //   hre.props.token1 = await hre.ethers.getContractAt('Token20', token1Address)
+        await this.deployAssist.deployContractWithRetry(
+            network,
+            // @ts-ignore
+            Token20__factory,
+            'tokenA',
+            ['Wrapped Ether', 'WETH', this.token0Decimals]
+          )
       
-        //   await this.deployAssist.deployContractWithRetry(
-        //     network,
-        //     // @ts-ignore
-        //     Token20__factory,
-        //     'tokenB',
-        //     ['Dai Stablecoin', 'DAI', this.token1Decimals]
-        //   )
+          await this.deployAssist.deployContractWithRetry(
+            network,
+            // @ts-ignore
+            Token20__factory,
+            'tokenB',
+            ['Dai Stablecoin', 'DAI', this.token1Decimals]
+          )
 
-        // const tokenOrder = hre.props.tokenA.address.localeCompare(hre.props.tokenB.address) < 0
-        // let token0Args
-        // let token1Args
-        // if (tokenOrder) {
-        //     hre.props.token0 = hre.props.tokenA
-        //     hre.props.token1 = hre.props.tokenB
-        //     token0Args = ['Wrapped Ether', 'WETH', this.token0Decimals]
-        //     token1Args = ['Dai Stablecoin', 'DAI', this.token1Decimals]
-        // } else {
-        //     hre.props.token0 = hre.props.tokenB
-        //     hre.props.token1 = hre.props.tokenA
-        //     token0Args = ['Dai Stablecoin', 'DAI', this.token1Decimals]
-        //     token1Args = ['Wrapped Ether', 'WETH', this.token0Decimals]
-        // }
-        // this.deployAssist.saveContractDeployment(
-        //     network,
-        //     'Token20',
-        //     'token0',
-        //     hre.props.token0,
-        //     token0Args
-        // )
-        // this.deployAssist.saveContractDeployment(
-        //     network,
-        //     'Token20',
-        //     'token1',
-        //     hre.props.token1,
-        //     token1Args
-        // )
-        // this.deployAssist.deleteContractDeployment(network, 'tokenA')
-        // this.deployAssist.deleteContractDeployment(network, 'tokenB')
+        const tokenOrder = hre.props.tokenA.address.localeCompare(hre.props.tokenB.address) < 0
+        let token0Args
+        let token1Args
+        if (tokenOrder) {
+            hre.props.token0 = hre.props.tokenA
+            hre.props.token1 = hre.props.tokenB
+            token0Args = ['Wrapped Ether', 'WETH', this.token0Decimals]
+            token1Args = ['Dai Stablecoin', 'DAI', this.token1Decimals]
+        } else {
+            hre.props.token0 = hre.props.tokenB
+            hre.props.token1 = hre.props.tokenA
+            token0Args = ['Dai Stablecoin', 'DAI', this.token1Decimals]
+            token1Args = ['Wrapped Ether', 'WETH', this.token0Decimals]
+        }
+        this.deployAssist.saveContractDeployment(
+            network,
+            'Token20',
+            'token0',
+            hre.props.token0,
+            token0Args
+        )
+        this.deployAssist.saveContractDeployment(
+            network,
+            'Token20',
+            'token1',
+            hre.props.token1,
+            token1Args
+        )
+        this.deployAssist.deleteContractDeployment(network, 'tokenA')
+        this.deployAssist.deleteContractDeployment(network, 'tokenB')
 
 
         // Encode the function parameters

@@ -14,15 +14,4 @@ interface ILimitPoolSwapCallback {
         int256 amount1Delta,
         bytes calldata data
     ) external;
-
-    // /// @notice Called to `msg.sender` after executing a swap.
-    // /// @dev In the implementation you must pay the pool tokens owed for the swap.
-    // /// amount0Delta and amount1Delta can both be 0 if no tokens were swapped.
-    // /// @param amount0Delta The amount of token0 either received by (positive) or sent from (negative) the user.
-    // /// @param amount1Delta The amount of token1 either received by (positive) or sent from (negative) the user.
-    // function coverPoolSwapCallback(
-    //     int256 amount0Delta,
-    //     int256 amount1Delta,
-    //     bytes calldata data
-    // ) external;
 }

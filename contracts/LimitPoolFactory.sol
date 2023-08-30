@@ -6,7 +6,7 @@ import './interfaces/limit/ILimitPoolFactory.sol';
 import './base/events/LimitPoolFactoryEvents.sol';
 import './interfaces/structs/PoolsharkStructs.sol';
 import './utils/LimitPoolErrors.sol';
-import './libraries/solady/LibClone.sol';
+import './external/solady/LibClone.sol';
 import './libraries/math/ConstantProduct.sol';
 
 contract LimitPoolFactory is 
@@ -45,7 +45,7 @@ contract LimitPoolFactory is
         }
 
         // sort tokens by address
-        Immutables memory constants;
+        LimitImmutables memory constants;
         (constants.token0, constants.token1) = tokenIn < tokenOut ? (tokenIn,  tokenOut) 
                                                                   : (tokenOut, tokenIn);
 

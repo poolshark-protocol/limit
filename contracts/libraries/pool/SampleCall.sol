@@ -18,7 +18,7 @@ library SampleCall {
 
     function perform(
         PoolsharkStructs.GlobalState memory state,
-        PoolsharkStructs.Immutables memory constants,
+        PoolsharkStructs.LimitImmutables memory constants,
         uint32[] memory secondsAgo
     ) external view returns (
         int56[]   memory tickSecondsAccum,

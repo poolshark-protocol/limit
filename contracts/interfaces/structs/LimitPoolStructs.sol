@@ -34,7 +34,7 @@ interface LimitPoolStructs is PoolsharkStructs {
     struct MintLimitCache {
         GlobalState state;
         LimitPosition position;
-        Immutables constants;
+        LimitImmutables constants;
         LimitPoolState pool;
         SwapCache swapCache;
         uint256 liquidityMinted;
@@ -52,7 +52,7 @@ interface LimitPoolStructs is PoolsharkStructs {
         LimitPoolState pool;
         LimitTick claimTick;
         LimitPosition position;
-        PoolsharkStructs.Immutables constants;
+        PoolsharkStructs.LimitImmutables constants;
         uint160 priceLower;
         uint160 priceClaim;
         uint160 priceUpper;

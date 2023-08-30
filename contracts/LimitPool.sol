@@ -20,7 +20,7 @@ import './libraries/limit/pool/MintLimitCall.sol';
 import './libraries/limit/pool/BurnLimitCall.sol';
 import './libraries/limit/pool/SnapshotLimitCall.sol';
 import './libraries/math/ConstantProduct.sol';
-import './libraries/solady/LibClone.sol';
+import './external/solady/LibClone.sol';
 import './external/openzeppelin/security/ReentrancyGuard.sol';
 
 
@@ -278,9 +278,9 @@ contract LimitPool is
     }
 
     function immutables() public view returns (
-        PoolsharkStructs.Immutables memory
+        LimitImmutables memory
     ) {
-        return Immutables(
+        return LimitImmutables(
             owner(),
             original,
             factory,

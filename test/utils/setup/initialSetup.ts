@@ -63,15 +63,15 @@ export class InitialSetup {
             Token20__factory,
             'tokenA',
             ['Wrapped Ether', 'WETH', this.token0Decimals]
-          )
-      
-          await this.deployAssist.deployContractWithRetry(
+        )
+    
+        await this.deployAssist.deployContractWithRetry(
             network,
             // @ts-ignore
             Token20__factory,
             'tokenB',
             ['Dai Stablecoin', 'DAI', this.token1Decimals]
-          )
+        )
 
         const tokenOrder = hre.props.tokenA.address.localeCompare(hre.props.tokenB.address) < 0
         let token0Args
@@ -421,7 +421,7 @@ export class InitialSetup {
             this.constantProductString,
             hre.props.token0.address,
             hre.props.token1.address,
-            '10',
+            '10000',
             '177159557114295710296101716160'
         )
         hre.nonce += 1

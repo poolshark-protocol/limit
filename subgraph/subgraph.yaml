@@ -1,6 +1,6 @@
 specVersion: 0.0.4
 description: Poolshark is a Directional Liquidity AMM allowing LPs to capture directional strength.
-repository: https://github.com/poolsharks-protocol/poolshark-limit-pool
+repository: https://github.com/poolshark-protocol/limit
 schema:
     file: ./schema.graphql
 dataSources:
@@ -8,9 +8,9 @@ dataSources:
     name: LimitPoolFactory
     network: arbitrum-goerli
     source:
-        address: '0x852deB31cBeCD1Cf96f7119a2512854aEB9cfe25'
+        address: '0x658e23AffE417B8b67ae56e2EF2d88B8aa85a1E0'
         abi: LimitPoolFactory
-        startBlock: 36178350
+        startBlock: 37370657
     mapping:
         kind: ethereum/events
         apiVersion: 0.0.6
@@ -37,9 +37,9 @@ dataSources:
     name: LimitPoolManager
     network: arbitrum-goerli
     source:
-        address: '0xd4778502Df61a2005085dBc38C88Db13FE95C638'
+        address: '0x04040cc78dFBe646D9A7CfCDc7F330F043499738'
         abi: LimitPoolManager
-        startBlock: 36178350
+        startBlock: 37362193
     mapping:
         kind: ethereum/events
         apiVersion: 0.0.6
@@ -68,14 +68,13 @@ dataSources:
               handler: handleProtocolFillFeesModified
             - event: ProtocolSwapFeesModified(address[],uint16[],uint16[])
               handler: ProtocolSwapFeesModified
-
   - kind: ethereum/contract
     name: PoolsharkRouter
     network: arbitrum-goerli
     source:
-        address: '0xDeaCe8fd9e599a13c6cF0f2d6E418FE1BB8E5853'
+        address: '0x379CBEa9234cAe9e106bC2a86b39610dC56dbAe2'
         abi: PoolsharkRouter
-        startBlock: 36178350
+        startBlock: 37758995
     mapping:
         kind: ethereum/events
         apiVersion: 0.0.6

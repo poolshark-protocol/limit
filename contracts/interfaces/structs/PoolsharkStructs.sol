@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: GPLv3
 pragma solidity 0.8.13;
 
-interface PoolsharkStructs {
+import '../cover/ITwapSource.sol';
 
+interface PoolsharkStructs {
     struct GlobalState {
         RangePoolState pool;
         LimitPoolState pool0;
@@ -105,7 +106,7 @@ interface PoolsharkStructs {
         uint160 priceAfter;
     }
     
-    struct Immutables {
+    struct LimitImmutables {
         address owner;
         address poolImpl;
         address factory;
@@ -116,6 +117,26 @@ interface PoolsharkStructs {
         uint32 genesisTime;
         int16 tickSpacing;
         uint16 swapFee;
+    }
+
+    struct CoverImmutables {
+        ITwapSource source;
+        PriceBounds bounds;
+        address owner;
+        address token0;
+        address token1;
+        address poolImpl;
+        address inputPool;
+        uint128 minAmountPerAuction;
+        uint32 genesisTime;
+        int16  minPositionWidth;
+        int16  tickSpread;
+        uint16 twapLength;
+        uint16 auctionLength;
+        uint16 blockTime;
+        uint8 token0Decimals;
+        uint8 token1Decimals;
+        bool minAmountLowerPriced;
     }
 
     struct PriceBounds {
@@ -133,7 +154,7 @@ interface PoolsharkStructs {
 
     struct SwapCache {
         GlobalState state;
-        PoolsharkStructs.Immutables constants;
+        LimitImmutables constants;
         uint256 price;
         uint256 liquidity;
         uint256 amountLeft;

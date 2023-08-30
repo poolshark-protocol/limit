@@ -6,9 +6,10 @@ import {
     fetchTokenName,
     fetchTokenDecimals,
 } from './utils/helpers'
-import { safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadToken } from './utils/loads'
+import { safeLoadBasePrice, safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadToken } from './utils/loads'
 import { BigInt } from '@graphprotocol/graph-ts'
 import { FACTORY_ADDRESS, ONE_BI } from './utils/constants'
+import { sqrtPriceX96ToTokenPrices, findEthPerToken } from './utils/price'
 
 export function handlePoolCreated(event: PoolCreated): void {
     // grab event parameters
@@ -31,7 +32,6 @@ export function handlePoolCreated(event: PoolCreated): void {
     let token1 = loadToken1.entity
     let pool = loadLimitPool.entity
     let factory = loadLimitPoolFactory.entity
-
 
     if (!loadToken0.exists) {
         token0.symbol = fetchTokenSymbol(event.params.token0)
@@ -75,6 +75,8 @@ export function handlePoolCreated(event: PoolCreated): void {
     pool.updatedAtBlockNumber = event.block.number
     pool.updatedAtTimestamp   = event.block.timestamp
 
+    token0.txnCount = token0.txnCount.plus(ONE_BI)
+    token1.txnCount = token1.txnCount.plus(ONE_BI)
     factory.poolCount = factory.poolCount.plus(ONE_BI)
     factory.txnCount  = factory.txnCount.plus(ONE_BI)
 

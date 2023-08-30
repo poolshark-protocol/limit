@@ -1,6 +1,7 @@
 import { BigInt } from "@graphprotocol/graph-ts"
 import { Initialize } from "../../../generated/LimitPoolFactory/LimitPool"
-import { safeLoadLimitPool, safeLoadLimitTick, safeLoadRangeTick } from "../utils/loads"
+import { safeLoadBasePrice, safeLoadLimitPool, safeLoadLimitTick, safeLoadRangeTick, safeLoadToken } from "../utils/loads"
+import { sqrtPriceX96ToTokenPrices, findEthPerToken } from "../utils/price"
 
 export function handleInitialize(event: Initialize): void {
     let minTickParam = event.params.minTick
@@ -12,13 +13,22 @@ export function handleInitialize(event: Initialize): void {
     let min = BigInt.fromI32(minTickParam)
     let max = BigInt.fromI32(maxTickParam)
 
+
     let loadLimitPool = safeLoadLimitPool(poolAddress)
+
+    let pool = loadLimitPool.entity
+
+
+    let loadToken0 = safeLoadToken(pool.token0)
+    let loadToken1 = safeLoadToken(pool.token1)
     let loadMinRangeTick = safeLoadRangeTick(poolAddress, min)
     let loadMaxRangeTick = safeLoadRangeTick(poolAddress, max)
     let loadMinLimitTick = safeLoadLimitTick(poolAddress, min)
     let loadMaxLimitTick = safeLoadLimitTick(poolAddress, max)
 
-    let pool = loadLimitPool.entity
+
+    let token0 = loadToken0.entity
+    let token1 = loadToken1.entity
     let minRangeTick = loadMinRangeTick.entity
     let maxRangeTick = loadMaxRangeTick.entity
     let minLimitTick = loadMinLimitTick.entity
@@ -29,7 +39,24 @@ export function handleInitialize(event: Initialize): void {
     pool.pool1Price = startPriceParam
     pool.tickAtPrice = BigInt.fromI32(startTickParam)
 
+    let prices = sqrtPriceX96ToTokenPrices(pool.poolPrice, token0, token1)
+    pool.price0 = prices[0]
+    pool.price1 = prices[1]
     pool.save()
+
+    let loadBasePrice = safeLoadBasePrice('eth')
+    let basePrice = loadBasePrice.entity
+
+    // price updates
+    token0.ethPrice = findEthPerToken(token0, token1, basePrice)
+    token1.ethPrice = findEthPerToken(token1, token0, basePrice)
+    token0.usdPrice = token0.ethPrice.times(basePrice.USD)
+    token1.usdPrice = token1.ethPrice.times(basePrice.USD)
+
+    pool.save()
+    token0.save()
+    token1.save()
+    basePrice.save()
     minRangeTick.save()
     maxRangeTick.save()
     minLimitTick.save()

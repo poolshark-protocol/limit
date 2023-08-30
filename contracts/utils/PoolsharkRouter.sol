@@ -2,15 +2,19 @@
 pragma solidity 0.8.13;
 
 import '../interfaces/IPool.sol';
+import '../interfaces/limit/ILimitPool.sol';
+import '../interfaces/cover/ICoverPool.sol';
 import '../interfaces/callbacks/ILimitPoolSwapCallback.sol';
+import '../interfaces/callbacks/ICoverPoolSwapCallback.sol';
 import '../libraries/utils/SafeTransfers.sol';
 import '../libraries/utils/SafeCast.sol';
 import '../interfaces/structs/PoolsharkStructs.sol';
-import '../libraries/solady/LibClone.sol';
+import '../external/solady/LibClone.sol';
 
 contract PoolsharkRouter is
+    PoolsharkStructs,
     ILimitPoolSwapCallback,
-    PoolsharkStructs
+    ICoverPoolSwapCallback
 {
     using SafeCast for uint256;
     using SafeCast for int256;
@@ -47,7 +51,7 @@ contract PoolsharkRouter is
         int256 amount1Delta,
         bytes calldata data
     ) external override {
-        PoolsharkStructs.Immutables memory constants = IPool(msg.sender).immutables();
+        PoolsharkStructs.LimitImmutables memory constants = ILimitPool(msg.sender).immutables();
 
         // generate key for pool
         bytes32 key = keccak256(abi.encode(
@@ -60,17 +64,7 @@ contract PoolsharkRouter is
         // compute address
         address predictedAddress = LibClone.predictDeterministicAddress(
             constants.poolImpl,
-            abi.encodePacked(
-                constants.owner,
-                constants.token0,
-                constants.token1,
-                constants.poolToken,
-                constants.bounds.min,
-                constants.bounds.max,
-                constants.genesisTime,
-                constants.tickSpacing,
-                constants.swapFee
-            ),
+            encodeLimit(constants),
             key,
             limitPoolFactory
         );
@@ -89,52 +83,44 @@ contract PoolsharkRouter is
         }
     }
 
-    // function coverPoolSwapCallback(
-    //     int256 amount0Delta,
-    //     int256 amount1Delta,
-    //     bytes calldata data
-    // ) external override {
-    //     PoolsharkStructs.Immutables memory constants = ICoverPool(msg.sender).immutables();
+    function coverPoolSwapCallback(
+        int256 amount0Delta,
+        int256 amount1Delta,
+        bytes calldata data
+    ) external override {
+        PoolsharkStructs.CoverImmutables memory constants = ICoverPool(msg.sender).immutables();
 
-    //     // generate key for pool
-    //     bytes32 key = keccak256(abi.encode(
-    //         implementation,
-    //         constants.token0,
-    //         constants.token1,
-    //         constants.swapFee
-    //     ));
+        // generate key for pool
+        bytes32 key = keccak256(abi.encode(
+            constants.token0,
+            constants.token1,
+            constants.source,
+            constants.inputPool,
+            constants.tickSpread,
+            constants.twapLength
+        ));
 
-    //     // compute address
-    //     address predictedAddress = LibClone.predictDeterministicAddress(
-    //         constants.poolImpl,
-    //         abi.encodePacked(
-    //             constants.owner,
-    //             constants.token0,
-    //             constants.token1,
-    //             constants.poolToken,
-    //             constants.bounds.min,
-    //             constants.bounds.max,
-    //             constants.genesisTime,
-    //             constants.tickSpacing,
-    //             constants.swapFee
-    //         ),
-    //         key,
-    //         limitPoolFactory
-    //     );
+        // compute address
+        address predictedAddress = LibClone.predictDeterministicAddress(
+            constants.poolImpl,
+            encodeCover(constants),
+            key,
+            coverPoolFactory
+        );
 
-    //     // revert on sender mismatch
-    //     if (msg.sender != predictedAddress) require(false, 'InvalidCallerAddress()');
+        // revert on sender mismatch
+        if (msg.sender != predictedAddress) require(false, 'InvalidCallerAddress()');
 
-    //     // decode original sender
-    //     SwapCallbackData memory _data = abi.decode(data, (SwapCallbackData));
+        // decode original sender
+        SwapCallbackData memory _data = abi.decode(data, (SwapCallbackData));
         
-    //     // transfer from swap caller
-    //     if (amount0Delta < 0) {
-    //         SafeTransfers.transferInto(constants.token0, _data.sender, uint256(-amount0Delta));
-    //     } else {
-    //         SafeTransfers.transferInto(constants.token1, _data.sender, uint256(-amount1Delta));
-    //     }
-    // }
+        // transfer from swap caller
+        if (amount0Delta < 0) {
+            SafeTransfers.transferInto(constants.token0, _data.sender, uint256(-amount0Delta));
+        } else {
+            SafeTransfers.transferInto(constants.token1, _data.sender, uint256(-amount1Delta));
+        }
+    }
 
     function multiQuote(
         address[] memory pools,
@@ -207,7 +193,6 @@ contract PoolsharkRouter is
                 }
                 params[i+1].amount = params[0].amount;
             }
-
             unchecked {
                 ++i;
             }
@@ -221,7 +206,7 @@ contract PoolsharkRouter is
         if (pools.length != params.length) require(false, 'InputArrayLengthsMismatch()');
         for (uint i = 0; i < pools.length;) {
             params[i].callbackData = abi.encode(SwapCallbackData({sender: msg.sender}));
-            IPool(pools[i]).swap(params[i]);
+            ICoverPool(pools[i]).swap(params[i]);
             unchecked {
                 ++i;
             }
@@ -273,5 +258,48 @@ contract PoolsharkRouter is
                     ++sorted;
                 }
             }
+    }
+
+    function encodeLimit(
+        LimitImmutables memory constants
+    ) private pure returns (bytes memory) {
+        return abi.encodePacked(
+                constants.owner,
+                constants.token0,
+                constants.token1,
+                constants.poolToken,
+                constants.bounds.min,
+                constants.bounds.max,
+                constants.genesisTime,
+                constants.tickSpacing,
+                constants.swapFee
+        );
+    }
+
+    function encodeCover(
+        CoverImmutables memory constants
+    ) private pure returns (bytes memory) {
+        bytes memory value1 = abi.encodePacked(
+            constants.owner,
+            constants.token0,
+            constants.token1,
+            constants.source,
+            constants.inputPool,
+            constants.bounds.min,
+            constants.bounds.max,
+            constants.minAmountPerAuction,
+            constants.genesisTime,
+            constants.minPositionWidth,
+            constants.tickSpread,
+            constants.twapLength,
+            constants.auctionLength
+        );
+        bytes memory value2 = abi.encodePacked(
+            constants.blockTime,
+            constants.token0Decimals,
+            constants.token1Decimals,
+            constants.minAmountLowerPriced
+        );
+        return abi.encodePacked(value1, value2);
     }
 }

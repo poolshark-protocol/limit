@@ -24,6 +24,7 @@ contract EchidnaPool {
     event PositionCreated(bool isCreated);
     event LiquidityAbsolute(uint128 beforeAbs, uint128 afterAbs);
     event LiquidityDeltaAndAbsolute(int128 delta, uint128 abs);
+    event PriceChange(uint160 priceBefore, uint160 priceAfter);
 
     int16 tickSpacing;
     uint16 swapFee;
@@ -192,11 +193,13 @@ contract EchidnaPool {
             if(poolValues.price0After >= poolValues.price0Before){
                 emit LiquidityAbsolute(poolValues.liquidityAbsoluteUpperBefore, poolValues.liquidityAbsoluteUpperAfter);
                 assert(poolValues.liquidityAbsoluteUpperAfter >= poolValues.liquidityAbsoluteUpperBefore);
+                emit LiquidityAbsolute(1234, 1234);
             }
         } else {
             if(poolValues.price1Before >= poolValues.price1After){
                 emit LiquidityAbsolute(poolValues.liquidityAbsoluteLowerBefore, poolValues.liquidityAbsoluteLowerAfter);
                 assert(poolValues.liquidityAbsoluteLowerAfter >= poolValues.liquidityAbsoluteLowerBefore);
+                emit LiquidityAbsolute(5678, 5678);
             }
         }
 
@@ -216,9 +219,11 @@ contract EchidnaPool {
         
         // Ensure pool liquidity is non-zero after mint with no undercuts
         if (zeroForOne) {
+            emit PriceChange(poolValues.price0Before, poolValues.price0After);
             if (poolValues.price0After < poolValues.price0Before) assert(poolValues.liquidity0After > 0);
         }
         else {
+            emit PriceChange(poolValues.price1Before, poolValues.price1After);
             if (poolValues.price1After > poolValues.price1Before) assert(poolValues.liquidity1After > 0);
         }
     }

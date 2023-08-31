@@ -97,18 +97,6 @@ library EchidnaMintLimitCall {
             cache
         );
 
-        if (params.positionId == 0 ||                       // new position
-                params.lower != cache.position.lower ||     // lower mismatch
-                params.upper != cache.position.upper) {     // upper mismatch
-            LimitPoolStructs.LimitPosition memory newPosition;
-            newPosition.lower = params.lower;
-            newPosition.upper = params.upper;
-            // use new position in cache
-            cache.position = newPosition;
-            params.positionId = cache.state.positionIdNext;
-            cache.state.positionIdNext += 1;
-        }
-
         // save state for reentrancy safety
         save(cache, globalState, !params.zeroForOne);
 
@@ -128,6 +116,17 @@ library EchidnaMintLimitCall {
             );
         // mint position if amount is left
         if (params.amount > 0 && params.lower < params.upper) {
+            if (params.positionId == 0 ||                       // new position
+                    params.lower != cache.position.lower ||     // lower mismatch
+                    params.upper != cache.position.upper) {     // upper mismatch
+                LimitPoolStructs.LimitPosition memory newPosition;
+                newPosition.lower = params.lower;
+                newPosition.upper = params.upper;
+                // use new position in cache
+                cache.position = newPosition;
+                params.positionId = cache.state.positionIdNext;
+                cache.state.positionIdNext += 1;
+            }
             cache.pool = params.zeroForOne ? cache.state.pool0 : cache.state.pool1;
             
             // bump to the next tick if there is no liquidity

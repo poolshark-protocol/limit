@@ -62,7 +62,7 @@ library Collect {
         return cache;
     }
 
-        function balance(
+    function balance(
         address token
     ) private view returns (uint256) {
         (

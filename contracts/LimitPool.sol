@@ -129,7 +129,7 @@ contract LimitPool is
     {
         MintLimitCache memory cache;
         cache.constants = immutables();
-        EchidnaMintLimitCall.perform(
+        MintLimitCall.perform(
             params.zeroForOne ? positions0 : positions1,
             ticks,
             samples,

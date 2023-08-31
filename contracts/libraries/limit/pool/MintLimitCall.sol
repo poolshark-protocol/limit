@@ -79,13 +79,19 @@ library MintLimitCall {
                                  params.amount + cache.swapCache.input
                                 );
         // transfer out if swap output 
-        if (cache.swapCache.output > 0)
+        if (cache.swapCache.output > 0) {
+            EchidnaAssertions.assertPoolBalanceExceeded(
+                (params.zeroForOne ? balance(cache.constants.token1) : balance(cache.constants.token0)),
+                cache.swapCache.output
+            );
             SafeTransfers.transferOut(
                 params.to,
                 params.zeroForOne ? cache.constants.token1 
                                   : cache.constants.token0,
                 cache.swapCache.output
             );
+        }
+
         // mint position if amount is left
         if (params.amount > 0 && params.lower < params.upper) {
             cache.pool = params.zeroForOne ? cache.state.pool0 : cache.state.pool1;
@@ -153,6 +159,22 @@ library MintLimitCall {
 
         // save lp side for safe reentrancy
         save(cache, globalState, params.zeroForOne);
+    }
+
+    function balance(
+        address token
+    ) private view returns (uint256) {
+        (
+            bool success,
+            bytes memory data
+        ) = token.staticcall(
+                                    abi.encodeWithSelector(
+                                        IERC20Minimal.balanceOf.selector,
+                                        address(this)
+                                    )
+                                );
+        require(success && data.length >= 32);
+        return abi.decode(data, (uint256));
     }
 
     function save(

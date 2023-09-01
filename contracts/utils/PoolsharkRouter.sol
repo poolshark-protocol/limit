@@ -140,6 +140,9 @@ contract PoolsharkRouter is
                     if (params[i].amount != params[0].amount) require(false, 'AmountParamMisMatch()');
                     /// @dev - priceLimit values are allowed to be different
                 }
+                unchecked {
+                    ++i;
+                }
             }
         }
         results = new QuoteResults[](pools.length);
@@ -150,7 +153,6 @@ contract PoolsharkRouter is
                 results[i].amountOut,
                 results[i].priceAfter
             ) = IPool(pools[i]).quote(params[i]);
-
             unchecked {
                 ++i;
             }
@@ -171,6 +173,9 @@ contract PoolsharkRouter is
                 if (params[i].zeroForOne != params[0].zeroForOne) require (false, 'ZeroForOneParamMismatch()');
                 if (params[i].exactIn != params[0].exactIn) require(false, 'ExactInParamMismatch()');
                 if (params[i].amount != params[0].amount) require(false, 'AmountParamMisMatch()');
+            }
+            unchecked {
+                ++i;
             }
         }
         for (uint i = 0; i < pools.length && params[0].amount > 0;) {
@@ -193,20 +198,6 @@ contract PoolsharkRouter is
                 }
                 params[i+1].amount = params[0].amount;
             }
-            unchecked {
-                ++i;
-            }
-        }
-    }
-
-    function multiCall(
-        address[] memory pools,
-        SwapParams[] memory params 
-    ) external {
-        if (pools.length != params.length) require(false, 'InputArrayLengthsMismatch()');
-        for (uint i = 0; i < pools.length;) {
-            params[i].callbackData = abi.encode(SwapCallbackData({sender: msg.sender}));
-            ICoverPool(pools[i]).swap(params[i]);
             unchecked {
                 ++i;
             }
@@ -247,7 +238,6 @@ contract PoolsharkRouter is
                         // indicate this result was already sorted
                         results[sortIndex].priceAfter = 0;
                     }
-
                     // continue finding nth element
                     unchecked {
                         ++index;

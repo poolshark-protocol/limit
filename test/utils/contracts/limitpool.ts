@@ -229,28 +229,56 @@ export async function validateSwap(params: ValidateSwapParams) {
     let amountOutQuoted
 
     if (revertMessage == '') {
-        const quote = await hre.props.limitPool.quote({
-            priceLimit: priceLimit,
-            amount: amountIn,
-            zeroForOne: zeroForOne,
-            exactIn: true
-        })
-        amountInQuoted = quote[0]
-        amountOutQuoted = quote[1]
+        const quote = await hre.props.poolRouter.multiQuote(
+            [hre.props.limitPool.address, hre.props.limitPool.address],
+            [{
+                priceLimit: zeroForOne ? (await (hre.props.limitPool.globalState())).pool0.price
+                                       : (await (hre.props.limitPool.globalState())).pool1.price,
+                amount: amountIn,
+                zeroForOne: zeroForOne,
+                exactIn: true
+            },
+            {
+                priceLimit: priceLimit,
+                amount: amountIn,
+                zeroForOne: zeroForOne,
+                exactIn: true
+            },
+            ],
+            true
+        )
+        // const quote = await hre.props.limitPool.quote({
+        //     priceLimit: priceLimit,
+        //     amount: amountIn,
+        //     zeroForOne: zeroForOne,
+        //     exactIn: true
+        // })
+        amountInQuoted = quote[0][1]
+        amountOutQuoted = quote[0][2]
         if (splitInto > 1) await ethers.provider.send("evm_setAutomine", [false]);
         for (let i = 0; i < splitInto; i++) {
             let txn = await hre.props.poolRouter
             .connect(signer)
-            .multiCall(
-            [hre.props.limitPool.address],  
-            [{
-              to: signer.address,
-              zeroForOne: zeroForOne,
-              amount: amountIn.div(splitInto),
-              priceLimit: priceLimit,
-              exactIn: true,
-              callbackData: ethers.utils.formatBytes32String('')
-            }], {gasLimit: 3000000})
+            .multiSwapSplit(
+            [hre.props.limitPool.address, hre.props.limitPool.address],
+                [{
+                    to: signer.address,
+                    priceLimit: zeroForOne ? (await (hre.props.limitPool.globalState())).pool0.price
+                                           : (await (hre.props.limitPool.globalState())).pool1.price,
+                    amount: amountIn,
+                    zeroForOne: zeroForOne,
+                    exactIn: true,
+                    callbackData: ethers.utils.formatBytes32String('')
+                },
+                {
+                    to: signer.address,
+                    priceLimit: priceLimit,
+                    amount: amountIn,
+                    zeroForOne: zeroForOne,
+                    exactIn: true,
+                    callbackData: ethers.utils.formatBytes32String('')
+                },
+                ], {gasLimit: 3000000})
             if (splitInto == 1) await txn.wait()
         }
         if (splitInto > 1){
@@ -261,7 +289,7 @@ export async function validateSwap(params: ValidateSwapParams) {
         await expect(
             hre.props.poolRouter
             .connect(signer)
-            .multiCall(
+            .multiSwapSplit(
             [hre.props.limitPool.address],  
             [{
               to: signer.address,

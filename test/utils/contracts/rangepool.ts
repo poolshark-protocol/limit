@@ -225,7 +225,7 @@ export async function validateSwap(params: ValidateSwapParams) {
   if (revertMessage == '') {
     let txn = await hre.props.poolRouter
       .connect(signer)
-      .multiCall(
+      .multiSwapSplit(
       [hre.props.limitPool.address],  
       [{
         to: signer.address,
@@ -240,7 +240,7 @@ export async function validateSwap(params: ValidateSwapParams) {
     await expect(
       hre.props.poolRouter
       .connect(signer)
-      .multiCall(
+      .multiSwapSplit(
       [hre.props.limitPool.address],  
         [{
           to: signer.address,

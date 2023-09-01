@@ -136,12 +136,12 @@
         },
         "poolRouter": {
             "contractName": "PoolsharkRouter",
-            "contractAddress": "0x379CBEa9234cAe9e106bC2a86b39610dC56dbAe2",
+            "contractAddress": "0x85856cede494f812742ecbf432832a16ad5033a1",
             "constructorArguments": [
                 "0x658e23AffE417B8b67ae56e2EF2d88B8aa85a1E0",
                 "0xD1f805fB8206FFE1B76E16c002a34739BE66f977"
             ],
-            "created": "2023-08-28T13:36:00.443Z"
+            "created": "2023-09-01T15:53:19.893Z"
         },
         "limitPool": {
             "contractName": "LimitPool",
@@ -310,5 +310,5 @@
             ],
             "created": "2023-08-27T20:44:29.627Z"
         }
-    }   
+    }
 }

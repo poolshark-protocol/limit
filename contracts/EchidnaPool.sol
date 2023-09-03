@@ -692,7 +692,7 @@ contract EchidnaPool {
         assert(poolValues.liquidityGlobalAfter == liquidityGlobalBefore);
     }
 
-    function poolsharkSwapCallback(
+    function limitPoolSwapCallback(
         int256 amount0Delta,
         int256 amount1Delta,
         bytes calldata data

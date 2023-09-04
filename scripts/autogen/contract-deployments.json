@@ -145,7 +145,7 @@
         },
         "limitPool": {
             "contractName": "LimitPool",
-            "contractAddress": "0xB451EDe31807F0C16de77487d97a44A7c08d04b7",
+            "contractAddress": "0x5bE2a9Fc86CD1b719F9f7E23B0D41e39c9dA52dB",
             "constructorArguments": [
                 "0x434f4e5354414e542d50524f4455435400000000000000000000000000000000",
                 "0x0BfaaAfa6e8fB009cD4e2Bd3693F2EEC2d18B053",

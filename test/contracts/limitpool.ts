@@ -4466,7 +4466,7 @@ describe('LimitPool Tests', function () {
             liquidityIncrease: '804',
             upperTickCleared: false,
             lowerTickCleared: true,
-            revertMessage: 'PositionLiquidityZero()',
+            revertMessage: 'NoLiquidityBeingAdded()',
         })
 
         const aliceId3 = await validateMint({

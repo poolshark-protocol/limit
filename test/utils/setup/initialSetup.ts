@@ -305,8 +305,8 @@ export class InitialSetup {
             PoolsharkRouter__factory,
             'poolRouter',
             [
-              hre.props.limitPoolFactory.address,
-              hre.props.limitPoolImpl.address //TODO: needs to be coverPoolFactory
+              hre.props.limitPoolFactory.address, // limitPoolFactory
+              '0xD1f805fB8206FFE1B76E16c002a34739BE66f977'  // coverPoolFactory
             ]
         )
 

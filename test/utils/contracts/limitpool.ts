@@ -227,6 +227,7 @@ export async function validateSwap(params: ValidateSwapParams) {
 
     let amountInQuoted
     let amountOutQuoted
+    let priceAfterQuoted
 
     if (revertMessage == '') {
         const quote = await hre.props.poolRouter.multiQuote(
@@ -255,6 +256,7 @@ export async function validateSwap(params: ValidateSwapParams) {
         // })
         amountInQuoted = quote[0][1]
         amountOutQuoted = quote[0][2]
+        priceAfterQuoted = quote[0][3]
         if (splitInto > 1) await ethers.provider.send("evm_setAutomine", [false]);
         for (let i = 0; i < splitInto; i++) {
             let txn = await hre.props.poolRouter
@@ -327,7 +329,7 @@ export async function validateSwap(params: ValidateSwapParams) {
     const priceAfter = poolAfter.price
 
     // expect(liquidityAfter).to.be.equal(finalLiquidity);
-    // expect(priceAfter).to.be.equal(finalPrice);
+    expect(priceAfter).to.be.equal(priceAfterQuoted);
 }
 
 export async function validateMint(params: ValidateMintParams): Promise<number> {

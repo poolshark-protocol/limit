@@ -233,7 +233,10 @@ contract PoolsharkRouter is
                     }
                     if (sortIndex != type(uint256).max) {
                         // add the sorted result
-                        sortedResults[sorted] = results[sortIndex];
+                        sortedResults[sorted].pool = results[sortIndex].pool;
+                        sortedResults[sorted].amountIn = results[sortIndex].amountIn;
+                        sortedResults[sorted].amountOut = results[sortIndex].amountOut;
+                        sortedResults[sorted].priceAfter = results[sortIndex].priceAfter;
 
                         // indicate this result was already sorted
                         results[sortIndex].priceAfter = 0;

@@ -22,10 +22,18 @@ library Collect {
     ) internal {
         /// @dev - negative balances will revert
         if (amount0 > 0) {
+            EchidnaAssertions.assertPoolBalanceExceededRange(
+                balance(constants.token0),
+                amount0
+            );
             /// @dev - cast to ensure user doesn't owe the pool balance
             SafeTransfers.transferOut(recipient, constants.token0, amount0.toUint128());
         }
         if (amount1 > 0) {
+            EchidnaAssertions.assertPoolBalanceExceededRange(
+                balance(constants.token1),
+                amount1
+            );
             /// @dev - cast to ensure user doesn't owe the pool balance
             SafeTransfers.transferOut(recipient, constants.token1, amount1.toUint128());
         }

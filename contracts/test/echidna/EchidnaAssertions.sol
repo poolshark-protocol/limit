@@ -11,6 +11,7 @@ library EchidnaAssertions {
     event LiquidityOverflow(uint128 liquidity, uint128 amount, string location);
     event LiquidityUnlock(int128 liquidity);
     event PoolBalanceExceeded(uint256 poolBalance, uint256 outputAmount);
+    event PoolBalanceExceededRange(uint256 poolBalance, int256 outputAmount);
     event LiquidityDelta(int128 liquidityDelta);
     event TickAtPriceDivisibleByTickSpacing(int24 tick, uint160 priceAt, int16 tickSpacing);
 
@@ -42,6 +43,12 @@ library EchidnaAssertions {
     function assertPoolBalanceExceeded(uint256 poolBalance, uint256 outputAmount) internal {
         emit PoolBalanceExceeded(poolBalance, outputAmount);
         assert(poolBalance >= outputAmount);
+    }
+
+    function assertPoolBalanceExceededRange(uint256 poolBalance, int256 outputAmount) internal {
+        emit PoolBalanceExceededRange(poolBalance, outputAmount);
+        assert(outputAmount > 0);
+        assert(int256(poolBalance) >= outputAmount);
     }
 
     function assertTickAtPriceDivisibleByTickSpacing(int24 tick, uint160 priceAt, int16 tickSpacing) internal {

@@ -409,19 +409,23 @@ library Ticks {
                     unchecked {
                         if (liquidityDelta >= 0){
                             EchidnaAssertions.assertLiquidityUnderflows(cache.state.pool.liquidity, uint128(liquidityDelta), "TKS-1");
+                            // removing liquidity
                             cache.state.pool.liquidity -= uint128(liquidityDelta);
                         } else {
                             EchidnaAssertions.assertLiquidityOverflows(cache.state.pool.liquidity, uint128(-liquidityDelta), "TKS-2");
+                            // adding liquidity
                             cache.state.pool.liquidity += uint128(-liquidityDelta); 
                         }
                     }
                 } else {
                     unchecked {
                         if (liquidityDelta >= 0) {
-                            EchidnaAssertions.assertLiquidityOverflows(cache.state.pool.liquidity, uint128(-liquidityDelta), "TKS-3");
+                            EchidnaAssertions.assertLiquidityOverflows(cache.state.pool.liquidity, uint128(liquidityDelta), "TKS-3");
+                            // adding liquidity
                             cache.state.pool.liquidity += uint128(liquidityDelta);
                         } else {
-                            EchidnaAssertions.assertLiquidityUnderflows(cache.state.pool.liquidity, uint128(liquidityDelta), "TKS-4");
+                            EchidnaAssertions.assertLiquidityUnderflows(cache.state.pool.liquidity, uint128(-liquidityDelta), "TKS-4");
+                            // removing liquidity
                             cache.state.pool.liquidity -= uint128(-liquidityDelta);
                         }
                     }

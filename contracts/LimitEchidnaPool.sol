@@ -210,7 +210,7 @@ contract EchidnaPool {
         values.liquidityDeltaLowerAfter = poolStructs.lower.liquidityDelta;
         values.liquidityDeltaUpperAfter = poolStructs.upper.liquidityDelta;
 
-        (, poolStructs.pool0, poolStructs.pool1, poolValues.liquidityGlobalAfter,,,) = pool.globalState();
+        (, poolStructs.pool0, poolStructs.pool1, poolValues.liquidityGlobalAfter,poolValues.positionIdNextAfter,,) = pool.globalState();
         poolValues.price0After = poolStructs.pool0.price;
         poolValues.liquidity0After = poolStructs.pool0.liquidity;
         poolValues.price1After = poolStructs.pool1.price;

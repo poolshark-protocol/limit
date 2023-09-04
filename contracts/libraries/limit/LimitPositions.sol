@@ -56,7 +56,7 @@ library LimitPositions {
             params.zeroForOne ? uint256(params.amount) : 0
         );
 
-        if (cache.liquidityMinted == 0) require (false, 'PositionLiquidityZero()');
+        if (cache.liquidityMinted == 0) require (false, 'NoLiquidityBeingAdded()');
         // calculate price limit by using half of input
         {
             cache.priceLimit = params.zeroForOne ? ConstantProduct.getNewPrice(cache.priceUpper, cache.liquidityMinted, params.amount / 2, true, true)

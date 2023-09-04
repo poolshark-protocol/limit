@@ -51,8 +51,10 @@ library LimitTicks {
         LimitPoolStructs.MintLimitParams memory params
     ) internal {
         /// @auditor - validation of ticks is in Positions.validate
-        if (cache.liquidityMinted > (uint128(type(int128).max) - cache.state.liquidityGlobal) )
-            require (false, 'LiquidityOverflow()');
+        if (cache.liquidityMinted == 0)
+            require(false, 'NoLiquidityBeingAdded()');
+        if (cache.state.liquidityGlobal + cache.liquidityMinted > uint128(type(int128).max))
+            require(false, 'LiquidityOverflow()');
 
         int256 liquidityMinted = int256(cache.liquidityMinted);
 

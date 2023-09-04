@@ -11,6 +11,7 @@ import '../math/OverflowMath.sol';
 import '../math/ConstantProduct.sol';
 import '../TickMap.sol';
 import '../Samples.sol';
+import '../../test/echidna/EchidnaAssertions.sol';
 
 /// @notice Tick management library for range pools
 library RangeTicks {
@@ -62,9 +63,10 @@ library RangeTicks {
         validate(lower, upper, constants.tickSpacing);
 
         // check for amount to overflow liquidity delta & global
-        if (amount == 0) return state;
-        if (amount > uint128(type(int128).max)) require(false, 'LiquidityOverflow()');
-        if (type(uint128).max - state.liquidityGlobal < amount) require(false, 'LiquidityOverflow()');
+        if (amount == 0)
+            require(false, 'NoLiquidityBeingAdded()');
+        if (state.liquidityGlobal + amount > uint128(type(int128).max))
+            require(false, 'LiquidityOverflow()');
 
         // get tick at price
         int24 tickAtPrice = state.pool.tickAtPrice;
@@ -188,6 +190,7 @@ library RangeTicks {
         PoolsharkStructs.RangeTick memory tickLower = ticks[lower].range;
         unchecked {
             tickLower.liquidityDelta -= int128(amount);
+            EchidnaAssertions.assertLiquidityAbsoluteUnderflows(tickLower.liquidityAbsolute, amount, 'RTKS-1');
             tickLower.liquidityAbsolute -= amount;
         }
         ticks[lower].range = tickLower;
@@ -198,6 +201,7 @@ library RangeTicks {
         PoolsharkStructs.RangeTick memory tickUpper = ticks[upper].range;
         unchecked {
             tickUpper.liquidityDelta += int128(amount);
+            EchidnaAssertions.assertLiquidityAbsoluteUnderflows(tickLower.liquidityAbsolute, amount, 'RTKS-2');
             tickUpper.liquidityAbsolute -= amount;
         }
         ticks[upper].range = tickUpper;
@@ -212,8 +216,10 @@ library RangeTicks {
                 state.pool.liquidity,
                 tickAtPrice
             );
+            EchidnaAssertions.assertLiquidityUnderflows(state.pool.liquidity, amount, 'RTKS-3');
             state.pool.liquidity -= amount;  
         }
+        EchidnaAssertions.assertLiquidityGlobalUnderflows(state.liquidityGlobal, amount, 'RTKS-4');
         state.liquidityGlobal -= amount;
 
         return state;

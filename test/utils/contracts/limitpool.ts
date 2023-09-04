@@ -322,13 +322,12 @@ export async function validateSwap(params: ValidateSwapParams) {
         expect(balanceOutAfter.sub(balanceOutBefore)).to.be.equal(amountOutQuoted)
     }
 
-    const poolAfter: LimitPoolState = zeroForOne
-        ? (await hre.props.limitPool.globalState()).pool1
-        : (await hre.props.limitPool.globalState()).pool0
+    const poolAfter: RangePoolState = (await hre.props.limitPool.globalState()).pool
     const liquidityAfter = poolAfter.liquidity
     const priceAfter = poolAfter.price
 
     // expect(liquidityAfter).to.be.equal(finalLiquidity);
+    // if (zeroForOne ? priceLimit)
     expect(priceAfter).to.be.equal(priceAfterQuoted);
 }
 

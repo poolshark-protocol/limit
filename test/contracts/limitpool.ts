@@ -3519,8 +3519,10 @@ describe('LimitPool Tests', function () {
             console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
         }
     })
-
+    
     it('pool0 - Broken Swap When Overlapped LPs :: GUARDIAN AUDITS', async function () {
+
+        if (debugMode) await getPrice(true, true)
 
         await validateSwap({
             signer: hre.props.alice,
@@ -3531,7 +3533,7 @@ describe('LimitPool Tests', function () {
             balanceInDecrease: '0',
             balanceOutIncrease: '0',
             revertMessage: '',
-        })
+        })  
 
         await validateSwap({
             signer: hre.props.alice,
@@ -4449,7 +4451,7 @@ describe('LimitPool Tests', function () {
             liquidityIncrease: '804',
             upperTickCleared: false,
             lowerTickCleared: true,
-            revertMessage: 'PositionLiquidityZero()',
+            revertMessage: 'NoLiquidityBeingAdded()',
         })
 
         // mint reverts as the price becomes out of bounds
@@ -4464,7 +4466,7 @@ describe('LimitPool Tests', function () {
             liquidityIncrease: '804',
             upperTickCleared: false,
             lowerTickCleared: true,
-            revertMessage: 'PositionLiquidityZero()',
+            revertMessage: 'NoLiquidityBeingAdded()',
         })
 
         const aliceId3 = await validateMint({

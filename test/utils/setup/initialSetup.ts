@@ -305,8 +305,8 @@ export class InitialSetup {
             PoolsharkRouter__factory,
             'poolRouter',
             [
-              hre.props.limitPoolFactory.address,
-              hre.props.limitPoolImpl.address //TODO: needs to be coverPoolFactory
+              hre.props.limitPoolFactory.address, // limitPoolFactory
+              '0xD1f805fB8206FFE1B76E16c002a34739BE66f977'  // coverPoolFactory
             ]
         )
 
@@ -403,12 +403,22 @@ export class InitialSetup {
                 'readLimitPoolSetup'
             )
         ).contractAddress
+        const poolRouterAddress = (
+            await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
+                {
+                    networkName: hre.network.name,
+                    objectName: 'poolRouter',
+                },
+                'readLimitPoolSetup'
+            )
+        ).contractAddress
 
         hre.props.token0 = await hre.ethers.getContractAt('Token20', token0Address)
         hre.props.token1 = await hre.ethers.getContractAt('Token20', token1Address)
         hre.props.limitPool = await hre.ethers.getContractAt('LimitPool', limitPoolAddress)
         hre.props.limitPoolFactory = await hre.ethers.getContractAt('LimitPoolFactory', limitPoolFactoryAddress)
         hre.props.limitPoolToken = await hre.ethers.getContractAt('PositionERC1155', positionERC1155Address)
+        hre.props.poolRouter = await hre.ethers.getContractAt('PoolsharkRouter', poolRouterAddress)
 
         return nonce
     }

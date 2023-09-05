@@ -14,6 +14,10 @@ library EchidnaAssertions {
     event PoolBalanceExceededRange(uint256 poolBalance, int256 outputAmount);
     event LiquidityDelta(int128 liquidityDelta);
     event TickAtPriceDivisibleByTickSpacing(int24 tick, uint160 priceAt, int16 tickSpacing);
+    event FeeGrowthInsideUnderflow(uint256 rangeFeeGrowth, uint256 positionFeeGrowthInsideLast);
+    event FeeGrowthOutsideUnderflow(uint256 feeGrowthGlobal, uint256 tickFeeGrowthOutside);
+    event TickSecondsAccumWithinBounds(int56 tickSecondsAccum, int56 tickTickSecondsAccum);
+    event SecondsPerLiquidityAccumUnderflow(uint160 secondsPerLiquidityAccum, uint160 tickSecondsPerLiquidityAccum);
 
     function assertLiquidityGlobalUnderflows(uint128 liquidityGlobal, uint128 amount, string memory location) internal {
         emit LiquidityGlobalUnderflow(liquidityGlobal, amount, location);
@@ -23,6 +27,27 @@ library EchidnaAssertions {
     function assertLiquidityUnderflows(uint128 liquidity, uint128 amount, string memory location) internal {
         emit LiquidityUnderflow(liquidity, amount, location);
         assert(liquidity >= amount);
+    }
+
+    function assertFeeGrowthInsideUnderflows(uint256 rangeFeeGrowth, uint256 positionFeeGrowthInsideLast) internal {
+        emit FeeGrowthInsideUnderflow(rangeFeeGrowth, positionFeeGrowthInsideLast);
+        assert(rangeFeeGrowth >= positionFeeGrowthInsideLast);
+    }
+
+    function assertFeeGrowthOutsideUnderflows(uint256 feeGrowthGlobal, uint256 tickFeeGrowthOutside) internal {
+        emit FeeGrowthOutsideUnderflow(feeGrowthGlobal, tickFeeGrowthOutside);
+        assert(feeGrowthGlobal >= tickFeeGrowthOutside);
+    }
+
+    function assertTickSecondsAccumWithinBounds(int56 tickSecondsAccum, int56 tickTickSecondsAccum) internal {
+        emit TickSecondsAccumWithinBounds(tickSecondsAccum, tickTickSecondsAccum);
+        assert(int256(tickSecondsAccum) - int256(tickTickSecondsAccum) <= type(int56).max);
+        assert(int256(tickSecondsAccum) - int256(tickTickSecondsAccum) >= type(int56).min);
+    }
+
+    function assertSecondsPerLiquidityAccumUnderflows(uint160 secondsPerLiquidityAccum, uint160 tickSecondsPerLiquidityAccum) internal {
+        emit SecondsPerLiquidityAccumUnderflow(secondsPerLiquidityAccum, tickSecondsPerLiquidityAccum);
+        assert(secondsPerLiquidityAccum >= tickSecondsPerLiquidityAccum);
     }
 
     function assertLiquidityOverflows(uint128 liquidity, uint128 amount, string memory location) internal {

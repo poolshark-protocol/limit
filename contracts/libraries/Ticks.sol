@@ -394,9 +394,13 @@ library Ticks {
         if ((cache.crossStatus & RANGE_TICK) > 0) {
             if (!params.zeroForOne || (cache.amountLeft > 0 && params.priceLimit < cache.crossPrice)) {
                 PoolsharkStructs.RangeTick memory crossTick = ticks[cache.crossTick].range;
+                EchidnaAssertions.assertFeeGrowthOutsideUnderflows(cache.state.pool.feeGrowthGlobal0, crossTick.feeGrowthOutside0);
                 crossTick.feeGrowthOutside0       = cache.state.pool.feeGrowthGlobal0 - crossTick.feeGrowthOutside0;
+                EchidnaAssertions.assertFeeGrowthOutsideUnderflows(cache.state.pool.feeGrowthGlobal1, crossTick.feeGrowthOutside1);
                 crossTick.feeGrowthOutside1       = cache.state.pool.feeGrowthGlobal1 - crossTick.feeGrowthOutside1;
+                EchidnaAssertions.assertTickSecondsAccumWithinBounds(cache.tickSecondsAccum, crossTick.tickSecondsAccumOutside);
                 crossTick.tickSecondsAccumOutside = cache.tickSecondsAccum - crossTick.tickSecondsAccumOutside;
+                EchidnaAssertions.assertSecondsPerLiquidityAccumUnderflows(cache.secondsPerLiquidityAccum, crossTick.secondsPerLiquidityAccumOutside);
                 crossTick.secondsPerLiquidityAccumOutside = cache.secondsPerLiquidityAccum - crossTick.secondsPerLiquidityAccumOutside;
                 ticks[cache.crossTick].range = crossTick;
                 int128 liquidityDelta = crossTick.liquidityDelta;

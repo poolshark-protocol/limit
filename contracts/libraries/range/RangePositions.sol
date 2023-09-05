@@ -252,11 +252,15 @@ library RangePositions {
             position.upper
         );
 
+        EchidnaAssertions.assertFeeGrowthInsideUnderflows(rangeFeeGrowth0, position.feeGrowthInside0Last);
+
         int128 amount0Fees = OverflowMath.mulDiv(
             rangeFeeGrowth0 - position.feeGrowthInside0Last,
             uint256(position.liquidity),
             Q128
         ).toInt256().toInt128();
+
+        EchidnaAssertions.assertFeeGrowthInsideUnderflows(rangeFeeGrowth1, position.feeGrowthInside1Last);
 
         int128 amount1Fees = OverflowMath.mulDiv(
             rangeFeeGrowth1 - position.feeGrowthInside1Last,

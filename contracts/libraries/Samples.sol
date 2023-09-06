@@ -171,14 +171,16 @@ library Samples {
         RangePoolStructs.Sample memory latest = _poolSample(pool, params.sampleIndex);
 
         if (secondsAgo == 0) {
-            if (latest.blockTimestamp != uint32(block.timestamp)) {
+            // if 2 seconds have elapsed build new sample
+            if (latest.blockTimestamp + 2 > uint32(block.timestamp)) {
                 latest = _build(
                     latest,
                     uint32(block.timestamp),
                     params.tick,
                     params.liquidity
                 );
-            } 
+            }
+            // else use latest sample
             return (
                 latest.tickSecondsAccum,
                 latest.secondsPerLiquidityAccum

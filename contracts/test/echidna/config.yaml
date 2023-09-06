@@ -1,6 +1,6 @@
 testMode: assertion
 corpusDir: corpus
-codeSize: 0x22dd1
+codeSize: 0x22ddf
 testLimit: 100000000
 deployContracts: [["0x1f", "EchidnaMintLimitCall"], ["0x2f", "EchidnaBurnLimitCall"]]
 cryticArgs: ["--compile-libraries=(EchidnaMintLimitCall,0x1f) --compile-libraries=(EchidnaBurnLimitCall,0x2f)"]

@@ -172,7 +172,7 @@ library Samples {
 
         if (secondsAgo == 0) {
             // if 2 seconds have elapsed build new sample
-            if (latest.blockTimestamp + 2 > uint32(block.timestamp)) {
+            if (latest.blockTimestamp + 2 <= uint32(block.timestamp)) {
                 latest = _build(
                     latest,
                     uint32(block.timestamp),

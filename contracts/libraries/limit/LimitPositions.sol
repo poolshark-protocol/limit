@@ -203,7 +203,12 @@ library LimitPositions {
         if (cache.position.liquidity == 0) {
             cache.position.epochLast = cache.state.epoch;
             cache.state.epoch += 1; // increment for future swaps
-            IPositionERC1155(cache.constants.poolToken).mint(msg.sender, params.positionId, 1, cache.constants);
+            IPositionERC1155(cache.constants.poolToken).mint(
+                params.to,
+                params.positionId,
+                1,
+                cache.constants
+            );
         } else {
             // safety check in case we somehow get here
             if (

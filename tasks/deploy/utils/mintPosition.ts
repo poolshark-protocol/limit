@@ -41,47 +41,47 @@ export class MintPosition {
         // await getPrice(true)
     // 0x34e800D1456d87A5F62B774AD98cea54a3A40048
     // 0x1DcF623EDf118E4B21b4C5Dc263bb735E170F9B8
-        // await validateMint({
-        //     signer: hre.props.alice,
-        //     recipient: hre.props.alice.address,
-        //     lower: '60',
-        //     upper: '100',
-        //     amount: token1Amount,
-        //     zeroForOne: false,
-        //     balanceInDecrease: token1Amount,
-        //     liquidityIncrease: liquidityAmount,
-        //     upperTickCleared: false,
-        //     lowerTickCleared: true,
-        //     revertMessage: '',
-        // })
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: '0x9dA9409D17DeA285B078af06206941C049F692Dc',
+            lower: '0',
+            upper: '100',
+            amount: token1Amount,
+            zeroForOne: false,
+            balanceInDecrease: token1Amount,
+            liquidityIncrease: liquidityAmount,
+            upperTickCleared: false,
+            lowerTickCleared: true,
+            revertMessage: '',
+        })
 
-        const quote = await hre.props.poolRouter.multiQuote(
-            [hre.props.limitPool.address],
-            [
-                {
-                    priceLimit: BigNumber.from('3543191142285914205922034323214'),
-                    amount: ethers.utils.parseUnits('1600', 18),
-                    exactIn: true,
-                    zeroForOne: false
-                }
-            ],
-            true
-        )
+        // const quote = await hre.props.poolRouter.multiQuote(
+        //     [hre.props.limitPool.address],
+        //     [
+        //         {
+        //             priceLimit: BigNumber.from('3543191142285914205922034323214'),
+        //             amount: ethers.utils.parseUnits('1600', 18),
+        //             exactIn: true,
+        //             zeroForOne: false
+        //         }
+        //     ],
+        //     true
+        // )
 
-        console.log('amount quoted:', quote[0][1].toString(), quote[0][2].toString(), quote[0][3].toString())
+        // console.log('amount quoted:', quote[0][1].toString(), quote[0][2].toString(), quote[0][3].toString())
 
-        // const aliceId = await validateMintRange({
-        //     signer: hre.props.alice,
-        //     recipient: hre.props.alice.address,
-        //     lower: '-887200',
-        //     upper: '887200',
-        //     amount0: token0Amount,
-        //     amount1: token1Amount,
-        //     balance0Decrease: token0Amount.mul(100000000),
-        //     balance1Decrease: token1Amount.mul(100000000),
-        //     liquidityIncrease: BN_ZERO,
-        //     revertMessage: '',
-        // })
+        const aliceId = await validateMintRange({
+            signer: hre.props.alice,
+            recipient: '0x9dA9409D17DeA285B078af06206941C049F692Dc',
+            lower: '-887000',
+            upper: '887000',
+            amount0: token0Amount,
+            amount1: token1Amount,
+            balance0Decrease: token0Amount.mul(10),
+            balance1Decrease: token1Amount.mul(10),
+            liquidityIncrease: BN_ZERO,
+            revertMessage: '',
+        })
         // await validateSwap({
         //     signer: hre.props.alice,
         //     recipient: hre.props.alice.address,

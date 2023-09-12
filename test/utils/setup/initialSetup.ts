@@ -318,13 +318,13 @@ export class InitialSetup {
         hre.nonce += 1;
 
         // create first limit pool
-        let createPoolTxn = await hre.props.limitPoolFactory.createLimitPool(
-            this.constantProductString,
-            hre.props.token0.address,
-            hre.props.token1.address,
-            '500',
-            '177159557114295710296101716160'
-        )
+        let createPoolTxn = await hre.props.limitPoolFactory.createLimitPool({
+            poolType: this.constantProductString,
+            tokenIn: hre.props.token0.address,
+            tokenOut: hre.props.token1.address,
+            swapFee: '500',
+            startPrice: '177159557114295710296101716160'
+        })
         await createPoolTxn.wait()
 
         hre.nonce += 1
@@ -427,13 +427,13 @@ export class InitialSetup {
 
         await hre.props.limitPoolFactory
           .connect(hre.props.admin)
-          .createLimitPool(
-            this.constantProductString,
-            hre.props.token0.address,
-            hre.props.token1.address,
-            '10000',
-            '177159557114295710296101716160'
-        )
+          .createLimitPool({
+            poolType: this.constantProductString,
+            tokenIn: hre.props.token0.address,
+            tokenOut: hre.props.token1.address,
+            swapFee: '10000',
+            startPrice: '177159557114295710296101716160'
+          })
         hre.nonce += 1
     }
 }

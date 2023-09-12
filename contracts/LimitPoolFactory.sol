@@ -1,17 +1,22 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.13;
 
-import './LimitPool.sol';
+import './interfaces/range/IRangePool.sol';
+import './interfaces/limit/ILimitPool.sol';
+import './interfaces/structs/LimitPoolStructs.sol';
+import './interfaces/structs/RangePoolStructs.sol';
 import './interfaces/limit/ILimitPoolFactory.sol';
+import './interfaces/limit/ILimitPoolManager.sol';
 import './base/events/LimitPoolFactoryEvents.sol';
-import './interfaces/structs/PoolsharkStructs.sol';
 import './utils/LimitPoolErrors.sol';
 import './external/solady/LibClone.sol';
+import './libraries/utils/SafeCast.sol';
 import './libraries/math/ConstantProduct.sol';
 
 contract LimitPoolFactory is 
     ILimitPoolFactory,
-    PoolsharkStructs,
+    LimitPoolStructs,
+    RangePoolStructs,
     LimitPoolFactoryEvents,
     LimitPoolFactoryErrors
 {
@@ -29,36 +34,32 @@ contract LimitPoolFactory is
     }
 
     function createLimitPool(
-        bytes32 poolType,
-        address tokenIn,
-        address tokenOut,
-        uint16  swapFee,
-        uint160 startPrice
-    ) external override returns (
+        LimitPoolParams memory params
+    ) public override returns (
         address pool,
         address poolToken
     ) {
 
         // validate token pair
-        if (tokenIn == tokenOut || tokenIn == address(0) || tokenOut == address(0)) {
+        if (params.tokenIn == params.tokenOut || params.tokenIn == address(0) || params.tokenOut == address(0)) {
             revert InvalidTokenAddress();
         }
 
         // sort tokens by address
         LimitImmutables memory constants;
-        (constants.token0, constants.token1) = tokenIn < tokenOut ? (tokenIn,  tokenOut) 
-                                                                  : (tokenOut, tokenIn);
+        (constants.token0, constants.token1) = params.tokenIn < params.tokenOut ? (params.tokenIn,  params.tokenOut) 
+                                                                                : (params.tokenOut, params.tokenIn);
 
         // check if tick spacing supported
-        constants.swapFee = swapFee;
-        constants.tickSpacing = ILimitPoolManager(owner).feeTiers(swapFee);
+        constants.swapFee = params.swapFee;
+        constants.tickSpacing = ILimitPoolManager(owner).feeTiers(params.swapFee);
         if (constants.tickSpacing == 0) revert FeeTierNotSupported();
 
         // check if pool type supported
         (
             address poolImpl,
             address tokenImpl
-         ) = ILimitPoolManager(owner).implementations(poolType);
+         ) = ILimitPoolManager(owner).implementations(params.poolType);
         if (poolImpl == address(0) || tokenImpl == address(0)) revert PoolTypeNotSupported();
 
         // generate key for pool
@@ -107,7 +108,7 @@ contract LimitPoolFactory is
         });
 
         // initialize pool storage
-        ILimitPool(pool).initialize(startPrice);
+        ILimitPool(pool).initialize(params.startPrice);
 
         // save pool in mapping
         pools[key] = pool;
@@ -126,12 +127,55 @@ contract LimitPoolFactory is
         return (pool, constants.poolToken);
     }
 
+    function createLimitPoolAndMint(
+        LimitPoolParams memory params,
+        MintRangeParams[] memory mintRangeParams,
+        MintLimitParams[] memory mintLimitParams
+    ) external returns (
+        address pool,
+        address poolToken
+    ) {
+        // check if pool exists
+        (
+            pool,
+            poolToken
+        ) = getLimitPool(
+            params.poolType,
+            params.tokenIn,
+            params.tokenOut,
+            params.swapFee
+        );
+        // create if pool doesn't exist
+        if (pool == address(0)) {
+            (
+                pool,
+                poolToken
+            ) = createLimitPool(
+                params
+            );
+        }
+        // mint initial range positions
+        for (uint i = 0; i < mintRangeParams.length;) {
+            IRangePool(pool).mintRange(mintRangeParams[i]);
+            unchecked {
+                ++i;
+            }
+        }
+        // mint initial limit positions
+        for (uint i = 0; i < mintLimitParams.length;) {
+            ILimitPool(pool).mintLimit(mintLimitParams[i]);
+            unchecked {
+                ++i;
+            }
+        }
+    } 
+
     function getLimitPool(
         bytes32 poolType,
         address tokenIn,
         address tokenOut,
         uint16 swapFee
-    ) external view override returns (
+    ) public view override returns (
         address pool,
         address poolToken
     ) {

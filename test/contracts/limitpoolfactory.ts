@@ -45,13 +45,13 @@ describe('LimitPoolFactory Tests', function () {
         await expect(
             hre.props.limitPoolFactory
                 .connect(hre.props.admin)
-                .createLimitPool(
-                    constantProductString,
-                    '0x0000000000000000000000000000000000000000',
-                    '0x0000000000000000000000000000000000000000',
-                    '500',
-                    '396140812571321687967719751680'
-                )
+                .createLimitPool({
+                    poolType: constantProductString,
+                    tokenIn: '0x0000000000000000000000000000000000000000',
+                    tokenOut: '0x0000000000000000000000000000000000000000',
+                    swapFee: '500',
+                    startPrice: '396140812571321687967719751680'
+                })
         ).to.be.revertedWith('InvalidTokenAddress()')
     })
 
@@ -59,25 +59,25 @@ describe('LimitPoolFactory Tests', function () {
         await expect(
             hre.props.limitPoolFactory
                 .connect(hre.props.admin)
-                .createLimitPool(
-                    constantProductString,
-                    '0x0000000000000000000000000000000000000000',
-                    hre.props.token0.address,
-                    '500',
-                    '396140812571321687967719751680'
-                )
+                .createLimitPool({
+                    poolType: constantProductString,
+                    tokenIn: '0x0000000000000000000000000000000000000000',
+                    tokenOut: hre.props.token0.address,
+                    swapFee: '500',
+                    startPrice: '396140812571321687967719751680'
+                })
         ).to.be.revertedWith('InvalidTokenAddress()')
         
         await expect(
             hre.props.limitPoolFactory
                 .connect(hre.props.admin)
-                .createLimitPool(
-                    constantProductString,
-                    '0x0000000000000000000000000000000000000000',
-                    hre.props.token0.address,
-                    '500',
-                    '396140812571321687967719751680'
-                )
+                .createLimitPool({
+                    poolType: constantProductString,
+                    tokenIn: '0x0000000000000000000000000000000000000000',
+                    tokenOut: hre.props.token0.address,
+                    swapFee: '500',
+                    startPrice: '396140812571321687967719751680'
+                })
         ).to.be.revertedWith('InvalidTokenAddress()')
     })
 
@@ -86,25 +86,25 @@ describe('LimitPoolFactory Tests', function () {
         await expect(
             hre.props.limitPoolFactory
                 .connect(hre.props.admin)
-                .createLimitPool(
-                    constantProductString,
-                    hre.props.token1.address,
-                    hre.props.token0.address,
-                    '500',
-                    '396140812571321687967719751680'
-                )
+                .createLimitPool({
+                    poolType: constantProductString,
+                    tokenIn: hre.props.token1.address,
+                    tokenOut: hre.props.token0.address,
+                    swapFee: '500',
+                    startPrice: '396140812571321687967719751680'
+                })
         ).to.be.revertedWith('PoolAlreadyExists()')
 
         await expect(
             hre.props.limitPoolFactory
                 .connect(hre.props.admin)
-                .createLimitPool(
-                    constantProductString,
-                    hre.props.token0.address,
-                    hre.props.token1.address,
-                    '500',
-                    '396140812571321687967719751680'
-                )
+                .createLimitPool({
+                    poolType: constantProductString,
+                    tokenIn: hre.props.token0.address,
+                    tokenOut: hre.props.token1.address,
+                    swapFee: '500',
+                    startPrice: '396140812571321687967719751680'
+                })
         ).to.be.revertedWith('PoolAlreadyExists()')
     })
 
@@ -112,13 +112,13 @@ describe('LimitPoolFactory Tests', function () {
         await expect(
             hre.props.limitPoolFactory
                 .connect(hre.props.admin)
-                .createLimitPool(
-                    constantProductString,
-                    hre.props.token1.address,
-                    hre.props.token0.address,
-                    '5',
-                    '396140812571321687967719751680'
-                )
+                .createLimitPool({
+                    poolType: constantProductString,
+                    tokenIn: hre.props.token1.address,
+                    tokenOut: hre.props.token0.address,
+                    swapFee: '5',
+                    startPrice: '396140812571321687967719751680'
+                })
         ).to.be.revertedWith('FeeTierNotSupported()')
     })
 
@@ -126,13 +126,13 @@ describe('LimitPoolFactory Tests', function () {
         await expect(
             hre.props.limitPoolFactory
                 .connect(hre.props.admin)
-                .createLimitPool(
-                    constantSumString,
-                    hre.props.token1.address,
-                    hre.props.token0.address,
-                    '500',
-                    '396140812571321687967719751680'
-                )
+                .createLimitPool({
+                    poolType: constantSumString,
+                    tokenIn: hre.props.token1.address,
+                    tokenOut: hre.props.token0.address,
+                    swapFee: '500',
+                    startPrice: '396140812571321687967719751680'
+                })
         ).to.be.revertedWith('PoolTypeNotSupported()')
     })
 })

@@ -2,8 +2,10 @@
 pragma solidity 0.8.13;
 
 import '../interfaces/IPool.sol';
+import '../interfaces/range/IRangePool.sol';
 import '../interfaces/limit/ILimitPool.sol';
 import '../interfaces/cover/ICoverPool.sol';
+import '../interfaces/limit/ILimitPoolFactory.sol';
 import '../interfaces/callbacks/ILimitPoolSwapCallback.sol';
 import '../interfaces/callbacks/ICoverPoolSwapCallback.sol';
 import '../libraries/utils/SafeTransfers.sol';

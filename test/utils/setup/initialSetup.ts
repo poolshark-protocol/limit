@@ -137,7 +137,6 @@ export class InitialSetup {
             [],
         )
 
-
         // limit
         await this.deployAssist.deployContractWithRetry(
             network,
@@ -148,7 +147,6 @@ export class InitialSetup {
             {
                 'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address
             }
-
         )
 
         await this.deployAssist.deployContractWithRetry(
@@ -222,7 +220,6 @@ export class InitialSetup {
             'snapshotLimitCall',
             []
         )
-
 
         await this.deployAssist.deployContractWithRetry(
             network,

@@ -54,7 +54,7 @@ library RangeTicks {
         RangePoolStructs.Sample[65535] storage samples,
         PoolsharkStructs.TickMap storage tickMap,
         PoolsharkStructs.GlobalState memory state,
-        PoolsharkStructs.Immutables memory constants,
+        PoolsharkStructs.LimitImmutables memory constants,
         int24 lower,
         int24 upper,
         uint128 amount
@@ -62,9 +62,10 @@ library RangeTicks {
         validate(lower, upper, constants.tickSpacing);
 
         // check for amount to overflow liquidity delta & global
-        if (amount == 0) return state;
-        if (amount > uint128(type(int128).max)) require(false, 'LiquidityOverflow()');
-        if (type(uint128).max - state.liquidityGlobal < amount) require(false, 'LiquidityOverflow()');
+        if (amount == 0)
+            require(false, 'NoLiquidityBeingAdded()');
+        if (state.liquidityGlobal + amount > uint128(type(int128).max))
+            require(false, 'LiquidityOverflow()');
 
         // get tick at price
         int24 tickAtPrice = state.pool.tickAtPrice;
@@ -170,7 +171,7 @@ library RangeTicks {
         RangePoolStructs.Sample[65535] storage samples,
         PoolsharkStructs.TickMap storage tickMap,
         PoolsharkStructs.GlobalState memory state,
-        PoolsharkStructs.Immutables memory constants, 
+        PoolsharkStructs.LimitImmutables memory constants, 
         int24 lower,
         int24 upper,
         uint128 amount
@@ -221,7 +222,7 @@ library RangeTicks {
 
     function clear(
         mapping(int24 => PoolsharkStructs.Tick) storage ticks,
-        PoolsharkStructs.Immutables memory constants,
+        PoolsharkStructs.LimitImmutables memory constants,
         PoolsharkStructs.TickMap storage tickMap,
         int24 tickToClear
     ) internal {

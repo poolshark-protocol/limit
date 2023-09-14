@@ -43,7 +43,7 @@ interface RangePoolStructs is PoolsharkStructs {
         uint32[] secondsAgo;
         int24 tick;
         uint128 liquidity;
-        PoolsharkStructs.Immutables constants;
+        PoolsharkStructs.LimitImmutables constants;
     }
 
     struct UpdateParams {
@@ -56,7 +56,7 @@ interface RangePoolStructs is PoolsharkStructs {
     struct MintRangeCache {
         GlobalState state;
         RangePosition position;
-        PoolsharkStructs.Immutables constants;
+        PoolsharkStructs.LimitImmutables constants;
         uint256 liquidityMinted;
         uint160 priceLower;
         uint160 priceUpper;
@@ -67,7 +67,7 @@ interface RangePoolStructs is PoolsharkStructs {
     struct BurnRangeCache {
         GlobalState state;
         RangePosition position;
-        PoolsharkStructs.Immutables constants;
+        PoolsharkStructs.LimitImmutables constants;
         uint256 liquidityBurned;
         uint160 priceLower;
         uint160 priceUpper;
@@ -88,7 +88,7 @@ interface RangePoolStructs is PoolsharkStructs {
     struct SnapshotRangeCache {
         RangePosition position;
         SampleState samples;
-        PoolsharkStructs.Immutables constants;
+        PoolsharkStructs.LimitImmutables constants;
         uint160 price;
         uint160 secondsPerLiquidityAccum;
         uint160 secondsPerLiquidityAccumLower;

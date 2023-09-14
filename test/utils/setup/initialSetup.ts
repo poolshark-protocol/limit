@@ -37,72 +37,72 @@ export class InitialSetup {
     public async initialLimitPoolSetup(): Promise<number> {
         const network = SUPPORTED_NETWORKS[hre.network.name.toUpperCase()]
         
-        const token0Address = (
-            await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
-              {
-                networkName: hre.network.name,
-                objectName: 'token0',
-              },
-              'readLimitPoolSetup'
-            )
-          ).contractAddress
-          const token1Address = (
-            await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
-              {
-                networkName: hre.network.name,
-                objectName: 'token1',
-              },
-              'readLimitPoolSetup'
-            )
-          ).contractAddress
-          hre.props.token0 = await hre.ethers.getContractAt('Token20', token0Address)
-          hre.props.token1 = await hre.ethers.getContractAt('Token20', token1Address)
-        // await this.deployAssist.deployContractWithRetry(
-        //     network,
-        //     // @ts-ignore
-        //     Token20__factory,
-        //     'tokenA',
-        //     ['Wrapped Ether', 'WETH', this.token0Decimals]
-        //   )
-      
-        //   await this.deployAssist.deployContractWithRetry(
-        //     network,
-        //     // @ts-ignore
-        //     Token20__factory,
-        //     'tokenB',
-        //     ['Dai Stablecoin', 'DAI', this.token1Decimals]
-        //   )
+        // const token0Address = (
+        //     await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
+        //       {
+        //         networkName: hre.network.name,
+        //         objectName: 'token0',
+        //       },
+        //       'readLimitPoolSetup'
+        //     )
+        //   ).contractAddress
+        //   const token1Address = (
+        //     await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
+        //       {
+        //         networkName: hre.network.name,
+        //         objectName: 'token1',
+        //       },
+        //       'readLimitPoolSetup'
+        //     )
+        //   ).contractAddress
+        //   hre.props.token0 = await hre.ethers.getContractAt('Token20', token0Address)
+        //   hre.props.token1 = await hre.ethers.getContractAt('Token20', token1Address)
+        await this.deployAssist.deployContractWithRetry(
+            network,
+            // @ts-ignore
+            Token20__factory,
+            'tokenA',
+            ['Wrapped Ether', 'WETH', this.token0Decimals]
+        )
+    
+        await this.deployAssist.deployContractWithRetry(
+            network,
+            // @ts-ignore
+            Token20__factory,
+            'tokenB',
+            ['Dai Stablecoin', 'DAI', this.token1Decimals]
+        )
 
-        // const tokenOrder = hre.props.tokenA.address.localeCompare(hre.props.tokenB.address) < 0
-        // let token0Args
-        // let token1Args
-        // if (tokenOrder) {
-        //     hre.props.token0 = hre.props.tokenA
-        //     hre.props.token1 = hre.props.tokenB
-        //     token0Args = ['Wrapped Ether', 'WETH', this.token0Decimals]
-        //     token1Args = ['Dai Stablecoin', 'DAI', this.token1Decimals]
-        // } else {
-        //     hre.props.token0 = hre.props.tokenB
-        //     hre.props.token1 = hre.props.tokenA
-        //     token0Args = ['Dai Stablecoin', 'DAI', this.token1Decimals]
-        //     token1Args = ['Wrapped Ether', 'WETH', this.token0Decimals]
-        // }
-        // this.deployAssist.saveContractDeployment(
-        //     network,
-        //     'Token20',
-        //     'token0',
-        //     hre.props.token0,
-        //     token0Args
-        // )
-        // this.deployAssist.saveContractDeployment(
-        //     network,
-        //     'Token20',
-        //     'token1',
-        //     hre.props.token1,
-        //     token1Args
-        // )
-        // this.deployAssist.deleteContractDeployment(network, 'tokenA')
-        // this.deployAssist.deleteContractDeployment(network, 'tokenB')
+        const tokenOrder = hre.props.tokenA.address.localeCompare(hre.props.tokenB.address) < 0
+        let token0Args
+        let token1Args
+        if (tokenOrder) {
+            hre.props.token0 = hre.props.tokenA
+            hre.props.token1 = hre.props.tokenB
+            token0Args = ['Wrapped Ether', 'WETH', this.token0Decimals]
+            token1Args = ['Dai Stablecoin', 'DAI', this.token1Decimals]
+        } else {
+            hre.props.token0 = hre.props.tokenB
+            hre.props.token1 = hre.props.tokenA
+            token0Args = ['Dai Stablecoin', 'DAI', this.token1Decimals]
+            token1Args = ['Wrapped Ether', 'WETH', this.token0Decimals]
+        }
+        this.deployAssist.saveContractDeployment(
+            network,
+            'Token20',
+            'token0',
+            hre.props.token0,
+            token0Args
+        )
+        this.deployAssist.saveContractDeployment(
+            network,
+            'Token20',
+            'token1',
+            hre.props.token1,
+            token1Args
+        )
+        this.deployAssist.deleteContractDeployment(network, 'tokenA')
+        this.deployAssist.deleteContractDeployment(network, 'tokenB')
 
 
         // Encode the function parameters
@@ -305,8 +305,8 @@ export class InitialSetup {
             PoolsharkRouter__factory,
             'poolRouter',
             [
-              hre.props.limitPoolFactory.address,
-              hre.props.limitPoolImpl.address //TODO: needs to be coverPoolFactory
+              hre.props.limitPoolFactory.address, // limitPoolFactory
+              '0xD1f805fB8206FFE1B76E16c002a34739BE66f977'  // coverPoolFactory
             ]
         )
 
@@ -318,13 +318,13 @@ export class InitialSetup {
         hre.nonce += 1;
 
         // create first limit pool
-        let createPoolTxn = await hre.props.limitPoolFactory.createLimitPool(
-            this.constantProductString,
-            hre.props.token0.address,
-            hre.props.token1.address,
-            '500',
-            '177159557114295710296101716160'
-        )
+        let createPoolTxn = await hre.props.limitPoolFactory.createLimitPool({
+            poolType: this.constantProductString,
+            tokenIn: hre.props.token0.address,
+            tokenOut: hre.props.token1.address,
+            swapFee: '500',
+            startPrice: '177159557114295710296101716160'
+        })
         await createPoolTxn.wait()
 
         hre.nonce += 1
@@ -403,12 +403,22 @@ export class InitialSetup {
                 'readLimitPoolSetup'
             )
         ).contractAddress
+        const poolRouterAddress = (
+            await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
+                {
+                    networkName: hre.network.name,
+                    objectName: 'poolRouter',
+                },
+                'readLimitPoolSetup'
+            )
+        ).contractAddress
 
         hre.props.token0 = await hre.ethers.getContractAt('Token20', token0Address)
         hre.props.token1 = await hre.ethers.getContractAt('Token20', token1Address)
         hre.props.limitPool = await hre.ethers.getContractAt('LimitPool', limitPoolAddress)
         hre.props.limitPoolFactory = await hre.ethers.getContractAt('LimitPoolFactory', limitPoolFactoryAddress)
         hre.props.limitPoolToken = await hre.ethers.getContractAt('PositionERC1155', positionERC1155Address)
+        hre.props.poolRouter = await hre.ethers.getContractAt('PoolsharkRouter', poolRouterAddress)
 
         return nonce
     }
@@ -417,13 +427,13 @@ export class InitialSetup {
 
         await hre.props.limitPoolFactory
           .connect(hre.props.admin)
-          .createLimitPool(
-            this.constantProductString,
-            hre.props.token0.address,
-            hre.props.token1.address,
-            '10',
-            '177159557114295710296101716160'
-        )
+          .createLimitPool({
+            poolType: this.constantProductString,
+            tokenIn: hre.props.token0.address,
+            tokenOut: hre.props.token1.address,
+            swapFee: '10000',
+            startPrice: '177159557114295710296101716160'
+          })
         hre.nonce += 1
     }
 }

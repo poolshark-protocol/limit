@@ -23,7 +23,7 @@ library SnapshotRangeCall {
             storage positions,
         mapping(int24 => PoolsharkStructs.Tick) storage ticks,
         PoolsharkStructs.GlobalState memory state,
-        PoolsharkStructs.Immutables memory constants,
+        PoolsharkStructs.LimitImmutables memory constants,
         uint32 positionId
     ) external view returns (
         int56,

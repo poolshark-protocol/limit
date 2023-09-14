@@ -11,7 +11,7 @@ library PositionTokens {
     uint256 internal constant Q128 = 0x100000000000000000000000000000000;
 
     function balanceOf(
-        PoolsharkStructs.Immutables memory constants,
+        PoolsharkStructs.LimitImmutables memory constants,
         address owner,
         uint32 positionId
     ) internal view returns (

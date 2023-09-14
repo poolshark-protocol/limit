@@ -33,7 +33,6 @@ export function handlePoolCreated(event: PoolCreated): void {
     let pool = loadLimitPool.entity
     let factory = loadLimitPoolFactory.entity
 
-
     if (!loadToken0.exists) {
         token0.symbol = fetchTokenSymbol(event.params.token0)
         token0.name = fetchTokenName(event.params.token0)

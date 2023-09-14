@@ -1,6 +1,6 @@
 import { store, BigInt } from "@graphprotocol/graph-ts"
 import { BurnLimit } from "../../../generated/LimitPoolFactory/LimitPool"
-import { ONE_BI } from "../utils/constants"
+import { ONE_BI } from "../../constants/constants"
 import { BIGINT_ZERO, convertTokenToDecimal } from "../utils/helpers"
 import { safeLoadBasePrice, safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadLimitPosition, safeLoadLimitTick, safeLoadToken } from "../utils/loads"
 import { findEthPerToken } from "../utils/price"

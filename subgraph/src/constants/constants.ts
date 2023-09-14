@@ -16,7 +16,7 @@ export let STABLE_COINS: string[] = [
 ]
 
 // used for safe eth pricing 
-export const STABLE_POOL_ADDRESS = '0x5be2a9fc86cd1b719f9f7e23b0d41e39c9da52db'
+export const STABLE_POOL_ADDRESS = '0xb451ede31807f0c16de77487d97a44a7c08d04b7'
 
 // determines which token to use for eth <-> usd rate, true means stable is token0 in pool above 
 export const STABLE_IS_TOKEN_0 = false

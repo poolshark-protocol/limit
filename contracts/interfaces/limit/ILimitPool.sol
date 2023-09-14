@@ -2,7 +2,6 @@
 pragma solidity 0.8.13;
 
 import '../structs/LimitPoolStructs.sol';
-import '../structs/LimitPoolFactoryStructs.sol';
 
 interface ILimitPool is LimitPoolStructs {
     function initialize(

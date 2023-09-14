@@ -3,7 +3,6 @@ pragma solidity 0.8.13;
 
 import '../../interfaces/structs/LimitPoolStructs.sol';
 import '../../interfaces/limit/ILimitPoolFactory.sol';
-import '../../interfaces/structs/LimitPoolFactoryStructs.sol';
 import '../../interfaces/limit/ILimitPool.sol';
 import '../math/ConstantProduct.sol';
 import './LimitPositions.sol';

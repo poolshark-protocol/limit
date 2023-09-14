@@ -13,12 +13,10 @@ export function handleInitialize(event: Initialize): void {
     let min = BigInt.fromI32(minTickParam)
     let max = BigInt.fromI32(maxTickParam)
 
-
     let loadLimitPool = safeLoadLimitPool(poolAddress)
 
     let pool = loadLimitPool.entity
 
-    let loadBasePrice = safeLoadBasePrice('eth')
     let loadToken0 = safeLoadToken(pool.token0)
     let loadToken1 = safeLoadToken(pool.token1)
     let loadMinRangeTick = safeLoadRangeTick(poolAddress, min)
@@ -26,7 +24,6 @@ export function handleInitialize(event: Initialize): void {
     let loadMinLimitTick = safeLoadLimitTick(poolAddress, min)
     let loadMaxLimitTick = safeLoadLimitTick(poolAddress, max)
 
-    let basePrice = loadBasePrice.entity
     let token0 = loadToken0.entity
     let token1 = loadToken1.entity
     let minRangeTick = loadMinRangeTick.entity
@@ -43,6 +40,9 @@ export function handleInitialize(event: Initialize): void {
     pool.price0 = prices[0]
     pool.price1 = prices[1]
     pool.save()
+
+    let loadBasePrice = safeLoadBasePrice('eth')
+    let basePrice = loadBasePrice.entity
 
     // price updates
     token0.ethPrice = findEthPerToken(token0, token1, basePrice)

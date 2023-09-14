@@ -6,10 +6,9 @@ import {
     fetchTokenName,
     fetchTokenDecimals,
 } from './utils/helpers'
-import { safeLoadBasePrice, safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadToken } from './utils/loads'
+import { safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadToken } from './utils/loads'
 import { BigInt } from '@graphprotocol/graph-ts'
-import { FACTORY_ADDRESS, ONE_BI } from './utils/constants'
-import { sqrtPriceX96ToTokenPrices, findEthPerToken } from './utils/price'
+import { FACTORY_ADDRESS, ONE_BI } from '../constants/constants'
 
 export function handlePoolCreated(event: PoolCreated): void {
     // grab event parameters

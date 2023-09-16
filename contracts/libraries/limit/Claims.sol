@@ -134,7 +134,7 @@ library Claims {
     function getDeltas(
         LimitPoolStructs.BurnLimitParams memory params,
         LimitPoolStructs.BurnLimitCache memory cache,
-        PoolsharkStructs.Immutables memory constants
+        PoolsharkStructs.LimitImmutables memory constants
     ) internal pure returns (
         LimitPoolStructs.BurnLimitCache memory
     ) {

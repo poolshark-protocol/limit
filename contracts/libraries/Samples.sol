@@ -235,7 +235,7 @@ library Samples {
 
     function getLatest(
         PoolsharkStructs.GlobalState memory state,
-        PoolsharkStructs.Immutables memory constants,
+        PoolsharkStructs.LimitImmutables memory constants,
         uint256 liquidity
     ) internal view returns (
         uint160 latestPrice,
@@ -290,7 +290,7 @@ library Samples {
         int56 tickSecondsAccumBase,
         uint32 timeDelta,
         uint32 timeDeltaMax,
-        PoolsharkStructs.Immutables memory constants
+        PoolsharkStructs.LimitImmutables memory constants
     ) private pure returns (
         uint160 averagePrice
     ) {
@@ -306,7 +306,7 @@ library Samples {
 
 
     function timeElapsed(
-        PoolsharkStructs.Immutables memory constants
+        PoolsharkStructs.LimitImmutables memory constants
     ) private view returns (
         uint32
     )    

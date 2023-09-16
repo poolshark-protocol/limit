@@ -6,7 +6,7 @@ import '../interfaces/IPool.sol';
 import "./LimitPoolErrors.sol";
 import '../base/storage/PositionERC1155Immutables.sol';
 import "../interfaces/IPositionERC1155.sol";
-import '../libraries/solady/LibClone.sol';
+import '../external/solady/LibClone.sol';
 
 // needs to be deployed as a separate clone
 // poolImpls; tokenImpls
@@ -46,7 +46,7 @@ contract PositionERC1155 is
     string private constant _SYMBOL = "PSHARK-LP";
 
     modifier onlyCanonicalClones(
-        PoolsharkStructs.Immutables memory constants
+        PoolsharkStructs.LimitImmutables memory constants
     ) {
         if(!_onlyCanonicalPools(constants)) require (false, 'CanoncialPoolsOnly()');
         if(!_onlyCanonicalPoolTokens(constants)) require (false, 'CanoncialPoolTokensOnly()');
@@ -80,7 +80,7 @@ contract PositionERC1155 is
         address _account,
         uint256 _id,
         uint256 _amount,
-        PoolsharkStructs.Immutables memory constants
+        PoolsharkStructs.LimitImmutables memory constants
     ) external 
         onlyCanonicalClones(constants)
         checkERC1155Support(_account)
@@ -92,7 +92,7 @@ contract PositionERC1155 is
         address _account,
         uint256 _id,
         uint256 _amount,
-        PoolsharkStructs.Immutables memory constants
+        PoolsharkStructs.LimitImmutables memory constants
     ) external
         onlyCanonicalClones(constants)
     {
@@ -249,7 +249,7 @@ contract PositionERC1155 is
     ) internal virtual {}
 
     function _onlyCanonicalPoolTokens(
-        PoolsharkStructs.Immutables memory constants
+        PoolsharkStructs.LimitImmutables memory constants
     ) private view returns (bool) {
         // generate key for pool
         bytes32 key = keccak256(abi.encode(
@@ -275,7 +275,7 @@ contract PositionERC1155 is
     }
 
     function _onlyCanonicalPools(
-        PoolsharkStructs.Immutables memory constants
+        PoolsharkStructs.LimitImmutables memory constants
     ) private view returns (bool) {
         // generate key for pool
         bytes32 key = keccak256(abi.encode(

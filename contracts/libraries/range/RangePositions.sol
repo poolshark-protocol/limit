@@ -178,7 +178,7 @@ library RangePositions {
         PoolsharkStructs.TickMap storage tickMap,
         RangePoolStructs.Sample[65535] storage samples,
         PoolsharkStructs.GlobalState memory state,
-        PoolsharkStructs.Immutables memory constants,
+        PoolsharkStructs.LimitImmutables memory constants,
         RangePoolStructs.RangePosition memory position,
         RangePoolStructs.CompoundRangeParams memory params
     ) internal returns (
@@ -229,7 +229,7 @@ library RangePositions {
         mapping(int24 => PoolsharkStructs.Tick) storage ticks,
         RangePoolStructs.RangePosition memory position,
         PoolsharkStructs.GlobalState memory state,
-        PoolsharkStructs.Immutables memory constants,
+        PoolsharkStructs.LimitImmutables memory constants,
         RangePoolStructs.UpdateParams memory params
     ) internal returns (
         RangePoolStructs.RangePosition memory,
@@ -313,7 +313,7 @@ library RangePositions {
             storage positions,
         mapping(int24 => PoolsharkStructs.Tick) storage ticks,
         PoolsharkStructs.GlobalState memory state,
-        PoolsharkStructs.Immutables memory constants,
+        PoolsharkStructs.LimitImmutables memory constants,
         uint32 positionId
     ) internal view returns (
         int56   tickSecondsAccum,

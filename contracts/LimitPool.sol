@@ -7,7 +7,6 @@ import './interfaces/IPool.sol';
 import './interfaces/limit/ILimitPoolManager.sol';
 import './base/storage/LimitPoolStorage.sol';
 import './base/storage/LimitPoolImmutables.sol';
-import './interfaces/structs/LimitPoolFactoryStructs.sol';
 import './utils/LimitPoolErrors.sol';
 import './libraries/pool/SwapCall.sol';
 import './libraries/pool/QuoteCall.sol';
@@ -22,7 +21,7 @@ import './libraries/limit/pool/BurnLimitCall.sol';
 import './test/echidna/EchidnaBurnLimitCall.sol';
 import './libraries/limit/pool/SnapshotLimitCall.sol';
 import './libraries/math/ConstantProduct.sol';
-import './libraries/solady/LibClone.sol';
+import './external/solady/LibClone.sol';
 import './external/openzeppelin/security/ReentrancyGuard.sol';
 
 
@@ -284,9 +283,9 @@ contract LimitPool is
     }
 
     function immutables() public view returns (
-        PoolsharkStructs.Immutables memory
+        LimitImmutables memory
     ) {
-        return Immutables(
+        return LimitImmutables(
             owner(),
             original,
             factory,

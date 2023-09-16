@@ -1,12 +1,11 @@
 import { Address, BigDecimal, BigInt, Bytes, ethereum, log } from '@graphprotocol/graph-ts'
 import { LimitPool, LimitPoolFactory, LimitPoolManager, LimitPosition, Token, FeeTier, BasePrice, RangePosition, RangeTick, Transaction, LimitTick, Swap, CompoundRangeLog, MintRangeLog, BurnRangeLog, PoolRouter } from '../../../generated/schema'
-import { ONE_BD, ONE_BI } from './constants'
+import { ONE_BD } from '../../constants/constants'
 import {
     fetchTokenSymbol,
     fetchTokenName,
     fetchTokenDecimals,
     BIGINT_ZERO,
-    BIGINT_ONE,
 } from './helpers'
 import { bigDecimalExponated, safeDiv } from './math'
 import { getEthPriceInUSD } from './price'

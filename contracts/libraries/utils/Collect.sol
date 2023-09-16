@@ -15,7 +15,7 @@ library Collect {
     );
 
     function range(
-        PoolsharkStructs.Immutables memory constants,
+        PoolsharkStructs.LimitImmutables memory constants,
         address recipient,
         int128 amount0,
         int128 amount1

@@ -309,7 +309,7 @@ library TickMap {
 
     function roundHalf(
         int24 tick,
-        PoolsharkStructs.Immutables memory constants,
+        PoolsharkStructs.LimitImmutables memory constants,
         uint256 price
     ) internal pure returns (
         int24 roundedTick,
@@ -341,7 +341,7 @@ library TickMap {
 
     function roundAhead(
         int24 tick,
-        PoolsharkStructs.Immutables memory constants,
+        PoolsharkStructs.LimitImmutables memory constants,
         bool zeroForOne,
         uint256 price
     ) internal pure returns (
@@ -371,7 +371,7 @@ library TickMap {
 
     function roundBack(
         int24 tick,
-        PoolsharkStructs.Immutables memory constants,
+        PoolsharkStructs.LimitImmutables memory constants,
         bool zeroForOne,
         uint256 price
     ) internal pure returns (

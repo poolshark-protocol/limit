@@ -3,7 +3,6 @@ pragma solidity 0.8.13;
 
 import '../../interfaces/structs/LimitPoolStructs.sol';
 import '../../interfaces/limit/ILimitPoolFactory.sol';
-import '../../interfaces/structs/LimitPoolFactoryStructs.sol';
 import '../../interfaces/limit/ILimitPool.sol';
 import '../math/ConstantProduct.sol';
 import './LimitPositions.sol';
@@ -50,7 +49,7 @@ library LimitTicks {
         LimitPoolStructs.MintLimitCache memory cache,
         LimitPoolStructs.MintLimitParams memory params
     ) internal {
-        /// @auditor - validation of ticks is in Positions.validate
+        /// @dev - validation of ticks is in Positions.validate
         if (cache.liquidityMinted == 0)
             require(false, 'NoLiquidityBeingAdded()');
         if (cache.state.liquidityGlobal + cache.liquidityMinted > uint128(type(int128).max))
@@ -120,7 +119,7 @@ library LimitTicks {
         PoolsharkStructs.TickMap storage tickMap,
         LimitPoolStructs.MintLimitCache memory cache,
         PoolsharkStructs.LimitPoolState memory pool,
-        PoolsharkStructs.Immutables memory constants
+        PoolsharkStructs.LimitImmutables memory constants
     ) internal returns (
         PoolsharkStructs.LimitPoolState memory
     ){
@@ -193,7 +192,7 @@ library LimitTicks {
         PoolsharkStructs.TickMap storage tickMap,
         LimitPoolStructs.BurnLimitParams memory params,
         LimitPoolStructs.BurnLimitCache memory cache,
-        PoolsharkStructs.Immutables memory constants
+        PoolsharkStructs.LimitImmutables memory constants
     ) internal {
         // set ticks based on claim and zeroForOne
         int24 lower = params.zeroForOne ? params.claim : cache.position.lower;
@@ -281,7 +280,7 @@ library LimitTicks {
 
     function clear(
         mapping(int24 => PoolsharkStructs.Tick) storage ticks,
-        PoolsharkStructs.Immutables memory constants,
+        PoolsharkStructs.LimitImmutables memory constants,
         PoolsharkStructs.TickMap storage tickMap,
         int24 tickToClear
     ) internal {

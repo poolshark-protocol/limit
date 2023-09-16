@@ -22,7 +22,7 @@ library FeesCall {
     function perform(
         PoolsharkStructs.GlobalState storage globalState,
         PoolsharkStructs.FeesParams memory params,
-        PoolsharkStructs.Immutables memory constants
+        PoolsharkStructs.LimitImmutables memory constants
     ) internal returns (
         uint128 token0Fees,
         uint128 token1Fees

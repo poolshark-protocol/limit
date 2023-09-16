@@ -57,7 +57,7 @@ library Ticks {
         PoolsharkStructs.TickMap storage limitTickMap,
         RangePoolStructs.Sample[65535] storage samples,
         PoolsharkStructs.GlobalState memory state,
-        PoolsharkStructs.Immutables memory constants,
+        PoolsharkStructs.LimitImmutables memory constants,
         uint160 startPrice
     ) internal returns (
         PoolsharkStructs.GlobalState memory  

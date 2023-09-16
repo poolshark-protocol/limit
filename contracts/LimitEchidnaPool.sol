@@ -34,11 +34,12 @@ contract EchidnaPool {
 
     int16 tickSpacing;
     uint16 swapFee;
-    address private implementation;
-    LimitPoolFactory private factory;
-    LimitPoolManager private manager;
-    PositionERC1155 private poolToken;
+    address private immutable poolImpl;
+    address private immutable tokenImpl;
+    LimitPoolFactory private immutable factory;
+    LimitPoolManager private immutable manager;
     LimitPool private pool;
+    PositionERC1155 private immutable token;
     Token20 private tokenIn;
     Token20 private tokenOut;
     LimitPosition[] private limitPositions;
@@ -89,7 +90,7 @@ contract EchidnaPool {
         uint128 liquidityAbsoluteUpperAfter;
         uint128 liquidityAbsoluteLowerAfter;
 
-        PoolsharkStructs.Immutables constants;
+        PoolsharkStructs.LimitImmutables constants;
 
         uint32 positionIdNextBefore;
         uint32 positionIdNextAfter;
@@ -139,15 +140,23 @@ contract EchidnaPool {
     constructor() {
         manager = new LimitPoolManager();
         factory = new LimitPoolFactory(address(manager));
-        implementation = address(new LimitPool(address(factory)));
-        poolToken = new PositionERC1155(address(factory));
+        poolImpl = address(new LimitPool(address(factory)));
+        tokenImpl = address(new PositionERC1155(address(factory)));
         
-        manager.enableImplementation(bytes32(0x0), address(implementation), address(poolToken));
+        manager.enableImplementation(bytes32(uint256(0x1)), address(poolImpl), address(tokenImpl));
         tickSpacing = 10;
         tokenIn = new Token20("IN", "IN", 18);
         tokenOut = new Token20("OUT", "OUT", 18);
-        (address poolAddr,) = factory.createLimitPool(bytes32(0x0), address(tokenIn), address(tokenOut), 500, 79228162514264337593543950336);
+
+        PoolsharkStructs.LimitPoolParams memory params;
+        params.poolType = bytes32(uint256(0x1));
+        params.tokenIn = address(tokenIn);
+        params.tokenOut = address(tokenOut);
+        params.swapFee = 500;
+        params.startPrice = 79228162514264337593543950336;
+        (address poolAddr, address tokenAddr) = factory.createLimitPool(params);
         pool = LimitPool(poolAddr);
+        token = PositionERC1155(tokenAddr);
     }
 
     // LIMIT CALLS
@@ -1122,7 +1131,7 @@ contract EchidnaPool {
     function liquidityMintedBackcalculates(uint128 amount, bool zeroForOne, int24 lower, int24 upper) tickPreconditions(lower, upper) internal {
         // NOTE: Do not use the exact inputs of this function for POCs, use the inputs after the input validation
         amount = amount + 1e5 + 1;
-        LimitPoolStructs.Immutables memory immutables = pool.immutables();
+        LimitPoolStructs.LimitImmutables memory immutables = pool.immutables();
         uint256 priceLower = ConstantProduct.getPriceAtTick(lower, immutables);
         uint256 priceUpper = ConstantProduct.getPriceAtTick(upper, immutables);
 

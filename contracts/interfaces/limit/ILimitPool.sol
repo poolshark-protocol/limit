@@ -2,7 +2,6 @@
 pragma solidity 0.8.13;
 
 import '../structs/LimitPoolStructs.sol';
-import '../structs/LimitPoolFactoryStructs.sol';
 
 interface ILimitPool is LimitPoolStructs {
     function initialize(
@@ -29,6 +28,11 @@ interface ILimitPool is LimitPoolStructs {
     ) external returns (
         uint128 token0Fees,
         uint128 token1Fees
+    );
+
+    function immutables(
+    ) external view returns(
+        LimitImmutables memory
     );
 
     function priceBounds(

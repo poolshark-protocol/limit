@@ -51,14 +51,14 @@ interface IPositionERC1155 is IERC165, PoolsharkStructs {
         address account,
         uint256 id,
         uint256 amount,
-        PoolsharkStructs.Immutables memory constants
+        PoolsharkStructs.LimitImmutables memory constants
     ) external;
 
     function burn(
         address account,
         uint256 id,
         uint256 amount,
-        PoolsharkStructs.Immutables memory constants
+        PoolsharkStructs.LimitImmutables memory constants
     ) external;
 
     function safeTransferFrom(

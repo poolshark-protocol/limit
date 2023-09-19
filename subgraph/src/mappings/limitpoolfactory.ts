@@ -14,8 +14,7 @@ export function handlePoolCreated(event: PoolCreated): void {
     // grab event parameters
     let poolAddressParam = event.params.pool
     let poolTokenParam = event.params.token
-    let poolImplParam = event.params.poolImpl.toHex()
-    let tokenImplParam = event.params.tokenImpl.toHex()
+    let poolTypeParam = event.params.poolType.toHex()
     let token0Param = event.params.token0.toHex()
     let token1Param = event.params.token1.toHex()
     let swapFeeParam = BigInt.fromI32(event.params.swapFee)
@@ -65,7 +64,7 @@ export function handlePoolCreated(event: PoolCreated): void {
     pool.swapFee = swapFeeParam
     pool.tickSpacing = tickSpacingParam
     pool.factory = factory.id
-    pool.implementation = poolImplParam.concat(tokenImplParam)
+    pool.poolType = poolTypeParam
     pool.samplesLength = BigInt.fromString('5')
 
     // creation stats

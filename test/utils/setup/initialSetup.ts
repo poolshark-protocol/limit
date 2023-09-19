@@ -287,7 +287,7 @@ export class InitialSetup {
             ]
         )
 
-        const enableImplTxn = await hre.props.limitPoolManager.enableImplementation(
+        const enableImplTxn = await hre.props.limitPoolManager.enablePoolType(
             this.constantProductString,
             hre.props.limitPoolImpl.address,
             hre.props.positionERC1155.address

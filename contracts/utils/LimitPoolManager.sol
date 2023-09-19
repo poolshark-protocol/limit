@@ -87,9 +87,9 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
         emit OwnerTransfer(oldFeeTo, newFeeTo);
     }
 
-    function enableTickSpacing(
-        int16 tickSpacing,
-        uint16 swapFee
+    function enableFeeTier(
+        uint16 swapFee,
+        int16 tickSpacing
     ) external onlyOwner {
         if (_feeTiers[swapFee] != 0) revert TickSpacingAlreadyEnabled();
         if (tickSpacing <= 0) revert InvalidTickSpacing();
@@ -100,7 +100,7 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
         emit FeeTierEnabled(swapFee, tickSpacing);
     }
 
-    function enableImplementation(
+    function enablePoolType(
         bytes32 poolType_,
         address poolImpl_,
         address tokenImpl_
@@ -111,7 +111,7 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
         if (poolImpl_ == tokenImpl_) revert InvalidImplAddress();
         _poolImpls[poolType_] = poolImpl_;
         _tokenImpls[poolType_] = tokenImpl_;
-        emit ImplementationEnabled(poolType_, poolImpl_, tokenImpl_);
+        emit PoolTypeEnabled(poolType_, poolImpl_, tokenImpl_);
     }
 
     function setFactory(

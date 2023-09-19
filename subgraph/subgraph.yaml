@@ -31,7 +31,7 @@ dataSources:
             - name: ERC20NameBytes
               file: ./abis/ERC20NameBytes.json
         eventHandlers:
-            - event: PoolCreated(address,address,address,address,indexed address,indexed address,indexed uint16,int16)
+            - event: PoolCreated(address,address,bytes32,indexed address,indexed address,indexed uint16,int16)
               handler: handlePoolCreated
   - kind: ethereum/contract
     name: LimitPoolManager
@@ -54,8 +54,8 @@ dataSources:
         eventHandlers:
             - event: FeeTierEnabled(uint16,int16)
               handler: handleFeeTierEnabled
-            - event: ImplementationEnabled(bytes32,address,address)
-              handler: handleImplementationEnabled
+            - event: PoolTypeEnabled(bytes32,address,address)
+              handler: handlePoolTypeEnabled
             - event: FactoryChanged(indexed address,indexed address)
               handler: handleFactoryChanged
             - event: FeeToTransfer(indexed address,indexed address)

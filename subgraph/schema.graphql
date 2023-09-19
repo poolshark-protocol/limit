@@ -1,6 +1,7 @@
 type LimitPoolFactory @entity {
     # poolAddress
     id: ID!
+    manager: LimitPoolManager!
     poolCount: BigInt!
     txnCount: BigInt!
     volumeUsdTotal: BigDecimal!
@@ -15,7 +16,7 @@ type LimitPoolManager @entity {
     id: ID!
     owner: Bytes!
     feeTo: Bytes!
-    # factory: LimitPoolFactory!
+    factory: LimitPoolFactory!
     feeTiers: [FeeTier!]!
     implementations: [LimitPoolImpl!]!
 }
@@ -82,7 +83,7 @@ type LimitPool @entity {
     swapFee: BigInt!
     tickSpacing: BigInt!
     factory: LimitPoolFactory!
-    implementation: LimitPoolImpl!
+    poolType: LimitPoolImpl!
 
     liquidity: BigInt!
     liquidityGlobal: BigInt!

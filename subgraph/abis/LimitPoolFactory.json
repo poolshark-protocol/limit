@@ -16,15 +16,9 @@
       },
       {
         "indexed": false,
-        "internalType": "address",
-        "name": "poolImpl",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "tokenImpl",
-        "type": "address"
+        "internalType": "bytes32",
+        "name": "poolType",
+        "type": "bytes32"
       },
       {
         "indexed": true,

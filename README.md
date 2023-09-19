@@ -38,7 +38,9 @@ npx hardhat deploy-coverpools --network arb_goerli
 
 ### Contracts
 #### Limit Pool
-Limit Pool is the liquidity pool contract which contains all the calls for the pool. Outside of the claim process, it is a relatively simple AMM liquidity pool which uses a both a tick bitmap to find ticks to cross and an epoch map to store epochs for any positions boundaries of Limit LPs. Positions are implemented via an ERC-1155 for transferability and composability.
+Limit Pool is the liquidity pool contract which contains all the calls for the pool. 
+<br/><br/>
+Outside of the claim process, it is a relatively simple AMM liquidity pool which uses a both a tick bitmap to find ticks to cross and an epoch map to store epochs for any positions boundaries of Limit LPs. Positions are implemented via an ERC-1155 for transferability and composability.
 <br/><br/>
 The contracts are implemented with extremely limited admin functionality, namely modifying fees up to a defined ceiling of 1% and adding new fee tiers.
 <br/><br/>
@@ -57,26 +59,42 @@ _ERC-1167: Minimal Proxy Contract_
 
 ### Testing Design
 #### Coverage
-ERC-1155 Functions
+##### ERC-1155 Functions
 
 totalSupply
+<br/>
 balanceOf
+<br/>
 transfer
+<br/>
 transferFrom
+<br/>
 approve
+<br/>
 allowance
-
-General Functions
+<br/>
+##### General Functions
 
 mintLimit
+<br/>
 mintRange
+<br/>
 burnLimit
+<br/>
 burnRange
+<br/>
 swap
+<br/>
 quote
+<br/>
 snapshotLimit
+<br/>
 snapshotRange
+<br/>
 immutables
+<br/>
 priceBounds
+
+### Limit LP Visual Diagram
 
 ![image](https://github.com/poolshark-protocol/limit/assets/84204260/c82cfc21-f559-452b-864d-5ba6e24992d2)

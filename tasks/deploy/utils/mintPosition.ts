@@ -1,7 +1,7 @@
 import { BigNumber } from 'ethers'
 import { BN_ZERO, getLiquidity, getPrice, validateBurn, validateMint, validateSwap, } from '../../../test/utils/contracts/limitpool'
 import { InitialSetup } from '../../../test/utils/setup/initialSetup'
-import { validateMint as validateMintRange } from '../../../test/utils/contracts/rangepool'
+import { validateMint as validateMintRange, validateBurn as validateBurnRange } from '../../../test/utils/contracts/rangepool'
 import { mintSigners20 } from '../../../test/utils/token'
 import { getNonce } from '../../utils'
 
@@ -39,21 +39,22 @@ export class MintPosition {
         const liquidityAmount = '49802891105937278098768'
 
         // await getPrice(true)
-    // 0x34e800D1456d87A5F62B774AD98cea54a3A40048
+    // 0x65f5B282E024e3d6CaAD112e848dEc3317dB0902
     // 0x1DcF623EDf118E4B21b4C5Dc263bb735E170F9B8
-        await validateMint({
-            signer: hre.props.alice,
-            recipient: '0x9dA9409D17DeA285B078af06206941C049F692Dc',
-            lower: '0',
-            upper: '100',
-            amount: token1Amount,
-            zeroForOne: false,
-            balanceInDecrease: token1Amount,
-            liquidityIncrease: liquidityAmount,
-            upperTickCleared: false,
-            lowerTickCleared: true,
-            revertMessage: '',
-        })
+    // 0x9dA9409D17DeA285B078af06206941C049F692Dc
+        // await validateMint({
+        //     signer: hre.props.alice,
+        //     recipient: '0x65f5B282E024e3d6CaAD112e848dEc3317dB0902',
+        //     lower: '0',
+        //     upper: '100',
+        //     amount: token1Amount,
+        //     zeroForOne: false,
+        //     balanceInDecrease: token1Amount,
+        //     liquidityIncrease: liquidityAmount,
+        //     upperTickCleared: false,
+        //     lowerTickCleared: true,
+        //     revertMessage: '',
+        // })
 
         // const quote = await hre.props.poolRouter.multiQuote(
         //     [hre.props.limitPool.address],
@@ -70,18 +71,18 @@ export class MintPosition {
 
         // console.log('amount quoted:', quote[0][1].toString(), quote[0][2].toString(), quote[0][3].toString())
 
-        const aliceId = await validateMintRange({
-            signer: hre.props.alice,
-            recipient: '0x9dA9409D17DeA285B078af06206941C049F692Dc',
-            lower: '-887000',
-            upper: '887000',
-            amount0: token0Amount,
-            amount1: token1Amount,
-            balance0Decrease: token0Amount.mul(10),
-            balance1Decrease: token1Amount.mul(10),
-            liquidityIncrease: BN_ZERO,
-            revertMessage: '',
-        })
+        // const aliceId = await validateMintRange({
+        //     signer: hre.props.alice,
+        //     recipient: '0x9dA9409D17DeA285B078af06206941C049F692Dc',
+        //     lower: '-887000',
+        //     upper: '887000',
+        //     amount0: token0Amount,
+        //     amount1: token1Amount,
+        //     balance0Decrease: token0Amount.mul(10),
+        //     balance1Decrease: token1Amount.mul(10),
+        //     liquidityIncrease: BN_ZERO,
+        //     revertMessage: '',
+        // })
         // await validateSwap({
         //     signer: hre.props.alice,
         //     recipient: hre.props.alice.address,
@@ -95,17 +96,30 @@ export class MintPosition {
 
         // await validateBurn({
         //     signer: hre.props.alice,
-        //     lower: '60',
-        //     claim: '60',
+        //     lower: '0',
+        //     claim: '100',
         //     upper: '100',
+        //     positionId: 3,
         //     liquidityPercent: ethers.utils.parseUnits('1', 38),
         //     zeroForOne: false,
-        //     balanceInIncrease: BN_ZERO,
+        //     balanceInIncrease: '0',
         //     balanceOutIncrease: token1Amount.sub(1),
         //     lowerTickCleared: false,
         //     upperTickCleared: false,
         //     revertMessage: '',
         // })
+
+        await validateBurnRange({
+            signer: hre.props.alice,
+            lower: '20',
+            upper: '60',
+            positionId: 7,
+            burnPercent: ethers.utils.parseUnits('1', 38),
+            liquidityAmount: BN_ZERO,
+            balance0Increase: token1Amount.div(10).sub(1),
+            balance1Increase: BigNumber.from('89946873348418057510'),
+            revertMessage: '',
+          })
 
         // await validateSync(60)
 

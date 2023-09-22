@@ -8,9 +8,9 @@ dataSources:
     name: LimitPoolFactory
     network: arbitrum-goerli
     source:
-        address: '0xbd6d010bcecc7440a72889546411e0edbb333ea2'
+        address: '0x2d21b6f89779f32b9632cea38c650dad3b925ed9'
         abi: LimitPoolFactory
-        startBlock: 41515300
+        startBlock: 43062800
     mapping:
         kind: ethereum/events
         apiVersion: 0.0.6
@@ -37,9 +37,9 @@ dataSources:
     name: LimitPoolManager
     network: arbitrum-goerli
     source:
-        address: '0x04405dbefdbf50c88f6e77b2d6cf0409c9596b12'
+        address: '0x95e2e84a4ee9214dd3b46644cdc6ccd23a1a033c'
         abi: LimitPoolManager
-        startBlock: 41515300
+        startBlock: 43062800
     mapping:
         kind: ethereum/events
         apiVersion: 0.0.6
@@ -74,7 +74,7 @@ dataSources:
     source:
         address: '0x1759c96aAD9A7E52F6d9c06573e0E0b418Bbdf74'
         abi: PoolsharkRouter
-        startBlock: 41515300
+        startBlock: 43062800
     mapping:
         kind: ethereum/events
         apiVersion: 0.0.6

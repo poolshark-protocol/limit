@@ -14,19 +14,6 @@ interface ILimitPoolMintCallback {
     ) external;
 }
 
-/// @title Callback for burns
-/// @notice Any contract that calls the `burn` function must implement this interface.
-interface ILimitPoolBurnCallback {
-    /// @notice Called to `msg.sender` after executing a burn.
-    /// @param amount0Delta The amount of token0 either received by (positive) or sent from (negative) the user.
-    /// @param amount1Delta The amount of token1 either received by (positive) or sent from (negative) the user.
-    function limitPoolBurnCallback(
-        int256 amount0Delta,
-        int256 amount1Delta,
-        bytes calldata data
-    ) external;
-}
-
 /// @title Callback for swaps
 /// @notice Any contract that calls the `swap` function must implement this interface.
 interface ILimitPoolSwapCallback {

@@ -33,7 +33,7 @@ library Collect {
 
     function burnLimit(
         LimitPoolStructs.BurnLimitCache memory cache,
-        LimitPoolStructs.BurnLimitParams memory params
+        PoolsharkStructs.BurnLimitParams memory params
     ) internal returns (
         LimitPoolStructs.BurnLimitCache memory
     )    

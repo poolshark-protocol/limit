@@ -84,6 +84,41 @@ interface PoolsharkStructs {
         bytes callbackData;
     }
 
+    struct MintLimitParams {
+        address to;
+        uint128 amount;
+        uint96 mintPercent;
+        uint32 positionId;
+        int24 lower;
+        int24 upper;
+        bool zeroForOne;
+        bytes callbackData;
+    }
+
+    struct BurnLimitParams {
+        address to;
+        uint128 burnPercent;
+        uint32 positionId;
+        int24 claim;
+        bool zeroForOne;
+    }
+
+    struct MintRangeParams {
+        address to;
+        int24 lower;
+        int24 upper;
+        uint32 positionId;
+        uint128 amount0;
+        uint128 amount1;
+        bytes callbackData;
+    }
+
+    struct BurnRangeParams {
+        address to;
+        uint32 positionId;
+        uint128 burnPercent;
+    }
+
     struct QuoteParams {
         uint160 priceLimit;
         uint128 amount;

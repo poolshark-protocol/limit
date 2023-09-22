@@ -302,11 +302,11 @@ export async function validateMint(params: ValidateMintParams): Promise<number> 
   balance1Before = await hre.props.token1.balanceOf(params.signer.address)
   const approve0Txn = await hre.props.token0
     .connect(params.signer)
-    .approve(hre.props.limitPool.address, amount0)
+    .approve(hre.props.poolRouter.address, amount0)
   await approve0Txn.wait()
   const approve1Txn = await hre.props.token1
     .connect(params.signer)
-    .approve(hre.props.limitPool.address, amount1)
+    .approve(hre.props.poolRouter.address, amount1)
   await approve1Txn.wait()
 
   let lowerTickBefore: RangeTick
@@ -323,29 +323,39 @@ export async function validateMint(params: ValidateMintParams): Promise<number> 
   if (params.positionId)
     expect(positionTokenBalanceBefore).to.be.equal(1)
   if (revertMessage == '') {
-    const txn = await hre.props.limitPool
+    const txn = await hre.props.poolRouter
       .connect(params.signer)
-      .mintRange({
-        to: recipient,
-        lower: lower,
-        upper: upper,
-        positionId: positionId,
-        amount0: amount0,
-        amount1: amount1,
-      })
+      .multiMintRange(
+        [hre.props.limitPool.address],
+        [
+          {
+            to: recipient,
+            lower: lower,
+            upper: upper,
+            positionId: positionId,
+            amount0: amount0,
+            amount1: amount1,
+            callbackData: ethers.utils.formatBytes32String('')
+          }
+        ])
     await txn.wait()
   } else {
     await expect(
-      hre.props.limitPool
-        .connect(params.signer)
-        .mintRange({
-          to: recipient,
-          lower: lower,
-          upper: upper,
-          positionId: positionId,
-          amount0: amount0,
-          amount1: amount1,
-      })
+      hre.props.poolRouter
+      .connect(params.signer)
+      .multiMintRange(
+        [hre.props.limitPool.address],
+        [
+          {
+            to: recipient,
+            lower: lower,
+            upper: upper,
+            positionId: positionId,
+            amount0: amount0,
+            amount1: amount1,
+            callbackData: ethers.utils.formatBytes32String('')
+          }
+        ])
     ).to.be.revertedWith(revertMessage)
     return
   }

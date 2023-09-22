@@ -575,7 +575,7 @@ describe('RangePool Exact In Tests', function () {
 
   it('token0 - Should autocompound fungible position and add liquidity 17', async function () {
     const aliceLiquidity = BigNumber.from('7705754408611783555308')
-    const aliceLiquidity2 = BigNumber.from('3853399963994096559303')
+    const aliceLiquidity2 = BigNumber.from('3852877204305891777654')
     const aliceToken2 = BigNumber.from('3851350676919383233343')
 
     await validateSwap({
@@ -638,6 +638,18 @@ describe('RangePool Exact In Tests', function () {
     if (debugMode) await getSnapshot(aliceId)
     if (debugMode) await getTickAtPrice()
 
+    await validateBurn({
+      signer: hre.props.alice,
+      lower: '500',
+      upper: '1000',
+      positionId: aliceId, 
+      liquidityAmount: BigNumber.from('-522759688204781649'), // liquidity increase
+      burnPercent: ethers.utils.parseUnits('0',38),
+      balance0Increase: BigNumber.from('62500000000000000'), // fees collected
+      balance1Increase: BigNumber.from('0'),
+      revertMessage: '',
+    })
+
     await validateMint({
       signer: hre.props.alice,
       recipient: hre.props.alice.address,
@@ -645,7 +657,7 @@ describe('RangePool Exact In Tests', function () {
       upper: '1000',
       amount0: tokenAmount,
       amount1: tokenAmount,
-      balance0Decrease: BigNumber.from('-62500000000000000'),
+      balance0Decrease: BigNumber.from('0'),
       balance1Decrease: BigNumber.from('100000000000000000000'),
       positionId: aliceId,
       liquidityIncrease: aliceLiquidity2,
@@ -2253,9 +2265,21 @@ describe('RangePool Exact Out Tests', function () {
 
   it('token0 - Should autocompound fungible position and add liquidity 27', async function () {
     const aliceLiquidity = BigNumber.from('7709661802936670729190')
-    const aliceLiquidity2 = BigNumber.from('3855500095503417339425')
+    const aliceLiquidity2 = BigNumber.from('3852877204305891777654')
     const aliceToken2 = BigNumber.from('3851307766638370338521')
     const compoundedLiquidity = BigNumber.from('2622891197525561771')
+
+    await validateSwap({
+      signer: hre.props.alice,
+      recipient: hre.props.alice.address,
+      zeroForOne: true,
+      amount: BigNumber.from('54487289918860678020'),
+      sqrtPriceLimitX96: BigNumber.from('82169626430546568102374149457'),
+      balanceInDecrease: BigNumber.from('0'),
+      balanceOutIncrease: BigNumber.from('0'),
+      revertMessage: '',
+      exactIn: false
+    })
 
     const aliceId = await validateMint({
       signer: hre.props.alice,
@@ -2307,6 +2331,19 @@ describe('RangePool Exact Out Tests', function () {
       exactIn: false
     })
     if (debugMode) await getSnapshot(aliceId)
+
+    await validateBurn({
+      signer: hre.props.alice,
+      lower: '500',
+      upper: '1000',
+      positionId: aliceId, 
+      liquidityAmount: BigNumber.from('-2622891197525561771'), // liquidity increase
+      burnPercent: ethers.utils.parseUnits('0',38),
+      balance0Increase: BigNumber.from('12493693242757168'), // fees collected
+      balance1Increase: BigNumber.from('0'),
+      revertMessage: '',
+    })
+
     await validateMint({
       signer: hre.props.alice,
       recipient: hre.props.alice.address,
@@ -2314,7 +2351,7 @@ describe('RangePool Exact Out Tests', function () {
       upper: '1000',
       amount0: tokenAmount,
       amount1: tokenAmount,
-      balance0Decrease: BigNumber.from('-12493693242757168'), // earned fees
+      balance0Decrease: BigNumber.from('0'), // earned fees
       balance1Decrease: BigNumber.from('100000000000000000000'),
       positionId: aliceId,
       liquidityIncrease: aliceLiquidity2,
@@ -2328,7 +2365,7 @@ describe('RangePool Exact Out Tests', function () {
       lower: '500',
       upper: '1000',
       positionId: aliceId,
-      liquidityAmount: aliceLiquidity.add(aliceLiquidity2),
+      liquidityAmount: aliceLiquidity.add(aliceLiquidity2).add(compoundedLiquidity),
       burnPercent: ethers.utils.parseUnits('1', 38),
       balance0Increase: BigNumber.from('0'),
       balance1Increase: BigNumber.from('300169491140675717112'),

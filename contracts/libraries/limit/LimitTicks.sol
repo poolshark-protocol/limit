@@ -47,7 +47,7 @@ library LimitTicks {
         mapping(int24 => LimitPoolStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
         LimitPoolStructs.MintLimitCache memory cache,
-        LimitPoolStructs.MintLimitParams memory params
+        PoolsharkStructs.MintLimitParams memory params
     ) internal {
         /// @dev - validation of ticks is in Positions.validate
         if (cache.liquidityMinted == 0)
@@ -114,7 +114,7 @@ library LimitTicks {
     }
 
     function insertSingle(
-        LimitPoolStructs.MintLimitParams memory params,
+        PoolsharkStructs.MintLimitParams memory params,
         mapping(int24 => LimitPoolStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
         LimitPoolStructs.MintLimitCache memory cache,
@@ -189,7 +189,7 @@ library LimitTicks {
     function remove(
         mapping(int24 => LimitPoolStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
-        LimitPoolStructs.BurnLimitParams memory params,
+        PoolsharkStructs.BurnLimitParams memory params,
         LimitPoolStructs.BurnLimitCache memory cache,
         PoolsharkStructs.LimitImmutables memory constants
     ) internal {

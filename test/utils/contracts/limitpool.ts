@@ -361,13 +361,13 @@ export async function validateMint(params: ValidateMintParams): Promise<number> 
         balanceOutBefore = await hre.props.token1.balanceOf(params.signer.address)
         await hre.props.token0
             .connect(params.signer)
-            .approve(hre.props.limitPool.address, amountDesired)
+            .approve(hre.props.poolRouter.address, amountDesired)
     } else {
         balanceInBefore = await hre.props.token1.balanceOf(params.signer.address)
         balanceOutBefore = await hre.props.token0.balanceOf(params.signer.address)
         await hre.props.token1
             .connect(params.signer)
-            .approve(hre.props.limitPool.address, amountDesired)
+            .approve(hre.props.poolRouter.address, amountDesired)
     }
 
     let lowerTickBefore: LimitTick
@@ -393,17 +393,22 @@ export async function validateMint(params: ValidateMintParams): Promise<number> 
     }
 
     if (revertMessage == '') {
-        const txn = await hre.props.limitPool
+        const txn = await hre.props.poolRouter
             .connect(params.signer)
-            .mintLimit({
-                to: recipient,
-                amount: amountDesired,
-                positionId: positionId,
-                lower: lower,
-                upper: upper,
-                zeroForOne: zeroForOne,
-                mintPercent: mintPercent
-            }, {gasLimit: 3000000})
+            .multiMintLimit(
+                [hre.props.limitPool.address],
+                [
+                    {
+                        to: recipient,
+                        amount: amountDesired,
+                        positionId: positionId,
+                        lower: lower,
+                        upper: upper,
+                        zeroForOne: zeroForOne,
+                        mintPercent: mintPercent,
+                        callbackData: ethers.utils.formatBytes32String('')
+                    }
+                ], {gasLimit: 3000000})
         await txn.wait()
     } else {
         await expect(
@@ -416,7 +421,8 @@ export async function validateMint(params: ValidateMintParams): Promise<number> 
                     upper: upper,
                     amount: amountDesired,
                     zeroForOne: zeroForOne,
-                    mintPercent: BN_ZERO
+                    mintPercent: BN_ZERO,
+                    callbackData: ethers.utils.formatBytes32String('')
                 })
         ).to.be.revertedWith(revertMessage)
         return expectedPositionId

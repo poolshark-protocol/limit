@@ -16,7 +16,6 @@ import '../external/solady/LibClone.sol';
 contract PoolsharkRouter is
     PoolsharkStructs,
     ILimitPoolMintCallback,
-    ILimitPoolBurnCallback,
     ILimitPoolSwapCallback,
     ICoverPoolSwapCallback
 {
@@ -33,10 +32,6 @@ contract PoolsharkRouter is
     );
 
     struct MintCallbackData {
-        address sender;
-    }
-
-    struct BurnCallbackData {
         address sender;
     }
 
@@ -74,29 +69,8 @@ contract PoolsharkRouter is
         // transfer from swap caller
         if (amount0Delta < 0) {
             SafeTransfers.transferInto(constants.token0, _data.sender, uint256(-amount0Delta));
-        } else {
-            SafeTransfers.transferInto(constants.token1, _data.sender, uint256(-amount1Delta));
         }
-    }
-
-    /// @inheritdoc ILimitPoolBurnCallback
-    function limitPoolBurnCallback(
-        int256 amount0Delta,
-        int256 amount1Delta,
-        bytes calldata data
-    ) external override {
-        PoolsharkStructs.LimitImmutables memory constants = ILimitPool(msg.sender).immutables();
-
-        // validate sender is a canonical limit pool
-        canonicalLimitPoolsOnly(constants);
-
-        // decode original sender
-        BurnCallbackData memory _data = abi.decode(data, (BurnCallbackData));
-        
-        // transfer from swap caller
-        if (amount0Delta < 0) {
-            SafeTransfers.transferInto(constants.token0, _data.sender, uint256(-amount0Delta));
-        } else {
+        if (amount1Delta < 0) {
             SafeTransfers.transferInto(constants.token1, _data.sender, uint256(-amount1Delta));
         }
     }
@@ -142,6 +116,34 @@ contract PoolsharkRouter is
             SafeTransfers.transferInto(constants.token0, _data.sender, uint256(-amount0Delta));
         } else {
             SafeTransfers.transferInto(constants.token1, _data.sender, uint256(-amount1Delta));
+        }
+    }
+
+    function multiMintLimit(
+        address[] memory pools,
+        MintLimitParams[] memory params
+    ) external {
+        if (pools.length != params.length) require(false, 'InputArrayLengthsMismatch()');
+        for (uint i = 0; i < pools.length;) {
+            params[i].callbackData = abi.encode(MintCallbackData({sender: msg.sender}));
+            ILimitPool(pools[i]).mintLimit(params[i]);
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
+    function multiMintRange(
+        address[] memory pools,
+        MintRangeParams[] memory params
+    ) external {
+        if (pools.length != params.length) require(false, 'InputArrayLengthsMismatch()');
+        for (uint i = 0; i < pools.length;) {
+            params[i].callbackData = abi.encode(MintCallbackData({sender: msg.sender}));
+            IRangePool(pools[i]).mintRange(params[i]);
+            unchecked {
+                ++i;
+            }
         }
     }
 

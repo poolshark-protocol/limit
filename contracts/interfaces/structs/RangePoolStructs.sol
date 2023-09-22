@@ -13,21 +13,6 @@ interface RangePoolStructs is PoolsharkStructs {
         int24 upper;
     }
 
-    struct MintRangeParams {
-        address to;
-        int24 lower;
-        int24 upper;
-        uint32 positionId;
-        uint128 amount0;
-        uint128 amount1;
-    }
-
-    struct BurnRangeParams {
-        address to;
-        uint32 positionId;
-        uint128 burnPercent;
-    }
-
     struct CompoundRangeParams {
         uint160 priceLower;
         uint160 priceUpper;

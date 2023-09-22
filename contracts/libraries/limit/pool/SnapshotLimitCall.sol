@@ -40,7 +40,7 @@ library SnapshotLimitCall {
         cache.state = state;
         cache.constants = constants;
         cache.position = positions[params.positionId];
-        LimitPoolStructs.BurnLimitParams memory burnParams = LimitPoolStructs.BurnLimitParams ({
+        PoolsharkStructs.BurnLimitParams memory burnParams = PoolsharkStructs.BurnLimitParams ({
             to: params.owner,
             burnPercent: params.burnPercent,
             positionId: params.positionId,

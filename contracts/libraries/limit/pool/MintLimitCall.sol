@@ -2,6 +2,8 @@
 pragma solidity 0.8.13;
 
 import '../../../interfaces/structs/LimitPoolStructs.sol';
+import '../../../interfaces/callbacks/ILimitPoolCallback.sol';
+import '../../../interfaces/IERC20Minimal.sol';
 import '../LimitPositions.sol';
 import '../../utils/Collect.sol';
 import '../../utils/PositionTokens.sol';
@@ -35,7 +37,7 @@ library MintLimitCall {
         PoolsharkStructs.TickMap storage rangeTickMap,
         PoolsharkStructs.TickMap storage limitTickMap,
         PoolsharkStructs.GlobalState storage globalState,
-        LimitPoolStructs.MintLimitParams memory params,
+        PoolsharkStructs.MintLimitParams memory params,
         LimitPoolStructs.MintLimitCache memory cache
     ) external {
         if (params.positionId > 0) {
@@ -60,12 +62,7 @@ library MintLimitCall {
         // save state for reentrancy safety
         save(cache, globalState, !params.zeroForOne);
 
-        // transfer in token amount
-        SafeTransfers.transferIn(
-                                 params.zeroForOne ? cache.constants.token0 
-                                                   : cache.constants.token1,
-                                 params.amount + cache.swapCache.input
-                                );
+
         // transfer out if swap output 
         if (cache.swapCache.output > 0)
             SafeTransfers.transferOut(
@@ -150,9 +147,20 @@ library MintLimitCall {
                 uint128(cache.liquidityMinted)
             );
         }
-
         // save lp side for safe reentrancy
         save(cache, globalState, params.zeroForOne);
+
+        // check balance and execute callback
+        uint256 balanceStart = balance(params, cache);
+        ILimitPoolMintCallback(msg.sender).limitPoolMintCallback(
+            params.zeroForOne ? -int256(params.amount + cache.swapCache.input) : int256(cache.swapCache.output),
+            params.zeroForOne ? int256(cache.swapCache.output) : -int256(params.amount + cache.swapCache.input),
+            params.callbackData
+        );
+
+        // check balance requirements after callback
+        if (balance(params, cache) < balanceStart + params.amount + cache.swapCache.input)
+            require(false, 'MintInputAmountTooLow()');
     }
 
     function save(
@@ -170,5 +178,25 @@ library MintLimitCall {
             globalState.pool = cache.state.pool;
             globalState.pool1 = cache.state.pool1;
         }
+    }
+
+    
+    function balance(
+        PoolsharkStructs.MintLimitParams memory params,
+        LimitPoolStructs.MintLimitCache memory cache
+    ) private view returns (uint256) {
+        (
+            bool success,
+            bytes memory data
+        ) = (params.zeroForOne ? cache.constants.token0
+                               : cache.constants.token1)
+                               .staticcall(
+                                    abi.encodeWithSelector(
+                                        IERC20Minimal.balanceOf.selector,
+                                        address(this)
+                                    )
+                                );
+        require(success && data.length >= 32);
+        return abi.decode(data, (uint256));
     }
 }

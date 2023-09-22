@@ -1607,6 +1607,7 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
 
+
         if (debugMode) await getTick(false, 21000)
         if (debugMode) console.log('BEFORE MINT 2')
         if (debugMode) await getPrice(true, true)

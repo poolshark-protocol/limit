@@ -27,7 +27,7 @@ library BurnLimitCall {
         mapping(int24 => LimitPoolStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
         PoolsharkStructs.GlobalState storage globalState,
-        LimitPoolStructs.BurnLimitParams memory params,
+        PoolsharkStructs.BurnLimitParams memory params,
         LimitPoolStructs.BurnLimitCache memory cache
     ) external {
         // check for invalid receiver

@@ -14,10 +14,10 @@ library Claims {
     function validate(
         mapping(int24 => LimitPoolStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
-        LimitPoolStructs.BurnLimitParams memory params,
+        PoolsharkStructs.BurnLimitParams memory params,
         LimitPoolStructs.BurnLimitCache memory cache
     ) internal view returns (
-        LimitPoolStructs.BurnLimitParams memory,
+        PoolsharkStructs.BurnLimitParams memory,
         LimitPoolStructs.BurnLimitCache memory
     ) {
         // validate position liquidity
@@ -132,7 +132,7 @@ library Claims {
     }
 
     function getDeltas(
-        LimitPoolStructs.BurnLimitParams memory params,
+        PoolsharkStructs.BurnLimitParams memory params,
         LimitPoolStructs.BurnLimitCache memory cache,
         PoolsharkStructs.LimitImmutables memory constants
     ) internal pure returns (

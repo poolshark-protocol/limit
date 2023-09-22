@@ -13,24 +13,6 @@ interface LimitPoolStructs is PoolsharkStructs {
         bool crossedInto;  // whether the position was crossed into already
     }
 
-    struct MintLimitParams {
-        address to;
-        uint128 amount;
-        uint96 mintPercent;
-        uint32 positionId;
-        int24 lower;
-        int24 upper;
-        bool zeroForOne;
-    }
-
-    struct BurnLimitParams {
-        address to;
-        uint128 burnPercent;
-        uint32 positionId;
-        int24 claim;
-        bool zeroForOne;
-    }
-
     struct MintLimitCache {
         GlobalState state;
         LimitPosition position;

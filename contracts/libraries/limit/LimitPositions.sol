@@ -34,10 +34,10 @@ library LimitPositions {
         RangePoolStructs.Sample[65535] storage samples,
         PoolsharkStructs.TickMap storage rangeTickMap,
         PoolsharkStructs.TickMap storage limitTickMap,
-        LimitPoolStructs.MintLimitParams memory params,
+        PoolsharkStructs.MintLimitParams memory params,
         LimitPoolStructs.MintLimitCache memory cache
     ) external returns (
-        LimitPoolStructs.MintLimitParams memory,
+        PoolsharkStructs.MintLimitParams memory,
         LimitPoolStructs.MintLimitCache memory
     )
     {
@@ -193,7 +193,7 @@ library LimitPositions {
         LimitPoolStructs.MintLimitCache memory cache,
         mapping(int24 => LimitPoolStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
-        LimitPoolStructs.MintLimitParams memory params
+        PoolsharkStructs.MintLimitParams memory params
     ) internal returns (
         PoolsharkStructs.LimitPoolState memory,
         LimitPoolStructs.LimitPosition memory
@@ -243,9 +243,9 @@ library LimitPositions {
         mapping(int24 => PoolsharkStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
         LimitPoolStructs.BurnLimitCache memory cache,
-        LimitPoolStructs.BurnLimitParams memory params
+        PoolsharkStructs.BurnLimitParams memory params
     ) internal returns (
-        LimitPoolStructs.BurnLimitParams memory,
+        PoolsharkStructs.BurnLimitParams memory,
         LimitPoolStructs.BurnLimitCache memory
     )
     {
@@ -362,7 +362,7 @@ library LimitPositions {
         mapping(int24 => PoolsharkStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
         LimitPoolStructs.BurnLimitCache memory cache,
-        LimitPoolStructs.BurnLimitParams memory params
+        PoolsharkStructs.BurnLimitParams memory params
     ) internal view returns (
         uint128 amountIn,
         uint128 amountOut
@@ -383,10 +383,10 @@ library LimitPositions {
     function _deltas(
         mapping(int24 => LimitPoolStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
-        LimitPoolStructs.BurnLimitParams memory params,
+        PoolsharkStructs.BurnLimitParams memory params,
         LimitPoolStructs.BurnLimitCache memory cache
     ) internal view returns (
-        LimitPoolStructs.BurnLimitParams memory,
+        PoolsharkStructs.BurnLimitParams memory,
         LimitPoolStructs.BurnLimitCache memory
     ) {
         cache = LimitPoolStructs.BurnLimitCache({

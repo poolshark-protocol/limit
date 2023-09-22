@@ -55,7 +55,7 @@ export function handleBurnLimit(event: BurnLimit): void {
     }
     if (position.liquidity == liquidityBurnedParam || 
             (zeroForOneParam ? newClaim.equals(upper) : newClaim.equals(lower))) {
-        store.remove('Position', position.id)
+        store.remove('LimitPosition', position.id)
     } else {
         position.liquidity = position.liquidity.minus(liquidityBurnedParam)
         position.amountFilled = position.amountFilled.minus(tokenInClaimedParam)

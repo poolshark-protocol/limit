@@ -71,12 +71,13 @@ export function handleBurnRange(event: BurnRange): void {
         .plus(amount1.times(token1.ethPrice.times(basePrice.USD)))
 
     if (liquidityBurnedParam.equals(position.liquidity)) {
-        position.liquidity = BIGINT_ZERO
+        store.remove('RangePosition', position.id)
     } else {
         position.liquidity = position.liquidity.minus(liquidityBurnedParam)
+        position.updatedAtBlockNumber = event.block.number
+        position.updatedAtTimestamp = event.block.timestamp
+        position.save()
     }
-    position.updatedAtBlockNumber = event.block.number
-    position.updatedAtTimestamp = event.block.timestamp
 
     if (lowerTick.liquidityAbsolute.equals(liquidityBurnedParam)) {
         store.remove('RangeTick', lowerTick.id)
@@ -123,7 +124,6 @@ export function handleBurnRange(event: BurnRange): void {
         pool.poolLiquidity = pool.poolLiquidity.minus(liquidityBurnedParam)
     }
 
-    position.save()
     burnLog.save()
     basePrice.save()
     pool.save()

@@ -244,6 +244,30 @@ type PoolRouter @entity {
     coverPoolFactory: Bytes!
 }
 
+type MintLimitLog @entity {
+    id: ID!
+
+    sender: Bytes!
+    recipient: Bytes!
+    lower: BigInt!
+    upper: BigInt!
+    positionId: BigInt!
+    liquidityMinted: BigInt!
+    pool: LimitPool!
+}
+
+type BurnLimitLog @entity {
+    id: ID!
+
+    owner: Bytes!
+    recipient: Bytes!
+    lower: BigInt!
+    upper: BigInt!
+    positionId: BigInt!
+    liquidityBurned: BigInt!
+    pool: LimitPool!
+}
+
 type MintRangeLog @entity {
     id: ID!
 

@@ -2,7 +2,7 @@ import { store, BigInt } from "@graphprotocol/graph-ts"
 import { BurnLimit } from "../../../generated/LimitPoolFactory/LimitPool"
 import { ONE_BI } from "../../constants/constants"
 import { BIGINT_ZERO, convertTokenToDecimal } from "../utils/helpers"
-import { safeLoadBasePrice, safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadLimitPosition, safeLoadLimitTick, safeLoadToken } from "../utils/loads"
+import { safeLoadBasePrice, safeLoadBurnLog, safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadLimitPosition, safeLoadLimitTick, safeLoadToken } from "../utils/loads"
 import { findEthPerToken } from "../utils/price"
 import { updateDerivedTVLAmounts } from "../utils/tvl"
 
@@ -55,7 +55,7 @@ export function handleBurnLimit(event: BurnLimit): void {
     }
     if (position.liquidity == liquidityBurnedParam || 
             (zeroForOneParam ? newClaim.equals(upper) : newClaim.equals(lower))) {
-        store.remove('Position', position.id)
+        store.remove('LimitPosition', position.id)
     } else {
         position.liquidity = position.liquidity.minus(liquidityBurnedParam)
         position.amountFilled = position.amountFilled.minus(tokenInClaimedParam)

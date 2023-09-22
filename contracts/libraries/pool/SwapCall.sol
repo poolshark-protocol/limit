@@ -2,7 +2,7 @@
 pragma solidity 0.8.13;
 
 import '../../interfaces/structs/LimitPoolStructs.sol';
-import '../../interfaces/callbacks/ILimitPoolSwapCallback.sol';
+import '../../interfaces/callbacks/ILimitPoolCallback.sol';
 import '../../interfaces/IERC20Minimal.sol';
 import '../Ticks.sol';
 import '../utils/Collect.sol';

@@ -169,6 +169,7 @@ interface PoolsharkStructs {
         address token0;
         address token1;
         address poolImpl;
+        address poolToken;
         address inputPool;
         uint128 minAmountPerAuction;
         uint32 genesisTime;

@@ -350,6 +350,7 @@ contract PoolsharkRouter is
             constants.token0,
             constants.token1,
             constants.source,
+            constants.poolToken,
             constants.inputPool,
             constants.bounds.min,
             constants.bounds.max,

@@ -208,15 +208,15 @@ class LoadLimitPoolRet {
 }
 export function safeLoadLimitPool(poolAddress: string): LoadLimitPoolRet {
     let exists = true
-    let coverPoolEntity = LimitPool.load(poolAddress)
+    let limitPoolEntity = LimitPool.load(poolAddress)
 
-    if (!coverPoolEntity) {
-        coverPoolEntity = new LimitPool(poolAddress)
+    if (!limitPoolEntity) {
+        limitPoolEntity = new LimitPool(poolAddress)
         exists = false
     }
 
     return {
-        entity: coverPoolEntity,
+        entity: limitPoolEntity,
         exists: exists,
     }
 }

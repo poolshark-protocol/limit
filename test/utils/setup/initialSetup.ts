@@ -27,6 +27,12 @@ export class InitialSetup {
     private contractDeploymentsKeys: ContractDeploymentsKeys
     private constantProductString: string
 
+    /// DEPLOY CONFIG
+    private deployRouter = false
+    private deployTokens = false
+    private deployPools = true
+    private deployContracts = true
+
     constructor() {
         this.deployAssist = new DeployAssist()
         this.contractDeploymentsJson = new ContractDeploymentsJson()
@@ -37,318 +43,378 @@ export class InitialSetup {
     public async initialLimitPoolSetup(): Promise<number> {
         const network = SUPPORTED_NETWORKS[hre.network.name.toUpperCase()]
         
-        // const token0Address = (
-        //     await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
-        //       {
-        //         networkName: hre.network.name,
-        //         objectName: 'token0',
-        //       },
-        //       'readLimitPoolSetup'
-        //     )
-        //   ).contractAddress
-        //   const token1Address = (
-        //     await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
-        //       {
-        //         networkName: hre.network.name,
-        //         objectName: 'token1',
-        //       },
-        //       'readLimitPoolSetup'
-        //     )
-        //   ).contractAddress
-        //   hre.props.token0 = await hre.ethers.getContractAt('Token20', token0Address)
-        //   hre.props.token1 = await hre.ethers.getContractAt('Token20', token1Address)
-        
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
-            Token20__factory,
-            'tokenA',
-            ['Wrapped Ether', 'WETH', this.token0Decimals]
-        )
-    
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
-            Token20__factory,
-            'tokenB',
-            ['Dai Stablecoin', 'DAI', this.token1Decimals]
-        )
-
-        const tokenOrder = hre.props.tokenA.address.localeCompare(hre.props.tokenB.address) < 0
-        let token0Args
-        let token1Args
-        if (tokenOrder) {
-            hre.props.token0 = hre.props.tokenA
-            hre.props.token1 = hre.props.tokenB
-            token0Args = ['Wrapped Ether', 'WETH', this.token0Decimals]
-            token1Args = ['Dai Stablecoin', 'DAI', this.token1Decimals]
+        if (!this.deployTokens && hre.network.name != 'hardhat') {
+            const token0Address = (
+                await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
+                  {
+                    networkName: hre.network.name,
+                    objectName: 'token0',
+                  },
+                  'readLimitPoolSetup'
+                )
+              ).contractAddress
+              const token1Address = (
+                await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
+                  {
+                    networkName: hre.network.name,
+                    objectName: 'token1',
+                  },
+                  'readLimitPoolSetup'
+                )
+              ).contractAddress
+              hre.props.token0 = await hre.ethers.getContractAt('Token20', token0Address)
+              hre.props.token1 = await hre.ethers.getContractAt('Token20', token1Address)
         } else {
-            hre.props.token0 = hre.props.tokenB
-            hre.props.token1 = hre.props.tokenA
-            token0Args = ['Dai Stablecoin', 'DAI', this.token1Decimals]
-            token1Args = ['Wrapped Ether', 'WETH', this.token0Decimals]
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                Token20__factory,
+                'tokenA',
+                ['Wrapped Ether', 'WETH', this.token0Decimals]
+            )
+        
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                Token20__factory,
+                'tokenB',
+                ['Dai Stablecoin', 'DAI', this.token1Decimals]
+            )
+    
+            const tokenOrder = hre.props.tokenA.address.localeCompare(hre.props.tokenB.address) < 0
+            let token0Args
+            let token1Args
+            if (tokenOrder) {
+                hre.props.token0 = hre.props.tokenA
+                hre.props.token1 = hre.props.tokenB
+                token0Args = ['Wrapped Ether', 'WETH', this.token0Decimals]
+                token1Args = ['Dai Stablecoin', 'DAI', this.token1Decimals]
+            } else {
+                hre.props.token0 = hre.props.tokenB
+                hre.props.token1 = hre.props.tokenA
+                token0Args = ['Dai Stablecoin', 'DAI', this.token1Decimals]
+                token1Args = ['Wrapped Ether', 'WETH', this.token0Decimals]
+            }
+            this.deployAssist.saveContractDeployment(
+                network,
+                'Token20',
+                'token0',
+                hre.props.token0,
+                token0Args
+            )
+            this.deployAssist.saveContractDeployment(
+                network,
+                'Token20',
+                'token1',
+                hre.props.token1,
+                token1Args
+            )
+            this.deployAssist.deleteContractDeployment(network, 'tokenA')
+            this.deployAssist.deleteContractDeployment(network, 'tokenB')
         }
-        this.deployAssist.saveContractDeployment(
-            network,
-            'Token20',
-            'token0',
-            hre.props.token0,
-            token0Args
-        )
-        this.deployAssist.saveContractDeployment(
-            network,
-            'Token20',
-            'token1',
-            hre.props.token1,
-            token1Args
-        )
-        this.deployAssist.deleteContractDeployment(network, 'tokenA')
-        this.deployAssist.deleteContractDeployment(network, 'tokenB')
 
         // Encode the function parameters
         // const abiCoder = new ethers.utils.AbiCoder();
         // const encodedData = abiCoder.encode(["address", "address", "int16"], [hre.props.token0.address, hre.props.token1.address, 10]);
         // const signature = keccak256(encodedData);
         // console.log('encoded data:', signature);
+        if (this.deployContracts || hre.network.name == 'hardhat') {
+            // shared
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                TickMap__factory,
+                'tickMapLib',
+                []
+            )
 
-        // shared
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
-            TickMap__factory,
-            'tickMapLib',
-            []
-        )
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                Ticks__factory,
+                'ticksLib',
+                [],
+            )
 
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
-            Ticks__factory,
-            'ticksLib',
-            [],
-        )
+            // range
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                RangePositions__factory,
+                'rangePositionsLib',
+                [],
+            )
 
-        // range
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
-            RangePositions__factory,
-            'rangePositionsLib',
-            [],
-        )
+            // limit
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                LimitPositions__factory,
+                'limitPositionsLib',
+                [],
+                {
+                    'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address
+                }
+            )
 
-        // limit
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
-            LimitPositions__factory,
-            'limitPositionsLib',
-            [],
-            {
-                'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address
-            }
-        )
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                LimitPoolManager__factory,
+                'limitPoolManager',
+                []
+            )
 
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
-            LimitPoolManager__factory,
-            'limitPoolManager',
-            []
-        )
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                LimitPoolFactory__factory,
+                'limitPoolFactory',
+                [   
+                    hre.props.limitPoolManager.address
+                ],
+            )
 
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
-            LimitPoolFactory__factory,
-            'limitPoolFactory',
-            [   
-                hre.props.limitPoolManager.address
-            ],
-        )
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                SwapCall__factory,
+                'swapCall',
+                [],
+                {
+                    'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address,
+                }
+            )
 
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
-            SwapCall__factory,
-            'swapCall',
-            [],
-            {
-                'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address,
-            }
-        )
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                MintRangeCall__factory,
+                'mintRangeCall',
+                []
+            )
 
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
-            MintRangeCall__factory,
-            'mintRangeCall',
-            []
-        )
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                BurnRangeCall__factory,
+                'burnRangeCall',
+                []
+            )
 
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
-            BurnRangeCall__factory,
-            'burnRangeCall',
-            []
-        )
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                MintLimitCall__factory,
+                'mintLimitCall',
+                [],
+                {
+                    'contracts/libraries/limit/LimitPositions.sol:LimitPositions': hre.props.limitPositionsLib.address
+                }
+            )
 
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
-            MintLimitCall__factory,
-            'mintLimitCall',
-            [],
-            {
-                'contracts/libraries/limit/LimitPositions.sol:LimitPositions': hre.props.limitPositionsLib.address
-            }
-        )
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                BurnLimitCall__factory,
+                'burnLimitCall',
+                []
+            )
 
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
-            BurnLimitCall__factory,
-            'burnLimitCall',
-            []
-        )
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                SnapshotLimitCall__factory,
+                'snapshotLimitCall',
+                []
+            )
 
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
-            SnapshotLimitCall__factory,
-            'snapshotLimitCall',
-            []
-        )
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                QuoteCall__factory,
+                'quoteCall',
+                []
+            )
+            
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                FeesCall__factory,
+                'feesCall',
+                []
+            )
 
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
-            QuoteCall__factory,
-            'quoteCall',
-            []
-        )
-        
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
-            FeesCall__factory,
-            'feesCall',
-            []
-        )
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                SampleCall__factory,
+                'sampleCall',
+                []
+            )
 
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
-            SampleCall__factory,
-            'sampleCall',
-            []
-        )
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                SnapshotRangeCall__factory,
+                'snapshotRangeCall',
+                []
+            )
 
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
-            SnapshotRangeCall__factory,
-            'snapshotRangeCall',
-            []
-        )
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                LimitPool__factory,
+                'limitPoolImpl',
+                [
+                    hre.props.limitPoolFactory.address
+                ],
+                {
+                    'contracts/libraries/limit/LimitPositions.sol:LimitPositions': hre.props.limitPositionsLib.address,
+                    'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address,
+                    'contracts/libraries/range/pool/MintRangeCall.sol:MintRangeCall': hre.props.mintRangeCall.address,
+                    'contracts/libraries/range/pool/BurnRangeCall.sol:BurnRangeCall': hre.props.burnRangeCall.address,
+                    'contracts/libraries/range/pool/SnapshotRangeCall.sol:SnapshotRangeCall': hre.props.snapshotRangeCall.address,
+                    'contracts/libraries/limit/pool/MintLimitCall.sol:MintLimitCall': hre.props.mintLimitCall.address,
+                    'contracts/libraries/limit/pool/BurnLimitCall.sol:BurnLimitCall': hre.props.burnLimitCall.address,
+                    'contracts/libraries/limit/pool/SnapshotLimitCall.sol:SnapshotLimitCall': hre.props.snapshotLimitCall.address,
+                    'contracts/libraries/pool/SwapCall.sol:SwapCall': hre.props.swapCall.address,
+                    'contracts/libraries/pool/QuoteCall.sol:QuoteCall': hre.props.quoteCall.address,
+                    'contracts/libraries/pool/FeesCall.sol:FeesCall': hre.props.feesCall.address,
+                    'contracts/libraries/pool/SampleCall.sol:SampleCall': hre.props.sampleCall.address
+                }
+            )
 
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
-            LimitPool__factory,
-            'limitPoolImpl',
-            [
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                PositionERC1155__factory,
+                'positionERC1155',
+                [
                 hre.props.limitPoolFactory.address
-            ],
-            {
-                'contracts/libraries/limit/LimitPositions.sol:LimitPositions': hre.props.limitPositionsLib.address,
-                'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address,
-                'contracts/libraries/range/pool/MintRangeCall.sol:MintRangeCall': hre.props.mintRangeCall.address,
-                'contracts/libraries/range/pool/BurnRangeCall.sol:BurnRangeCall': hre.props.burnRangeCall.address,
-                'contracts/libraries/range/pool/SnapshotRangeCall.sol:SnapshotRangeCall': hre.props.snapshotRangeCall.address,
-                'contracts/libraries/limit/pool/MintLimitCall.sol:MintLimitCall': hre.props.mintLimitCall.address,
-                'contracts/libraries/limit/pool/BurnLimitCall.sol:BurnLimitCall': hre.props.burnLimitCall.address,
-                'contracts/libraries/limit/pool/SnapshotLimitCall.sol:SnapshotLimitCall': hre.props.snapshotLimitCall.address,
-                'contracts/libraries/pool/SwapCall.sol:SwapCall': hre.props.swapCall.address,
-                'contracts/libraries/pool/QuoteCall.sol:QuoteCall': hre.props.quoteCall.address,
-                'contracts/libraries/pool/FeesCall.sol:FeesCall': hre.props.feesCall.address,
-                'contracts/libraries/pool/SampleCall.sol:SampleCall': hre.props.sampleCall.address
-            }
-        )
+                ]
+            )
 
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
-            PositionERC1155__factory,
-            'positionERC1155',
-            [
-              hre.props.limitPoolFactory.address
-            ]
-        )
-
-        const enableImplTxn = await hre.props.limitPoolManager.enablePoolType(
-            this.constantProductString,
-            hre.props.limitPoolImpl.address,
-            hre.props.positionERC1155.address
-        )
-        await enableImplTxn.wait();
-
-        hre.nonce += 1;
-
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
-            PoolsharkRouter__factory,
-            'poolRouter',
-            [
-              hre.props.limitPoolFactory.address, // limitPoolFactory
-              '0xD1f805fB8206FFE1B76E16c002a34739BE66f977'  // coverPoolFactory
-            ]
-        )
-
-        const setFactoryTxn = await hre.props.limitPoolManager.setFactory(
-            hre.props.limitPoolFactory.address
-        )
-        await setFactoryTxn.wait()
-
-        hre.nonce += 1;
-
-        // create first limit pool
-        let createPoolTxn = await hre.props.limitPoolFactory.createLimitPool({
-            poolType: this.constantProductString,
-            tokenIn: hre.props.token0.address,
-            tokenOut: hre.props.token1.address,
-            swapFee: '500',
-            startPrice: '177159557114295710296101716160'
-        })
-        await createPoolTxn.wait()
-
-        hre.nonce += 1
-
-        let limitPoolAddress; let limitPoolTokenAddress;
-        [limitPoolAddress, limitPoolTokenAddress] = await hre.props.limitPoolFactory.getLimitPool(
-            this.constantProductString,
-            hre.props.token0.address,
-            hre.props.token1.address,
-            '500'
-        )
-        hre.props.limitPool = await hre.ethers.getContractAt('LimitPool', limitPoolAddress)
-        hre.props.limitPoolToken = await hre.ethers.getContractAt('PositionERC1155', limitPoolTokenAddress)
-
-        await this.deployAssist.saveContractDeployment(
-            network,
-            'LimitPool',
-            'limitPool',
-            hre.props.limitPool,
-            [
+            const enableImplTxn = await hre.props.limitPoolManager.enablePoolType(
                 this.constantProductString,
-                hre.props.token0.address,
-                hre.props.token1.address,
-                '500'
-            ]
-        )
+                hre.props.limitPoolImpl.address,
+                hre.props.positionERC1155.address
+            )
+            await enableImplTxn.wait();
 
+            hre.nonce += 1;
+
+            const setFactoryTxn = await hre.props.limitPoolManager.setFactory(
+                hre.props.limitPoolFactory.address
+            )
+            await setFactoryTxn.wait()
+    
+            hre.nonce += 1;
+    
+            let limitPoolAddress; let limitPoolTokenAddress;
+    
+            if (hre.network.name == 'hardhat') {
+                // add 500 fee tier
+                let enableFeeTierTxn = await hre.props.limitPoolManager.enableFeeTier(
+                    500,
+                    10
+                );
+                await enableFeeTierTxn.wait();
+
+                hre.nonce += 1;
+
+                // create first limit pool
+                let createPoolTxn = await hre.props.limitPoolFactory.createLimitPool({
+                    poolType: this.constantProductString,
+                    tokenIn: hre.props.token0.address,
+                    tokenOut: hre.props.token1.address,
+                    swapFee: '500',
+                    startPrice: '177159557114295710296101716160'
+                });
+                await createPoolTxn.wait();
+    
+                hre.nonce += 1;
+    
+                [limitPoolAddress, limitPoolTokenAddress] = await hre.props.limitPoolFactory.getLimitPool(
+                    this.constantProductString,
+                    hre.props.token0.address,
+                    hre.props.token1.address,
+                    '500'
+                )
+            } else if (this.deployPools) {
+                // create first limit pool
+                let createPoolTxn = await hre.props.limitPoolFactory.createLimitPool({
+                    poolType: this.constantProductString,
+                    tokenIn: hre.props.token0.address,
+                    tokenOut: hre.props.token1.address,
+                    swapFee: '1000',
+                    startPrice: '3169126500570573503741758013440'
+                });
+                await createPoolTxn.wait();
+    
+                hre.nonce += 1;
+    
+                [limitPoolAddress, limitPoolTokenAddress] = await hre.props.limitPoolFactory.getLimitPool(
+                    this.constantProductString,
+                    hre.props.token0.address,
+                    hre.props.token1.address,
+                    '1000'
+                )
+    
+                hre.nonce += 1;
+    
+                createPoolTxn = await hre.props.limitPoolFactory.createLimitPool({
+                    poolType: this.constantProductString,
+                    tokenIn: hre.props.token0.address,
+                    tokenOut: hre.props.token1.address,
+                    swapFee: '3000',
+                    startPrice: '3169126500570573503741758013440'
+                });
+                await createPoolTxn.wait();
+    
+                hre.nonce += 1;
+    
+                createPoolTxn = await hre.props.limitPoolFactory.createLimitPool({
+                    poolType: this.constantProductString,
+                    tokenIn: hre.props.token0.address,
+                    tokenOut: hre.props.token1.address,
+                    swapFee: '10000',
+                    startPrice: '3169126500570573503741758013440'
+                });
+                await createPoolTxn.wait();
+
+                hre.nonce += 1;
+            }
+    
+            hre.props.limitPool = await hre.ethers.getContractAt('LimitPool', limitPoolAddress)
+            hre.props.limitPoolToken = await hre.ethers.getContractAt('PositionERC1155', limitPoolTokenAddress)
+    
+            await this.deployAssist.saveContractDeployment(
+                network,
+                'LimitPool',
+                'limitPool',
+                hre.props.limitPool,
+                [
+                    this.constantProductString,
+                    hre.props.token0.address,
+                    hre.props.token1.address,
+                    '500'
+                ]
+            )
+        }
+
+        if (hre.network.name == 'hardhat' || this.deployRouter) {
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                PoolsharkRouter__factory,
+                'poolRouter',
+                [
+                  hre.props.limitPoolFactory.address, // limitPoolFactory
+                  '0xD1f805fB8206FFE1B76E16c002a34739BE66f977'  // coverPoolFactory
+                ]
+            )
+        }
         return hre.nonce
     }
 

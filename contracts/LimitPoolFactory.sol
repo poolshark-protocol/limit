@@ -39,7 +39,6 @@ contract LimitPoolFactory is
         address pool,
         address poolToken
     ) {
-
         // validate token pair
         if (params.tokenIn == params.tokenOut || params.tokenIn == address(0) || params.tokenOut == address(0)) {
             revert InvalidTokenAddress();

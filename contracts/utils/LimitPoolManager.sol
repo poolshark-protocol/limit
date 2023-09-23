@@ -34,9 +34,11 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
         emit OwnerTransfer(address(0), msg.sender);
 
         // create initial fee tiers
-        _feeTiers[500] = 10;
+        _feeTiers[1000] = 10;
+        _feeTiers[3000] = 30;
         _feeTiers[10000] = 100;
-        emit FeeTierEnabled(500, 10);
+        emit FeeTierEnabled(1000, 10);
+        emit FeeTierEnabled(3000, 30);
         emit FeeTierEnabled(10000, 100);
     }
 

@@ -32,4 +32,6 @@
 10. swap for sufficient samples for Cover Pools
 
 11. Subgraph setup
+- subgraph.yaml => factory, manager, router addresses, startBlock
+- constants.ts => FACTORY_ADDRESS down to => STABLE_IS_TOKEN_0
 

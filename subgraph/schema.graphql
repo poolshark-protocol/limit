@@ -135,6 +135,7 @@ type LimitPosition @entity {
     owner: Bytes!
     lower: BigInt!
     upper: BigInt!
+    zeroForOne: Boolean!
     liquidity: BigInt!
     pool: LimitPool!
     epochLast: BigInt!

@@ -71,6 +71,7 @@ export function handleMintLimit(event: MintLimit): void {
         position.positionId = positionIdParam
         position.lower = lower
         position.upper = upper
+        position.zeroForOne = zeroForOneParam
         position.owner = Bytes.fromHexString(ownerParam) as Bytes
         position.epochLast = epochLastParam
         position.createdBy = msgSender

@@ -85,29 +85,43 @@ export class MintPosition {
         //     liquidityIncrease: BN_ZERO,
         //     revertMessage: '',
         // })
+
+        for (let i=0; i < 2; i++) {
+            const signer = hre.props.alice
+            const zeroForOne = false
+            const amountIn = token1Amount.mul(10)
+            const priceLimit = BigNumber.from('3169126500570573503741758013440')
+            await hre.props.token1.connect(signer).approve(hre.props.poolRouter.address, amountIn)
+            let txn = await hre.props.poolRouter
+            .connect(signer)
+            .multiSwapSplit(
+            [hre.props.limitPool.address],
+                [
+                {
+                    to: signer.address,
+                    priceLimit: priceLimit,
+                    amount: amountIn,
+                    zeroForOne: zeroForOne,
+                    exactIn: true,
+                    callbackData: ethers.utils.formatBytes32String('')
+                },
+                ], {gasLimit: 3000000})
+            await txn.wait()
+        }
+
+        const globalStateAfter = (await hre.props.limitPool.globalState())
+        console.log('sample state', globalStateAfter.pool.samples.index, globalStateAfter.pool.samples.count, globalStateAfter.pool.samples.countMax, globalStateAfter.pool.tickAtPrice)
+
         // await validateSwap({
         //     signer: hre.props.alice,
         //     recipient: hre.props.alice.address,
-        //     zeroForOne: true,
-        //     amountIn: token1Amount.div(10),
-        //     priceLimit: BigNumber.from('79228162514264337593543950336'),
+        //     zeroForOne: false,
+        //     amountIn: token1Amount,
+        //     priceLimit: BigNumber.from('4339505179874779489431521786241'),
         //     balanceInDecrease: token1Amount.div(10000),
         //     balanceOutIncrease: '15641085361593105857',
         //     revertMessage:''
         // })
-
-
-
-        await validateSwap({
-            signer: hre.props.alice,
-            recipient: hre.props.alice.address,
-            zeroForOne: false,
-            amountIn: token1Amount,
-            priceLimit: BigNumber.from('4339505179874779489431521786241'),
-            balanceInDecrease: token1Amount.div(10000),
-            balanceOutIncrease: '15641085361593105857',
-            revertMessage:''
-        })
 
         // await validateBurn({
         //     signer: hre.props.alice,
@@ -138,8 +152,8 @@ export class MintPosition {
 
         // await validateSync(60)
 
-        await getPrice(false, true)
-        await getLiquidity(false, true)
+        // await getPrice(false, true)
+        // await getLiquidity(false, true)
 
         console.log('position minted')
     }

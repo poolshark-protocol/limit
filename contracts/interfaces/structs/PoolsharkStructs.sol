@@ -314,7 +314,7 @@ interface PoolsharkStructs {
         int16  tickSpread;
         uint16 twapLength;
         uint16 auctionLength;
-        uint16 blockTime;
+        uint16 sampleInterval;
         uint8 token0Decimals;
         uint8 token1Decimals;
         bool minAmountLowerPriced;

@@ -8,7 +8,7 @@ import '../interfaces/cover/ICoverPool.sol';
 import '../interfaces/cover/ICoverPoolFactory.sol';
 import '../interfaces/limit/ILimitPoolFactory.sol';
 import '../interfaces/callbacks/ILimitPoolCallback.sol';
-import '../interfaces/callbacks/ICoverPoolSwapCallback.sol';
+import '../interfaces/callbacks/ICoverPoolCallback.sol';
 import '../libraries/utils/SafeTransfers.sol';
 import '../libraries/utils/SafeCast.sol';
 import '../interfaces/structs/PoolsharkStructs.sol';
@@ -18,7 +18,8 @@ contract PoolsharkRouter is
     PoolsharkStructs,
     ILimitPoolMintCallback,
     ILimitPoolSwapCallback,
-    ICoverPoolSwapCallback
+    ICoverPoolSwapCallback,
+    ICoverPoolMintCallback
 {
     using SafeCast for uint256;
     using SafeCast for int256;
@@ -112,6 +113,28 @@ contract PoolsharkRouter is
         // decode original sender
         SwapCallbackData memory _data = abi.decode(data, (SwapCallbackData));
         
+        // transfer from swap caller
+        if (amount0Delta < 0) {
+            SafeTransfers.transferInto(constants.token0, _data.sender, uint256(-amount0Delta));
+        } else {
+            SafeTransfers.transferInto(constants.token1, _data.sender, uint256(-amount1Delta));
+        }
+    }
+
+    /// @inheritdoc ICoverPoolMintCallback
+    function coverPoolMintCallback(
+        int256 amount0Delta,
+        int256 amount1Delta,
+        bytes calldata data
+    ) external override {
+        PoolsharkStructs.CoverImmutables memory constants = ICoverPool(msg.sender).immutables();
+
+        // validate sender is a canonical cover pool
+        canonicalCoverPoolsOnly(constants);
+
+        // decode original sender
+        MintCallbackData memory _data = abi.decode(data, (MintCallbackData));
+
         // transfer from swap caller
         if (amount0Delta < 0) {
             SafeTransfers.transferInto(constants.token0, _data.sender, uint256(-amount0Delta));
@@ -452,7 +475,7 @@ contract PoolsharkRouter is
             constants.auctionLength
         );
         bytes memory value2 = abi.encodePacked(
-            constants.blockTime,
+            constants.sampleInterval,
             constants.token0Decimals,
             constants.token1Decimals,
             constants.minAmountLowerPriced

@@ -1,9 +1,9 @@
-import { SampleLengthIncreased, SyncRangeTick } from "../../../generated/LimitPoolFactory/LimitPool"
+import { SampleCountIncreased, SyncRangeTick } from "../../../generated/LimitPoolFactory/LimitPool"
 import { safeLoadLimitPool, safeLoadRangeTick } from "../utils/loads"
 import { BigInt } from "@graphprotocol/graph-ts"
 
-export function handleSampleLengthIncreased(event: SampleLengthIncreased): void {
-    let newSamplesLength = event.params.sampleLengthNext
+export function handleSampleCountIncreased(event: SampleCountIncreased): void {
+    let newSamplesLength = event.params.newSampleCountMax
     let poolAddress = event.address.toHex()
 
     let loadPool = safeLoadLimitPool(poolAddress)

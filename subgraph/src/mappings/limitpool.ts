@@ -1,6 +1,6 @@
 import { handleInitialize as handleInitializeHelper } from './pool/initialize'
 import { handleSwap as handleSwapHelper } from './pool/swap'
-import { handleSampleLengthIncreased as handleSampleLengthIncreasedHelper } from './samples/lengthincreased'
+import { handleSampleCountIncreased as handleSampleCountIncreasedHelper } from './samples/lengthincreased'
 import { handleSampleRecorded as handleSampleRecordedHelper } from './samples/recorded'
 import { handleMintLimit as handleMintLimitHelper } from './limit/mint'
 import { handleBurnLimit as handleBurnLimitHelper } from './limit/burn'
@@ -12,7 +12,7 @@ import { handleBurnRange as handleBurnRangeHelper } from './range/burn'
 import { handleCompoundRange as handleCompoundRangeHelper } from './range/compound'
 import { handleCollectRange as handleCollectRangeHelper } from './range/collect'
 import { handleSyncRangeTick as handleSyncRangeTickHelper } from './range/synctick'
-import { BurnLimit, BurnRange, CollectRange, CompoundRange, Initialize, MintLimit, MintRange, SampleLengthIncreased, SampleRecorded, Swap, SyncLimitLiquidity, SyncLimitPool, SyncLimitTick, SyncRangeTick } from '../../generated/LimitPoolFactory/LimitPool'
+import { BurnLimit, BurnRange, CollectRange, CompoundRange, Initialize, MintLimit, MintRange, SampleCountIncreased, SampleRecorded, Swap, SyncLimitLiquidity, SyncLimitPool, SyncLimitTick, SyncRangeTick } from '../../generated/LimitPoolFactory/LimitPool'
 
 // pool
 export function handleInitialize(event: Initialize): void {
@@ -24,8 +24,8 @@ export function handleSwap(event: Swap): void {
 }
 
 // samples
-export function handleSampleLengthIncreased(event: SampleLengthIncreased): void {
-    handleSampleLengthIncreasedHelper(event)
+export function handleSampleCountIncreased(event: SampleCountIncreased): void {
+    handleSampleCountIncreasedHelper(event)
 }
 
 export function handleSampleRecorded(event: SampleRecorded): void {

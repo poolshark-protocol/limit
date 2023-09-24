@@ -1,6 +1,4 @@
-import { SampleLengthIncreased, SampleRecorded, SyncRangeTick } from "../../../generated/LimitPoolFactory/LimitPool"
-import { safeLoadLimitPool, safeLoadRangeTick } from "../utils/loads"
-import { BigInt } from "@graphprotocol/graph-ts"
+import { SampleRecorded } from "../../../generated/LimitPoolFactory/LimitPool"
 
 export function handleSampleRecorded(event: SampleRecorded): void {
 }

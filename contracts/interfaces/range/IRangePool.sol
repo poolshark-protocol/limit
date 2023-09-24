@@ -47,7 +47,7 @@ interface IRangePool is RangePoolStructs {
         int24 averageTick
     );
 
-    function increaseSampleLength(
-        uint16 sampleLengthNext
+    function increaseSampleCount(
+        uint16 newSampleCountMax
     ) external;
 }

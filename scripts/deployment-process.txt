@@ -1,0 +1,33 @@
+1. set values for production
+  - fee tiers
+  - pool types
+  - dynamic fee constant
+
+2. set booleans for first deployment
+    private deployRouter = false
+    private deployTokens = false
+    private deployPools = true
+    private deployContracts = true
+
+3. run first deployment
+
+4. verify contracts
+   - remove rangePositionsLib and limitPool from scripts\autogen\contract-deployments-keys.ts
+
+5. set booleans for second deployment
+    COPY coverPoolFactory from cover deployment
+    private deployRouter = true
+    private deployTokens = false
+    private deployPools = false
+    private deployContracts = false
+
+6. verify router contract
+
+7. add contracts on Tenderly
+
+8. mint position(s)
+
+9. swap for sufficient samples for Cover Pools
+
+10. Subgraph setup
+

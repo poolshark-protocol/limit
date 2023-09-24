@@ -337,7 +337,7 @@ export async function validateMint(params: ValidateMintParams): Promise<number> 
             amount1: amount1,
             callbackData: ethers.utils.formatBytes32String('')
           }
-        ])
+        ], {gasLimit: 3_000_000})
     await txn.wait()
   } else {
     await expect(

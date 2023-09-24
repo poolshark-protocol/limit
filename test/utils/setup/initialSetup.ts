@@ -28,10 +28,10 @@ export class InitialSetup {
     private constantProductString: string
 
     /// DEPLOY CONFIG
-    private deployRouter = false
+    private deployRouter = true
     private deployTokens = false
-    private deployPools = true
-    private deployContracts = true
+    private deployPools = false
+    private deployContracts = false
 
     constructor() {
         this.deployAssist = new DeployAssist()
@@ -404,14 +404,38 @@ export class InitialSetup {
         }
 
         if (hre.network.name == 'hardhat' || this.deployRouter) {
+            let limitPoolFactoryAddress; let coverPoolFactoryAddress;
+            if (hre.network.name == 'hardhat') {
+                limitPoolFactoryAddress = hre.props.limitPoolFactory.address
+                coverPoolFactoryAddress = '0x0000000000000000000000000000000000000000'
+            } else {
+                limitPoolFactoryAddress = (
+                    await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
+                        {
+                            networkName: hre.network.name,
+                            objectName: 'limitPoolFactory',
+                        },
+                        'readLimitPoolSetup'
+                    )
+                ).contractAddress
+                coverPoolFactoryAddress = (
+                    await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
+                        {
+                            networkName: hre.network.name,
+                            objectName: 'coverPoolFactory',
+                        },
+                        'readLimitPoolSetup'
+                    )
+                ).contractAddress
+            }
             await this.deployAssist.deployContractWithRetry(
                 network,
                 // @ts-ignore
                 PoolsharkRouter__factory,
                 'poolRouter',
                 [
-                  hre.props.limitPoolFactory.address, // limitPoolFactory
-                  '0xD1f805fB8206FFE1B76E16c002a34739BE66f977'  // coverPoolFactory
+                  limitPoolFactoryAddress, // limitPoolFactory
+                  coverPoolFactoryAddress  // coverPoolFactory
                 ]
             )
         }

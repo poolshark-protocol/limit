@@ -23,15 +23,13 @@ abstract contract LimitPoolEvents {
         bool indexed exactIn
     );
 
-
     event SampleRecorded(
         int56 tickSecondsAccum,
         uint160 secondsPerLiquidityAccum
     );
 
-
-    event SampleLengthIncreased(
-        uint16 sampleLengthNext
+    event SampleCountIncreased(
+        uint16 newSampleCountMax
     );
 
     event MintRange(

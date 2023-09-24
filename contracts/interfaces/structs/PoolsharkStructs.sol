@@ -63,8 +63,8 @@ interface PoolsharkStructs {
 
     struct SampleState {
         uint16  index;
-        uint16  length;
-        uint16  lengthNext;
+        uint16  count;
+        uint16  countMax;
     }
 
     struct LimitPoolParams {

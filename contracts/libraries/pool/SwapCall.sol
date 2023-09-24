@@ -41,7 +41,9 @@ library SwapCall {
             params,
             cache
         );
+        // save state for reentrancy protection
         save(cache, globalState, params.zeroForOne);
+
         // transfer output amount
         SafeTransfers.transferOut(
             params.to, 

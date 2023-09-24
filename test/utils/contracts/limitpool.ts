@@ -56,8 +56,8 @@ export interface LimitPoolState {
 
 export interface SampleState {
     index: number
-    length: number
-    lengthNext: number
+    count: number
+    countMax: number
 }
 
 export interface Tick {

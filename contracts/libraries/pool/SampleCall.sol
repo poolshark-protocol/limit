@@ -33,7 +33,7 @@ library SampleCall {
             address(this),
             RangePoolStructs.SampleParams(
                 state.pool.samples.index,
-                state.pool.samples.length,
+                state.pool.samples.count,
                 uint32(block.timestamp),
                 secondsAgo,
                 state.pool.tickAtPrice,

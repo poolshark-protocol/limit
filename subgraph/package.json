@@ -18,7 +18,7 @@
         "build": "graph build",
         "deploy": "graph deploy --product hosted-service alphak3y/poolshark-limit",
         "deploy-sats": "graph deploy limit-arbitrumGoerli --version-label v0.1.0 --node https://app.satsuma.xyz/api/subgraphs/deploy --deploy-key 7NoUUXPcOGfBX --ipfs https://ipfs.satsuma.xyz",
-        "deploy-chainstack": "graph deploy --version-label v0.2.2 --node https://api.graph-eu.p2pify.com/3bd8a0adf573b40768f68ef92c7bd843/deploy --ipfs https://api.graph-eu.p2pify.com/3bd8a0adf573b40768f68ef92c7bd843/ipfs limit-arbitrumGoerli-beta2",
+        "deploy-chainstack": "graph deploy --version-label v0.2.3 --node https://api.graph-eu.p2pify.com/3bd8a0adf573b40768f68ef92c7bd843/deploy --ipfs https://api.graph-eu.p2pify.com/3bd8a0adf573b40768f68ef92c7bd843/ipfs limit-arbitrumGoerli-beta2",
         "deploy-op-test": "graph deploy --product hosted-service alphak3y/poolshark-cover-op-goerli",
         "deploy-studio": "graph deploy --studio poolsharks-exchange",
         "deploy-local": "graph deploy example --ipfs http://localhost:5001 --node http://127.0.0.1:8020",

@@ -58,14 +58,6 @@
             ],
             "created": "2023-09-24T14:56:59.060Z"
         },
-        "coverPoolFactory": {
-            "contractName": "CoverPoolFactory",
-            "contractAddress": "0xc9Dc6657e02349445c0FF45EBaCd3B2534d7b198",
-            "constructorArguments": [
-                "0x904BDA322fDc790621653F4608E42c07C9bEe5f4"
-            ],
-            "created": "2023-09-24T15:01:56.097Z"
-        },
         "swapCall": {
             "contractName": "SwapCall",
             "contractAddress": "0x09795cf6a01bc1de4ce731c66181215e8795011a",
@@ -144,12 +136,12 @@
         },
         "poolRouter": {
             "contractName": "PoolsharkRouter",
-            "contractAddress": "0x991743beef1a9f890adc1c289dea0aa1d498d86a",
+            "contractAddress": "0xdb11885eac2a8944438322349925ac0de3159392",
             "constructorArguments": [
                 "0xab21829ec97c5fb6fc5edee736235fa7ca1fbb0a",
-                "0xc9Dc6657e02349445c0FF45EBaCd3B2534d7b198"
+                "0x4b0288914ea8ab81da888e74f93da0062212ddcc"
             ],
-            "created": "2023-09-24T16:01:11.026Z"
+            "created": "2023-09-25T03:03:32.166Z"
         },
         "limitPool": {
             "contractName": "LimitPool",
@@ -161,6 +153,14 @@
                 "500"
             ],
             "created": "2023-09-24T14:57:33.646Z"
+        },
+        "coverPoolFactory": {
+            "contractName": "CoverPoolFactory",
+            "contractAddress": "0x4b0288914ea8ab81da888e74f93da0062212ddcc",
+            "constructorArguments": [
+                "0xF76088F4C5Ad2a138f68870449f019e0E93E1510"
+            ],
+            "created": "2023-09-25T01:59:46.159Z"
         }
     },
     "scrollSepolia": {

@@ -83,7 +83,7 @@ type LimitPool @entity {
     swapFee: BigInt!
     tickSpacing: BigInt!
     factory: LimitPoolFactory!
-    poolType: LimitPoolImpl!
+    poolType: String!
 
     liquidity: BigInt!
     liquidityGlobal: BigInt!

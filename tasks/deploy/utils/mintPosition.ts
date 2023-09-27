@@ -45,7 +45,7 @@ export class MintPosition {
     // 0xBd5db4c7D55C086107f4e9D17c4c34395D1B1E1E
         // await validateMint({
         //     signer: hre.props.alice,
-        //     recipient: '0x65f5B282E024e3d6CaAD112e848dEc3317dB0902',
+        //     recipient: '0x9dA9409D17DeA285B078af06206941C049F692Dc',
         //     lower: '0',
         //     upper: '100',
         //     amount: token1Amount,
@@ -71,8 +71,8 @@ export class MintPosition {
         // )
 
         // console.log('amount quoted:', quote[0][1].toString(), quote[0][2].toString(), quote[0][3].toString())
-        const globalStateBefore = (await hre.props.limitPool.globalState())
-        console.log('sample state', globalStateBefore.pool.samples.index, globalStateBefore.pool.samples.count, globalStateBefore.pool.samples.countMax, globalStateBefore.pool.tickAtPrice)
+        // const globalStateBefore = (await hre.props.limitPool.globalState())
+        // console.log('sample state', globalStateBefore.pool.samples.index, globalStateBefore.pool.samples.count, globalStateBefore.pool.samples.countMax, globalStateBefore.pool.tickAtPrice)
         // const aliceId = await validateMintRange({
         //     signer: hre.props.alice,
         //     recipient: '0xBd5db4c7D55C086107f4e9D17c4c34395D1B1E1E',
@@ -86,31 +86,31 @@ export class MintPosition {
         //     revertMessage: '',
         // })
 
-        for (let i=0; i < 2; i++) {
-            const signer = hre.props.alice
-            const zeroForOne = false
-            const amountIn = token1Amount.mul(10)
-            const priceLimit = BigNumber.from('3169126500570573503741758013440')
-            await hre.props.token1.connect(signer).approve(hre.props.poolRouter.address, amountIn)
-            let txn = await hre.props.poolRouter
-            .connect(signer)
-            .multiSwapSplit(
-            [hre.props.limitPool.address],
-                [
-                {
-                    to: signer.address,
-                    priceLimit: priceLimit,
-                    amount: amountIn,
-                    zeroForOne: zeroForOne,
-                    exactIn: true,
-                    callbackData: ethers.utils.formatBytes32String('')
-                },
-                ], {gasLimit: 3000000})
-            await txn.wait()
-        }
+        // for (let i=0; i < 10; i++) {
+        //     const signer = hre.props.alice
+        //     const zeroForOne = false
+        //     const amountIn = token1Amount.mul(10)
+        //     const priceLimit = BigNumber.from('3169126500570573503741758013440')
+        //     await hre.props.token1.connect(signer).approve(hre.props.poolRouter.address, amountIn)
+        //     let txn = await hre.props.poolRouter
+        //     .connect(signer)
+        //     .multiSwapSplit(
+        //     [hre.props.limitPool.address],
+        //         [
+        //         {
+        //             to: signer.address,
+        //             priceLimit: priceLimit,
+        //             amount: amountIn,
+        //             zeroForOne: zeroForOne,
+        //             exactIn: true,
+        //             callbackData: ethers.utils.formatBytes32String('')
+        //         },
+        //         ], {gasLimit: 3000000})
+        //     await txn.wait()
+        // }
 
-        const globalStateAfter = (await hre.props.limitPool.globalState())
-        console.log('sample state', globalStateAfter.pool.samples.index, globalStateAfter.pool.samples.count, globalStateAfter.pool.samples.countMax, globalStateAfter.pool.tickAtPrice)
+        // const globalStateAfter = (await hre.props.limitPool.globalState())
+        // console.log('sample state', globalStateAfter.pool.samples.index, globalStateAfter.pool.samples.count, globalStateAfter.pool.samples.countMax, globalStateAfter.pool.tickAtPrice)
 
         // await validateSwap({
         //     signer: hre.props.alice,
@@ -123,20 +123,20 @@ export class MintPosition {
         //     revertMessage:''
         // })
 
-        // await validateBurn({
-        //     signer: hre.props.alice,
-        //     lower: '0',
-        //     claim: '100',
-        //     upper: '100',
-        //     positionId: 3,
-        //     liquidityPercent: ethers.utils.parseUnits('1', 38),
-        //     zeroForOne: false,
-        //     balanceInIncrease: '0',
-        //     balanceOutIncrease: token1Amount.sub(1),
-        //     lowerTickCleared: false,
-        //     upperTickCleared: false,
-        //     revertMessage: '',
-        // })
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '73800',
+            claim: '73800',
+            upper: '73830',
+            positionId: 4,
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: true,
+            balanceInIncrease: '0',
+            balanceOutIncrease: token1Amount.sub(1),
+            lowerTickCleared: false,
+            upperTickCleared: false,
+            revertMessage: '',
+        })
 
         // await validateBurnRange({
         //     signer: hre.props.alice,

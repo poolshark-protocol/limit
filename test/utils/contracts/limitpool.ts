@@ -580,7 +580,7 @@ export async function validateBurn(params: ValidateBurnParams) {
                 claim: claim,
                 zeroForOne: zeroForOne,
                 burnPercent: liquidityPercent,
-            })
+            }, {gasLimit: 3_000_000})
         await burnTxn.wait()
     } else {
         await expect(

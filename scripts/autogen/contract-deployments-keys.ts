@@ -2,87 +2,83 @@ import { ContractDeploymentsKey } from '../util/files/contractDeploymentsJson'
 
 export const CONTRACT_DEPLOYMENT_KEYS: ContractDeploymentsKey[] = [
     {
-        networkName: 'arb_goerli',
-        objectName: 'poolRouter'
-    },
-    {
-        networkName: 'undefined',
+        networkName: 'scrollSepolia',
         objectName: 'tickMapLib'
     },
     {
-        networkName: 'undefined',
+        networkName: 'scrollSepolia',
         objectName: 'ticksLib'
     },
     {
-        networkName: 'undefined',
+        networkName: 'scrollSepolia',
         objectName: 'rangePositionsLib'
     },
     {
-        networkName: 'undefined',
+        networkName: 'scrollSepolia',
         objectName: 'limitPositionsLib'
     },
     {
-        networkName: 'undefined',
+        networkName: 'scrollSepolia',
         objectName: 'limitPoolManager'
     },
     {
-        networkName: 'undefined',
+        networkName: 'scrollSepolia',
         objectName: 'limitPoolFactory'
     },
     {
-        networkName: 'undefined',
+        networkName: 'scrollSepolia',
         objectName: 'swapCall'
     },
     {
-        networkName: 'undefined',
+        networkName: 'scrollSepolia',
         objectName: 'mintRangeCall'
     },
     {
-        networkName: 'undefined',
+        networkName: 'scrollSepolia',
         objectName: 'burnRangeCall'
     },
     {
-        networkName: 'undefined',
+        networkName: 'scrollSepolia',
         objectName: 'mintLimitCall'
     },
     {
-        networkName: 'undefined',
+        networkName: 'scrollSepolia',
         objectName: 'burnLimitCall'
     },
     {
-        networkName: 'undefined',
+        networkName: 'scrollSepolia',
         objectName: 'snapshotLimitCall'
     },
     {
-        networkName: 'undefined',
+        networkName: 'scrollSepolia',
         objectName: 'quoteCall'
     },
     {
-        networkName: 'undefined',
+        networkName: 'scrollSepolia',
         objectName: 'feesCall'
     },
     {
-        networkName: 'undefined',
+        networkName: 'scrollSepolia',
         objectName: 'sampleCall'
     },
     {
-        networkName: 'undefined',
+        networkName: 'scrollSepolia',
         objectName: 'snapshotRangeCall'
     },
     {
-        networkName: 'undefined',
+        networkName: 'scrollSepolia',
         objectName: 'limitPoolImpl'
     },
     {
-        networkName: 'undefined',
+        networkName: 'scrollSepolia',
         objectName: 'positionERC1155'
     },
     {
-        networkName: 'undefined',
+        networkName: 'scrollSepolia',
         objectName: 'limitPool'
     },
     {
-        networkName: 'undefined',
+        networkName: 'scrollSepolia',
         objectName: 'poolRouter'
     },
 ];

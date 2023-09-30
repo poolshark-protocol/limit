@@ -112,31 +112,31 @@ export class MintPosition {
         // const globalStateAfter = (await hre.props.limitPool.globalState())
         // console.log('sample state', globalStateAfter.pool.samples.index, globalStateAfter.pool.samples.count, globalStateAfter.pool.samples.countMax, globalStateAfter.pool.tickAtPrice)
 
-        // await validateSwap({
-        //     signer: hre.props.alice,
-        //     recipient: hre.props.alice.address,
-        //     zeroForOne: false,
-        //     amountIn: token1Amount,
-        //     priceLimit: BigNumber.from('4339505179874779489431521786241'),
-        //     balanceInDecrease: token1Amount.div(10000),
-        //     balanceOutIncrease: '15641085361593105857',
-        //     revertMessage:''
-        // })
-
-        await validateBurn({
+        await validateSwap({
             signer: hre.props.alice,
-            lower: '73800',
-            claim: '73800',
-            upper: '73830',
-            positionId: 4,
-            liquidityPercent: ethers.utils.parseUnits('1', 38),
-            zeroForOne: true,
-            balanceInIncrease: '0',
-            balanceOutIncrease: token1Amount.sub(1),
-            lowerTickCleared: false,
-            upperTickCleared: false,
-            revertMessage: '',
+            recipient: hre.props.alice.address,
+            zeroForOne: false,
+            amountIn: token1Amount.div(100),
+            priceLimit: BigNumber.from('1461446703485210103287273052203988822378723970342'),
+            balanceInDecrease: token1Amount.div(10000),
+            balanceOutIncrease: '15641085361593105857',
+            revertMessage:'',
         })
+
+        // await validateBurn({
+        //     signer: hre.props.alice,
+        //     lower: '73800',
+        //     claim: '73800',
+        //     upper: '73830',
+        //     positionId: 4,
+        //     liquidityPercent: ethers.utils.parseUnits('1', 38),
+        //     zeroForOne: true,
+        //     balanceInIncrease: '0',
+        //     balanceOutIncrease: token1Amount.sub(1),
+        //     lowerTickCleared: false,
+        //     upperTickCleared: false,
+        //     revertMessage: '',
+        // })
 
         // await validateBurnRange({
         //     signer: hre.props.alice,

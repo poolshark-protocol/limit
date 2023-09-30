@@ -224,10 +224,11 @@ export async function validateSwap(params: ValidateSwapParams) {
 
     // quote pre-swap and validate balance changes match post-swap
 
-
     let amountInQuoted
     let amountOutQuoted
     let priceAfterQuoted
+
+    console.log('current price', (await (hre.props.limitPool.globalState())).pool.price.toString())
 
     if (revertMessage == '') {
         const quote = await hre.props.poolRouter.multiQuote(
@@ -248,6 +249,34 @@ export async function validateSwap(params: ValidateSwapParams) {
             ],
             true
         )
+        // const quote = await hre.props.poolRouter.multiQuote(
+        //     [
+        //         "0x5c83c95242e7c36a26e50e2de8d95198cab6aabb",
+        //         "0x7af8be3e1f0d7de23649e9ad146be3b5433fb4ee",
+        //         "0x83e8902a1b28faedc9d09ce1a45671be424efaf3"
+        //     ],
+        //     [
+        //         {
+        //             priceLimit: priceLimit,
+        //             amount: amountIn,
+        //             zeroForOne: zeroForOne,
+        //             exactIn: true
+        //         },
+        //         {
+        //             priceLimit: priceLimit,
+        //             amount: amountIn,
+        //             zeroForOne: zeroForOne,
+        //             exactIn: true
+        //         },
+        //         {
+        //             priceLimit: priceLimit,
+        //             amount: amountIn,
+        //             zeroForOne: zeroForOne,
+        //             exactIn: true
+        //         }
+        //     ],
+        //     true
+        // )
         // const quote = await hre.props.limitPool.quote({
         //     priceLimit: priceLimit,
         //     amount: amountIn,
@@ -257,6 +286,8 @@ export async function validateSwap(params: ValidateSwapParams) {
         amountInQuoted = quote[0][1]
         amountOutQuoted = quote[0][2]
         priceAfterQuoted = quote[0][3]
+        // console.log('quote results', amountInQuoted.toString(), amountOutQuoted.toString(), priceAfterQuoted.toString())
+
         if (splitInto > 1) await ethers.provider.send("evm_setAutomine", [false]);
         for (let i = 0; i < splitInto; i++) {
             let txn = await hre.props.poolRouter

@@ -2,7 +2,7 @@ import { store, BigInt } from "@graphprotocol/graph-ts"
 import { BurnLimit } from "../../../generated/LimitPoolFactory/LimitPool"
 import { ONE_BI } from "../../constants/constants"
 import { BIGINT_ZERO, convertTokenToDecimal } from "../utils/helpers"
-import { safeLoadBasePrice, safeLoadBurnLog, safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadLimitPosition, safeLoadLimitTick, safeLoadToken } from "../utils/loads"
+import { safeLoadBasePrice, safeLoadBurnLog, safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadLimitPosition, safeLoadLimitTick, safeLoadToken, safeLoadTvlUpdateLog } from "../utils/loads"
 import { findEthPerToken } from "../utils/price"
 import { updateDerivedTVLAmounts } from "../utils/tvl"
 
@@ -134,6 +134,7 @@ export function handleBurnLimit(event: BurnLimit): void {
         zeroForOneParam ? tokenIn : tokenOut,
         pool,
         factory,
+        basePrice,
         oldPoolTotalValueLockedEth
     )
     if (zeroForOneParam) {
@@ -145,6 +146,24 @@ export function handleBurnLimit(event: BurnLimit): void {
     }
     pool = updateTvlRet.pool
     factory = updateTvlRet.factory
+
+    let loadTvlUpdateLog = safeLoadTvlUpdateLog(event.transaction.hash, poolAddress)
+    let tvlUpdateLog = loadTvlUpdateLog.entity
+
+    tvlUpdateLog.pool = poolAddress
+    tvlUpdateLog.txnHash = event.transaction.hash
+    tvlUpdateLog.amount0Change = zeroForOneParam ? amountOut.neg() : amountIn.neg()
+    tvlUpdateLog.amount1Change = zeroForOneParam ? amountIn.neg() : amountOut.neg()
+    tvlUpdateLog.amount0Total = pool.totalValueLocked0
+    tvlUpdateLog.amount1Total = pool.totalValueLocked1
+    tvlUpdateLog.token0UsdPrice = zeroForOneParam ? tokenOut.usdPrice : tokenIn.usdPrice
+    tvlUpdateLog.token1UsdPrice = zeroForOneParam ? tokenIn.usdPrice : tokenOut.usdPrice
+    tvlUpdateLog.amountUsdChange = amountIn
+    .times(tokenIn.ethPrice.times(basePrice.USD))
+    .plus(amountOut.times(tokenOut.ethPrice.times(basePrice.USD))).neg()
+    tvlUpdateLog.amountUsdTotal = pool.totalValueLockedUsd
+
+    tvlUpdateLog.save()
 
     basePrice.save() // 3
     pool.save() // 4

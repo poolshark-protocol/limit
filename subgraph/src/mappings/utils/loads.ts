@@ -1,5 +1,5 @@
 import { Address, BigDecimal, BigInt, Bytes, ethereum, log } from '@graphprotocol/graph-ts'
-import { LimitPool, LimitPoolFactory, LimitPoolManager, LimitPosition, Token, FeeTier, BasePrice, RangePosition, RangeTick, Transaction, LimitTick, Swap, CompoundRangeLog, MintRangeLog, BurnRangeLog, PoolRouter } from '../../../generated/schema'
+import { LimitPool, LimitPoolFactory, LimitPoolManager, LimitPosition, Token, FeeTier, BasePrice, RangePosition, RangeTick, Transaction, LimitTick, Swap, CompoundRangeLog, MintRangeLog, BurnRangeLog, PoolRouter, TvlUpdateLog } from '../../../generated/schema'
 import { ONE_BD } from '../../constants/constants'
 import {
     fetchTokenSymbol,
@@ -334,6 +334,30 @@ export function safeLoadRangePositionById(
 
     return {
         entity: positionEntity,
+        exists: exists,
+    }
+}
+
+class LoadTvlUpdateLog {
+    entity: TvlUpdateLog
+    exists: boolean
+}
+export function safeLoadTvlUpdateLog(txnHash: Bytes, pool: string): LoadTvlUpdateLog {
+    let exists = true
+
+    let tvlUpdateLogId = txnHash.toString()
+                    .concat('-')
+                    .concat(pool)
+
+    let tvlUpdateLogEntity = TvlUpdateLog.load(tvlUpdateLogId)
+
+    if (!tvlUpdateLogEntity) {
+        tvlUpdateLogEntity = new TvlUpdateLog(tvlUpdateLogId)
+        exists = false
+    }
+
+    return {
+        entity: tvlUpdateLogEntity,
         exists: exists,
     }
 }

@@ -136,12 +136,12 @@
         },
         "poolRouter": {
             "contractName": "PoolsharkRouter",
-            "contractAddress": "0x3a3b9a14a0695e9aeb2d3fdbe08274a9f853a1f9",
+            "contractAddress": "0xbe033a8649376bf3ac06cae9439c2612b582532c",
             "constructorArguments": [
                 "0xab21829ec97c5fb6fc5edee736235fa7ca1fbb0a",
-                "0x4b0288914ea8ab81da888e74f93da0062212ddcc"
+                "0xf8f75a39663e97d36da4be2882608513512f4cf0"
             ],
-            "created": "2023-09-30T18:04:34.377Z"
+            "created": "2023-10-01T21:28:30.192Z"
         },
         "limitPool": {
             "contractName": "LimitPool",
@@ -156,11 +156,11 @@
         },
         "coverPoolFactory": {
             "contractName": "CoverPoolFactory",
-            "contractAddress": "0x4b0288914ea8ab81da888e74f93da0062212ddcc",
+            "contractAddress": "0xf8f75a39663e97d36da4be2882608513512f4cf0",
             "constructorArguments": [
-                "0xF76088F4C5Ad2a138f68870449f019e0E93E1510"
+                "0x7877A681D1290d80ed0272A920b9a5CeE8Fd2fAC"
             ],
-            "created": "2023-09-25T01:59:46.159Z"
+            "created": "2023-10-01T13:30:41.488Z"
         }
     },
     "scrollSepolia": {

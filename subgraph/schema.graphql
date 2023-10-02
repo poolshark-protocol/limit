@@ -245,6 +245,20 @@ type PoolRouter @entity {
     coverPoolFactory: Bytes!
 }
 
+type TvlUpdateLog @entity {
+    id: ID!
+    pool: LimitPool!
+    txnHash: Bytes!
+    amount0Change: BigDecimal!
+    amount1Change: BigDecimal!
+    amount0Total: BigDecimal!
+    amount1Total: BigDecimal!
+    token0UsdPrice: BigDecimal!
+    token1UsdPrice: BigDecimal!
+    amountUsdChange: BigDecimal!
+    amountUsdTotal: BigDecimal!
+}
+
 type MintLimitLog @entity {
     id: ID!
 

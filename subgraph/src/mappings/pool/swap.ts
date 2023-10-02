@@ -1,5 +1,5 @@
 import { BigDecimal, BigInt } from "@graphprotocol/graph-ts"
-import { safeLoadBasePrice, safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadSwap, safeLoadToken, safeLoadTransaction } from "../utils/loads"
+import { safeLoadBasePrice, safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadSwap, safeLoadToken, safeLoadTransaction, safeLoadTvlUpdateLog } from "../utils/loads"
 import { convertTokenToDecimal } from "../utils/helpers"
 import { ZERO_BD, TWO_BD, ONE_BI } from "../../constants/constants"
 import { AmountType, findEthPerToken, getAdjustedAmounts, getEthPriceInUSD, sqrtPriceX96ToTokenPrices } from "../utils/price"
@@ -34,10 +34,10 @@ export function handleSwap(event: Swap): void {
     let amount0: BigDecimal; let amount1: BigDecimal;
     if (zeroForOneParam) {
         amount0 = convertTokenToDecimal(amountInParam, token0.decimals)
-        amount1 = convertTokenToDecimal(amountOutParam, token1.decimals)
+        amount1 = convertTokenToDecimal(amountOutParam.neg(), token1.decimals)
     } else {
         amount1 = convertTokenToDecimal(amountInParam, token1.decimals)
-        amount0 = convertTokenToDecimal(amountOutParam, token0.decimals)
+        amount0 = convertTokenToDecimal(amountOutParam.neg(), token0.decimals)
     }
 
     pool.liquidity = liquidityParam
@@ -65,7 +65,7 @@ export function handleSwap(event: Swap): void {
     pool.totalValueLocked1 = pool.totalValueLocked1.plus(amount1)
     token0.totalValueLocked = token0.totalValueLocked.plus(amount0)
     token1.totalValueLocked = token1.totalValueLocked.plus(amount1)
-    let updateTvlRet = updateDerivedTVLAmounts(token0, token1, pool, factory, oldPoolTVLEth)
+    let updateTvlRet = updateDerivedTVLAmounts(token0, token1, pool, factory, basePrice, oldPoolTVLEth)
     token0 = updateTvlRet.token0
     token1 = updateTvlRet.token1
     pool = updateTvlRet.pool
@@ -136,6 +136,24 @@ export function handleSwap(event: Swap): void {
         swap.tickAfter = BigInt.fromI32(tickAtPriceParam)
         swap.txnIndex = pool.txnCount
     }
+
+    let loadTvlUpdateLog = safeLoadTvlUpdateLog(event.transaction.hash, poolAddress)
+    let tvlUpdateLog = loadTvlUpdateLog.entity
+
+    tvlUpdateLog.pool = poolAddress
+    tvlUpdateLog.txnHash = event.transaction.hash
+    tvlUpdateLog.amount0Change = amount0
+    tvlUpdateLog.amount1Change = amount1
+    tvlUpdateLog.amount0Total = pool.totalValueLocked0
+    tvlUpdateLog.amount1Total = pool.totalValueLocked1
+    tvlUpdateLog.token0UsdPrice = token0.usdPrice
+    tvlUpdateLog.token1UsdPrice = token1.usdPrice
+    tvlUpdateLog.amountUsdChange = amount0
+    .times(token0.ethPrice.times(basePrice.USD))
+    .plus(amount1.times(token1.ethPrice.times(basePrice.USD)))
+    tvlUpdateLog.amountUsdTotal = pool.totalValueLockedUsd
+
+    tvlUpdateLog.save()
 
     //TODO: add hour and daily data
     basePrice.save()

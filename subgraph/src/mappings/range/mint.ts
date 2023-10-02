@@ -127,6 +127,9 @@ export function handleMintRange(event: MintRange): void {
     let tvlUpdateLog = loadTvlUpdateLog.entity
 
     tvlUpdateLog.pool = poolAddress
+    tvlUpdateLog.eventName = "MintRange"
+    tvlUpdateLog.txnHash = event.transaction.hash
+    tvlUpdateLog.txnBlockNumber = event.block.number
     tvlUpdateLog.amount0Change = amount0
     tvlUpdateLog.amount1Change = amount1
     tvlUpdateLog.amount0Total = pool.totalValueLocked0

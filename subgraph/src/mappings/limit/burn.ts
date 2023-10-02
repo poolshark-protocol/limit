@@ -151,7 +151,9 @@ export function handleBurnLimit(event: BurnLimit): void {
     let tvlUpdateLog = loadTvlUpdateLog.entity
 
     tvlUpdateLog.pool = poolAddress
+    tvlUpdateLog.eventName = "BurnRange"
     tvlUpdateLog.txnHash = event.transaction.hash
+    tvlUpdateLog.txnBlockNumber = event.block.number
     tvlUpdateLog.amount0Change = zeroForOneParam ? amountOut.neg() : amountIn.neg()
     tvlUpdateLog.amount1Change = zeroForOneParam ? amountIn.neg() : amountOut.neg()
     tvlUpdateLog.amount0Total = pool.totalValueLocked0

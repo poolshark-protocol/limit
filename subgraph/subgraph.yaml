@@ -129,8 +129,8 @@ templates:
                 handler: handleBurnRange
               - event: CompoundRange(indexed uint32,uint128)
                 handler: handleCompoundRange
-              - event: CollectRange(uint128,uint128)
-                handler: handleCollectRange
+              # - event: CollectRange(uint128,uint128)
+              #   handler: handleCollectRange
               - event: SyncRangeTick(uint200,uint200,int24)
                 handler: handleSyncRangeTick
               - event: MintLimit(indexed address,int24,int24,bool,uint32,uint32,uint128,uint128,uint128)

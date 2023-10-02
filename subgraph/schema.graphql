@@ -248,7 +248,9 @@ type PoolRouter @entity {
 type TvlUpdateLog @entity {
     id: ID!
     pool: LimitPool!
+    eventName: String!
     txnHash: Bytes!
+    txnBlockNumber: BigInt!
     amount0Change: BigDecimal!
     amount1Change: BigDecimal!
     amount0Total: BigDecimal!

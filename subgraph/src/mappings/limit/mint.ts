@@ -156,7 +156,9 @@ export function handleMintLimit(event: MintLimit): void {
     let tvlUpdateLog = loadTvlUpdateLog.entity
 
     tvlUpdateLog.pool = poolAddress
+    tvlUpdateLog.eventName = "MintLimit"
     tvlUpdateLog.txnHash = event.transaction.hash
+    tvlUpdateLog.txnBlockNumber = event.block.number
     tvlUpdateLog.amount0Change = zeroForOneParam ? amountIn : amountOut.neg()
     tvlUpdateLog.amount1Change = zeroForOneParam ? amountOut.neg() : amountIn
     tvlUpdateLog.amount0Total = pool.totalValueLocked0

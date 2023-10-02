@@ -51,7 +51,9 @@ export function handleCollectRange(event: CollectRange): void {
     let tvlUpdateLog = loadTvlUpdateLog.entity
 
     tvlUpdateLog.pool = poolAddress
+    tvlUpdateLog.eventName = "CollectRange"
     tvlUpdateLog.txnHash = event.transaction.hash
+    tvlUpdateLog.txnBlockNumber = event.block.number
     tvlUpdateLog.amount0Change = amount0.neg()
     tvlUpdateLog.amount1Change = amount1.neg()
     tvlUpdateLog.amount0Total = pool.totalValueLocked0

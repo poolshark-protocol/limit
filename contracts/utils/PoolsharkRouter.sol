@@ -269,6 +269,24 @@ contract PoolsharkRouter is
         }
     }
 
+    function multiSnapshotLimit(
+        address[] memory pools,
+        SnapshotLimitParams[] memory params 
+    ) external view returns(
+        uint128[] memory amountIns,
+        uint128[] memory amountOuts
+    ) {
+        amountIns = new uint128[](pools.length);
+        amountOuts = new uint128[](pools.length);
+        for (uint i = 0; i < pools.length;) {
+            if (pools[i] == address(0)) require(false, "InvalidPoolAddress()");
+            (amountIns[i], amountOuts[i]) = ILimitPool(pools[i]).snapshotLimit(params[i]);
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
     function createLimitPoolAndMint(
         ILimitPoolFactory.LimitPoolParams memory params,
         MintRangeParams[] memory mintRangeParams,

@@ -50,8 +50,8 @@ interface IPool is PoolsharkStructs {
     function snapshotLimit(
         SnapshotLimitParams memory params
     ) external view returns(
-        uint128,
-        uint128
+        uint128 amountIn,
+        uint128 amountOut
     );
 
     function globalState() external view returns (

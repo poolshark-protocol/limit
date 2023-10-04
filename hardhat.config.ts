@@ -43,8 +43,7 @@ const config: HardhatUserConfig = {
             chainId: 534351,
             url: "https://sepolia-rpc.scroll.io/" || "",
             gasPrice: 1_500_000_000,
-            accounts:
-              process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+            accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
         },
         op_goerli: {
             chainId: 420,

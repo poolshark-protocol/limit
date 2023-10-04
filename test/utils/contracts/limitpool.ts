@@ -228,8 +228,6 @@ export async function validateSwap(params: ValidateSwapParams) {
     let amountOutQuoted
     let priceAfterQuoted
 
-    console.log('current price', (await (hre.props.limitPool.globalState())).pool.price.toString())
-
     if (revertMessage == '') {
         const quote = await hre.props.poolRouter.multiQuote(
             [hre.props.limitPool.address, hre.props.limitPool.address],
@@ -568,7 +566,7 @@ export async function validateBurn(params: ValidateBurnParams) {
     let lowerTickBefore: LimitTick
     let upperTickBefore: LimitTick
     let positionBefore: LimitPosition
-    let positionSnapshot: [BigNumber, BigNumber]
+    let positionSnapshots: [BigNumber[], BigNumber[]]
     let positionTokens: Contract
     let positionTokenBalanceBefore: BigNumber
     positionTokens = await hre.ethers.getContractAt('PositionERC1155', hre.props.limitPoolToken.address);
@@ -596,13 +594,17 @@ export async function validateBurn(params: ValidateBurnParams) {
         liquidityAmount = liquidityPercent.mul(positionBefore.liquidity).div(ethers.utils.parseUnits("1",38))
     }
     if (revertMessage == '') {
-        positionSnapshot = await hre.props.limitPool.snapshotLimit({
-            owner: signer.address,
-            positionId: params.positionId,
-            claim: claim,
-            zeroForOne: zeroForOne,
-            burnPercent: liquidityPercent
-        })
+        positionSnapshots = await hre.props.poolRouter.multiSnapshotLimit(
+        [hre.props.limitPool.address],
+        [    
+            {
+                owner: signer.address,
+                positionId: params.positionId,
+                claim: claim,
+                zeroForOne: zeroForOne,
+                burnPercent: liquidityPercent
+            }
+        ])
         const burnTxn = await hre.props.limitPool
             .connect(signer)
             .burnLimit({
@@ -642,8 +644,8 @@ export async function validateBurn(params: ValidateBurnParams) {
     expect(balanceOutAfter.sub(balanceOutBefore)).to.be.equal(balanceOutIncrease)
 
     if (compareSnapshot) {
-        expect(positionSnapshot[0]).to.be.equal(balanceInIncrease)
-        expect(positionSnapshot[1]).to.be.equal(balanceOutIncrease)
+        expect(positionSnapshots[0][0]).to.be.equal(balanceInIncrease)
+        expect(positionSnapshots[1][0]).to.be.equal(balanceOutIncrease)
     }
 
     let lowerTickAfter: LimitTick

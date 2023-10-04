@@ -27,5 +27,5 @@ task(MINT_POSITION)
 
         await mintPosition.mintPosition.postDeployment()
 
-        console.log('Mint tokens task complete.\n')
+        console.log('Mint position task complete.\n')
     })

@@ -120,14 +120,6 @@ library Claims {
                 require (false, 'WrongTickClaimedAt7()');
         }
 
-        // early return if no update and amount burned is 0
-        //TODO: after we've cycled through claim ticks and there are no position updates just revert - DONE
-        if (params.zeroForOne ? params.claim == cache.position.lower
-                              : params.claim == cache.position.upper) {
-            if (cache.liquidityBurned == 0)
-                require(false, 'NoPositionUpdates()');
-        }
-
         return (params, cache);
     }
 

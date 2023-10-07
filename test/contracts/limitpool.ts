@@ -1897,6 +1897,7 @@ describe('LimitPool Tests', function () {
             revertMessage: '',
         })
 
+        // no position updates
         await validateBurn({
             signer: hre.props.alice,
             positionId: aliceId,
@@ -1905,12 +1906,12 @@ describe('LimitPool Tests', function () {
             claim: '120',
             liquidityPercent: ethers.utils.parseUnits('0', 37),
             zeroForOne: true,
-            balanceInIncrease: '6299506528577082722',
-            balanceOutIncrease: '93477298451459613958',
+            balanceInIncrease: '0',
+            balanceOutIncrease: '0',
             lowerTickCleared: true,
             upperTickCleared: false,
             expectedLower: '120',
-            revertMessage: 'NoPositionUpdates()',
+            revertMessage: '',
         })
 
         if (debugMode) console.log('BEFORE BURN 3')
@@ -2146,12 +2147,12 @@ describe('LimitPool Tests', function () {
             claim: '-120',
             liquidityPercent: ethers.utils.parseUnits('0', 37),
             zeroForOne: false,
-            balanceInIncrease: '6273424767410208531',
-            balanceOutIncrease: '93503056303984116865',
+            balanceInIncrease: '0',
+            balanceOutIncrease: '0',
             lowerTickCleared: false,
             upperTickCleared: true,
             expectedUpper: '-120',
-            revertMessage: 'NoPositionUpdates()',
+            revertMessage: '',
         })
 
         if (debugMode) console.log('BEFORE MINT 3')

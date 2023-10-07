@@ -288,11 +288,11 @@
       {
         "indexed": false,
         "internalType": "uint16",
-        "name": "sampleLengthNext",
+        "name": "newSampleCountMax",
         "type": "uint16"
       }
     ],
-    "name": "SampleLengthIncreased",
+    "name": "SampleCountIncreased",
     "type": "event"
   },
   {

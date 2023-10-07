@@ -8,7 +8,8 @@ export async function mintSigners20(
     signers: SignerWithAddress[]
 ): Promise<void> {
     for (let signer of signers) {
-        await token.connect(hre.props.alice).mint(signer.address, amount)
+        const txn = await token.connect(hre.props.alice).mint(signer.address, amount)
+        await txn.wait()
     }
 }
 

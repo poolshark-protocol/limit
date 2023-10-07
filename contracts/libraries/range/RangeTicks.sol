@@ -82,7 +82,7 @@ library RangeTicks {
                         IPool(address(this)), 
                         RangePoolStructs.SampleParams(
                             state.pool.samples.index,
-                            state.pool.samples.length,
+                            state.pool.samples.count,
                             uint32(block.timestamp),
                             new uint32[](2),
                             state.pool.tickAtPrice,
@@ -122,7 +122,7 @@ library RangeTicks {
                         IPool(address(this)), 
                         RangePoolStructs.SampleParams(
                             state.pool.samples.index,
-                            state.pool.samples.length,
+                            state.pool.samples.count,
                             uint32(block.timestamp),
                             new uint32[](2),
                             state.pool.tickAtPrice,
@@ -151,7 +151,7 @@ library RangeTicks {
         }
         if (tickAtPrice >= lower && tickAtPrice < upper) {
             // write an oracle entry
-            (state.pool.samples.index, state.pool.samples.length) = Samples.save(
+            (state.pool.samples.index, state.pool.samples.count) = Samples.save(
                 samples,
                 state.pool.samples,
                 state.pool.liquidity,
@@ -207,7 +207,7 @@ library RangeTicks {
 
         if (tickAtPrice >= lower && tickAtPrice < upper) {
             // write an oracle entry
-            (state.pool.samples.index, state.pool.samples.length) = Samples.save(
+            (state.pool.samples.index, state.pool.samples.count) = Samples.save(
                 samples,
                 state.pool.samples,
                 state.pool.liquidity,

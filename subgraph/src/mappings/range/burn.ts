@@ -1,5 +1,5 @@
 import { Address, store } from "@graphprotocol/graph-ts"
-import { safeLoadBasePrice, safeLoadBurnLog, safeLoadRangePositionById, safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadRangeTick, safeLoadToken, safeLoadRangePosition } from "../utils/loads"
+import { safeLoadBasePrice, safeLoadBurnLog, safeLoadRangePositionById, safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadRangeTick, safeLoadToken, safeLoadRangePosition, safeLoadTvlUpdateLog } from "../utils/loads"
 import {
     BigInt,
 } from '@graphprotocol/graph-ts'
@@ -109,7 +109,7 @@ export function handleBurnRange(event: BurnRange): void {
     token1.totalValueLocked = token1.totalValueLocked.minus(amount1)
     pool.totalValueLocked0 = pool.totalValueLocked0.minus(amount0)
     pool.totalValueLocked1 = pool.totalValueLocked1.minus(amount1)
-    let updateTvlRet = updateDerivedTVLAmounts(token0, token1, pool, factory, oldPoolTotalValueLockedEth)
+    let updateTvlRet = updateDerivedTVLAmounts(token0, token1, pool, factory, basePrice, oldPoolTotalValueLockedEth)
     token0 = updateTvlRet.token0
     token1 = updateTvlRet.token1
     pool = updateTvlRet.pool
@@ -123,6 +123,26 @@ export function handleBurnRange(event: BurnRange): void {
         pool.liquidity = pool.liquidity.minus(liquidityBurnedParam)
         pool.poolLiquidity = pool.poolLiquidity.minus(liquidityBurnedParam)
     }
+
+    let loadTvlUpdateLog = safeLoadTvlUpdateLog(event.transaction.hash, poolAddress)
+    let tvlUpdateLog = loadTvlUpdateLog.entity
+
+    tvlUpdateLog.pool = poolAddress
+    tvlUpdateLog.eventName = "BurnRange"
+    tvlUpdateLog.txnHash = event.transaction.hash
+    tvlUpdateLog.txnBlockNumber = event.block.number
+    tvlUpdateLog.amount0Change = amount0.neg()
+    tvlUpdateLog.amount1Change = amount1.neg()
+    tvlUpdateLog.amount0Total = pool.totalValueLocked0
+    tvlUpdateLog.amount1Total = pool.totalValueLocked1
+    tvlUpdateLog.token0UsdPrice = token0.usdPrice
+    tvlUpdateLog.token1UsdPrice = token1.usdPrice
+    tvlUpdateLog.amountUsdChange = amount0
+    .times(token0.ethPrice.times(basePrice.USD))
+    .plus(amount1.times(token1.ethPrice.times(basePrice.USD))).neg()
+    tvlUpdateLog.amountUsdTotal = pool.totalValueLockedUsd
+
+    tvlUpdateLog.save()
 
     burnLog.save()
     basePrice.save()

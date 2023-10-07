@@ -39,7 +39,6 @@ contract LimitPoolFactory is
         address pool,
         address poolToken
     ) {
-
         // validate token pair
         if (params.tokenIn == params.tokenOut || params.tokenIn == address(0) || params.tokenOut == address(0)) {
             revert InvalidTokenAddress();
@@ -125,49 +124,6 @@ contract LimitPoolFactory is
 
         return (pool, constants.poolToken);
     }
-
-    function createLimitPoolAndMint(
-        LimitPoolParams memory params,
-        MintRangeParams[] memory mintRangeParams,
-        MintLimitParams[] memory mintLimitParams
-    ) external returns (
-        address pool,
-        address poolToken
-    ) {
-        // check if pool exists
-        (
-            pool,
-            poolToken
-        ) = getLimitPool(
-            params.poolType,
-            params.tokenIn,
-            params.tokenOut,
-            params.swapFee
-        );
-        // create if pool doesn't exist
-        if (pool == address(0)) {
-            (
-                pool,
-                poolToken
-            ) = createLimitPool(
-                params
-            );
-        }
-        // mint initial range positions
-        for (uint i = 0; i < mintRangeParams.length;) {
-            IRangePool(pool).mintRange(mintRangeParams[i]);
-            unchecked {
-                ++i;
-            }
-        }
-        // mint initial limit positions
-        for (uint i = 0; i < mintLimitParams.length;) {
-            ILimitPool(pool).mintLimit(mintLimitParams[i]);
-            unchecked {
-                ++i;
-            }
-        }
-    } 
 
     function getLimitPool(
         bytes32 poolType,

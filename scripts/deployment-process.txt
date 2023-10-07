@@ -1,0 +1,37 @@
+1. yarn clean; yarn compile
+
+2. set values for production
+  - fee tiers
+  - pool types
+  - dynamic fee constant
+
+3. set booleans for first deployment
+    private deployRouter = false
+    private deployTokens = false
+    private deployPools = true
+    private deployContracts = true
+
+4. run first deployment
+
+5. verify contracts
+   - remove rangePositionsLib and limitPool from scripts\autogen\contract-deployments-keys.ts
+
+6. set booleans for second deployment
+    COPY coverPoolFactory from cover deployment
+    private deployRouter = true
+    private deployTokens = false
+    private deployPools = false
+    private deployContracts = false
+
+7. verify router contract
+
+8. add contracts on Tenderly
+
+9. mint position(s)
+
+10. swap for sufficient samples for Cover Pools
+
+11. Subgraph setup
+- subgraph.yaml => factory, manager, router addresses, startBlock
+- constants.ts => FACTORY_ADDRESS down to => STABLE_IS_TOKEN_0
+

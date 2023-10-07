@@ -34,9 +34,9 @@ export function updateDerivedTVLAmounts(
   token1: Token,
   pool: LimitPool,
   factory: LimitPoolFactory,
+  basePrice: BasePrice,
   oldLimitPoolTotalValueLockedEth: BigDecimal
 ): UpdateDerivedTVLAmountsRet {
-  let basePrice = safeLoadBasePrice('eth').entity
 
   if (token0 === null || token1 === null || basePrice === null) {
     return {

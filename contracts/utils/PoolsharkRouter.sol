@@ -5,9 +5,10 @@ import '../interfaces/IPool.sol';
 import '../interfaces/range/IRangePool.sol';
 import '../interfaces/limit/ILimitPool.sol';
 import '../interfaces/cover/ICoverPool.sol';
+import '../interfaces/cover/ICoverPoolFactory.sol';
 import '../interfaces/limit/ILimitPoolFactory.sol';
 import '../interfaces/callbacks/ILimitPoolCallback.sol';
-import '../interfaces/callbacks/ICoverPoolSwapCallback.sol';
+import '../interfaces/callbacks/ICoverPoolCallback.sol';
 import '../libraries/utils/SafeTransfers.sol';
 import '../libraries/utils/SafeCast.sol';
 import '../interfaces/structs/PoolsharkStructs.sol';
@@ -17,7 +18,8 @@ contract PoolsharkRouter is
     PoolsharkStructs,
     ILimitPoolMintCallback,
     ILimitPoolSwapCallback,
-    ICoverPoolSwapCallback
+    ICoverPoolSwapCallback,
+    ICoverPoolMintCallback
 {
     using SafeCast for uint256;
     using SafeCast for int256;
@@ -52,6 +54,52 @@ contract PoolsharkRouter is
         );
     }
 
+    /// @inheritdoc ILimitPoolSwapCallback
+    function limitPoolSwapCallback(
+        int256 amount0Delta,
+        int256 amount1Delta,
+        bytes calldata data
+    ) external override {
+        PoolsharkStructs.LimitImmutables memory constants = ILimitPool(msg.sender).immutables();
+
+        // validate sender is a canonical limit pool
+        canonicalLimitPoolsOnly(constants);
+
+        // decode original sender
+        SwapCallbackData memory _data = abi.decode(data, (SwapCallbackData));
+        
+        // transfer from swap caller
+        if (amount0Delta < 0) {
+            SafeTransfers.transferInto(constants.token0, _data.sender, uint256(-amount0Delta));
+        }
+        if (amount1Delta < 0) {
+            SafeTransfers.transferInto(constants.token1, _data.sender, uint256(-amount1Delta));
+        }
+    }
+
+    /// @inheritdoc ICoverPoolSwapCallback
+    function coverPoolSwapCallback(
+        int256 amount0Delta,
+        int256 amount1Delta,
+        bytes calldata data
+    ) external override {
+        PoolsharkStructs.CoverImmutables memory constants = ICoverPool(msg.sender).immutables();
+
+        // validate sender is a canonical cover pool
+        canonicalCoverPoolsOnly(constants);
+
+        // decode original sender
+        SwapCallbackData memory _data = abi.decode(data, (SwapCallbackData));
+        
+        // transfer from swap caller
+        if (amount0Delta < 0) {
+            SafeTransfers.transferInto(constants.token0, _data.sender, uint256(-amount0Delta));
+        }
+        if (amount1Delta < 0) {
+            SafeTransfers.transferInto(constants.token1, _data.sender, uint256(-amount1Delta));
+        }
+    }
+
     /// @inheritdoc ILimitPoolMintCallback
     function limitPoolMintCallback(
         int256 amount0Delta,
@@ -75,30 +123,8 @@ contract PoolsharkRouter is
         }
     }
 
-    /// @inheritdoc ILimitPoolSwapCallback
-    function limitPoolSwapCallback(
-        int256 amount0Delta,
-        int256 amount1Delta,
-        bytes calldata data
-    ) external override {
-        PoolsharkStructs.LimitImmutables memory constants = ILimitPool(msg.sender).immutables();
-
-        // validate sender is a canonical limit pool
-        canonicalLimitPoolsOnly(constants);
-
-        // decode original sender
-        SwapCallbackData memory _data = abi.decode(data, (SwapCallbackData));
-        
-        // transfer from swap caller
-        if (amount0Delta < 0) {
-            SafeTransfers.transferInto(constants.token0, _data.sender, uint256(-amount0Delta));
-        } else {
-            SafeTransfers.transferInto(constants.token1, _data.sender, uint256(-amount1Delta));
-        }
-    }
-
-    /// @inheritdoc ICoverPoolSwapCallback
-    function coverPoolSwapCallback(
+    /// @inheritdoc ICoverPoolMintCallback
+    function coverPoolMintCallback(
         int256 amount0Delta,
         int256 amount1Delta,
         bytes calldata data
@@ -109,12 +135,13 @@ contract PoolsharkRouter is
         canonicalCoverPoolsOnly(constants);
 
         // decode original sender
-        SwapCallbackData memory _data = abi.decode(data, (SwapCallbackData));
-        
+        MintCallbackData memory _data = abi.decode(data, (MintCallbackData));
+
         // transfer from swap caller
         if (amount0Delta < 0) {
             SafeTransfers.transferInto(constants.token0, _data.sender, uint256(-amount0Delta));
-        } else {
+        }
+        if (amount1Delta < 0) {
             SafeTransfers.transferInto(constants.token1, _data.sender, uint256(-amount1Delta));
         }
     }
@@ -147,6 +174,20 @@ contract PoolsharkRouter is
         }
     }
 
+    function multiMintCover(
+        address[] memory pools,
+        PoolsharkStructs.MintCoverParams[] memory params
+    ) external {
+        if (pools.length != params.length) require(false, 'InputArrayLengthsMismatch()');
+        for (uint i = 0; i < pools.length;) {
+            params[i].callbackData = abi.encode(MintCallbackData({sender: msg.sender}));
+            ICoverPool(pools[i]).mint(params[i]);
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
     function multiQuote(
         address[] memory pools,
         QuoteParams[] memory params,
@@ -162,8 +203,7 @@ contract PoolsharkRouter is
                 if (i > 0) {
                     if (params[i].zeroForOne != params[0].zeroForOne) require (false, 'ZeroForOneParamMismatch()');
                     if (params[i].exactIn != params[0].exactIn) require(false, 'ExactInParamMismatch()');
-                    if (params[i].amount != params[0].amount) require(false, 'AmountParamMisMatch()');
-                    /// @dev - priceLimit values are allowed to be different
+                    /// @dev - amount and priceLimit values are allowed to be different
                 }
                 unchecked {
                     ++i;
@@ -229,53 +269,181 @@ contract PoolsharkRouter is
         }
     }
 
+    function multiSnapshotLimit(
+        address[] memory pools,
+        SnapshotLimitParams[] memory params 
+    ) external view returns(
+        uint128[] memory amountIns,
+        uint128[] memory amountOuts
+    ) {
+        amountIns = new uint128[](pools.length);
+        amountOuts = new uint128[](pools.length);
+        for (uint i = 0; i < pools.length;) {
+            if (pools[i] == address(0)) require(false, "InvalidPoolAddress()");
+            (amountIns[i], amountOuts[i]) = ILimitPool(pools[i]).snapshotLimit(params[i]);
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
+    function createLimitPoolAndMint(
+        ILimitPoolFactory.LimitPoolParams memory params,
+        MintRangeParams[] memory mintRangeParams,
+        MintLimitParams[] memory mintLimitParams
+    ) external returns (
+        address pool,
+        address poolToken 
+    ) {
+        // check if pool exists
+        (
+            pool,
+            poolToken
+        ) = ILimitPoolFactory(limitPoolFactory).getLimitPool(
+            params.poolType,
+            params.tokenIn,
+            params.tokenOut,
+            params.swapFee
+        );
+        // create if pool doesn't exist
+        if (pool == address(0)) {
+            (
+                pool,
+                poolToken
+            ) = ILimitPoolFactory(limitPoolFactory).createLimitPool(
+                params
+            );
+        }
+        // mint initial range positions
+        for (uint i = 0; i < mintRangeParams.length;) {
+            IRangePool(pool).mintRange(mintRangeParams[i]);
+            unchecked {
+                ++i;
+            }
+        }
+        // mint initial limit positions
+        for (uint i = 0; i < mintLimitParams.length;) {
+            ILimitPool(pool).mintLimit(mintLimitParams[i]);
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
+    function createCoverPoolAndMint(
+        ICoverPoolFactory.CoverPoolParams memory params,
+        MintCoverParams[] memory mintCoverParams
+    ) external returns (
+        address pool,
+        address poolToken 
+    ) {
+        // check if pool exists
+        (
+            pool,
+            poolToken
+        ) = ICoverPoolFactory(coverPoolFactory).getCoverPool(
+            params
+        );
+        // create if pool doesn't exist
+        if (pool == address(0)) {
+            (
+                pool,
+                poolToken
+            ) = ICoverPoolFactory(coverPoolFactory).createCoverPool(
+                params
+            );
+        }
+        // mint initial cover positions
+        for (uint i = 0; i < mintCoverParams.length;) {
+            ICoverPool(pool).mint(mintCoverParams[i]);
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
+    struct SortQuoteResultsLocals {
+        QuoteResults[] sortedResults;
+        QuoteResults[] prunedResults;
+        bool[] sortedFlags;
+        uint256 emptyResults;
+        int256 sortAmount;
+        uint256 sortIndex;
+        uint256 prunedIndex;
+    }
+
     function sortQuoteResults(
         QuoteParams[] memory params,
         QuoteResults[] memory results
     ) internal pure returns (
-        QuoteResults[] memory sortedResults
+        QuoteResults[] memory
     ) {
-            sortedResults = new QuoteResults[](results.length);
-            for (uint sorted = 0; sorted < results.length;) {
-                // if exactIn, sort by most output
-                // if exactOut, sort by least input
-                int256 sortAmount = params[0].exactIn ? int256(0) : type(int256).max;
-                uint256 sortIndex = type(uint256).max;
-                for (uint index = 0; index < (results.length - sorted);) {
-                    // check if result already sorted
-                    if (results[index].priceAfter > 0) {
-                        if (params[0].exactIn) {
-                            if (results[index].amountOut >= sortAmount) {
-                                sortIndex = index;
-                                sortAmount = results[index].amountOut;
-                            }
-                        } else {
-                           if (results[index].amountIn <= sortAmount) {
-                                sortIndex = index;
-                                sortAmount = results[index].amountIn;
-                            }
+        SortQuoteResultsLocals memory locals;
+        locals.sortedResults = new QuoteResults[](results.length);
+        locals.sortedFlags = new bool[](results.length);
+        locals.emptyResults = 0;
+        for (uint sorted = 0; sorted < results.length;) {
+            // if exactIn, sort by most output
+            // if exactOut, sort by least input
+            locals.sortAmount = params[0].exactIn ? int256(0) : type(int256).max;
+            locals.sortIndex = type(uint256).max;
+            for (uint index = 0; index < results.length;) {
+                // check if result already sorted
+                if (!locals.sortedFlags[index]) {
+                    if (params[0].exactIn) {
+                        if (results[index].amountOut >= locals.sortAmount) {
+                            locals.sortIndex = index;
+                            locals.sortAmount = results[index].amountOut;
+                        }
+                    } else {
+                        if (results[index].amountIn <= locals.sortAmount) {
+                            locals.sortIndex = index;
+                            locals.sortAmount = results[index].amountIn;
                         }
                     }
-                    if (sortIndex != type(uint256).max) {
-                        // add the sorted result
-                        sortedResults[sorted].pool = results[sortIndex].pool;
-                        sortedResults[sorted].amountIn = results[sortIndex].amountIn;
-                        sortedResults[sorted].amountOut = results[sortIndex].amountOut;
-                        sortedResults[sorted].priceAfter = results[sortIndex].priceAfter;
+                }
+                // continue finding nth element
+                unchecked {
+                    ++index;
+                }
+            }
+            if (locals.sortIndex != type(uint256).max) {
+                // add the sorted result
+                locals.sortedResults[sorted].pool = results[locals.sortIndex].pool;
+                locals.sortedResults[sorted].amountIn = results[locals.sortIndex].amountIn;
+                locals.sortedResults[sorted].amountOut = results[locals.sortIndex].amountOut;
+                locals.sortedResults[sorted].priceAfter = results[locals.sortIndex].priceAfter;
 
-                        // indicate this result was already sorted
-                        results[sortIndex].priceAfter = 0;
-                    }
-                    // continue finding nth element
+                // indicate this result was already sorted
+                locals.sortedFlags[locals.sortIndex] = true;
+            } else {
+                ++locals.emptyResults;
+            }
+            // find next sorted element
+            unchecked {
+                ++sorted;
+            }
+        }
+        // if any results were empty, prune them
+        if (locals.emptyResults > 0) {
+            locals.prunedResults = new QuoteResults[](results.length - locals.emptyResults);
+            locals.prunedIndex = 0;
+            for (uint sorted = 0; sorted < results.length;) {
+                // empty results are omitted
+                if (locals.sortedResults[sorted].pool != address(0)) {
+                    locals.prunedResults[locals.prunedIndex] = locals.sortedResults[sorted];
                     unchecked {
-                        ++index;
+                        ++locals.prunedIndex;
                     }
                 }
-                // find next sorted element
                 unchecked {
                     ++sorted;
                 }
             }
+        } else {
+            locals.prunedResults = locals.sortedResults;
+        }
+        return locals.prunedResults;
     }
 
     function canonicalLimitPoolsOnly(
@@ -350,9 +518,12 @@ contract PoolsharkRouter is
             constants.token0,
             constants.token1,
             constants.source,
+            constants.poolToken,
             constants.inputPool,
             constants.bounds.min,
-            constants.bounds.max,
+            constants.bounds.max
+        );
+        bytes memory value2 = abi.encodePacked(
             constants.minAmountPerAuction,
             constants.genesisTime,
             constants.minPositionWidth,
@@ -360,12 +531,12 @@ contract PoolsharkRouter is
             constants.twapLength,
             constants.auctionLength
         );
-        bytes memory value2 = abi.encodePacked(
-            constants.blockTime,
+        bytes memory value3 = abi.encodePacked(
+            constants.sampleInterval,
             constants.token0Decimals,
             constants.token1Decimals,
             constants.minAmountLowerPriced
         );
-        return abi.encodePacked(value1, value2);
+        return abi.encodePacked(value1, value2, value3);
     }
 }

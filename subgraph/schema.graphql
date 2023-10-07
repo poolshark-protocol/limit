@@ -83,7 +83,7 @@ type LimitPool @entity {
     swapFee: BigInt!
     tickSpacing: BigInt!
     factory: LimitPoolFactory!
-    poolType: LimitPoolImpl!
+    poolType: String!
 
     liquidity: BigInt!
     liquidityGlobal: BigInt!
@@ -135,6 +135,7 @@ type LimitPosition @entity {
     owner: Bytes!
     lower: BigInt!
     upper: BigInt!
+    zeroForOne: Boolean!
     liquidity: BigInt!
     pool: LimitPool!
     epochLast: BigInt!
@@ -242,6 +243,22 @@ type PoolRouter @entity {
 
     limitPoolFactory: Bytes!
     coverPoolFactory: Bytes!
+}
+
+type TvlUpdateLog @entity {
+    id: ID!
+    pool: LimitPool!
+    eventName: String!
+    txnHash: Bytes!
+    txnBlockNumber: BigInt!
+    amount0Change: BigDecimal!
+    amount1Change: BigDecimal!
+    amount0Total: BigDecimal!
+    amount1Total: BigDecimal!
+    token0UsdPrice: BigDecimal!
+    token1UsdPrice: BigDecimal!
+    amountUsdChange: BigDecimal!
+    amountUsdTotal: BigDecimal!
 }
 
 type MintLimitLog @entity {

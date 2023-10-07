@@ -9,6 +9,7 @@ import {
     safeLoadBasePrice,
     safeLoadLimitPoolFactory,
     safeLoadMintRangeLog,
+    safeLoadTvlUpdateLog,
 } from '../utils/loads'
 import { BIGINT_ONE, convertTokenToDecimal } from '../utils/helpers'
 import { ONE_BI } from '../../constants/constants'
@@ -94,8 +95,8 @@ export function handleMintRange(event: MintRange): void {
         pool.positionIdNext = positionIdParam.plus(BIGINT_ONE)
     }
 
-    let amount0 = convertTokenToDecimal(event.params.amount0Delta, token0.decimals)
-    let amount1 = convertTokenToDecimal(event.params.amount1Delta, token1.decimals)
+    let amount0 = convertTokenToDecimal(amount0DeltaParam, token0.decimals)
+    let amount1 = convertTokenToDecimal(amount1DeltaParam, token1.decimals)
     let amountUsd = amount0
     .times(token0.ethPrice.times(basePrice.USD))
     .plus(amount1.times(token1.ethPrice.times(basePrice.USD)))
@@ -116,11 +117,29 @@ export function handleMintRange(event: MintRange): void {
     token1.totalValueLocked = token1.totalValueLocked.plus(amount1)
     pool.totalValueLocked0 = pool.totalValueLocked0.plus(amount0)
     pool.totalValueLocked1 = pool.totalValueLocked1.plus(amount1)
-    let updateTvlRet = updateDerivedTVLAmounts(token0, token1, pool, factory, oldPoolTVLETH)
+    let updateTvlRet = updateDerivedTVLAmounts(token0, token1, pool, factory, basePrice, oldPoolTVLETH)
     token0 = updateTvlRet.token0
     token1 = updateTvlRet.token1
     pool = updateTvlRet.pool
     factory = updateTvlRet.factory
+
+    let loadTvlUpdateLog = safeLoadTvlUpdateLog(event.transaction.hash, poolAddress)
+    let tvlUpdateLog = loadTvlUpdateLog.entity
+
+    tvlUpdateLog.pool = poolAddress
+    tvlUpdateLog.eventName = "MintRange"
+    tvlUpdateLog.txnHash = event.transaction.hash
+    tvlUpdateLog.txnBlockNumber = event.block.number
+    tvlUpdateLog.amount0Change = amount0
+    tvlUpdateLog.amount1Change = amount1
+    tvlUpdateLog.amount0Total = pool.totalValueLocked0
+    tvlUpdateLog.amount1Total = pool.totalValueLocked1
+    tvlUpdateLog.token0UsdPrice = token0.usdPrice
+    tvlUpdateLog.token1UsdPrice = token1.usdPrice
+    tvlUpdateLog.amountUsdChange = amountUsd
+    tvlUpdateLog.amountUsdTotal = pool.totalValueLockedUsd
+
+    tvlUpdateLog.save()
 
     if (
         pool.tickAtPrice !== null &&

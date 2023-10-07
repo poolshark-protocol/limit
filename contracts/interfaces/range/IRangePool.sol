@@ -37,7 +37,17 @@ interface IRangePool is RangePoolStructs {
         uint128 feesOwed1
     );
 
-    function increaseSampleLength(
-        uint16 sampleLengthNext
+    function sample(
+        uint32[] memory secondsAgo
+    ) external view returns(
+        int56[]   memory tickSecondsAccum,
+        uint160[] memory secondsPerLiquidityAccum,
+        uint160 averagePrice,
+        uint128 averageLiquidity,
+        int24 averageTick
+    );
+
+    function increaseSampleCount(
+        uint16 newSampleCountMax
     ) external;
 }

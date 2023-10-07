@@ -175,8 +175,8 @@ contract LimitPool is
         );
     }
 
-    function increaseSampleLength(
-        uint16 sampleLengthNext
+    function increaseSampleCount(
+        uint16 newSampleCountMax
     ) external override
         nonReentrant(globalState)
         canoncialOnly 
@@ -184,7 +184,7 @@ contract LimitPool is
         Samples.expand(
             samples,
             globalState.pool,
-            sampleLengthNext
+            newSampleCountMax
         );
     }
 

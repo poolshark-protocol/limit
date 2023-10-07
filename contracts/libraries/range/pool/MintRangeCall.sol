@@ -82,29 +82,6 @@ library MintRangeCall {
         cache.priceLower = ConstantProduct.getPriceAtTick(cache.position.lower, cache.constants);
         cache.priceUpper = ConstantProduct.getPriceAtTick(cache.position.upper, cache.constants);
 
-        // compound and transfer remaining back to user
-        // if (cache.amount0 > 0 || cache.amount1 > 0) {
-        //     (
-        //         cache.position,
-        //         cache.state,
-        //         cache.amount0,
-        //         cache.amount1
-        //     ) = RangePositions.compound(
-        //         ticks,
-        //         tickMap,
-        //         samples,
-        //         cache.state,
-        //         cache.constants,
-        //         cache.position,
-        //         RangePoolStructs.CompoundRangeParams( 
-        //             cache.priceLower,
-        //             cache.priceUpper,
-        //             cache.amount0.toUint128(),
-        //             cache.amount1.toUint128(),
-        //             params.positionId
-        //         )
-        //     );
-        // }
         // validate input amounts
         (params, cache) = RangePositions.validate(params, cache);
 

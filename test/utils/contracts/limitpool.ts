@@ -56,8 +56,8 @@ export interface LimitPoolState {
 
 export interface SampleState {
     index: number
-    length: number
-    lengthNext: number
+    count: number
+    countMax: number
 }
 
 export interface Tick {
@@ -224,7 +224,6 @@ export async function validateSwap(params: ValidateSwapParams) {
 
     // quote pre-swap and validate balance changes match post-swap
 
-
     let amountInQuoted
     let amountOutQuoted
     let priceAfterQuoted
@@ -248,6 +247,34 @@ export async function validateSwap(params: ValidateSwapParams) {
             ],
             true
         )
+        // const quote = await hre.props.poolRouter.multiQuote(
+        //     [
+        //         "0x5c83c95242e7c36a26e50e2de8d95198cab6aabb",
+        //         "0x7af8be3e1f0d7de23649e9ad146be3b5433fb4ee",
+        //         "0x83e8902a1b28faedc9d09ce1a45671be424efaf3"
+        //     ],
+        //     [
+        //         {
+        //             priceLimit: priceLimit,
+        //             amount: amountIn,
+        //             zeroForOne: zeroForOne,
+        //             exactIn: true
+        //         },
+        //         {
+        //             priceLimit: priceLimit,
+        //             amount: amountIn,
+        //             zeroForOne: zeroForOne,
+        //             exactIn: true
+        //         },
+        //         {
+        //             priceLimit: priceLimit,
+        //             amount: amountIn,
+        //             zeroForOne: zeroForOne,
+        //             exactIn: true
+        //         }
+        //     ],
+        //     true
+        // )
         // const quote = await hre.props.limitPool.quote({
         //     priceLimit: priceLimit,
         //     amount: amountIn,
@@ -257,6 +284,8 @@ export async function validateSwap(params: ValidateSwapParams) {
         amountInQuoted = quote[0][1]
         amountOutQuoted = quote[0][2]
         priceAfterQuoted = quote[0][3]
+        // console.log('quote results', amountInQuoted.toString(), amountOutQuoted.toString(), priceAfterQuoted.toString())
+
         if (splitInto > 1) await ethers.provider.send("evm_setAutomine", [false]);
         for (let i = 0; i < splitInto; i++) {
             let txn = await hre.props.poolRouter
@@ -537,7 +566,7 @@ export async function validateBurn(params: ValidateBurnParams) {
     let lowerTickBefore: LimitTick
     let upperTickBefore: LimitTick
     let positionBefore: LimitPosition
-    let positionSnapshot: [BigNumber, BigNumber]
+    let positionSnapshots: [BigNumber[], BigNumber[]]
     let positionTokens: Contract
     let positionTokenBalanceBefore: BigNumber
     positionTokens = await hre.ethers.getContractAt('PositionERC1155', hre.props.limitPoolToken.address);
@@ -565,13 +594,17 @@ export async function validateBurn(params: ValidateBurnParams) {
         liquidityAmount = liquidityPercent.mul(positionBefore.liquidity).div(ethers.utils.parseUnits("1",38))
     }
     if (revertMessage == '') {
-        positionSnapshot = await hre.props.limitPool.snapshotLimit({
-            owner: signer.address,
-            positionId: params.positionId,
-            claim: claim,
-            zeroForOne: zeroForOne,
-            burnPercent: liquidityPercent
-        })
+        positionSnapshots = await hre.props.poolRouter.multiSnapshotLimit(
+        [hre.props.limitPool.address],
+        [    
+            {
+                owner: signer.address,
+                positionId: params.positionId,
+                claim: claim,
+                zeroForOne: zeroForOne,
+                burnPercent: liquidityPercent
+            }
+        ])
         const burnTxn = await hre.props.limitPool
             .connect(signer)
             .burnLimit({
@@ -580,7 +613,7 @@ export async function validateBurn(params: ValidateBurnParams) {
                 claim: claim,
                 zeroForOne: zeroForOne,
                 burnPercent: liquidityPercent,
-            })
+            }, {gasLimit: 3_000_000})
         await burnTxn.wait()
     } else {
         await expect(
@@ -611,8 +644,8 @@ export async function validateBurn(params: ValidateBurnParams) {
     expect(balanceOutAfter.sub(balanceOutBefore)).to.be.equal(balanceOutIncrease)
 
     if (compareSnapshot) {
-        expect(positionSnapshot[0]).to.be.equal(balanceInIncrease)
-        expect(positionSnapshot[1]).to.be.equal(balanceOutIncrease)
+        expect(positionSnapshots[0][0]).to.be.equal(balanceInIncrease)
+        expect(positionSnapshots[1][0]).to.be.equal(balanceOutIncrease)
     }
 
     let lowerTickAfter: LimitTick

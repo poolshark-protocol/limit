@@ -43,8 +43,7 @@ const config: HardhatUserConfig = {
             chainId: 534351,
             url: "https://sepolia-rpc.scroll.io/" || "",
             gasPrice: 1_500_000_000,
-            accounts:
-              process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+            accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
         },
         op_goerli: {
             chainId: 420,
@@ -57,15 +56,15 @@ const config: HardhatUserConfig = {
     etherscan: { 
         apiKey: {
             arbitrumGoerli: process.env.ARBITRUM_GOERLI_API_KEY,
-            scrollSepolia: 'abc',
+            scrollSepolia: 'D62920783A4311EE9D6600155D570C742E',
         },
         customChains: [
             {
               network: 'scrollSepolia',
               chainId: 534351,
               urls: {
-                apiURL: 'https://sepolia-blockscout.scroll.io/api',
-                browserURL: 'https://sepolia-blockscout.scroll.io/',
+                apiURL: 'https://api-sepolia.scrollscan.dev/api',
+                browserURL: 'https://api-sepolia.scrollscan.dev',
               },
             },
         ],

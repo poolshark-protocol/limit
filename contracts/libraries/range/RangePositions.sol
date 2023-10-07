@@ -383,7 +383,7 @@ library RangePositions {
                 IPool(address(this)), 
                 RangePoolStructs.SampleParams(
                     cache.samples.index,
-                    cache.samples.length,
+                    cache.samples.count,
                     uint32(block.timestamp),
                     new uint32[](2),
                     cache.tick,

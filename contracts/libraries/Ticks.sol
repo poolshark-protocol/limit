@@ -114,20 +114,15 @@ library Ticks {
     ) external returns (
         PoolsharkStructs.SwapCache memory
     )
-    {   
-        // if price == priceAtTick
-        // cross range tick if present
-        // in _cross if price == priceAtTick && amountLeft == 0
-        // don't cross the range tick
-        // start with range price
+    {
         cache.price = cache.state.pool.price;
         cache.crossTick = cache.state.pool.tickAtPrice;
 
+        // set initial cross state
         cache = _iterate(ticks, rangeTickMap, limitTickMap, cache, params.zeroForOne, true);
 
         uint128 startLiquidity = cache.liquidity.toUint128();
 
-        // set crossTick/crossPrice based on the best between limit and range
         // grab sample for accumulators
         cache = PoolsharkStructs.SwapCache({
             state: cache.state,
@@ -173,7 +168,7 @@ library Ticks {
         /// @dev - write oracle entry after start of block
         (
             cache.state.pool.samples.index,
-            cache.state.pool.samples.length
+            cache.state.pool.samples.count
         ) = Samples.save(
             samples,
             cache.state.pool.samples,

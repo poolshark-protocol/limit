@@ -86,6 +86,12 @@
       },
       {
         "indexed": false,
+        "internalType": "uint8",
+        "name": "poolTypeId",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
         "internalType": "address",
         "name": "poolImpl",
         "type": "address"

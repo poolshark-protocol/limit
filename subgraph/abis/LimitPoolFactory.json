@@ -15,12 +15,6 @@
         "type": "address"
       },
       {
-        "indexed": false,
-        "internalType": "bytes32",
-        "name": "poolType",
-        "type": "bytes32"
-      },
-      {
         "indexed": true,
         "internalType": "address",
         "name": "token0",
@@ -43,6 +37,12 @@
         "internalType": "int16",
         "name": "tickSpacing",
         "type": "int16"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "poolTypeId",
+        "type": "uint8"
       }
     ],
     "name": "PoolCreated",

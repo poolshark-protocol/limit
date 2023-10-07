@@ -18,7 +18,7 @@ type LimitPoolManager @entity {
     feeTo: Bytes!
     factory: LimitPoolFactory!
     feeTiers: [FeeTier!]!
-    implementations: [LimitPoolImpl!]!
+    poolTypes: [LimitPoolType!]!
 }
 
 type BasePrice @entity {
@@ -195,8 +195,8 @@ type Transaction @entity {
     swaps: [Swap!]! @derivedFrom(field: "transaction")
 }
 
-type LimitPoolImpl @entity {
-    # pool impl + token impl
+type LimitPoolType @entity {
+    # poolTypeId
     id: ID!
 
     name: String!

@@ -296,9 +296,9 @@ export class InitialSetup {
             )
 
             const enableImplTxn = await hre.props.limitPoolManager.enablePoolType(
-                this.constantProductString,
                 hre.props.limitPoolImpl.address,
-                hre.props.positionERC1155.address
+                hre.props.positionERC1155.address,
+                this.constantProductString
             )
             await enableImplTxn.wait();
 
@@ -325,7 +325,7 @@ export class InitialSetup {
 
                 // create first limit pool
                 let createPoolTxn = await hre.props.limitPoolFactory.createLimitPool({
-                    poolType: this.constantProductString,
+                    poolTypeId: 0,
                     tokenIn: hre.props.token0.address,
                     tokenOut: hre.props.token1.address,
                     swapFee: '500',
@@ -336,15 +336,15 @@ export class InitialSetup {
                 hre.nonce += 1;
     
                 [limitPoolAddress, limitPoolTokenAddress] = await hre.props.limitPoolFactory.getLimitPool(
-                    this.constantProductString,
                     hre.props.token0.address,
                     hre.props.token1.address,
-                    '500'
+                    '500',
+                    0
                 )
             } else if (this.deployPools) {
                 // create first limit pool
                 let createPoolTxn = await hre.props.limitPoolFactory.createLimitPool({
-                    poolType: this.constantProductString,
+                    poolTypeId: 0,
                     tokenIn: hre.props.token0.address,
                     tokenOut: hre.props.token1.address,
                     swapFee: '1000',
@@ -364,7 +364,7 @@ export class InitialSetup {
                 hre.nonce += 1;
     
                 createPoolTxn = await hre.props.limitPoolFactory.createLimitPool({
-                    poolType: this.constantProductString,
+                    poolTypeId: 0,
                     tokenIn: hre.props.token0.address,
                     tokenOut: hre.props.token1.address,
                     swapFee: '3000',
@@ -375,7 +375,7 @@ export class InitialSetup {
                 hre.nonce += 1;
     
                 createPoolTxn = await hre.props.limitPoolFactory.createLimitPool({
-                    poolType: this.constantProductString,
+                    poolTypeId: 0,
                     tokenIn: hre.props.token0.address,
                     tokenOut: hre.props.token1.address,
                     swapFee: '10000',
@@ -527,7 +527,7 @@ export class InitialSetup {
         let poolTxn = await hre.props.limitPoolFactory
           .connect(hre.props.admin)
           .createLimitPool({
-            poolType: this.constantProductString,
+            poolTypeId: 0,
             tokenIn: '0x5339F8fDFc2a9bE081fc1d924d9CF1473dA46C68',  // stETH
             tokenOut: '0x3a56859B3E176636095c142c87F73cC57B408b67', // USDC
             swapFee: '1000',
@@ -538,7 +538,7 @@ export class InitialSetup {
         poolTxn = await hre.props.limitPoolFactory
             .connect(hre.props.admin)
             .createLimitPool({
-            poolType: this.constantProductString,
+            poolTypeId: 0,
             tokenIn: '0x681cfAC3f265b6041FF4648A1CcB214F1c0DcF38',  // YFI
             tokenOut: '0x7dCF144D7f39d7aD7aE0E6F9E612379F73BD8E80', // DAI
             swapFee: '1000',
@@ -549,7 +549,7 @@ export class InitialSetup {
         poolTxn = await hre.props.limitPoolFactory
         .connect(hre.props.admin)
         .createLimitPool({
-            poolType: this.constantProductString,
+            poolTypeId: 0,
             tokenIn: '0x681cfAC3f265b6041FF4648A1CcB214F1c0DcF38',  // YFI
             tokenOut: '0xa9e1ab5e6878621F80E03A4a5F8FB3705F4FFA2B', // SUSHI
             swapFee: '1000',
@@ -560,7 +560,7 @@ export class InitialSetup {
         poolTxn = await hre.props.limitPoolFactory
         .connect(hre.props.admin)
         .createLimitPool({
-            poolType: this.constantProductString,
+            poolTypeId: 0,
             tokenIn: '0x3a56859B3E176636095c142c87F73cC57B408b67',  // USDC
             tokenOut: '0x7dCF144D7f39d7aD7aE0E6F9E612379F73BD8E80', // DAI
             swapFee: '1000',

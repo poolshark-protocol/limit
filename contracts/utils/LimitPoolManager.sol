@@ -6,6 +6,7 @@ import '../interfaces/limit/ILimitPool.sol';
 import '../interfaces/limit/ILimitPoolFactory.sol';
 import '../interfaces/limit/ILimitPoolManager.sol';
 import '../base/events/LimitPoolManagerEvents.sol';
+import '../libraries/utils/SafeCast.sol';
 
 /**
  * @dev Defines the actions which can be executed by the factory admin.
@@ -17,16 +18,20 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
     uint16  public constant MAX_PROTOCOL_SWAP_FEE = 1e4; /// @dev - max protocol swap fee of 100%
     uint16  public constant MAX_PROTOCOL_FILL_FEE = 1e2; /// @dev - max protocol fill fee of 1%
     // impl name => impl address
-    mapping(bytes32 => address) internal _poolImpls;
-    mapping(bytes32 => address) internal _tokenImpls;
+    bytes32[] _poolTypeNames;
+    mapping(uint256 => address) internal _poolImpls;
+    mapping(uint256 => address) internal _tokenImpls;
     // swap fee => tick spacing
     mapping(uint16 => int16) internal _feeTiers;
+
+    using SafeCast for uint256;
 
     error InvalidSwapFee();
     error InvalidTickSpacing();
     error InvalidImplAddress();
     error TickSpacingAlreadyEnabled();
     error ImplementationAlreadyExists();
+    error MaxPoolTypesCountExceeded();
 
     constructor() {
         owner = msg.sender;
@@ -103,17 +108,19 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
     }
 
     function enablePoolType(
-        bytes32 poolType_,
         address poolImpl_,
-        address tokenImpl_
+        address tokenImpl_,
+        bytes32 poolTypeName_
     ) external onlyOwner {
-        if (_poolImpls[poolType_] != address(0)) revert ImplementationAlreadyExists();
+        uint8 poolTypeId_ = _poolTypeNames.length.toUint8();
+        if (poolTypeId_ > type(uint8).max) revert MaxPoolTypesCountExceeded();
+        if (_poolImpls[poolTypeId_] != address(0)) revert ImplementationAlreadyExists();
         if (poolImpl_ == address(0) || tokenImpl_ == address(0)) revert InvalidImplAddress();
         /// @dev - prevent same addresses since factory does not support this
         if (poolImpl_ == tokenImpl_) revert InvalidImplAddress();
-        _poolImpls[poolType_] = poolImpl_;
-        _tokenImpls[poolType_] = tokenImpl_;
-        emit PoolTypeEnabled(poolType_, poolImpl_, tokenImpl_);
+        _poolImpls[poolTypeId_] = poolImpl_;
+        _tokenImpls[poolTypeId_] = tokenImpl_;
+        emit PoolTypeEnabled(poolTypeName_, poolTypeId_, poolImpl_, tokenImpl_);
     }
 
     function setFactory(
@@ -205,13 +212,13 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
         );
     }
 
-    function implementations(
-        bytes32 key
+    function poolTypes(
+        uint8 poolTypeId
     ) external view returns (
         address,
         address
     ) {
-        return (_poolImpls[key], _tokenImpls[key]);
+        return (_poolImpls[poolTypeId], _tokenImpls[poolTypeId]);
     }
 
     function feeTiers(

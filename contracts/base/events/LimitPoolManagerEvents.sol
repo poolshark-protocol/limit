@@ -7,6 +7,7 @@ abstract contract LimitPoolManagerEvents is PoolsharkStructs {
     event FactoryChanged(address indexed previousFactory, address indexed newFactory);
     event PoolTypeEnabled(
         bytes32 poolType,
+        uint8   poolTypeId,
         address poolImpl,
         address tokenImpl
     );

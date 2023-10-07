@@ -5,10 +5,10 @@ abstract contract LimitPoolFactoryEvents {
     event PoolCreated(
         address pool,
         address token,
-        bytes32 poolType,
         address indexed token0,
         address indexed token1,
         uint16 indexed swapFee,
-        int16 tickSpacing
+        int16 tickSpacing,
+        uint8 poolTypeId
     );
 }

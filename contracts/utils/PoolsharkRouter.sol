@@ -300,10 +300,10 @@ contract PoolsharkRouter is
             pool,
             poolToken
         ) = ILimitPoolFactory(limitPoolFactory).getLimitPool(
-            params.poolType,
             params.tokenIn,
             params.tokenOut,
-            params.swapFee
+            params.swapFee,
+            params.poolTypeId
         );
         // create if pool doesn't exist
         if (pool == address(0)) {

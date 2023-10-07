@@ -166,7 +166,7 @@
     "scrollSepolia": {
         "token0": {
             "contractName": "Token20",
-            "contractAddress": "0x3a56859B3E176636095c142c87F73cC57B408b67",
+            "contractAddress": "0x681cfAC3f265b6041FF4648A1CcB214F1c0DcF38",
             "constructorArguments": [
                 "Wrapped Ether",
                 "WETH",
@@ -176,7 +176,7 @@
         },
         "token1": {
             "contractName": "Token20",
-            "contractAddress": "0x7dCF144D7f39d7aD7aE0E6F9E612379F73BD8E80",
+            "contractAddress": "0xa9e1ab5e6878621F80E03A4a5F8FB3705F4FFA2B",
             "constructorArguments": [
                 "Dai Stablecoin",
                 "DAI",
@@ -300,7 +300,7 @@
         },
         "limitPool": {
             "contractName": "LimitPool",
-            "contractAddress": "0xF7B3eC2Fa17093FE895a0965C8Fc69f101C74847",
+            "contractAddress": "0xA3374d366C33E803A3fF4a3db4B38e5Aa4A1f2E5",
             "constructorArguments": [
                 "0x434f4e5354414e542d50524f4455435400000000000000000000000000000000",
                 "0x26323C7e4F000227932d3ed640EA79D6027701DE",

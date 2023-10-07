@@ -27,7 +27,7 @@ export class MintPosition {
             hre.props.bob = signers[1]
             hre.carol = signers[2]
         }
-        hre.nonce = await getNonce(hre, hre.props.alice.address) + 1
+        hre.nonce = await getNonce(hre, hre.props.alice.address)
         console.log(this.nonce)
         await this.initialSetup.readLimitPoolSetup(this.nonce)
         console.log('read positions')
@@ -71,48 +71,54 @@ export class MintPosition {
         //     true
         // )
 
+        let txn = await hre.props.limitPool.connect(hre.props.alice).increaseSampleCount(60)
+        await txn.wait()
+
         // console.log('amount quoted:', quote[0][1].toString(), quote[0][2].toString(), quote[0][3].toString())
-        // const globalStateBefore = (await hre.props.limitPool.globalState())
-        // console.log('sample state', globalStateBefore.pool.samples.index, globalStateBefore.pool.samples.count, globalStateBefore.pool.samples.countMax, globalStateBefore.pool.tickAtPrice)
+        const globalStateBefore = (await hre.props.limitPool.globalState())
+        console.log('sample state', globalStateBefore.pool.price, globalStateBefore.pool.samples.index, globalStateBefore.pool.samples.count, globalStateBefore.pool.samples.countMax, globalStateBefore.pool.tickAtPrice)
 
-        const aliceId = await validateMintRange({
-            signer: hre.props.alice,
-            recipient: '0x168A15DaFA2A4896E08C7E05119eff5203c33a66',
-            lower: '-500000',
-            upper: '500000',
-            amount0: token0Amount.mul(1000),
-            amount1: token1Amount.mul(1000),
-            balance0Decrease: BigNumber.from('624999999999999999'),
-            balance1Decrease: token1Amount.mul(10).sub(1),
-            liquidityIncrease: BN_ZERO,
-            revertMessage: '',
-        })
-        return
-        // for (let i=0; i < 10; i++) {
-        //     const signer = hre.props.alice
-        //     const zeroForOne = false
-        //     const amountIn = token1Amount.mul(10)
-        //     const priceLimit = BigNumber.from('3169126500570573503741758013440')
-        //     await hre.props.token1.connect(signer).approve(hre.props.poolRouter.address, amountIn)
-        //     let txn = await hre.props.poolRouter
-        //     .connect(signer)
-        //     .multiSwapSplit(
-        //     [hre.props.limitPool.address],
-        //         [
-        //         {
-        //             to: signer.address,
-        //             priceLimit: priceLimit,
-        //             amount: amountIn,
-        //             zeroForOne: zeroForOne,
-        //             exactIn: true,
-        //             callbackData: ethers.utils.formatBytes32String('')
-        //         },
-        //         ], {gasLimit: 3000000})
-        //     await txn.wait()
-        // }
+        // const aliceId = await validateMintRange({
+        //     signer: hre.props.alice,
+        //     recipient: '0x168A15DaFA2A4896E08C7E05119eff5203c33a66',
+        //     lower: '-500000',
+        //     upper: '500000',
+        //     amount0: token0Amount.mul(1000),
+        //     amount1: token1Amount.mul(1000),
+        //     balance0Decrease: BigNumber.from('624999999999999999'),
+        //     balance1Decrease: token1Amount.mul(10).sub(1),
+        //     liquidityIncrease: BN_ZERO,
+        //     revertMessage: '',
+        // })
+        // return
+        const signer = hre.props.alice
+        let approveTxn = await hre.props.token1.connect(signer).approve(hre.props.poolRouter.address, token1Amount.mul(1000))
+        await approveTxn.wait()
+        for (let i=0; i < 20; i++) {
 
-        // const globalStateAfter = (await hre.props.limitPool.globalState())
-        // console.log('sample state', globalStateAfter.pool.samples.index, globalStateAfter.pool.samples.count, globalStateAfter.pool.samples.countMax, globalStateAfter.pool.tickAtPrice)
+            const zeroForOne = false
+            const amountIn = token1Amount.mul(10)
+            const priceLimit = BigNumber.from('3169126500570573503741758013440')
+
+            let txn = await hre.props.poolRouter
+            .connect(signer)
+            .multiSwapSplit(
+            [hre.props.limitPool.address],
+                [
+                {
+                    to: signer.address,
+                    priceLimit: priceLimit,
+                    amount: amountIn,
+                    zeroForOne: zeroForOne,
+                    exactIn: true,
+                    callbackData: ethers.utils.formatBytes32String('')
+                },
+                ], {gasLimit: 3000000})
+            await txn.wait()
+        }
+
+        const globalStateAfter = (await hre.props.limitPool.globalState())
+        console.log('sample state', globalStateAfter.pool.samples.index, globalStateAfter.pool.samples.count, globalStateAfter.pool.samples.countMax, globalStateAfter.pool.tickAtPrice)
 
         // await validateSwap({
         //     signer: hre.props.alice,

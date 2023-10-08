@@ -42,6 +42,7 @@ interface RangePoolStructs is PoolsharkStructs {
         GlobalState state;
         RangePosition position;
         PoolsharkStructs.LimitImmutables constants;
+        address sender;
         uint256 liquidityMinted;
         uint160 priceLower;
         uint160 priceUpper;

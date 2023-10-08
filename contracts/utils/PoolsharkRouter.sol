@@ -316,6 +316,7 @@ contract PoolsharkRouter is
         }
         // mint initial range positions
         for (uint i = 0; i < mintRangeParams.length;) {
+            mintRangeParams[i].positionId = 0;
             IRangePool(pool).mintRange(mintRangeParams[i]);
             unchecked {
                 ++i;
@@ -323,6 +324,7 @@ contract PoolsharkRouter is
         }
         // mint initial limit positions
         for (uint i = 0; i < mintLimitParams.length;) {
+            mintLimitParams[i].positionId = 0;
             ILimitPool(pool).mintLimit(mintLimitParams[i]);
             unchecked {
                 ++i;

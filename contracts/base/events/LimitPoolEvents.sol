@@ -55,8 +55,11 @@ abstract contract LimitPoolEvents {
         uint128 liquidityCompounded
     );
 
-    event CollectRange(
-        uint128 amount0,
+    event CollectRange0(
+        uint128 amount0
+    );
+
+    event CollectRange1(
         uint128 amount1
     );
 

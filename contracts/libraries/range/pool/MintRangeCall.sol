@@ -47,9 +47,9 @@ library MintRangeCall {
         if (params.positionId > 0) {
             cache.position = positions[params.positionId];
             // existing position
-            cache.sender = Bytes.getSender(params.callbackData);
+            cache.owner = Bytes.getSender(params.callbackData);
             // require balance held for existing position
-            if (PositionTokens.balanceOf(cache.constants, cache.sender, params.positionId) == 0)
+            if (PositionTokens.balanceOf(cache.constants, cache.owner, params.positionId) == 0)
                 require(false, 'PositionOwnerMismatch()');
             // set bounds as defined by position
             params.lower = cache.position.lower;
@@ -79,7 +79,7 @@ library MintRangeCall {
             // set tick bounds on position
             cache.position.lower = params.lower;
             cache.position.upper = params.upper;
-            cache.sender = params.to;
+            cache.owner = params.to;
         }
         // set cache based on bounds
         cache.priceLower = ConstantProduct.getPriceAtTick(cache.position.lower, cache.constants);
@@ -94,7 +94,7 @@ library MintRangeCall {
         cache.amount1 -= params.amount1.toInt128();
 
         emit MintRange(
-            params.to,
+            cache.owner,
             cache.position.lower,
             cache.position.upper,
             params.positionId,

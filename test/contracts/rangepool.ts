@@ -462,8 +462,6 @@ describe('RangePool Exact In Tests', function () {
       revertMessage: '',
     })
 
-    console.log('alice address', hre.props.alice.address)
-
     await validateSwap({
       signer: hre.props.alice,
       recipient: hre.props.alice.address,

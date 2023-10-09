@@ -119,7 +119,7 @@ library MintRangeCall {
         if (cache.amount0 > 0 || cache.amount1 > 0)
             Collect.range(
                 cache.constants,
-                cache.sender,
+                cache.owner,
                 cache.amount0,
                 cache.amount1
             );

@@ -136,6 +136,16 @@ library MintRangeCall {
             params.callbackData
         );
 
+        // int128 value = -187;
+        // int128 value2 = 187;
+
+        // if (true)
+        //     if ((-value).toUint128() < 0)
+        //         require(false, 'MintInputAmountCheckTooLow()');
+        // if (value2 < 0)
+        //     if ((-value).toUint128() < 0)
+        //         require(false, 'MintInputAmountCheckTooLow()');
+
         // check balance after callback
         if (cache.amount0 < 0)
             if (balance0(cache) < startBalance.amount0 + (-cache.amount0).toUint128())

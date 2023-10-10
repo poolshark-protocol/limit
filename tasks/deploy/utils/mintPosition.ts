@@ -71,12 +71,18 @@ export class MintPosition {
         //     true
         // )
 
-        let txn = await hre.props.limitPool.connect(hre.props.alice).increaseSampleCount(60)
-        await txn.wait()
+        // let txn = await hre.props.limitPool.connect(hre.props.alice).increaseSampleCount(60)
+        // await txn.wait()
 
         // console.log('amount quoted:', quote[0][1].toString(), quote[0][2].toString(), quote[0][3].toString())
-        const globalStateBefore = (await hre.props.limitPool.globalState())
-        console.log('sample state', globalStateBefore.pool.price, globalStateBefore.pool.samples.index, globalStateBefore.pool.samples.count, globalStateBefore.pool.samples.countMax, globalStateBefore.pool.tickAtPrice)
+        // const globalStateBefore = (await hre.props.limitPool.globalState())
+        // console.log('sample state', globalStateBefore.pool.price, globalStateBefore.pool.samples.index, globalStateBefore.pool.samples.count, globalStateBefore.pool.samples.countMax, globalStateBefore.pool.tickAtPrice)
+
+        const snapshot = await hre.props.limitPool.connect(hre.props.alice).snapshotRange(
+            31
+        )
+
+        console.log('position snapshot', snapshot.feesOwed0.toString(), snapshot.feesOwed1.toString())
 
         // const aliceId = await validateMintRange({
         //     signer: hre.props.alice,
@@ -91,34 +97,34 @@ export class MintPosition {
         //     revertMessage: '',
         // })
         // return
-        const signer = hre.props.alice
-        let approveTxn = await hre.props.token1.connect(signer).approve(hre.props.poolRouter.address, token1Amount.mul(1000))
-        await approveTxn.wait()
-        for (let i=0; i < 20; i++) {
+        // const signer = hre.props.alice
+        // let approveTxn = await hre.props.token1.connect(signer).approve(hre.props.poolRouter.address, token1Amount.mul(1000))
+        // await approveTxn.wait()
+        // for (let i=0; i < 20; i++) {
 
-            const zeroForOne = false
-            const amountIn = token1Amount.mul(10)
-            const priceLimit = BigNumber.from('3169126500570573503741758013440')
+        //     const zeroForOne = false
+        //     const amountIn = token1Amount.mul(10)
+        //     const priceLimit = BigNumber.from('3169126500570573503741758013440')
 
-            let txn = await hre.props.poolRouter
-            .connect(signer)
-            .multiSwapSplit(
-            [hre.props.limitPool.address],
-                [
-                {
-                    to: signer.address,
-                    priceLimit: priceLimit,
-                    amount: amountIn,
-                    zeroForOne: zeroForOne,
-                    exactIn: true,
-                    callbackData: ethers.utils.formatBytes32String('')
-                },
-                ], {gasLimit: 3000000})
-            await txn.wait()
-        }
+        //     let txn = await hre.props.poolRouter
+        //     .connect(signer)
+        //     .multiSwapSplit(
+        //     [hre.props.limitPool.address],
+        //         [
+        //         {
+        //             to: signer.address,
+        //             priceLimit: priceLimit,
+        //             amount: amountIn,
+        //             zeroForOne: zeroForOne,
+        //             exactIn: true,
+        //             callbackData: ethers.utils.formatBytes32String('')
+        //         },
+        //         ], {gasLimit: 3000000})
+        //     await txn.wait()
+        // }
 
-        const globalStateAfter = (await hre.props.limitPool.globalState())
-        console.log('sample state', globalStateAfter.pool.samples.index, globalStateAfter.pool.samples.count, globalStateAfter.pool.samples.countMax, globalStateAfter.pool.tickAtPrice)
+        // const globalStateAfter = (await hre.props.limitPool.globalState())
+        // console.log('sample state', globalStateAfter.pool.samples.index, globalStateAfter.pool.samples.count, globalStateAfter.pool.samples.countMax, globalStateAfter.pool.tickAtPrice)
 
         // await validateSwap({
         //     signer: hre.props.alice,

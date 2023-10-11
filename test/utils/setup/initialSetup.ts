@@ -291,9 +291,11 @@ export class InitialSetup {
                 PositionERC1155__factory,
                 'positionERC1155',
                 [
-                hre.props.limitPoolFactory.address
+                    hre.props.limitPoolFactory.address
                 ]
             )
+
+            console.log('enable pool type', hre.props.limitPoolImpl.address, hre.props.positionERC1155.address, this.constantProductString)
 
             const enableImplTxn = await hre.props.limitPoolManager.enablePoolType(
                 hre.props.limitPoolImpl.address,
@@ -302,12 +304,16 @@ export class InitialSetup {
             )
             await enableImplTxn.wait();
 
+            console.log('enabled pool type')
+
             hre.nonce += 1;
 
             const setFactoryTxn = await hre.props.limitPoolManager.setFactory(
                 hre.props.limitPoolFactory.address
             )
             await setFactoryTxn.wait()
+
+            console.log('set factory')
     
             hre.nonce += 1;
     
@@ -355,10 +361,10 @@ export class InitialSetup {
                 hre.nonce += 1;
     
                 [limitPoolAddress, limitPoolTokenAddress] = await hre.props.limitPoolFactory.getLimitPool(
-                    this.constantProductString,
                     hre.props.token0.address,
                     hre.props.token1.address,
-                    '1000'
+                    '1000',
+                    0
                 )
     
                 hre.nonce += 1;
@@ -395,10 +401,10 @@ export class InitialSetup {
                 'limitPool',
                 hre.props.limitPool,
                 [
-                    this.constantProductString,
                     hre.props.token0.address,
                     hre.props.token1.address,
-                    '500'
+                    hre.network.name == 'hardhat' ? '500' : '1000',
+                    0
                 ]
             )
         }

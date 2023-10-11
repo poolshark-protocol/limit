@@ -1754,6 +1754,87 @@ describe('RangePool Exact In Tests', function () {
     }
   })
 
+  it.only('token0 - Should add out-of-range liquidity 17', async function () {
+    const pool: RangePoolState = (await hre.props.limitPool.globalState()).pool
+
+    let positionCount = 0
+
+    await validateSwap({
+      signer: hre.props.alice,
+      recipient: hre.props.alice.address,
+      zeroForOne: true,
+      amount: tokenAmount.div(2),
+      sqrtPriceLimitX96: BigNumber.from('79228162514264337593543950336'),
+      balanceInDecrease: BigNumber.from('0'),
+      balanceOutIncrease: BigNumber.from('0'),
+      revertMessage: '',
+    })
+
+    const aliceId = await validateMint({
+      signer: hre.props.alice,
+      recipient: hre.props.alice.address,
+      lower: '-510',
+      upper: '13500',
+      amount0: tokenAmount,
+      amount1: tokenAmount,
+      balance0Decrease: BigNumber.from('100000000000000000000'),
+      balance1Decrease: BigNumber.from('5129385544815469135'),
+      liquidityIncrease: BigNumber.from('203738023811206695441'),
+      revertMessage: '',
+      collectRevertMessage: ''
+    })
+
+    ++positionCount;
+
+    await validateSwap({
+      signer: hre.props.alice,
+      recipient: hre.props.alice.address,
+      zeroForOne: false,
+      amount: tokenAmount.mul(2),
+      sqrtPriceLimitX96: BigNumber.from('3169126500570573503741758013440'),
+      balanceInDecrease: BigNumber.from('196396669539406744346'),
+      balanceOutIncrease: BigNumber.from('99949999999999999999'),
+      revertMessage: '',
+    })
+
+    console.log('pool price:', (await hre.props.limitPool.globalState()).pool.price.toString())
+
+    const snapshot = await getSnapshot(aliceId)
+
+    await validateMint({
+      signer: hre.props.alice,
+      recipient: hre.props.alice.address,
+      lower: '-510',
+      upper: '13500',
+      amount0: tokenAmount,
+      amount1: tokenAmount,
+      balance0Decrease: BigNumber.from('-49999999999999999'),
+      balance1Decrease: BigNumber.from('100000000000000000000'),
+      liquidityIncrease: BigNumber.from('101097609302211592992'),
+      revertMessage: '',
+      collectRevertMessage: '',
+      positionId: aliceId
+    })
+
+    // for
+    return
+
+    await validateMint({
+      signer: hre.props.alice,
+      recipient: hre.props.alice.address,
+      lower: '-510',
+      upper: '13500',
+      amount0: tokenAmount,
+      amount1: tokenAmount,
+      balance0Decrease: BigNumber.from('0'),
+      balance1Decrease: BigNumber.from('100000000000000000000'),
+      liquidityIncrease: BigNumber.from('101097609302211592992'),
+      revertMessage: '',
+      collectRevertMessage: '',
+      positionId: aliceId
+    })
+  })
+
 })
 
 describe('RangePool Exact Out Tests', function () {

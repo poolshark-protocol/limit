@@ -5,12 +5,12 @@ import {
 import { MintLimit } from "../../../generated/LimitPoolFactory/LimitPool"
 import { ONE_BI } from "../../constants/constants"
 import { BIGINT_ONE, convertTokenToDecimal } from "../utils/helpers"
-import { safeLoadBasePrice, safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadLimitPosition, safeLoadLimitTick, safeLoadToken, safeLoadTvlUpdateLog } from "../utils/loads"
+import { safeLoadBasePrice, safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadLimitPosition, safeLoadLimitTick, safeLoadMintLimitLog, safeLoadToken, safeLoadTvlUpdateLog, safeLoadTxnLog } from "../utils/loads"
 import { findEthPerToken } from '../utils/price'
 import { updateDerivedTVLAmounts } from '../utils/tvl'
 
 export function handleMintLimit(event: MintLimit): void {
-    let ownerParam = event.params.to.toHex()
+    let ownerParam = event.params.to
     let lowerParam = event.params.lower
     let upperParam = event.params.upper
     let positionIdParam = event.params.positionId
@@ -44,6 +44,27 @@ export function handleMintLimit(event: MintLimit): void {
     let tokenIn = loadTokenIn.entity
     let tokenOut = loadTokenOut.entity
 
+    let loadMintLog = safeLoadMintLimitLog(event.transaction.hash, poolAddress, positionIdParam)
+    let mintLog = loadMintLog.entity
+    if (!loadMintLog.exists) {
+        mintLog.sender = msgSender
+        mintLog.recipient = ownerParam
+        mintLog.lower = lower
+        mintLog.upper = upper
+        mintLog.positionId = positionIdParam
+        mintLog.pool = poolAddress
+        mintLog.zeroForOne = zeroForOneParam
+        mintLog.txnHash = event.transaction.hash
+        mintLog.blockNumber = event.block.number
+    }
+    mintLog.liquidityMinted = mintLog.liquidityMinted.plus(liquidityMintedParam)
+    mintLog.save()
+
+    let loadTxnLog = safeLoadTxnLog(event.transaction.hash, event.block.number, "MintLimit")
+    let txnLog = loadTxnLog.entity
+    txnLog.pool = poolAddress
+    txnLog.save()
+
     pool.txnCount = pool.txnCount.plus(ONE_BI)
     tokenIn.txnCount = tokenIn.txnCount.plus(ONE_BI)
     tokenOut.txnCount = tokenOut.txnCount.plus(ONE_BI)
@@ -72,7 +93,7 @@ export function handleMintLimit(event: MintLimit): void {
         position.lower = lower
         position.upper = upper
         position.zeroForOne = zeroForOneParam
-        position.owner = Bytes.fromHexString(ownerParam) as Bytes
+        position.owner = ownerParam
         position.epochLast = epochLastParam
         position.createdBy = msgSender
         position.createdAtTimestamp = event.block.timestamp

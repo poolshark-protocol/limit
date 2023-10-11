@@ -1,4 +1,4 @@
-import { safeLoadRangePosition, safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadToken, safeLoadCompoundRangeLog, safeLoadRangeTick } from "../utils/loads"
+import { safeLoadRangePosition, safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadToken, safeLoadCompoundRangeLog, safeLoadRangeTick, safeLoadTxnLog } from "../utils/loads"
 import {
     BigInt
 } from '@graphprotocol/graph-ts'
@@ -28,8 +28,16 @@ export function handleCompoundRange(event: CompoundRange): void {
         compoundLog.sender = senderParam
         compoundLog.pool = poolAddress
         compoundLog.positionId = position.positionId
+        compoundLog.txnHash = event.transaction.hash
+        compoundLog.blockNumber = event.block.number
     }
     compoundLog.liquidityCompounded = compoundLog.liquidityCompounded.plus(liquidityCompoundedParam)
+    compoundLog.save()
+
+    let loadTxnLog = safeLoadTxnLog(event.transaction.hash, event.block.number, "CompoundRange")
+    let txnLog = loadTxnLog.entity
+    txnLog.pool = poolAddress
+    txnLog.save()
 
     let loadLimitPool = safeLoadLimitPool(poolAddress)
     let pool = loadLimitPool.entity
@@ -78,5 +86,4 @@ export function handleCompoundRange(event: CompoundRange): void {
     position.save()
     lowerTick.save()
     upperTick.save()
-    compoundLog.save()
 }

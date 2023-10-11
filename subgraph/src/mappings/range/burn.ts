@@ -1,5 +1,5 @@
 import { Address, store } from "@graphprotocol/graph-ts"
-import { safeLoadBasePrice, safeLoadBurnLog, safeLoadRangePositionById, safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadRangeTick, safeLoadToken, safeLoadRangePosition, safeLoadTvlUpdateLog } from "../utils/loads"
+import { safeLoadBasePrice, safeLoadRangePositionById, safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadRangeTick, safeLoadToken, safeLoadRangePosition, safeLoadTvlUpdateLog, safeLoadBurnRangeLog, safeLoadTxnLog } from "../utils/loads"
 import {
     BigInt,
 } from '@graphprotocol/graph-ts'
@@ -28,7 +28,7 @@ export function handleBurnRange(event: BurnRange): void {
     let upper = position.upper
 
     // log burn action
-    let loadBurnLog = safeLoadBurnLog(event.transaction.hash, poolAddress, positionIdParam)
+    let loadBurnLog = safeLoadBurnRangeLog(event.transaction.hash, poolAddress, positionIdParam)
     let burnLog = loadBurnLog.entity
     if (!loadBurnLog.exists) {
         burnLog.owner = msgSender
@@ -37,8 +37,16 @@ export function handleBurnRange(event: BurnRange): void {
         burnLog.upper = upper
         burnLog.positionId = positionIdParam
         burnLog.pool = poolAddress
+        burnLog.txnHash = event.transaction.hash
+        burnLog.blockNumber = event.block.number
     }
     burnLog.liquidityBurned = burnLog.liquidityBurned.plus(liquidityBurnedParam)
+    burnLog.save()
+
+    let loadTxnLog = safeLoadTxnLog(event.transaction.hash, event.block.number, "BurnRange")
+    let txnLog = loadTxnLog.entity
+    txnLog.pool = poolAddress
+    txnLog.save()
 
     let loadBasePrice = safeLoadBasePrice('eth')
     let loadLimitPool = safeLoadLimitPool(poolAddress)
@@ -141,10 +149,8 @@ export function handleBurnRange(event: BurnRange): void {
     .times(token0.ethPrice.times(basePrice.USD))
     .plus(amount1.times(token1.ethPrice.times(basePrice.USD))).neg()
     tvlUpdateLog.amountUsdTotal = pool.totalValueLockedUsd
-
     tvlUpdateLog.save()
 
-    burnLog.save()
     basePrice.save()
     pool.save()
     factory.save()

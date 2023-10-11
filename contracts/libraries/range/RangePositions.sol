@@ -10,6 +10,7 @@ import '../math/OverflowMath.sol';
 import '../utils/SafeCast.sol';
 import './RangeTicks.sol';
 import '../Samples.sol';
+import 'hardhat/console.sol';
 
 /// @notice Position management library for ranged liquidity.
 library RangePositions {
@@ -320,6 +321,8 @@ library RangePositions {
         RangePoolStructs.SnapshotRangeCache memory cache;
         cache.position = positions[positionId];
 
+        console.log('position liquidity', cache.position.liquidity);
+
         // early return if position empty
         if (cache.position.liquidity == 0)
             return (0,0,0,0);
@@ -367,7 +370,9 @@ library RangePositions {
         );
 
         cache.tick = state.pool.tickAtPrice;
-        if (cache.position.lower >= cache.tick) {
+
+        if (cache.tick < cache.position.lower) {
+            // lower accum values are greater
             return (
                 cache.tickSecondsAccumLower - cache.tickSecondsAccumUpper,
                 cache.secondsPerLiquidityAccumLower - cache.secondsPerLiquidityAccumUpper,
@@ -375,6 +380,7 @@ library RangePositions {
                 cache.amount1
             );
         } else if (cache.position.upper >= cache.tick) {
+            // grab current sample
             cache.blockTimestamp = uint32(block.timestamp);
             (
                 cache.tickSecondsAccum,
@@ -399,6 +405,14 @@ library RangePositions {
                 cache.secondsPerLiquidityAccum
                   - cache.secondsPerLiquidityAccumLower
                   - cache.secondsPerLiquidityAccumUpper,
+                cache.amount0,
+                cache.amount1
+            );
+        } else {
+            // upper accum values are greater
+            return (
+                cache.tickSecondsAccumUpper - cache.tickSecondsAccumLower,
+                cache.secondsPerLiquidityAccumUpper - cache.secondsPerLiquidityAccumLower,
                 cache.amount0,
                 cache.amount1
             );

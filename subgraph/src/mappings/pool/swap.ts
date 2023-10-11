@@ -1,5 +1,5 @@
 import { BigDecimal, BigInt } from "@graphprotocol/graph-ts"
-import { safeLoadBasePrice, safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadSwap, safeLoadToken, safeLoadTransaction, safeLoadTvlUpdateLog } from "../utils/loads"
+import { safeLoadBasePrice, safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadSwap, safeLoadSwapLog, safeLoadToken, safeLoadTransaction, safeLoadTvlUpdateLog, safeLoadTxnLog } from "../utils/loads"
 import { convertTokenToDecimal } from "../utils/helpers"
 import { ZERO_BD, TWO_BD, ONE_BI } from "../../constants/constants"
 import { AmountType, findEthPerToken, getAdjustedAmounts, getEthPriceInUSD, sqrtPriceX96ToTokenPrices } from "../utils/price"
@@ -39,6 +39,23 @@ export function handleSwap(event: Swap): void {
         amount1 = convertTokenToDecimal(amountInParam, token1.decimals)
         amount0 = convertTokenToDecimal(amountOutParam.neg(), token0.decimals)
     }
+
+    let loadSwapLog = safeLoadSwapLog(event.transaction.hash, poolAddress)
+    let swapLog = loadSwapLog.entity
+    if (!loadSwapLog.exists) {
+        swapLog.txnHash = event.transaction.hash
+        swapLog.blockNumber = event.block.number
+        swapLog.amountIn = amountInParam
+        swapLog.amountOut = amountOutParam
+        swapLog.zeroForOne = zeroForOneParam
+        swapLog.pool = poolAddress
+    }
+    swapLog.save()
+
+    let loadTxnLog = safeLoadTxnLog(event.transaction.hash, event.block.number, "Swap")
+    let txnLog = loadTxnLog.entity
+    txnLog.pool = poolAddress
+    txnLog.save()
 
     pool.liquidity = liquidityParam
     pool.tickAtPrice = BigInt.fromI32(tickAtPriceParam)

@@ -28,7 +28,7 @@ library Collect {
             /// @dev - cast to ensure user doesn't owe the pool balance
             SafeTransfers.transferOut(recipient, constants.token1, amount1.toUint128());
         }
-        emit CollectRange(amount0.toUint128(), amount1.toUint128());
+        // emit CollectRange(amount0.toUint128(), amount1.toUint128());
     }
 
     function burnLimit(

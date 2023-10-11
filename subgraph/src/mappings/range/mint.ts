@@ -10,6 +10,7 @@ import {
     safeLoadLimitPoolFactory,
     safeLoadMintRangeLog,
     safeLoadTvlUpdateLog,
+    safeLoadTxnLog,
 } from '../utils/loads'
 import { BIGINT_ONE, convertTokenToDecimal } from '../utils/helpers'
 import { ONE_BI } from '../../constants/constants'
@@ -54,9 +55,16 @@ export function handleMintRange(event: MintRange): void {
         mintLog.upper = upper
         mintLog.positionId = positionIdParam
         mintLog.pool = poolAddress
+        mintLog.txnHash = event.transaction.hash
+        mintLog.blockNumber = event.block.number
     }
     mintLog.liquidityMinted = mintLog.liquidityMinted.plus(liquidityMintedParam)
     mintLog.save()
+
+    let loadTxnLog = safeLoadTxnLog(event.transaction.hash, event.block.number, "MintRange")
+    let txnLog = loadTxnLog.entity
+    txnLog.pool = poolAddress
+    txnLog.save()
 
     let loadLowerTick = safeLoadRangeTick(
         poolAddress,

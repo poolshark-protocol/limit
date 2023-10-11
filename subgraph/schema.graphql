@@ -264,6 +264,8 @@ type TvlUpdateLog @entity {
 type MintLimitLog @entity {
     id: ID!
 
+    txnHash: Bytes!
+    blockNumber: BigInt!
     sender: Bytes!
     recipient: Bytes!
     lower: BigInt!
@@ -271,11 +273,14 @@ type MintLimitLog @entity {
     positionId: BigInt!
     liquidityMinted: BigInt!
     pool: LimitPool!
+    zeroForOne: Boolean!
 }
 
 type BurnLimitLog @entity {
     id: ID!
 
+    txnHash: Bytes!
+    blockNumber: BigInt!
     owner: Bytes!
     recipient: Bytes!
     lower: BigInt!
@@ -283,11 +288,14 @@ type BurnLimitLog @entity {
     positionId: BigInt!
     liquidityBurned: BigInt!
     pool: LimitPool!
+    zeroForOne: Boolean!
 }
 
 type MintRangeLog @entity {
     id: ID!
 
+    txnHash: Bytes!
+    blockNumber: BigInt!
     sender: Bytes!
     recipient: Bytes!
     lower: BigInt!
@@ -300,6 +308,8 @@ type MintRangeLog @entity {
 type BurnRangeLog @entity {
     id: ID!
 
+    txnHash: Bytes!
+    blockNumber: BigInt!
     owner: Bytes!
     recipient: Bytes!
     lower: BigInt!
@@ -312,9 +322,31 @@ type BurnRangeLog @entity {
 type CompoundRangeLog @entity {
     id: ID!
 
+    txnHash: Bytes!
+    blockNumber: BigInt!
     sender: Bytes!
     pool: LimitPool!
     liquidityCompounded: BigInt!
     positionId: BigInt!
+}
+
+type SwapLog @entity {
+    id: ID!
+
+    txnHash: Bytes!
+    blockNumber: BigInt!
+    amountIn: BigInt!
+    amountOut: BigInt!
+    zeroForOne: Boolean!
+    pool: LimitPool!
+}
+
+type TxnLog @entity {
+    id: ID!
+
+    txnHash: Bytes!
+    blockNumber: BigInt!
+    eventName: String!
+    pool: LimitPool!
 }
 

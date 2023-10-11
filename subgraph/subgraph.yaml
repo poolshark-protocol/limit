@@ -10,7 +10,7 @@ dataSources:
     source:
         address: '0xab21829ec97c5fb6fc5edee736235fa7ca1fbb0a'
         abi: LimitPoolFactory
-        startBlock: 43415400
+        startBlock: 43415436
     mapping:
         kind: ethereum/events
         apiVersion: 0.0.6
@@ -39,7 +39,7 @@ dataSources:
     source:
         address: '0xecbec0e3f1d12644168f1a0bceaf4142ee97b91b'
         abi: LimitPoolManager
-        startBlock: 43415400
+        startBlock: 43415434
     mapping:
         kind: ethereum/events
         apiVersion: 0.0.6

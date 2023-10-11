@@ -1,5 +1,5 @@
 import { Address, BigDecimal, BigInt, Bytes, ethereum, log } from '@graphprotocol/graph-ts'
-import { LimitPool, LimitPoolFactory, LimitPoolManager, LimitPosition, Token, FeeTier, BasePrice, RangePosition, RangeTick, Transaction, LimitTick, Swap, CompoundRangeLog, MintRangeLog, BurnRangeLog, PoolRouter, TvlUpdateLog } from '../../../generated/schema'
+import { LimitPool, LimitPoolFactory, LimitPoolManager, LimitPosition, Token, FeeTier, BasePrice, RangePosition, RangeTick, Transaction, LimitTick, Swap, CompoundRangeLog, MintRangeLog, BurnRangeLog, PoolRouter, TvlUpdateLog, MintLimitLog, BurnLimitLog, SwapLog, TxnLog } from '../../../generated/schema'
 import { ONE_BD } from '../../constants/constants'
 import {
     fetchTokenSymbol,
@@ -388,11 +388,11 @@ export function safeLoadMintRangeLog(txnHash: Bytes, pool: string, positionId: B
     }
 }
 
-class LoadBurnLogRet {
+class LoadBurnRangeLogRet {
     entity: BurnRangeLog
     exists: boolean
 }
-export function safeLoadBurnLog(txnHash: Bytes, pool: string, positionId: BigInt): LoadBurnLogRet {
+export function safeLoadBurnRangeLog(txnHash: Bytes, pool: string, positionId: BigInt): LoadBurnRangeLogRet {
     let exists = true
 
     let burnRangeLogId = txnHash.toString()
@@ -436,6 +436,112 @@ export function safeLoadCompoundRangeLog(txnHash: Bytes, pool: string, positionI
 
     return {
         entity: compoundLogEntity,
+        exists: exists,
+    }
+}
+
+class LoadMintLimitLogRet {
+    entity: MintLimitLog
+    exists: boolean
+}
+export function safeLoadMintLimitLog(txnHash: Bytes, pool: string, positionId: BigInt): LoadMintLimitLogRet {
+    let exists = true
+
+    let mintLimitLogId = txnHash.toString()
+                    .concat('-')
+                    .concat(pool)
+                    .concat('-')
+                    .concat(positionId.toString())
+
+    let mintLimitLogEntity = MintLimitLog.load(mintLimitLogId)
+
+    if (!mintLimitLogEntity) {
+        mintLimitLogEntity = new MintLimitLog(mintLimitLogId)
+        exists = false
+    }
+
+    return {
+        entity: mintLimitLogEntity,
+        exists: exists,
+    }
+}
+
+class LoadBurnLimitLogRet {
+    entity: BurnLimitLog
+    exists: boolean
+}
+export function safeLoadBurnLimitLog(txnHash: Bytes, pool: string, positionId: BigInt): LoadBurnLimitLogRet {
+    let exists = true
+
+    let burnLimitLogId = txnHash.toHex()
+                    .concat('-')
+                    .concat(pool)
+                    .concat('-')
+                    .concat(positionId.toString())
+
+    let burnLimitLogEntity = BurnLimitLog.load(burnLimitLogId)
+
+    if (!burnLimitLogEntity) {
+        burnLimitLogEntity = new BurnLimitLog(burnLimitLogId)
+
+        exists = false
+    }
+
+    return {
+        entity: burnLimitLogEntity,
+        exists: exists,
+    }
+}
+
+class LoadSwapLogRet {
+    entity: SwapLog
+    exists: boolean
+}
+export function safeLoadSwapLog(txnHash: Bytes, pool: string): LoadSwapLogRet {
+    let exists = true
+
+    let swapLogId = txnHash.toHex()
+                    .concat('-')
+                    .concat(pool)
+
+    let txnLogEntity = SwapLog.load(swapLogId)
+
+    if (!txnLogEntity) {
+        txnLogEntity = new SwapLog(swapLogId)
+
+        exists = false
+    }
+
+    return {
+        entity: txnLogEntity,
+        exists: exists,
+    }
+}
+
+class LoadTxnLogRet {
+    entity: TxnLog
+    exists: boolean
+}
+export function safeLoadTxnLog(txnHash: Bytes, blockNumber: BigInt, eventName: string): LoadTxnLogRet {
+    let exists = true
+
+    let txnLogId = txnHash.toHex()
+                    .concat('-')
+                    .concat(blockNumber.toString())
+
+    let txnLogEntity = TxnLog.load(txnLogId)
+
+    if (!txnLogEntity) {
+        txnLogEntity = new TxnLog(txnLogId)
+        txnLogEntity.txnHash = txnHash
+        txnLogEntity.blockNumber = blockNumber
+        txnLogEntity.eventName = eventName
+
+        exists = false
+    }
+
+    return {
+        entity: txnLogEntity,
         exists: exists,
     }
 }

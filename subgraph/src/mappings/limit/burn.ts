@@ -2,12 +2,13 @@ import { store, BigInt } from "@graphprotocol/graph-ts"
 import { BurnLimit } from "../../../generated/LimitPoolFactory/LimitPool"
 import { ONE_BI } from "../../constants/constants"
 import { BIGINT_ZERO, convertTokenToDecimal } from "../utils/helpers"
-import { safeLoadBasePrice, safeLoadBurnLog, safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadLimitPosition, safeLoadLimitTick, safeLoadToken, safeLoadTvlUpdateLog } from "../utils/loads"
+import { safeLoadBasePrice, safeLoadBurnLimitLog, safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadLimitPosition, safeLoadLimitTick, safeLoadToken, safeLoadTvlUpdateLog, safeLoadTxnLog } from "../utils/loads"
 import { findEthPerToken } from "../utils/price"
 import { updateDerivedTVLAmounts } from "../utils/tvl"
 
 export function handleBurnLimit(event: BurnLimit): void {
-    let msgSender = event.transaction.from.toHex()
+    let msgSender = event.transaction.from
+    let recipientParam = event.params.to
     let positionIdParam = event.params.positionId
     let lowerParam = event.params.lower
     let oldClaimParam = event.params.oldClaim
@@ -43,6 +44,28 @@ export function handleBurnLimit(event: BurnLimit): void {
     let upperTick = loadUpperTick.entity
     let tokenIn = loadTokenIn.entity
     let tokenOut = loadTokenOut.entity
+
+    // log burn action
+    let loadBurnLog = safeLoadBurnLimitLog(event.transaction.hash, poolAddress, positionIdParam)
+    let burnLog = loadBurnLog.entity
+    if (!loadBurnLog.exists) {
+        burnLog.owner = msgSender
+        burnLog.recipient = recipientParam
+        burnLog.lower = lower
+        burnLog.upper = upper
+        burnLog.positionId = positionIdParam
+        burnLog.pool = poolAddress
+        burnLog.zeroForOne = zeroForOneParam
+        burnLog.txnHash = event.transaction.hash
+        burnLog.blockNumber = event.block.number
+    }
+    burnLog.liquidityBurned = burnLog.liquidityBurned.plus(liquidityBurnedParam)
+    burnLog.save()
+
+    let loadTxnLog = safeLoadTxnLog(event.transaction.hash, event.block.number, "BurnLimit")
+    let txnLog = loadTxnLog.entity
+    txnLog.pool = poolAddress
+    txnLog.save()
 
     // update txn counts
     pool.txnCount = pool.txnCount.plus(ONE_BI)
@@ -151,7 +174,7 @@ export function handleBurnLimit(event: BurnLimit): void {
     let tvlUpdateLog = loadTvlUpdateLog.entity
 
     tvlUpdateLog.pool = poolAddress
-    tvlUpdateLog.eventName = "BurnRange"
+    tvlUpdateLog.eventName = "BurnLimit"
     tvlUpdateLog.txnHash = event.transaction.hash
     tvlUpdateLog.txnBlockNumber = event.block.number
     tvlUpdateLog.amount0Change = zeroForOneParam ? amountOut.neg() : amountIn.neg()

@@ -1,4 +1,4 @@
-import { BigInt } from "@graphprotocol/graph-ts"
+import { BigInt, log } from "@graphprotocol/graph-ts"
 import { Initialize } from "../../../generated/LimitPoolFactory/LimitPool"
 import { safeLoadBasePrice, safeLoadLimitPool, safeLoadLimitTick, safeLoadRangeTick, safeLoadToken } from "../utils/loads"
 import { sqrtPriceX96ToTokenPrices, findEthPerToken } from "../utils/price"
@@ -49,6 +49,10 @@ export function handleInitialize(event: Initialize): void {
     token1.ethPrice = findEthPerToken(token1, token0, basePrice)
     token0.usdPrice = token0.ethPrice.times(basePrice.USD)
     token1.usdPrice = token1.ethPrice.times(basePrice.USD)
+
+    if (token1.symbol == 'USDC') {
+        log.info('USDC price at pool creation time: {}', [token1.usdPrice.toString()])
+    }
 
     pool.save()
     token0.save()

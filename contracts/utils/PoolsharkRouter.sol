@@ -317,6 +317,7 @@ contract PoolsharkRouter is
         // mint initial range positions
         for (uint i = 0; i < mintRangeParams.length;) {
             mintRangeParams[i].positionId = 0;
+            mintRangeParams[i].callbackData = abi.encode(MintCallbackData({sender: msg.sender}));
             IRangePool(pool).mintRange(mintRangeParams[i]);
             unchecked {
                 ++i;
@@ -325,6 +326,7 @@ contract PoolsharkRouter is
         // mint initial limit positions
         for (uint i = 0; i < mintLimitParams.length;) {
             mintLimitParams[i].positionId = 0;
+            mintLimitParams[i].callbackData = abi.encode(MintCallbackData({sender: msg.sender}));
             ILimitPool(pool).mintLimit(mintLimitParams[i]);
             unchecked {
                 ++i;
@@ -357,6 +359,8 @@ contract PoolsharkRouter is
         }
         // mint initial cover positions
         for (uint i = 0; i < mintCoverParams.length;) {
+            mintCoverParams[i].positionId = 0;
+            mintCoverParams[i].callbackData = abi.encode(MintCallbackData({sender: msg.sender}));
             ICoverPool(pool).mint(mintCoverParams[i]);
             unchecked {
                 ++i;
@@ -393,12 +397,12 @@ contract PoolsharkRouter is
                 // check if result already sorted
                 if (!locals.sortedFlags[index]) {
                     if (params[0].exactIn) {
-                        if (results[index].amountOut >= locals.sortAmount) {
+                        if (results[index].amountOut > 0 && results[index].amountOut >= locals.sortAmount) {
                             locals.sortIndex = index;
                             locals.sortAmount = results[index].amountOut;
                         }
                     } else {
-                        if (results[index].amountIn <= locals.sortAmount) {
+                        if (results[index].amountIn > 0 && results[index].amountIn <= locals.sortAmount) {
                             locals.sortIndex = index;
                             locals.sortAmount = results[index].amountIn;
                         }

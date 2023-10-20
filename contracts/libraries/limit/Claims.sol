@@ -21,10 +21,10 @@ library Claims {
         LimitPoolStructs.BurnLimitCache memory
     ) {
         // validate position liquidity
-        if (cache.liquidityBurned > cache.position.liquidity) require (false, 'NotEnoughPositionLiquidity()');
-        if (cache.position.liquidity == 0) {
+        if (cache.position.liquidity == 0)
             require(false, 'NoPositionLiquidityFound()');
-        }
+        if (cache.liquidityBurned > cache.position.liquidity)
+            require (false, 'NotEnoughPositionLiquidity()');
         
         if (params.claim < cache.position.lower ||
                 params.claim > cache.position.upper)

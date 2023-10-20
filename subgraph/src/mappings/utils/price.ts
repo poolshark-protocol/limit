@@ -50,6 +50,10 @@ export function findEthPerToken(token: Token, otherToken: Token, basePrice: Base
     log.info('weth address mismatch {} {}',[WETH_ADDRESS, token.id])
   }
   let whiteList = token.whitelistPools
+
+  // if the token is a stablecoin return 1 / basePrice
+  // if otherToken is ETH get price based on ETH
+
   // for now just take USD from pool with greatest TVL
   // need to update this to actually detect best rate based on liquidity distribution
   let largestLiquidityETH = ZERO_BD

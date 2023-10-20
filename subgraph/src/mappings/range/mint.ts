@@ -1,5 +1,5 @@
 import {
-    BigInt,
+    BigInt, log,
 } from '@graphprotocol/graph-ts'
 import {
     safeLoadLimitPool,
@@ -150,6 +150,10 @@ export function handleMintRange(event: MintRange): void {
         pool.poolLiquidity = pool.poolLiquidity.plus(liquidityMintedParam)
     }
     position.liquidity = position.liquidity.plus(liquidityMintedParam)
+
+    if (token1.symbol == 'USDC') {
+        log.info('USDC price at mint time: {}', [token1.usdPrice.toString()])
+    }
     
     basePrice.save()
     pool.save()

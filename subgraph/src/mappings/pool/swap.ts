@@ -1,4 +1,4 @@
-import { BigDecimal, BigInt } from "@graphprotocol/graph-ts"
+import { BigDecimal, BigInt, log } from "@graphprotocol/graph-ts"
 import { safeLoadBasePrice, safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadSwap, safeLoadToken, safeLoadTransaction, safeLoadTvlUpdateLog } from "../utils/loads"
 import { convertTokenToDecimal } from "../utils/helpers"
 import { ZERO_BD, TWO_BD, ONE_BI } from "../../constants/constants"
@@ -156,6 +156,10 @@ export function handleSwap(event: Swap): void {
     tvlUpdateLog.amountUsdTotal = pool.totalValueLockedUsd
 
     tvlUpdateLog.save()
+
+    if (token1.symbol == 'USDC') {
+        log.info('USDC price at swap time: {}', [token1.usdPrice.toString()])
+    }
 
     //TODO: add hour and daily data
     basePrice.save()

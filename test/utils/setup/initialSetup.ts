@@ -28,8 +28,8 @@ export class InitialSetup {
     private constantProductString: string
 
     /// DEPLOY CONFIG
-    private deployRouter = true
-    private deployTokens = false
+    private deployRouter = false
+    private deployTokens = true
     private deployPools = false
     private deployContracts = false
 
@@ -70,7 +70,7 @@ export class InitialSetup {
                 // @ts-ignore
                 Token20__factory,
                 'tokenA',
-                ['Wrapped Ether', 'WETH', this.token0Decimals]
+                ['ChainLink Token', 'LINK', this.token0Decimals]
             )
         
             await this.deployAssist.deployContractWithRetry(
@@ -78,7 +78,7 @@ export class InitialSetup {
                 // @ts-ignore
                 Token20__factory,
                 'tokenB',
-                ['Dai Stablecoin', 'DAI', this.token1Decimals]
+                ['Wrapped BTC', 'WBTC', this.token1Decimals]
             )
     
             const tokenOrder = hre.props.tokenA.address.localeCompare(hre.props.tokenB.address) < 0
@@ -295,16 +295,12 @@ export class InitialSetup {
                 ]
             )
 
-            console.log('enable pool type', hre.props.limitPoolImpl.address, hre.props.positionERC1155.address, this.constantProductString)
-
             const enableImplTxn = await hre.props.limitPoolManager.enablePoolType(
                 hre.props.limitPoolImpl.address,
                 hre.props.positionERC1155.address,
                 this.constantProductString
             )
             await enableImplTxn.wait();
-
-            console.log('enabled pool type')
 
             hre.nonce += 1;
 
@@ -313,8 +309,6 @@ export class InitialSetup {
             )
             await setFactoryTxn.wait()
 
-            console.log('set factory')
-    
             hre.nonce += 1;
     
             let limitPoolAddress; let limitPoolTokenAddress;

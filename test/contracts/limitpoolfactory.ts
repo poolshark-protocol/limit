@@ -46,7 +46,7 @@ describe('LimitPoolFactory Tests', function () {
             hre.props.limitPoolFactory
                 .connect(hre.props.admin)
                 .createLimitPool({
-                    poolType: constantProductString,
+                    poolTypeId: 0,
                     tokenIn: '0x0000000000000000000000000000000000000000',
                     tokenOut: '0x0000000000000000000000000000000000000000',
                     swapFee: '500',
@@ -60,7 +60,7 @@ describe('LimitPoolFactory Tests', function () {
             hre.props.limitPoolFactory
                 .connect(hre.props.admin)
                 .createLimitPool({
-                    poolType: constantProductString,
+                    poolTypeId: 0,
                     tokenIn: '0x0000000000000000000000000000000000000000',
                     tokenOut: hre.props.token0.address,
                     swapFee: '500',
@@ -72,7 +72,7 @@ describe('LimitPoolFactory Tests', function () {
             hre.props.limitPoolFactory
                 .connect(hre.props.admin)
                 .createLimitPool({
-                    poolType: constantProductString,
+                    poolTypeId: 0,
                     tokenIn: '0x0000000000000000000000000000000000000000',
                     tokenOut: hre.props.token0.address,
                     swapFee: '500',
@@ -87,7 +87,7 @@ describe('LimitPoolFactory Tests', function () {
             hre.props.limitPoolFactory
                 .connect(hre.props.admin)
                 .createLimitPool({
-                    poolType: constantProductString,
+                    poolTypeId: 0,
                     tokenIn: hre.props.token1.address,
                     tokenOut: hre.props.token0.address,
                     swapFee: '500',
@@ -99,7 +99,7 @@ describe('LimitPoolFactory Tests', function () {
             hre.props.limitPoolFactory
                 .connect(hre.props.admin)
                 .createLimitPool({
-                    poolType: constantProductString,
+                    poolTypeId: 0,
                     tokenIn: hre.props.token0.address,
                     tokenOut: hre.props.token1.address,
                     swapFee: '500',
@@ -113,7 +113,7 @@ describe('LimitPoolFactory Tests', function () {
             hre.props.limitPoolFactory
                 .connect(hre.props.admin)
                 .createLimitPool({
-                    poolType: constantProductString,
+                    poolTypeId: 0,
                     tokenIn: hre.props.token1.address,
                     tokenOut: hre.props.token0.address,
                     swapFee: '5',
@@ -127,7 +127,7 @@ describe('LimitPoolFactory Tests', function () {
             hre.props.limitPoolFactory
                 .connect(hre.props.admin)
                 .createLimitPool({
-                    poolType: constantSumString,
+                    poolTypeId: 1,
                     tokenIn: hre.props.token1.address,
                     tokenOut: hre.props.token0.address,
                     swapFee: '500',

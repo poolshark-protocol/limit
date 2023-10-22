@@ -58,7 +58,7 @@ contract LimitPoolFactory is
         (
             address poolImpl,
             address tokenImpl
-         ) = ILimitPoolManager(owner).implementations(params.poolType);
+         ) = ILimitPoolManager(owner).poolTypes(params.poolTypeId);
         if (poolImpl == address(0) || tokenImpl == address(0)) revert PoolTypeNotSupported();
 
         // generate key for pool
@@ -115,21 +115,21 @@ contract LimitPoolFactory is
         emit PoolCreated(
             pool,
             poolToken,
-            params.poolType,
             constants.token0,
             constants.token1,
             constants.swapFee,
-            constants.tickSpacing
+            constants.tickSpacing,
+            params.poolTypeId
         );
 
         return (pool, constants.poolToken);
     }
 
     function getLimitPool(
-        bytes32 poolType,
         address tokenIn,
         address tokenOut,
-        uint16 swapFee
+        uint16 swapFee,
+        uint8 poolTypeId
     ) public view override returns (
         address pool,
         address poolToken
@@ -146,7 +146,7 @@ contract LimitPoolFactory is
         (
             address poolImpl,
             address tokenImpl
-         ) = ILimitPoolManager(owner).implementations(poolType);
+         ) = ILimitPoolManager(owner).poolTypes(poolTypeId);
         if (poolImpl == address(0) || tokenImpl == address(0)) revert PoolTypeNotSupported();
 
         // generate key for pool

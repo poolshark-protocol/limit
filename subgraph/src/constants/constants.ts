@@ -1,7 +1,7 @@
 /* eslint-disable */
 import { BigInt, BigDecimal, Address } from '@graphprotocol/graph-ts'
 import { LimitPoolFactory as FactoryContract } from '../../generated/templates/LimitPoolTemplate/LimitPoolFactory'
-export let FACTORY_ADDRESS = '0xab21829ec97c5fb6fc5edee736235fa7ca1fbb0a'
+export let FACTORY_ADDRESS = '0xd0219266568eae5c1eea960e3eacf1a1e149aab0'
 export let WETH_ADDRESS = '0x0bfaaafa6e8fb009cd4e2bd3693f2eec2d18b053'
 
 // tokens where USD value is safe to use for globals
@@ -16,7 +16,7 @@ export let STABLE_COINS: string[] = [
 ]
 
 // used for safe eth pricing 
-export const STABLE_POOL_ADDRESS = '0x83e8902a1b28faedc9d09ce1a45671be424efaf3'
+export const STABLE_POOL_ADDRESS = '0x0b77fb84d0f1485abc8d192bd6d8e1b68b957992'
 
 // determines which token to use for eth <-> usd rate, true means stable is token0 in pool above 
 export const STABLE_IS_TOKEN_0 = false

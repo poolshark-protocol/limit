@@ -68,11 +68,11 @@ interface PoolsharkStructs {
     }
 
     struct LimitPoolParams {
-        bytes32 poolType;
         address tokenIn;
         address tokenOut;
         uint160 startPrice;
         uint16  swapFee;
+        uint8   poolTypeId;
     }
 
     struct SwapParams {

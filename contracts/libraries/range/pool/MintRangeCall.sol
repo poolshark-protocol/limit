@@ -5,6 +5,7 @@ import '../../../interfaces/structs/RangePoolStructs.sol';
 import '../../../interfaces/callbacks/ILimitPoolCallback.sol';
 import '../../../interfaces/IERC20Minimal.sol';
 import '../../utils/SafeTransfers.sol';
+import '../../utils/Bytes.sol';
 import '../../utils/Collect.sol';
 import '../../utils/PositionTokens.sol';
 import '../RangePositions.sol';
@@ -46,9 +47,10 @@ library MintRangeCall {
         if (params.positionId > 0) {
             cache.position = positions[params.positionId];
             // existing position
-            // if (PositionTokens.balanceOf(cache.constants, msg.sender, params.positionId) == 0)
-            //     // check for balance held
-            //     require(false, 'PositionNotFound()');
+            cache.owner = Bytes.getSender(params.callbackData);
+            // require balance held for existing position
+            if (PositionTokens.balanceOf(cache.constants, cache.owner, params.positionId) == 0)
+                require(false, 'PositionOwnerMismatch()');
             // set bounds as defined by position
             params.lower = cache.position.lower;
             params.upper = cache.position.upper;
@@ -77,6 +79,7 @@ library MintRangeCall {
             // set tick bounds on position
             cache.position.lower = params.lower;
             cache.position.upper = params.upper;
+            cache.owner = params.to;
         }
         // set cache based on bounds
         cache.priceLower = ConstantProduct.getPriceAtTick(cache.position.lower, cache.constants);
@@ -91,7 +94,7 @@ library MintRangeCall {
         cache.amount1 -= params.amount1.toInt128();
 
         emit MintRange(
-            params.to,
+            cache.owner,
             cache.position.lower,
             cache.position.upper,
             params.positionId,
@@ -116,22 +119,34 @@ library MintRangeCall {
         if (cache.amount0 > 0 || cache.amount1 > 0)
             Collect.range(
                 cache.constants,
-                params.to,
+                cache.owner,
                 cache.amount0,
                 cache.amount1
             );
 
-        // check balances and execute callback
+        // check starting balances
         Balances memory startBalance;
         if (cache.amount0 < 0) startBalance.amount0 = balance0(cache);
         if (cache.amount1 < 0) startBalance.amount1 = balance1(cache);
+
+        // execute mint callback
         ILimitPoolMintCallback(msg.sender).limitPoolMintCallback(
             cache.amount0,
             cache.amount1,
             params.callbackData
         );
 
-        // check balance requirements after callback
+        // int128 value = -187;
+        // int128 value2 = 187;
+
+        // if (true)
+        //     if ((-value).toUint128() < 0)
+        //         require(false, 'MintInputAmountCheckTooLow()');
+        // if (value2 < 0)
+        //     if ((-value).toUint128() < 0)
+        //         require(false, 'MintInputAmountCheckTooLow()');
+
+        // check balance after callback
         if (cache.amount0 < 0)
             if (balance0(cache) < startBalance.amount0 + (-cache.amount0).toUint128())
                 require(false, 'MintInputAmount0TooLow()');

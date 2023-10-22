@@ -367,7 +367,9 @@ library RangePositions {
         );
 
         cache.tick = state.pool.tickAtPrice;
-        if (cache.position.lower >= cache.tick) {
+
+        if (cache.tick < cache.position.lower) {
+            // lower accum values are greater
             return (
                 cache.tickSecondsAccumLower - cache.tickSecondsAccumUpper,
                 cache.secondsPerLiquidityAccumLower - cache.secondsPerLiquidityAccumUpper,
@@ -375,6 +377,7 @@ library RangePositions {
                 cache.amount1
             );
         } else if (cache.position.upper >= cache.tick) {
+            // grab current sample
             cache.blockTimestamp = uint32(block.timestamp);
             (
                 cache.tickSecondsAccum,
@@ -399,6 +402,14 @@ library RangePositions {
                 cache.secondsPerLiquidityAccum
                   - cache.secondsPerLiquidityAccumLower
                   - cache.secondsPerLiquidityAccumUpper,
+                cache.amount0,
+                cache.amount1
+            );
+        } else {
+            // upper accum values are greater
+            return (
+                cache.tickSecondsAccumUpper - cache.tickSecondsAccumLower,
+                cache.secondsPerLiquidityAccumUpper - cache.secondsPerLiquidityAccumLower,
                 cache.amount0,
                 cache.amount1
             );

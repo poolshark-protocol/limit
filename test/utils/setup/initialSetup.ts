@@ -28,8 +28,8 @@ export class InitialSetup {
     private constantProductString: string
 
     /// DEPLOY CONFIG
-    private deployRouter = true
-    private deployTokens = false
+    private deployRouter = false
+    private deployTokens = true
     private deployPools = false
     private deployContracts = false
 
@@ -70,7 +70,7 @@ export class InitialSetup {
                 // @ts-ignore
                 Token20__factory,
                 'tokenA',
-                ['Wrapped Ether', 'WETH', this.token0Decimals]
+                ['ChainLink Token', 'LINK', this.token0Decimals]
             )
         
             await this.deployAssist.deployContractWithRetry(
@@ -78,7 +78,7 @@ export class InitialSetup {
                 // @ts-ignore
                 Token20__factory,
                 'tokenB',
-                ['Dai Stablecoin', 'DAI', this.token1Decimals]
+                ['Wrapped BTC', 'WBTC', this.token1Decimals]
             )
     
             const tokenOrder = hre.props.tokenA.address.localeCompare(hre.props.tokenB.address) < 0
@@ -291,14 +291,14 @@ export class InitialSetup {
                 PositionERC1155__factory,
                 'positionERC1155',
                 [
-                hre.props.limitPoolFactory.address
+                    hre.props.limitPoolFactory.address
                 ]
             )
 
             const enableImplTxn = await hre.props.limitPoolManager.enablePoolType(
-                this.constantProductString,
                 hre.props.limitPoolImpl.address,
-                hre.props.positionERC1155.address
+                hre.props.positionERC1155.address,
+                this.constantProductString
             )
             await enableImplTxn.wait();
 
@@ -308,7 +308,7 @@ export class InitialSetup {
                 hre.props.limitPoolFactory.address
             )
             await setFactoryTxn.wait()
-    
+
             hre.nonce += 1;
     
             let limitPoolAddress; let limitPoolTokenAddress;
@@ -325,7 +325,7 @@ export class InitialSetup {
 
                 // create first limit pool
                 let createPoolTxn = await hre.props.limitPoolFactory.createLimitPool({
-                    poolType: this.constantProductString,
+                    poolTypeId: 0,
                     tokenIn: hre.props.token0.address,
                     tokenOut: hre.props.token1.address,
                     swapFee: '500',
@@ -336,15 +336,15 @@ export class InitialSetup {
                 hre.nonce += 1;
     
                 [limitPoolAddress, limitPoolTokenAddress] = await hre.props.limitPoolFactory.getLimitPool(
-                    this.constantProductString,
                     hre.props.token0.address,
                     hre.props.token1.address,
-                    '500'
+                    '500',
+                    0
                 )
             } else if (this.deployPools) {
                 // create first limit pool
                 let createPoolTxn = await hre.props.limitPoolFactory.createLimitPool({
-                    poolType: this.constantProductString,
+                    poolTypeId: 0,
                     tokenIn: hre.props.token0.address,
                     tokenOut: hre.props.token1.address,
                     swapFee: '1000',
@@ -355,16 +355,16 @@ export class InitialSetup {
                 hre.nonce += 1;
     
                 [limitPoolAddress, limitPoolTokenAddress] = await hre.props.limitPoolFactory.getLimitPool(
-                    this.constantProductString,
                     hre.props.token0.address,
                     hre.props.token1.address,
-                    '1000'
+                    '1000',
+                    0
                 )
     
                 hre.nonce += 1;
     
                 createPoolTxn = await hre.props.limitPoolFactory.createLimitPool({
-                    poolType: this.constantProductString,
+                    poolTypeId: 0,
                     tokenIn: hre.props.token0.address,
                     tokenOut: hre.props.token1.address,
                     swapFee: '3000',
@@ -375,7 +375,7 @@ export class InitialSetup {
                 hre.nonce += 1;
     
                 createPoolTxn = await hre.props.limitPoolFactory.createLimitPool({
-                    poolType: this.constantProductString,
+                    poolTypeId: 0,
                     tokenIn: hre.props.token0.address,
                     tokenOut: hre.props.token1.address,
                     swapFee: '10000',
@@ -395,10 +395,10 @@ export class InitialSetup {
                 'limitPool',
                 hre.props.limitPool,
                 [
-                    this.constantProductString,
                     hre.props.token0.address,
                     hre.props.token1.address,
-                    '500'
+                    hre.network.name == 'hardhat' ? '500' : '1000',
+                    0
                 ]
             )
         }
@@ -527,7 +527,7 @@ export class InitialSetup {
         let poolTxn = await hre.props.limitPoolFactory
           .connect(hre.props.admin)
           .createLimitPool({
-            poolType: this.constantProductString,
+            poolTypeId: 0,
             tokenIn: '0x5339F8fDFc2a9bE081fc1d924d9CF1473dA46C68',  // stETH
             tokenOut: '0x3a56859B3E176636095c142c87F73cC57B408b67', // USDC
             swapFee: '1000',
@@ -538,7 +538,7 @@ export class InitialSetup {
         poolTxn = await hre.props.limitPoolFactory
             .connect(hre.props.admin)
             .createLimitPool({
-            poolType: this.constantProductString,
+            poolTypeId: 0,
             tokenIn: '0x681cfAC3f265b6041FF4648A1CcB214F1c0DcF38',  // YFI
             tokenOut: '0x7dCF144D7f39d7aD7aE0E6F9E612379F73BD8E80', // DAI
             swapFee: '1000',
@@ -549,7 +549,7 @@ export class InitialSetup {
         poolTxn = await hre.props.limitPoolFactory
         .connect(hre.props.admin)
         .createLimitPool({
-            poolType: this.constantProductString,
+            poolTypeId: 0,
             tokenIn: '0x681cfAC3f265b6041FF4648A1CcB214F1c0DcF38',  // YFI
             tokenOut: '0xa9e1ab5e6878621F80E03A4a5F8FB3705F4FFA2B', // SUSHI
             swapFee: '1000',
@@ -560,7 +560,7 @@ export class InitialSetup {
         poolTxn = await hre.props.limitPoolFactory
         .connect(hre.props.admin)
         .createLimitPool({
-            poolType: this.constantProductString,
+            poolTypeId: 0,
             tokenIn: '0x3a56859B3E176636095c142c87F73cC57B408b67',  // USDC
             tokenOut: '0x7dCF144D7f39d7aD7aE0E6F9E612379F73BD8E80', // DAI
             swapFee: '1000',

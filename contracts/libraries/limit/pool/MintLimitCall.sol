@@ -41,10 +41,11 @@ library MintLimitCall {
         LimitPoolStructs.MintLimitCache memory cache
     ) external {
         if (params.positionId > 0) {
-            if (PositionTokens.balanceOf(cache.constants, msg.sender, params.positionId) == 0)
-                // check for balance held
-                require(false, 'PositionNotFound()');
             cache.position = positions[params.positionId];
+            if (cache.position.liquidity == 0) {
+                // position doesn't exist
+                require(false, 'PositionNotFound()');
+            }
         }
 
         cache.state = globalState;
@@ -61,7 +62,6 @@ library MintLimitCall {
 
         // save state for reentrancy safety
         save(cache, globalState, !params.zeroForOne);
-
 
         // transfer out if swap output 
         if (cache.swapCache.output > 0)

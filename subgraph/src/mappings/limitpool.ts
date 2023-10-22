@@ -10,9 +10,8 @@ import { handleSyncLimitTick as handleSyncLimitTickHelper } from './limit/syncti
 import { handleMintRange as handleMintRangeHelper } from './range/mint'
 import { handleBurnRange as handleBurnRangeHelper } from './range/burn'
 import { handleCompoundRange as handleCompoundRangeHelper } from './range/compound'
-import { handleCollectRange as handleCollectRangeHelper } from './range/collect'
 import { handleSyncRangeTick as handleSyncRangeTickHelper } from './range/synctick'
-import { BurnLimit, BurnRange, CollectRange, CompoundRange, Initialize, MintLimit, MintRange, SampleCountIncreased, SampleRecorded, Swap, SyncLimitLiquidity, SyncLimitPool, SyncLimitTick, SyncRangeTick } from '../../generated/LimitPoolFactory/LimitPool'
+import { BurnLimit, BurnRange, CompoundRange, Initialize, MintLimit, MintRange, SampleCountIncreased, SampleRecorded, Swap, SyncLimitLiquidity, SyncLimitPool, SyncLimitTick, SyncRangeTick } from '../../generated/LimitPoolFactory/LimitPool'
 
 // pool
 export function handleInitialize(event: Initialize): void {
@@ -43,10 +42,6 @@ export function handleBurnRange(event: BurnRange): void {
 
 export function handleCompoundRange(event: CompoundRange): void {
     handleCompoundRangeHelper(event)
-}
-
-export function handleCollectRange(event: CollectRange): void {
-    handleCollectRangeHelper(event)
 }
 
 export function handleSyncRangeTick(event: SyncRangeTick): void {

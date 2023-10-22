@@ -21,10 +21,10 @@ library Claims {
         LimitPoolStructs.BurnLimitCache memory
     ) {
         // validate position liquidity
-        if (cache.liquidityBurned > cache.position.liquidity) require (false, 'NotEnoughPositionLiquidity()');
-        if (cache.position.liquidity == 0) {
+        if (cache.position.liquidity == 0)
             require(false, 'NoPositionLiquidityFound()');
-        }
+        if (cache.liquidityBurned > cache.position.liquidity)
+            require (false, 'NotEnoughPositionLiquidity()');
         
         if (params.claim < cache.position.lower ||
                 params.claim > cache.position.upper)
@@ -118,14 +118,6 @@ library Claims {
             // check epochLast on claim tick
             if (claimTickEpoch <= cache.position.epochLast)
                 require (false, 'WrongTickClaimedAt7()');
-        }
-
-        // early return if no update and amount burned is 0
-        //TODO: after we've cycled through claim ticks and there are no position updates just revert - DONE
-        if (params.zeroForOne ? params.claim == cache.position.lower
-                              : params.claim == cache.position.upper) {
-            if (cache.liquidityBurned == 0)
-                require(false, 'NoPositionUpdates()');
         }
 
         return (params, cache);

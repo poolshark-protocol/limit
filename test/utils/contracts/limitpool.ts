@@ -229,24 +229,25 @@ export async function validateSwap(params: ValidateSwapParams) {
     let priceAfterQuoted
 
     if (revertMessage == '') {
-        const quote = await hre.props.poolRouter.multiQuote(
-            [hre.props.limitPool.address, hre.props.limitPool.address],
-            [{
-                priceLimit: zeroForOne ? (await (hre.props.limitPool.globalState())).pool0.price
-                                       : (await (hre.props.limitPool.globalState())).pool1.price,
-                amount: amountIn,
-                zeroForOne: zeroForOne,
-                exactIn: true
-            },
-            {
-                priceLimit: priceLimit,
-                amount: amountIn,
-                zeroForOne: zeroForOne,
-                exactIn: true
-            },
-            ],
-            true
-        )
+        const poolPrice = zeroForOne ? (await (hre.props.limitPool.globalState())).pool0.price
+                                     : (await (hre.props.limitPool.globalState())).pool1.price
+        // const quote = await hre.props.poolRouter.multiQuote(
+        //     [hre.props.limitPool.address, hre.props.limitPool.address],
+        //     [{
+        //         priceLimit: poolPrice,
+        //         amount: amountIn,
+        //         zeroForOne: zeroForOne,
+        //         exactIn: true
+        //     },
+        //     {
+        //         priceLimit: priceLimit,
+        //         amount: amountIn,
+        //         zeroForOne: zeroForOne,
+        //         exactIn: true
+        //     },
+        //     ],
+        //     false
+        // )
         // const quote = await hre.props.poolRouter.multiQuote(
         //     [
         //         "0x5c83c95242e7c36a26e50e2de8d95198cab6aabb",
@@ -275,15 +276,22 @@ export async function validateSwap(params: ValidateSwapParams) {
         //     ],
         //     true
         // )
-        // const quote = await hre.props.limitPool.quote({
-        //     priceLimit: priceLimit,
-        //     amount: amountIn,
-        //     zeroForOne: zeroForOne,
-        //     exactIn: true
-        // })
-        amountInQuoted = quote[0][1]
-        amountOutQuoted = quote[0][2]
-        priceAfterQuoted = quote[0][3]
+        const quote = await hre.props.limitPool.quote({
+            priceLimit: priceLimit,
+            amount: amountIn,
+            zeroForOne: zeroForOne,
+            exactIn: true
+        })
+        if (quote.length > 0) {
+            amountInQuoted = quote[0]
+            amountOutQuoted = quote[1]
+            priceAfterQuoted = quote[2]
+        } else {
+            amountInQuoted = BN_ZERO
+            amountOutQuoted = BN_ZERO
+            priceAfterQuoted = poolPrice
+        }
+
         // console.log('quote results', amountInQuoted.toString(), amountOutQuoted.toString(), priceAfterQuoted.toString())
 
         if (splitInto > 1) await ethers.provider.send("evm_setAutomine", [false]);

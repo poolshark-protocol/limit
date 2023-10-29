@@ -404,7 +404,8 @@ library LimitPositions {
             amountOut: 0,
             claim: params.claim,
             removeLower: false,
-            removeUpper: false
+            removeUpper: false,
+            search: false
         });
 
         // check claim is valid

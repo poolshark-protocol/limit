@@ -44,6 +44,7 @@ interface LimitPoolStructs is PoolsharkStructs {
         int24 claim;
         bool removeLower;
         bool removeUpper;
+        bool search;
     }
 
     struct InsertSingleLocals {
@@ -60,5 +61,18 @@ interface LimitPoolStructs is PoolsharkStructs {
         int24 previousFullTick;
         uint256 pricePrevious;
         uint256 priceNext;
+    }
+
+    struct SearchLocals {
+        int24[] ticksFound;
+        int24 searchTick;
+        uint16 ticksIncluded;
+    }
+
+    struct TickMapLocals {
+        uint256 word;
+        uint256 tickIndex;
+        uint256 wordIndex;
+        uint256 blockIndex;
     }
 }

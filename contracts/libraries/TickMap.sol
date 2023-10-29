@@ -3,6 +3,7 @@ pragma solidity 0.8.13;
 
 import './math/ConstantProduct.sol';
 import '../interfaces/structs/PoolsharkStructs.sol';
+import 'hardhat/console.sol';
 
 library TickMap {
 
@@ -175,6 +176,104 @@ library TickMap {
         }
     }
 
+    function previousTicksWithinWord(
+        PoolsharkStructs.TickMap storage tickMap,
+        int24 tick,
+        int16 tickSpacing,
+        int24 stopTick,
+        int24[] memory previousTicks,
+        uint16 ticksIncluded
+    ) internal view returns (
+        int24[] memory,
+        uint16,
+        int24
+    ) {
+        // rounds up to ensure relative position
+        if (tick % (tickSpacing / 2) != 0) {
+            if (tick < (ConstantProduct.maxTick(tickSpacing) - tickSpacing / 2)) {
+                /// @dev - ensures we cross when tick >= 0
+                if (tick >= 0) {
+                    tick += tickSpacing / 2;
+                }
+            }
+        }
+        LimitPoolStructs.TickMapLocals memory locals; 
+        (
+            locals.tickIndex,
+            locals.wordIndex,
+            locals.blockIndex
+        ) = getIndices(tick, tickSpacing);
+        console.log('grabbing word value', locals.wordIndex, locals.tickIndex, tickMap.ticks[locals.wordIndex]);
+        locals.word = tickMap.ticks[locals.wordIndex] & ((1 << (locals.tickIndex & 0xFF)) - 1);
+        console.log('word value:', locals.word, tick < stopTick);
+        while (locals.word != 0 && tick > stopTick) {
+            // ticks left within word
+            tick = _tick((locals.wordIndex << 8) | _msb(locals.word), tickSpacing);
+            console.log('ticks found within word', uint24(tick));
+            previousTicks[ticksIncluded] = tick;
+            unchecked {
+                ++ticksIncluded;
+            }
+            (
+                locals.tickIndex,,
+            ) = getIndices(tick, tickSpacing);
+            locals.word = locals.word & ((1 << (locals.tickIndex & 0xFF)) - 1);
+        }
+        // no ticks left within word
+        // int24 firstTickNextWord =  
+        return (previousTicks, ticksIncluded, locals.wordIndex > 0 ? _tick((locals.wordIndex - 1) << 8 | _msb(1 << 255), tickSpacing)
+                                                                   : ConstantProduct.minTick(tickSpacing));
+    }
+
+    function nextTicksWithinWord(
+        PoolsharkStructs.TickMap storage tickMap,
+        int24 tick,
+        int16 tickSpacing,
+        int24 stopTick,
+        int24[] memory nextTicks,
+        uint16 ticksIncluded
+    ) internal view returns (
+        int24[] memory,
+        uint16,
+        int24
+    ) {
+        /// @dev - handles negative ticks rounding up
+        if (tick % (tickSpacing / 2) != 0) {
+            if (tick < 0)
+                if (tick > (ConstantProduct.minTick(tickSpacing) + tickSpacing / 2))
+                    tick -= tickSpacing / 2;
+        }
+        LimitPoolStructs.TickMapLocals memory locals; 
+        (
+            locals.tickIndex,
+            locals.wordIndex,
+            locals.blockIndex
+        ) = getIndices(tick, tickSpacing);
+        if ((locals.tickIndex & 0xFF) != 255) {
+            console.log('grabbing word value', locals.wordIndex, locals.tickIndex, tickMap.ticks[locals.wordIndex]);
+           locals.word = tickMap.ticks[locals.wordIndex] & ~((1 << ((locals.tickIndex & 0xFF) + 1)) - 1);
+        }
+        console.log('word value:', locals.word, tick < stopTick);
+        while (locals.word != 0 && tick < stopTick) {
+            // ticks left within word
+            tick = _tick((locals.wordIndex << 8) | _lsb(locals.word), tickSpacing);
+            console.log('ticks found within word', uint24(tick));
+            nextTicks[ticksIncluded] = tick;
+            unchecked {
+                ++ticksIncluded;
+            }
+            (
+                locals.tickIndex,,
+            ) = getIndices(tick, tickSpacing);
+            if ((locals.tickIndex & 0xFF) != 255) {
+                locals.word = locals.word & ~((1 << ((locals.tickIndex & 0xFF) + 1)) - 1);
+            }
+        }
+        // no ticks left within word
+        // int24 firstTickNextWord =  
+        return (nextTicks, ticksIncluded, _tick((locals.wordIndex + 1) << 8 | _lsb(1), tickSpacing));
+    }
+
     function getIndices(
         int24 tick,
         int24 tickSpacing
@@ -185,7 +284,7 @@ library TickMap {
         )
     {
         unchecked {
-            if (tick > ConstantProduct.MAX_TICK) require(false, ' TickIndexOverflow()');
+            if (tick > ConstantProduct.MAX_TICK) require(false, 'TickIndexOverflow()');
             if (tick < ConstantProduct.MIN_TICK) require(false, 'TickIndexUnderflow()');
             if (tick % (tickSpacing / 2) != 0) tick = round(tick, tickSpacing / 2);
             tickIndex = uint256(int256((round(tick, tickSpacing / 2) 

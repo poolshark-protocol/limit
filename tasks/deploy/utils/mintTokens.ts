@@ -28,8 +28,8 @@ export class MintTokens {
         await this.initialSetup.readLimitPoolSetup(this.nonce)
         const token0Amount = ethers.utils.parseUnits('100', await hre.props.token0.decimals())
         const token1Amount = ethers.utils.parseUnits('100', await hre.props.token1.decimals())
-        await mintSigners20(hre.props.token0, token0Amount.mul(10), [hre.props.alice])
-        await mintSigners20(hre.props.token1, token1Amount.mul(10), [hre.props.alice])
+        await mintSigners20(hre.props.token0, token0Amount.mul(100), [hre.props.alice])
+        await mintSigners20(hre.props.token1, token1Amount.mul(100), [hre.props.alice])
 
         // const token0Balance = await hre.props.token0.balanceOf(
         //     '0x50924f626d1Ae4813e4a81E2c5589EC3882C13ca'

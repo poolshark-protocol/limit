@@ -6,6 +6,7 @@ import './EpochMap.sol';
 import '../TickMap.sol';
 import '../utils/String.sol';
 import '../utils/SafeCast.sol';
+import 'hardhat/console.sol';
 
 library Claims {
 
@@ -22,13 +23,16 @@ library Claims {
     ) {
         // validate position liquidity
         if (cache.position.liquidity == 0)
-            require(false, 'NoPositionLiquidityFound()');
+            require(false, 'LimitPosition::NoPositionFound()');
         if (cache.liquidityBurned > cache.position.liquidity)
-            require (false, 'NotEnoughPositionLiquidity()');
+            require (false, 'LimitPosition::NotEnoughLiquidity()');
         
         if (params.claim < cache.position.lower ||
                 params.claim > cache.position.upper)
-            require (false, 'InvalidClaimTick()');
+            require (false, 'ClaimTick::OutsidePositionBounds()');
+        
+        if (params.claim % (cache.constants.tickSpacing / 2) != 0)
+            require (false, 'ClaimTick::NotHalfTickOrFullTick()');
 
         uint32 claimTickEpoch = EpochMap.get(params.claim, params.zeroForOne, tickMap, cache.constants);
 
@@ -46,7 +50,13 @@ library Claims {
                 claimTickEpoch = cache.state.epoch;
             } else if (params.claim % cache.constants.tickSpacing != 0) {
                 if (cache.claimTick.priceAt == 0) {
-                    require (false, 'WrongTickClaimedAt1()');
+                    // require (false, 'ClaimTick::HalfTickAlreadyCrossed()');
+                    // if tick untouched since position creation revert
+                    if (claimTickEpoch <= cache.position.epochLast)
+                        require (false, 'ClaimTick::HalfTickClaimInvalid()'); 
+                    else
+                        // search ahead for the correct claim tick
+                        cache.search = true;
                 }
                 cache.priceClaim = cache.claimTick.priceAt;
             }
@@ -60,64 +70,79 @@ library Claims {
                     cache.priceClaim = cache.priceLower;
                     params.claim = cache.position.lower;
                     cache.claimTick = ticks[cache.position.upper].limit;
-
                 }
                 claimTickEpoch = cache.state.epoch;
             } else if (params.claim % cache.constants.tickSpacing != 0) {
                 if (cache.claimTick.priceAt == 0) {
-                    require (false, 'WrongTickClaimedAt2()');
+                    // require (false, 'ClaimTick::HalfTickAlreadyCrossed()');
+                    if (claimTickEpoch <= cache.position.epochLast)
+                        require (false, 'ClaimTick::HalfTickClaimInvalid()'); 
+                    else
+                        // search ahead for the correct claim tick
+                        cache.search = true;
                 }
                 cache.priceClaim = cache.claimTick.priceAt;
             }
         }
 
-        // validate claim tick
         if (params.claim == (params.zeroForOne ? cache.position.upper : cache.position.lower)) {
-            // set params.amount to 0 for event emitted at end
+            // check if final tick crossed
             cache.liquidityBurned = 0;
              if (claimTickEpoch <= cache.position.epochLast)
-                require (false, 'WrongTickClaimedAt3()');
+                // nothing to search
+                require (false, 'ClaimTick::FinalTickNotCrossedYet()');
         } else if (cache.liquidityBurned > 0) {
             /// @dev - partway claim is valid as long as liquidity is not being removed
-
-            // if we cleared the final tick of their position, this is the wrong claim tick
             if (params.zeroForOne) {
+                // check final tick first
                 uint32 endTickEpoch = EpochMap.get(cache.position.upper, params.zeroForOne, tickMap, cache.constants);
                 if (endTickEpoch > cache.position.epochLast) {
+                    // final tick crossed
                     params.claim = cache.position.upper;
                     cache.priceClaim = cache.priceUpper;
                     cache.claimTick = ticks[cache.position.upper].limit;
                     cache.liquidityBurned = cache.position.liquidity;
                 } else {
+                    // check claim tick passed is valid
                     int24 claimTickNext = TickMap.next(tickMap, params.claim, cache.constants.tickSpacing, false);
                     uint32 claimTickNextEpoch = EpochMap.get(claimTickNext, params.zeroForOne, tickMap, cache.constants);
-                    ///@dev - next swapEpoch should not be greater
                     if (claimTickNextEpoch > cache.position.epochLast) {
-                        require (false, 'WrongTickClaimedAt5()');
+                        ///@dev - next tick in range should not have been crossed
+                        // require (false, 'ClaimTick::NextTickAlreadyCrossed()');
+                        cache.search = true;
                     }
                 }
             } else {
+                // check final tick first
                 uint32 endTickEpoch = EpochMap.get(cache.position.lower, params.zeroForOne, tickMap, cache.constants);
                 if (endTickEpoch > cache.position.epochLast) {
+                    // final tick crossed
                     params.claim = cache.position.lower;
                     cache.priceClaim = cache.priceLower;
                     cache.claimTick = ticks[cache.position.lower].limit;
                     cache.liquidityBurned = cache.position.liquidity;
                 } else {
+                    // check claim tick passed is valid
                     int24 claimTickNext = TickMap.previous(tickMap, params.claim, cache.constants.tickSpacing, false);
                     uint32 claimTickNextEpoch = EpochMap.get(claimTickNext, params.zeroForOne, tickMap, cache.constants);
-                    ///@dev - next swapEpoch should not be greater
                     if (claimTickNextEpoch > cache.position.epochLast) {
-                        require (false, 'WrongTickClaimedAt5()');
+                        ///@dev - next tick in range should not have been crossed
+                        // require (false, 'ClaimTick::NextTickAlreadyCrossed()');
+                        cache.search = true;
                     }
                 }
             }
         }
+
+        if (cache.search) {
+            (params, cache, claimTickEpoch) = search(ticks, tickMap, params, cache);
+        }
+
         /// @dev - start tick does not overwrite position and final tick clears position
         if (params.claim != cache.position.upper && params.claim != cache.position.lower) {
             // check epochLast on claim tick
             if (claimTickEpoch <= cache.position.epochLast)
-                require (false, 'WrongTickClaimedAt7()');
+                require (false, 'ClaimTick::TickNotCrossed()');
         }
 
         return (params, cache);
@@ -172,5 +197,72 @@ library Claims {
             cache.pool.protocolFees += protocolFeeAmount;
         }
         return cache;
+    }
+
+    function search(
+        mapping(int24 => LimitPoolStructs.Tick) storage ticks,
+        PoolsharkStructs.TickMap storage tickMap,
+        PoolsharkStructs.BurnLimitParams memory params,
+        LimitPoolStructs.BurnLimitCache memory cache
+    ) internal view returns (
+        PoolsharkStructs.BurnLimitParams memory,
+        LimitPoolStructs.BurnLimitCache memory,
+        uint32 claimTickEpoch
+    ) {
+        LimitPoolStructs.SearchLocals memory locals;
+        // push ticks onto array
+        // 1. get indices for tick and word
+        locals.ticksFound = new int24[](256);
+        locals.searchTick = params.claim;
+        if (params.zeroForOne) {
+            for (int i=0; i<2;) {
+                (locals.ticksFound, locals.ticksIncluded, locals.searchTick) = TickMap.nextTicksWithinWord(
+                    tickMap,
+                    locals.searchTick,
+                    cache.constants.tickSpacing,
+                    cache.position.upper,
+                    locals.ticksFound,
+                    locals.ticksIncluded
+                );
+                console.log('ticks found:', locals.ticksIncluded, uint24(locals.ticksFound[locals.ticksIncluded - 1]), uint24(locals.searchTick));
+
+                // if we reached the final tick break the loop
+                if (locals.ticksIncluded > 0 && 
+                        locals.searchTick >= cache.position.upper) {
+                    break;
+                }
+                unchecked {
+                    ++i;
+                }
+            }
+            require(false, "SecondSearchIteration()");
+        } else {
+            for (int i=0; i<2;) {
+                (locals.ticksFound, locals.ticksIncluded, locals.searchTick) = TickMap.previousTicksWithinWord(
+                    tickMap,
+                    locals.searchTick,
+                    cache.constants.tickSpacing,
+                    cache.position.lower,
+                    locals.ticksFound,
+                    locals.ticksIncluded
+                );
+                console.log('ticks found:', locals.ticksIncluded, uint24(locals.ticksFound[locals.ticksIncluded - 1]), uint24(locals.searchTick));
+
+                // if we reached the final tick break the loop
+                if (locals.ticksIncluded > 0 && 
+                        locals.searchTick <= cache.position.lower) {
+                    break;
+                }
+                unchecked {
+                    ++i;
+                }
+            } 
+        }
+
+        // start with middle of array
+        // if crossed, check tick ahead
+        //      if tick ahead crossed, search between middle and end
+        //      if tick ahead not crossed, return claim tick
+        // if not crossed, check between middle and start
     }
 }

@@ -66,7 +66,13 @@ interface LimitPoolStructs is PoolsharkStructs {
     struct SearchLocals {
         int24[] ticksFound;
         int24 searchTick;
+        int24 searchTickAhead;
+        uint16 searchIdx;
+        uint16 startIdx;
+        uint16 endIdx;
         uint16 ticksIncluded;
+        uint32 claimTickEpoch;
+        uint32 claimTickAheadEpoch;
     }
 
     struct TickMapLocals {

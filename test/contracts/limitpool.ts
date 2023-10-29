@@ -7817,29 +7817,25 @@ describe('LimitPool Tests', function () {
             claim: "0",
             liquidityPercent: ethers.utils.parseUnits('1', 38),
             zeroForOne: true,
-            balanceInIncrease: "0",
-            balanceOutIncrease: "19",
-            lowerTickCleared: false,
+            balanceInIncrease: "19",
+            balanceOutIncrease: "1",
+            lowerTickCleared: true,
             upperTickCleared: false,
             revertMessage: "",
         });
 
-        return
-
-
-
         await validateBurn({
             signer: hre.props.bob,
-            positionId: bobId,
-            lower: "-10",
-            upper: "0",
-            claim: "0",
+            positionId: bobId2,
+            lower: "500",
+            upper: "1000",
+            claim: "500",
             liquidityPercent: ethers.utils.parseUnits('1', 38),
-            zeroForOne: false,
+            zeroForOne: true,
             balanceInIncrease: "0",
             balanceOutIncrease: "19",
-            lowerTickCleared: false,
-            upperTickCleared: true,
+            lowerTickCleared: true,
+            upperTickCleared: false,
             revertMessage: "",
         });
     });

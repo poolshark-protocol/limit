@@ -210,12 +210,12 @@ library Claims {
         uint32 claimTickEpoch
     ) {
         LimitPoolStructs.SearchLocals memory locals;
-        // push ticks onto array
-        // 1. get indices for tick and word
+
         locals.ticksFound = new int24[](256);
         locals.searchTick = params.claim;
         if (params.zeroForOne) {
             for (int i=0; i<2;) {
+                // push ticks from up to 2 storage slots onto array
                 (locals.ticksFound, locals.ticksIncluded, locals.searchTick) = TickMap.nextTicksWithinWord(
                     tickMap,
                     locals.searchTick,
@@ -225,7 +225,6 @@ library Claims {
                     locals.ticksIncluded
                 );
                 console.log('ticks found:', locals.ticksIncluded, uint24(locals.ticksFound[locals.ticksIncluded - 1]), uint24(locals.searchTick));
-
                 // if we reached the final tick break the loop
                 if (locals.ticksIncluded > 0 && 
                         locals.searchTick >= cache.position.upper) {
@@ -235,7 +234,44 @@ library Claims {
                     ++i;
                 }
             }
-            require(false, "SecondSearchIteration()");
+            locals.endIdx = locals.ticksIncluded - 1;
+            while (locals.startIdx <= locals.endIdx) {
+                // set idx at middle of start & end
+                locals.searchIdx = (locals.endIdx - locals.startIdx) / 2 + locals.startIdx;
+                
+                // set ticks
+                locals.searchTick = locals.ticksFound[locals.searchIdx];
+                console.log('search tick set:', uint24(locals.searchIdx), uint24(locals.searchTick));
+                if (locals.searchIdx < locals.endIdx) {
+                    // tick ahead in array
+                    locals.searchTickAhead = locals.ticksFound[locals.searchIdx + 1];
+                } else {
+                    // tick ahead in storage 
+                    locals.searchTickAhead = TickMap.next(tickMap, locals.searchTick, cache.constants.tickSpacing, false);
+                }
+
+                // set epochs
+                locals.claimTickEpoch = EpochMap.get(locals.searchTick, params.zeroForOne, tickMap, cache.constants);
+                locals.claimTickAheadEpoch = EpochMap.get(locals.searchTickAhead, params.zeroForOne, tickMap, cache.constants);
+                
+                // check epochs
+                if (locals.claimTickEpoch > cache.position.epochLast) {
+                    if (locals.claimTickAheadEpoch <= cache.position.epochLast) {
+                        // correct claim tick
+                        break;
+                    } else {
+                        // search higher
+                        locals.startIdx = locals.searchIdx + 1;
+                    }
+                } else if (locals.searchIdx > 0) {
+                    // search lower
+                    locals.endIdx = locals.searchIdx - 1;
+                } else {
+                    // 0 index hit; end of search
+                    break;
+                }
+            }
+            console.log('claim tick found:', uint24(locals.searchTick));
         } else {
             for (int i=0; i<2;) {
                 (locals.ticksFound, locals.ticksIncluded, locals.searchTick) = TickMap.previousTicksWithinWord(
@@ -258,6 +294,20 @@ library Claims {
                 }
             } 
         }
+
+        // final check on valid claim tick
+        if (locals.claimTickEpoch <= cache.position.epochLast ||
+                locals.claimTickAheadEpoch > cache.position.epochLast) {
+            require(false, "ClaimTick::NotFoundViaSearch()");
+        }
+        
+        params.claim = TickMap.roundBack(locals.searchTick, cache.constants, params.zeroForOne, cache.priceClaim);
+        cache.priceClaim = ConstantProduct.getPriceAtTick(locals.searchTick, cache.constants);
+        cache.claimTick = ticks[locals.searchTick].limit;
+
+        console.log('search results:', uint24(params.claim), uint128(cache.claimTick.liquidityDelta));
+
+        return (params, cache, locals.claimTickEpoch);
 
         // start with middle of array
         // if crossed, check tick ahead

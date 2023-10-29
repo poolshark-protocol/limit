@@ -7766,7 +7766,7 @@ describe('LimitPool Tests', function () {
         });
     });
 
-    it.only("pool1 - should remove liquidity by searching claim tick", async function () {
+    it.only("pool0 - should remove liquidity by searching claim tick", async function () {
         
         const bobId = await validateMint({
           signer: hre.props.bob,
@@ -7836,6 +7836,81 @@ describe('LimitPool Tests', function () {
             balanceOutIncrease: "19",
             lowerTickCleared: true,
             upperTickCleared: false,
+            revertMessage: "",
+        });
+    });
+
+    it.only("pool1 - should remove liquidity by searching claim tick", async function () {
+        
+        const bobId = await validateMint({
+          signer: hre.props.bob,
+          recipient: hre.props.bob.address,
+          lower: "-2000",
+          upper: "0",
+          amount: "20",
+          zeroForOne: false,
+          balanceInDecrease: "20",
+          liquidityIncrease: "210",
+          balanceOutIncrease: "0",
+          lowerTickCleared: false,
+          upperTickCleared: true,
+          revertMessage: "",
+        });
+
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: true,
+            amountIn: BigNumber.from("20"),
+            priceLimit: minPrice,
+            balanceInDecrease: '20',
+            balanceOutIncrease: '18',
+            revertMessage: '',
+        })
+
+
+        const bobId2 = await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: "-1000",
+            upper: "-500",
+            amount: "20",
+            zeroForOne: false,
+            balanceInDecrease: "20",
+            liquidityIncrease: "830",
+            balanceOutIncrease: "0",
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: "",
+        });
+
+        await validateBurn({
+            signer: hre.props.bob,
+            positionId: bobId,
+            lower: "-2000",
+            upper: "0",
+            claim: "0",
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: false,
+            balanceInIncrease: "19",
+            balanceOutIncrease: "1",
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: "",
+        });
+
+        await validateBurn({
+            signer: hre.props.bob,
+            positionId: bobId2,
+            lower: "-1000",
+            upper: "-500",
+            claim: "-500",
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: false,
+            balanceInIncrease: "0",
+            balanceOutIncrease: "19",
+            lowerTickCleared: false,
+            upperTickCleared: true,
             revertMessage: "",
         });
     });

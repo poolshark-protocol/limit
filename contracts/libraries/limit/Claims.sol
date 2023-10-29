@@ -270,7 +270,7 @@ library Claims {
             
             // set ticks
             locals.searchTick = locals.ticksFound[locals.searchIdx];
-            console.log('search tick set:', uint24(locals.searchIdx), uint24(locals.searchTick));
+            console.log('search tick set:', uint24(locals.searchIdx), uint24(-locals.searchTick));
             if (locals.searchIdx < locals.ticksIncluded) {
                 // tick ahead in array
                 locals.searchTickAhead = locals.ticksFound[locals.searchIdx + 1];
@@ -301,7 +301,7 @@ library Claims {
                 break;
             }
         }
-        console.log('claim tick found:', uint24(locals.searchTick));
+        console.log('claim tick found:', uint24(-locals.searchTick));
 
         // final check on valid claim tick
         if (locals.claimTickEpoch <= cache.position.epochLast ||
@@ -313,7 +313,7 @@ library Claims {
         cache.priceClaim = ConstantProduct.getPriceAtTick(locals.searchTick, cache.constants);
         cache.claimTick = ticks[locals.searchTick].limit;
 
-        console.log('search results:', uint24(params.claim), uint128(cache.claimTick.liquidityDelta));
+        console.log('search results:', uint24(-params.claim), uint128(cache.claimTick.liquidityDelta));
 
         return (params, cache, locals.claimTickEpoch);
     }

@@ -627,6 +627,7 @@ contract PoolsharkRouter is
         // wrap necessary amount of WETH
         IWETH9 weth = IWETH9(wethAddress);
         weth.deposit{value: amount}();
+        // transfer weth into pool
         SafeTransfers.transferInto(wethAddress, address(this), amount);
         // return remaining to sender
         (bool success, ) = sender.call{value: address(this).balance}("");

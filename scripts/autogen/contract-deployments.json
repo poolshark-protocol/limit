@@ -181,6 +181,12 @@
                 8
             ],
             "created": "2023-10-20T14:15:30.017Z"
+        },
+        "weth9": {
+            "contractName": "WETH9",
+            "contractAddress": "0x4cd24cddfd0b2adf3ef17a203bc34eaf650a380d",
+            "constructorArguments": [],
+            "created": "2023-11-06T13:28:54.430Z"
         }
     },
     "scrollSepolia": {

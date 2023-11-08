@@ -25,4 +25,8 @@ export const CONTRACT_DEPLOYMENT_KEYS: ContractDeploymentsKey[] = [
         networkName: 'arb_goerli',
         objectName: 'tokenB'
     },
+    {
+        networkName: 'arb_goerli',
+        objectName: 'weth9'
+    },
 ];

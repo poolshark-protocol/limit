@@ -17,6 +17,7 @@ import {
     SampleCall,
     SnapshotRangeCall,
     SnapshotLimitCall,
+    WETH9,
 } from '../../../typechain'
 import { InitialSetup } from './initialSetup'
 import { MintRangeCall } from '../../../typechain'
@@ -55,7 +56,7 @@ export interface BeforeEachProps {
     tokenB: Token20
     token0: Token20
     token1: Token20
-    token20: Token20
+    weth9: WETH9
     admin: SignerWithAddress
     alice: SignerWithAddress
     bob: SignerWithAddress
@@ -114,7 +115,7 @@ export class GetBeforeEach {
         let tokenB: Token20
         let token0: Token20
         let token1: Token20
-        let token20: Token20
+        let weth9: WETH9
         let admin: SignerWithAddress
         let alice: SignerWithAddress
         let bob: SignerWithAddress
@@ -151,7 +152,7 @@ export class GetBeforeEach {
             tokenB,
             token0,
             token1,
-            token20,
+            weth9,
             admin,
             alice,
             bob,

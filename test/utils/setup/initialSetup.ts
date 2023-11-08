@@ -2,7 +2,7 @@ import { SUPPORTED_NETWORKS } from '../../../scripts/constants/supportedNetworks
 import { DeployAssist } from '../../../scripts/util/deployAssist'
 import { ContractDeploymentsKeys } from '../../../scripts/util/files/contractDeploymentKeys'
 import { ContractDeploymentsJson } from '../../../scripts/util/files/contractDeploymentsJson'
-import { BurnLimitCall__factory, LimitPool__factory, MintLimitCall__factory, LimitPositions__factory, QuoteCall__factory, PositionERC1155__factory, LimitTicks__factory, FeesCall__factory, SampleCall__factory, SnapshotRangeCall__factory, SnapshotLimitCall__factory } from '../../../typechain'
+import { BurnLimitCall__factory, LimitPool__factory, MintLimitCall__factory, LimitPositions__factory, QuoteCall__factory, PositionERC1155__factory, LimitTicks__factory, FeesCall__factory, SampleCall__factory, SnapshotRangeCall__factory, SnapshotLimitCall__factory, WETH9__factory } from '../../../typechain'
 import { BurnRangeCall__factory } from '../../../typechain'
 import { SwapCall__factory } from '../../../typechain'
 import { MintRangeCall__factory } from '../../../typechain'
@@ -404,10 +404,18 @@ export class InitialSetup {
         }
 
         if (hre.network.name == 'hardhat' || this.deployRouter) {
-            let limitPoolFactoryAddress; let coverPoolFactoryAddress;
+            let limitPoolFactoryAddress; let coverPoolFactoryAddress; let weth9Address;
             if (hre.network.name == 'hardhat') {
                 limitPoolFactoryAddress = hre.props.limitPoolFactory.address
                 coverPoolFactoryAddress = '0x0000000000000000000000000000000000000000'
+                // deploy weth9
+                await this.deployAssist.deployContractWithRetry(
+                    network,
+                    // @ts-ignore
+                    WETH9__factory,
+                    'weth9',
+                    []
+                )
             } else {
                 limitPoolFactoryAddress = (
                     await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
@@ -427,6 +435,15 @@ export class InitialSetup {
                         'readLimitPoolSetup'
                     )
                 ).contractAddress
+                const weth9Address = (
+                    await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
+                      {
+                        networkName: hre.network.name,
+                        objectName: 'weth9',
+                      },
+                      'readLimitPoolSetup'
+                    )
+                ).contractAddress
             }
             await this.deployAssist.deployContractWithRetry(
                 network,
@@ -435,7 +452,8 @@ export class InitialSetup {
                 'poolRouter',
                 [
                   limitPoolFactoryAddress, // limitPoolFactory
-                  coverPoolFactoryAddress  // coverPoolFactory
+                  coverPoolFactoryAddress, // coverPoolFactory,
+                  weth9Address
                 ]
             )
         }

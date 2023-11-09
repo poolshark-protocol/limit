@@ -165,8 +165,6 @@ library RangePositions {
             cache.amount1
         );
         if (cache.position.liquidity == 0) {
-            cache.position.feeGrowthInside0Last = 0;
-            cache.position.feeGrowthInside1Last = 0;
             cache.position.lower = 0;
             cache.position.upper = 0;
         }

@@ -81,4 +81,8 @@ interface IPool is PoolsharkStructs {
         int24 lower,
         int24 upper
     );
+
+    function poolToken() external view returns(
+        address poolToken
+    );
 }

@@ -192,11 +192,7 @@ contract RangeStaker is LimitPoolManagerEvents {
 
     // mint and stake
 
-    // burn (does not unstake)
-
-    // compound
-
-    // collect
+    // burn (does not unstake; supports compound and collect)
 
     /**
      * @dev Throws if called by any account other than the owner.
@@ -259,5 +255,8 @@ contract RangeStaker is LimitPoolManagerEvents {
         if (feeTo != msg.sender) require (false, 'FeeToOnly()');
     }
 
-    //TODO: implement 1155 receive hook
+    function supportsInterface(bytes4 interfaceID) external pure returns (bool) {
+      return  interfaceID == 0x01ffc9a7 ||    // ERC-165 support
+              interfaceID == 0xd9b67a26;      // ERC-1155 support
+    }
 }

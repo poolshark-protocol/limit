@@ -315,7 +315,7 @@ contract PositionERC1155 is
         if (_target.code.length == 0) return true;
         bytes memory encodedParams = abi.encodeWithSelector(
             IERC165.supportsInterface.selector,
-            type(IPositionERC1155).interfaceId
+            0xd9b67a26 // ERC-1155 support
         );
         (bool success, bytes memory result) = _target.staticcall{gas: 30_000}(encodedParams);
         if (result.length < 32) return false;

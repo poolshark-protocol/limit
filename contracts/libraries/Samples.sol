@@ -3,7 +3,6 @@ pragma solidity 0.8.13;
 
 import './math/ConstantProduct.sol';
 import './utils/SafeCast.sol';
-import '../interfaces/IPool.sol';
 import '../interfaces/range/IRangePool.sol';
 import '../interfaces/structs/RangePoolStructs.sol';
 
@@ -121,7 +120,7 @@ library Samples {
                 tickSecondsAccum[i],
                 secondsPerLiquidityAccum[i]
             ) = getSingle(
-                IPool(pool),
+                IRangePool(pool),
                 params,
                 secondsAgo[i]
             );
@@ -142,7 +141,7 @@ library Samples {
     }
 
     function _poolSample(
-        IPool pool,
+        IRangePool pool,
         uint256 sampleIndex
     ) internal view returns (
         RangePoolStructs.Sample memory
@@ -151,7 +150,7 @@ library Samples {
             uint32 blockTimestamp,
             int56 tickSecondsAccum,
             uint160 liquidityPerSecondsAccum
-        ) = pool.samples(sampleIndex);
+        ) = IRangePool(pool).samples(sampleIndex);
 
         return PoolsharkStructs.Sample(
             blockTimestamp,
@@ -161,7 +160,7 @@ library Samples {
     }
 
     function getSingle(
-        IPool pool,
+        IRangePool pool,
         RangePoolStructs.SampleParams memory params,
         uint32 secondsAgo
     ) internal view returns (
@@ -246,7 +245,7 @@ library Samples {
             tickSecondsAccum,
             secondsPerLiquidityAccum
         ) = getSingle(
-                IPool(address(this)), 
+                IRangePool(address(this)), 
                 RangePoolStructs.SampleParams(
                     state.pool.samples.index,
                     state.pool.samples.count,
@@ -262,7 +261,7 @@ library Samples {
         (
             int56 tickSecondsAccumBase,
         ) = Samples.getSingle(
-                IPool(address(this)), 
+                IRangePool(address(this)), 
                 RangePoolStructs.SampleParams(
                     state.pool.samples.index,
                     state.pool.samples.count,
@@ -355,7 +354,7 @@ library Samples {
     }
 
     function _binarySearch(
-        IPool pool,
+        IRangePool pool,
         uint32 targetTime,
         uint16 sampleIndex,
         uint16 sampleLength
@@ -392,7 +391,7 @@ library Samples {
     }
 
     function _getAdjacentSamples(
-        IPool pool,
+        IRangePool pool,
         RangePoolStructs.Sample memory firstSample,
         RangePoolStructs.SampleParams memory params,
         uint32 targetTime

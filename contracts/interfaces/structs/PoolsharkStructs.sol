@@ -142,6 +142,12 @@ interface PoolsharkStructs {
         bool zeroForOne;
     }
 
+    struct StakeRangeParams {
+        address to;
+        address pool;
+        uint32 positionId;
+    }
+
     /**
      * @custom:struct MintCoverParams
      */

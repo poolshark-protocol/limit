@@ -41,4 +41,14 @@ interface ILimitPool is LimitPoolStructs {
         uint160 minPrice,
         uint160 maxPrice
     );
+
+    function globalState() external view returns (
+        RangePoolState memory pool,
+        LimitPoolState memory pool0,
+        LimitPoolState memory pool1,
+        uint128 liquidityGlobal,
+        uint32 positionIdNext,
+        uint32 epoch,
+        uint8 unlocked
+    );
 }

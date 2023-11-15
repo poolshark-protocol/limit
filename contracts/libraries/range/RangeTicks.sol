@@ -79,7 +79,7 @@ library RangeTicks {
                     int56 tickSecondsAccum,
                     uint160 secondsPerLiquidityAccum
                 ) = Samples.getSingle(
-                        IPool(address(this)), 
+                        IRangePool(address(this)), 
                         RangePoolStructs.SampleParams(
                             state.pool.samples.index,
                             state.pool.samples.count,
@@ -119,7 +119,7 @@ library RangeTicks {
                     int56 tickSecondsAccum,
                     uint160 secondsPerLiquidityAccum
                 ) = Samples.getSingle(
-                        IPool(address(this)), 
+                        IRangePool(address(this)), 
                         RangePoolStructs.SampleParams(
                             state.pool.samples.index,
                             state.pool.samples.count,

@@ -25,8 +25,6 @@ import './external/openzeppelin/security/ReentrancyGuard.sol';
 
 /// @notice Poolshark Limit Pool Implementation
 contract LimitPool is
-    ILimitPool,
-    IRangePool,
     LimitPoolStorage,
     LimitPoolImmutables,
     ReentrancyGuard
@@ -59,7 +57,7 @@ contract LimitPool is
 
     function initialize(
         uint160 startPrice
-    ) external override 
+    ) external  
         nonReentrant(globalState)
         factoryOnly
         canoncialOnly
@@ -77,7 +75,7 @@ contract LimitPool is
 
     function mintRange(
         MintRangeParams memory params
-    ) external override
+    ) external 
         nonReentrant(globalState)
         canoncialOnly
     {
@@ -96,7 +94,7 @@ contract LimitPool is
 
     function burnRange(
         BurnRangeParams memory params
-    ) external override
+    ) external 
         nonReentrant(globalState)
         canoncialOnly
     {
@@ -116,7 +114,7 @@ contract LimitPool is
     //limitSwap
     function mintLimit(
         MintLimitParams memory params
-    ) external override
+    ) external 
         nonReentrant(globalState)
         canoncialOnly
     {
@@ -136,7 +134,7 @@ contract LimitPool is
 
     function burnLimit(
         BurnLimitParams memory params
-    ) external override
+    ) external 
         nonReentrant(globalState)
         canoncialOnly
     {
@@ -154,7 +152,7 @@ contract LimitPool is
 
     function swap(
         SwapParams memory params
-    ) external override
+    ) external 
         nonReentrant(globalState)
         canoncialOnly
     returns (
@@ -177,7 +175,7 @@ contract LimitPool is
 
     function increaseSampleCount(
         uint16 newSampleCountMax
-    ) external override
+    ) external 
         nonReentrant(globalState)
         canoncialOnly 
     {
@@ -190,7 +188,7 @@ contract LimitPool is
 
     function fees(
         FeesParams memory params
-    ) external override
+    ) external 
         ownerOnly
         nonReentrant(globalState)
         canoncialOnly 
@@ -207,7 +205,7 @@ contract LimitPool is
 
     function quote(
         QuoteParams memory params
-    ) external view override
+    ) external view 
     returns (
         uint256,
         uint256,
@@ -245,7 +243,7 @@ contract LimitPool is
 
     function snapshotRange(
         uint32 positionId 
-    ) external view override returns (
+    ) external view  returns (
         int56   tickSecondsAccum,
         uint160 secondsPerLiquidityAccum,
         uint128 feesOwed0,
@@ -262,7 +260,7 @@ contract LimitPool is
 
     function snapshotLimit(
         SnapshotLimitParams memory params
-    ) external view override returns(
+    ) external view  returns(
         uint128,
         uint128
     ) {

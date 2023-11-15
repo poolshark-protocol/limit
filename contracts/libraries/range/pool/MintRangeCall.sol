@@ -129,22 +129,12 @@ library MintRangeCall {
         if (cache.amount0 < 0) startBalance.amount0 = balance0(cache);
         if (cache.amount1 < 0) startBalance.amount1 = balance1(cache);
 
-        // execute mint callback
-        ILimitPoolMintCallback(msg.sender).limitPoolMintCallback(
+        // execute mint range callback
+        ILimitPoolMintRangeCallback(msg.sender).limitPoolMintRangeCallback(
             cache.amount0,
             cache.amount1,
             params.callbackData
         );
-
-        // int128 value = -187;
-        // int128 value2 = 187;
-
-        // if (true)
-        //     if ((-value).toUint128() < 0)
-        //         require(false, 'MintInputAmountCheckTooLow()');
-        // if (value2 < 0)
-        //     if ((-value).toUint128() < 0)
-        //         require(false, 'MintInputAmountCheckTooLow()');
 
         // check balance after callback
         if (cache.amount0 < 0)

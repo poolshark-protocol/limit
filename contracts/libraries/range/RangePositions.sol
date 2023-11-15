@@ -381,7 +381,7 @@ library RangePositions {
                 cache.tickSecondsAccum,
                 cache.secondsPerLiquidityAccum
             ) = Samples.getSingle(
-                IPool(address(this)), 
+                IRangePool(address(this)), 
                 RangePoolStructs.SampleParams(
                     cache.samples.index,
                     cache.samples.count,

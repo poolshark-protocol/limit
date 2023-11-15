@@ -152,7 +152,7 @@ library MintLimitCall {
 
         // check balance and execute callback
         uint256 balanceStart = balance(params, cache);
-        ILimitPoolMintCallback(msg.sender).limitPoolMintCallback(
+        ILimitPoolMintLimitCallback(msg.sender).limitPoolMintLimitCallback(
             params.zeroForOne ? -int256(params.amount + cache.swapCache.input) : int256(cache.swapCache.output),
             params.zeroForOne ? int256(cache.swapCache.output) : -int256(params.amount + cache.swapCache.input),
             params.callbackData

@@ -14,7 +14,6 @@ import '../libraries/utils/SafeTransfers.sol';
 import '../libraries/utils/SafeCast.sol';
 import '../interfaces/structs/PoolsharkStructs.sol';
 import '../external/solady/LibClone.sol';
-import 'hardhat/console.sol';
 
 contract PoolsharkRouter is
     PoolsharkStructs,
@@ -79,17 +78,13 @@ contract PoolsharkRouter is
         
         // transfer from swap caller
         if (amount0Delta < 0) {
-            console.log('amount 0 delta lt 0');
             if (constants.token0 == wethAddress && _data.wrapped) {
-                console.log('wrapping eth');
                 wrapEth(_data.sender, uint256(-amount0Delta));
-                console.log('wrapped eth');
             } else {
                 SafeTransfers.transferInto(constants.token0, _data.sender, uint256(-amount0Delta));   
             }
         }
         if (amount1Delta < 0) {
-            console.log('amount 1 delta lt 0');
             if (constants.token1 == wethAddress && _data.wrapped) {
                 wrapEth(_data.sender, uint256(-amount1Delta));
             } else {
@@ -298,7 +293,6 @@ contract PoolsharkRouter is
         }
         for (uint i = 0; i < pools.length && params[0].amount > 0;) {
             // if msg.value > 0 we either need to wrap or unwrap the native gas token
-            console.log('executing swap', msg.value > 0, msg.value);
             params[i].callbackData = abi.encode(SwapCallbackData({
                 sender: msg.sender,
                 recipient: params[i].to,
@@ -467,7 +461,7 @@ contract PoolsharkRouter is
         locals.emptyResults = 0;
         for (uint sorted = 0; sorted < results.length;) {
             // if exactIn, sort by most output
-            // if exactOut, sort by least input
+            // if exactOut, sort by most output then least input
             locals.sortAmount = params[0].exactIn ? int256(0) : type(int256).max;
             locals.sortIndex = type(uint256).max;
             for (uint index = 0; index < results.length;) {
@@ -640,10 +634,8 @@ contract PoolsharkRouter is
     function wrapEth(address sender, uint256 amount) private {
         // wrap necessary amount of WETH
         IWETH9 weth = IWETH9(wethAddress);
-        console.log('weth address', wethAddress, address(this).balance, amount);
         weth.deposit{value: amount}();
         // transfer weth into pool
-        console.log('weth balance', weth.balanceOf(address(this)), amount);
         SafeTransfers.transferOut(msg.sender, wethAddress, amount);
         // return remaining to sender
         if (address(this).balance > 0) {
@@ -657,7 +649,7 @@ contract PoolsharkRouter is
         // unwrap WETH and send to recipient
         weth.withdraw(amount);
         // send balance to recipient
-        (bool success, ) = recipient.call{value: amount}("");
+        (bool success, ) = recipient.call{value: address(this).balance}("");
         if (!success) require(false, "Callback::EthTransferFailed()");
     }
 }

@@ -225,6 +225,13 @@ library Claims {
                     locals.ticksIncluded
                 );
                 console.log('ticks found:', locals.ticksIncluded, uint24(locals.ticksFound[locals.ticksIncluded - 1]), uint24(locals.searchTick));
+                // if searchTick is within range add to ticksFound
+                if (locals.searchTick < cache.position.upper) {
+                    locals.ticksFound[locals.ticksIncluded] = locals.searchTick;
+                    unchecked {
+                        ++locals.ticksIncluded;
+                    }
+                }
                 // if we reached the final tick break the loop
                 if (locals.ticksIncluded > 0 && 
                         locals.searchTick >= cache.position.upper) {
@@ -245,7 +252,13 @@ library Claims {
                     locals.ticksIncluded
                 );
                 console.log('ticks found:', locals.ticksIncluded, uint24(locals.ticksFound[locals.ticksIncluded - 1]), uint24(locals.searchTick));
-
+                // if searchTick is within range add to ticksFound
+                if (locals.searchTick > cache.position.lower) {
+                    locals.ticksFound[locals.ticksIncluded] = locals.searchTick;
+                    unchecked {
+                        ++locals.ticksIncluded;
+                    }
+                }
                 // if we reached the final tick break the loop
                 if (locals.ticksIncluded > 0 && 
                         locals.searchTick <= cache.position.lower) {

@@ -14,6 +14,7 @@ import '../libraries/utils/SafeTransfers.sol';
 import '../libraries/utils/SafeCast.sol';
 import '../interfaces/structs/PoolsharkStructs.sol';
 import '../external/solady/LibClone.sol';
+import 'hardhat/console.sol';
 
 contract PoolsharkRouter is
     PoolsharkStructs,
@@ -60,6 +61,8 @@ contract PoolsharkRouter is
         );
     }
 
+    receive() external payable {}
+
     /// @inheritdoc ILimitPoolSwapCallback
     function limitPoolSwapCallback(
         int256 amount0Delta,
@@ -76,13 +79,17 @@ contract PoolsharkRouter is
         
         // transfer from swap caller
         if (amount0Delta < 0) {
+            console.log('amount 0 delta lt 0');
             if (constants.token0 == wethAddress && _data.wrapped) {
+                console.log('wrapping eth');
                 wrapEth(_data.sender, uint256(-amount0Delta));
+                console.log('wrapped eth');
             } else {
                 SafeTransfers.transferInto(constants.token0, _data.sender, uint256(-amount0Delta));   
             }
         }
         if (amount1Delta < 0) {
+            console.log('amount 1 delta lt 0');
             if (constants.token1 == wethAddress && _data.wrapped) {
                 wrapEth(_data.sender, uint256(-amount1Delta));
             } else {
@@ -96,7 +103,7 @@ contract PoolsharkRouter is
             }
         }
         if (amount1Delta > 0) {
-            if (constants.token0 == wethAddress && _data.wrapped) {
+            if (constants.token1 == wethAddress && _data.wrapped) {
                 // unwrap WETH and send to recipient
                 unwrapEth(_data.recipient, uint256(amount1Delta));
             }
@@ -274,7 +281,6 @@ contract PoolsharkRouter is
         }
     }
 
-    //PRODUCTION: add reentrancy lock
     function multiSwapSplit(
         address[] memory pools,
         SwapParams[] memory params 
@@ -292,6 +298,7 @@ contract PoolsharkRouter is
         }
         for (uint i = 0; i < pools.length && params[0].amount > 0;) {
             // if msg.value > 0 we either need to wrap or unwrap the native gas token
+            console.log('executing swap', msg.value > 0, msg.value);
             params[i].callbackData = abi.encode(SwapCallbackData({
                 sender: msg.sender,
                 recipient: params[i].to,
@@ -299,10 +306,13 @@ contract PoolsharkRouter is
             }));
             if (msg.value > 0) {
                 IPool pool = IPool(pools[i]);
+                address tokenIn = params[i].zeroForOne ? pool.token0() : pool.token1();
                 address tokenOut = params[i].zeroForOne ? pool.token1() : pool.token0();
                 if (tokenOut == wethAddress) {
                     // send weth to router for unwrapping
                     params[i].to = address(this);
+                } else if (tokenIn != wethAddress) {
+                    require (false, "NonNativeTokenPair()");
                 }
             }
             (
@@ -326,6 +336,10 @@ contract PoolsharkRouter is
             unchecked {
                 ++i;
             }
+        }
+        if (address(this).balance > 0) {
+            (bool success, ) = msg.sender.call{value: address(this).balance}("");
+            if (!success) require(false, "Callback::EthTransferFailed()");
         }
     }
 
@@ -626,12 +640,16 @@ contract PoolsharkRouter is
     function wrapEth(address sender, uint256 amount) private {
         // wrap necessary amount of WETH
         IWETH9 weth = IWETH9(wethAddress);
+        console.log('weth address', wethAddress, address(this).balance, amount);
         weth.deposit{value: amount}();
         // transfer weth into pool
-        SafeTransfers.transferInto(wethAddress, address(this), amount);
+        console.log('weth balance', weth.balanceOf(address(this)), amount);
+        SafeTransfers.transferOut(msg.sender, wethAddress, amount);
         // return remaining to sender
-        (bool success, ) = sender.call{value: address(this).balance}("");
-        if (!success) require(false, "Callback::EthTransferFailed()");
+        if (address(this).balance > 0) {
+            (bool success, ) = sender.call{value: address(this).balance}("");
+            if (!success) require(false, "Callback::EthTransferFailed()");
+        }  
     }
 
     function unwrapEth(address recipient, uint256 amount) private {

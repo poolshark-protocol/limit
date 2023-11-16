@@ -28,8 +28,8 @@ export class InitialSetup {
     private constantProductString: string
 
     /// DEPLOY CONFIG
-    private deployRouter = false
-    private deployTokens = true
+    private deployRouter = true
+    private deployTokens = false
     private deployPools = false
     private deployContracts = false
 
@@ -314,6 +314,15 @@ export class InitialSetup {
             let limitPoolAddress; let limitPoolTokenAddress;
     
             if (hre.network.name == 'hardhat') {
+                // deploy weth9
+                await this.deployAssist.deployContractWithRetry(
+                    network,
+                    // @ts-ignore
+                    WETH9__factory,
+                    'weth9',
+                    []
+                )
+                console.log('weth9 address:', hre.props.weth9.address, hre.network.name)
                 // add 500 fee tier
                 let enableFeeTierTxn = await hre.props.limitPoolManager.enableFeeTier(
                     500,
@@ -332,14 +341,52 @@ export class InitialSetup {
                     startPrice: '177159557114295710296101716160'
                 });
                 await createPoolTxn.wait();
+
+                hre.nonce += 1;
+
+                // create weth limit pool
+                let wethPoollTxn = await hre.props.limitPoolFactory.createLimitPool({
+                    poolTypeId: 0,
+                    tokenIn: hre.props.weth9.address,
+                    tokenOut: hre.props.token1.address,
+                    swapFee: '500',
+                    startPrice: '3266660825699135434887405499641'
+                });
+                await wethPoollTxn.wait();
     
                 hre.nonce += 1;
+
+                console.log('weth pool created');
     
                 [limitPoolAddress, limitPoolTokenAddress] = await hre.props.limitPoolFactory.getLimitPool(
                     hre.props.token0.address,
                     hre.props.token1.address,
                     '500',
                     0
+                )
+
+                let [wethPoolAddress, wethPoolTokenAddress] = await hre.props.limitPoolFactory.getLimitPool(
+                    hre.props.weth9.address,
+                    hre.props.token1.address,
+                    '500',
+                    0
+                )
+
+                hre.props.wethPool = await hre.ethers.getContractAt('LimitPool', wethPoolAddress)
+                hre.props.wethPoolToken = await hre.ethers.getContractAt('PositionERC1155', wethPoolTokenAddress)
+
+                await this.deployAssist.saveContractDeployment(
+                    network,
+                    'LimitPool',
+                    'wethPool',
+                    hre.props.wethPool,
+                    [
+                        hre.props.weth9.address,
+                        hre.props.token1.address,
+                        '500',
+                        '3266660825699135434887405499641',
+                        0
+                    ]
                 )
             } else if (this.deployPools) {
                 // create first limit pool
@@ -408,14 +455,7 @@ export class InitialSetup {
             if (hre.network.name == 'hardhat') {
                 limitPoolFactoryAddress = hre.props.limitPoolFactory.address
                 coverPoolFactoryAddress = '0x0000000000000000000000000000000000000000'
-                // deploy weth9
-                await this.deployAssist.deployContractWithRetry(
-                    network,
-                    // @ts-ignore
-                    WETH9__factory,
-                    'weth9',
-                    []
-                )
+                weth9Address = hre.props.weth9.address
             } else {
                 limitPoolFactoryAddress = (
                     await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
@@ -435,7 +475,7 @@ export class InitialSetup {
                         'readLimitPoolSetup'
                     )
                 ).contractAddress
-                const weth9Address = (
+                weth9Address = (
                     await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
                       {
                         networkName: hre.network.name,
@@ -445,6 +485,8 @@ export class InitialSetup {
                     )
                 ).contractAddress
             }
+
+            console.log('addresses:', limitPoolFactoryAddress, coverPoolFactoryAddress, weth9Address)
             await this.deployAssist.deployContractWithRetry(
                 network,
                 // @ts-ignore

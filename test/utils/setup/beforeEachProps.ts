@@ -28,7 +28,8 @@ import { QuoteCall } from '../../../typechain'
 export interface BeforeEachProps {
     //shared
     limitPool: LimitPool
-    limitPool2: LimitPool
+    wethPool: LimitPool
+    wethPoolToken: PositionERC1155
     limitPoolImpl: LimitPool
     limitPoolToken: PositionERC1155
     limitPoolManager: LimitPoolManager
@@ -87,7 +88,8 @@ export class GetBeforeEach {
     public retrieveProps(): BeforeEachProps {
         //shared
         let limitPool: LimitPool
-        let limitPool2: LimitPool
+        let wethPool: LimitPool
+        let wethPoolToken: PositionERC1155
         let limitPoolImpl: LimitPool
         let limitPoolToken: PositionERC1155
         let limitPoolManager: LimitPoolManager
@@ -124,7 +126,8 @@ export class GetBeforeEach {
         return {
             //shared
             limitPool,
-            limitPool2,
+            wethPool,
+            wethPoolToken,
             limitPoolImpl,
             limitPoolToken,
             limitPoolManager,

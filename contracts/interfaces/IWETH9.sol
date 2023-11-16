@@ -10,4 +10,7 @@ interface IWETH9 {
 
     /// @notice Withdraws ether from wrapped ether balance
     function transfer(address dst, uint wad) external returns (bool);
+
+    /// @notice Returns balance for address
+    function balanceOf(address account) external returns (uint256);
 }

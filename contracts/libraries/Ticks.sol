@@ -11,6 +11,7 @@ import './range/math/FeeMath.sol';
 import './Samples.sol';
 import './limit/EpochMap.sol';
 import './limit/LimitTicks.sol';
+import 'hardhat/console.sol';
 
 library Ticks {
 
@@ -89,6 +90,8 @@ library Ticks {
         state.pool.tickAtPrice = startTick;
         state.pool0.tickAtPrice = startTick;
         state.pool1.tickAtPrice = startTick;
+
+        console.log('start tick', uint24(startTick));
 
         // intialize samples
         state.pool = Samples.initialize(samples, state.pool);

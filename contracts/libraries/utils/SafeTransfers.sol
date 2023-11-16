@@ -2,6 +2,7 @@
 pragma solidity 0.8.13;
 
 import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
+import 'hardhat/console.sol';
 
 library SafeTransfers {
     /**
@@ -142,6 +143,8 @@ library SafeTransfers {
 
         // Calculate the amount that was *actually* transferred
         uint256 balanceAfter = IERC20(token).balanceOf(address(this));
+
+        console.log('balance check:', balanceAfter);
 
         return balanceAfter - balanceBefore; // underflow already checked above, just subtract
     }

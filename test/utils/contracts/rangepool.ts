@@ -1,7 +1,7 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { expect } from 'chai'
 import { BigNumber, Contract } from 'ethers'
-import { PositionERC1155 } from '../../../typechain'
+import { LimitPool, PositionERC1155 } from '../../../typechain'
 import { RangePoolState, RangeTick, Tick } from './limitpool'
 
 export const Q64x96 = BigNumber.from('2').pow(96)
@@ -49,6 +49,8 @@ export interface ValidateMintParams {
   revertMessage: string
   collectRevertMessage?: string
   balanceCheck?: boolean
+  poolContract?: LimitPool
+  poolTokenContract?: PositionERC1155
 }
 
 export interface ValidateSampleParams {
@@ -295,16 +297,22 @@ export async function validateMint(params: ValidateMintParams): Promise<number> 
   const positionId = params.positionId ? params.positionId : 0
   const expectedPositionId = params.positionId ? params.positionId
                                                : (await hre.props.limitPool.globalState()).positionIdNext
+  const poolContract = params.poolContract ?? hre.props.limitPool
+  const poolTokenContract = params.poolTokenContract ?? hre.props.limitPoolToken
+
+  console.log('pool address:', hre.props.wethPool.address == poolContract.address)
 
   let balance0Before
   let balance1Before
-  balance0Before = await hre.props.token0.balanceOf(params.signer.address)
-  balance1Before = await hre.props.token1.balanceOf(params.signer.address)
-  const approve0Txn = await hre.props.token0
+  const token0 = await hre.ethers.getContractAt('Token20', await poolContract.token0())
+  const token1 = await hre.ethers.getContractAt('Token20', await poolContract.token1())
+  balance0Before = await token0.balanceOf(params.signer.address)
+  balance1Before = await token1.balanceOf(params.signer.address)
+  const approve0Txn = await token0
     .connect(params.signer)
     .approve(hre.props.poolRouter.address, amount0)
   await approve0Txn.wait()
-  const approve1Txn = await hre.props.token1
+  const approve1Txn = await token1
     .connect(params.signer)
     .approve(hre.props.poolRouter.address, amount1)
   await approve1Txn.wait()
@@ -314,11 +322,11 @@ export async function validateMint(params: ValidateMintParams): Promise<number> 
   let positionBefore: Position
   let positionTokens: Contract
   let positionTokenBalanceBefore: BigNumber
-  lowerTickBefore = (await hre.props.limitPool.ticks(lower)).range
-  upperTickBefore = (await hre.props.limitPool.ticks(upper)).range
+  lowerTickBefore = (await poolContract.ticks(lower)).range
+  upperTickBefore = (await poolContract.ticks(upper)).range
 
-  positionBefore = await hre.props.limitPool.positions(positionId)
-  positionTokens = await hre.ethers.getContractAt('PositionERC1155', hre.props.limitPoolToken.address);
+  positionBefore = await poolContract.positions(positionId)
+  positionTokens = await hre.ethers.getContractAt('PositionERC1155', poolTokenContract.address);
   positionTokenBalanceBefore = await positionTokens.balanceOf(signer.address, expectedPositionId);
   if (params.positionId)
     expect(positionTokenBalanceBefore).to.be.equal(1)
@@ -326,7 +334,7 @@ export async function validateMint(params: ValidateMintParams): Promise<number> 
     const txn = await hre.props.poolRouter
       .connect(params.signer)
       .multiMintRange(
-        [hre.props.limitPool.address],
+        [poolContract.address],
         [
           {
             to: recipient,
@@ -344,7 +352,7 @@ export async function validateMint(params: ValidateMintParams): Promise<number> 
       hre.props.poolRouter
       .connect(params.signer)
       .multiMintRange(
-        [hre.props.limitPool.address],
+        [poolContract.address],
         [
           {
             to: recipient,
@@ -361,8 +369,8 @@ export async function validateMint(params: ValidateMintParams): Promise<number> 
   }
   let balance0After
   let balance1After
-  balance0After = await hre.props.token0.balanceOf(params.signer.address)
-  balance1After = await hre.props.token1.balanceOf(params.signer.address)
+  balance0After = await token0.balanceOf(params.signer.address)
+  balance1After = await token1.balanceOf(params.signer.address)
 
   expect(balance0Before.sub(balance0After)).to.be.equal(balance0Decrease)
   expect(balance1Before.sub(balance1After)).to.be.equal(balance1Decrease)
@@ -371,11 +379,11 @@ export async function validateMint(params: ValidateMintParams): Promise<number> 
   let upperTickAfter: RangeTick
   let positionAfter: Position
   let positionTokenBalanceAfter: BigNumber
-  lowerTickAfter = (await hre.props.limitPool.ticks(lower)).range
-  upperTickAfter = (await hre.props.limitPool.ticks(upper)).range
+  lowerTickAfter = (await poolContract.ticks(lower)).range
+  upperTickAfter = (await poolContract.ticks(upper)).range
 
-  positionAfter = await hre.props.limitPool.positions(expectedPositionId)
-  positionTokens = await hre.ethers.getContractAt('PositionERC1155', hre.props.limitPoolToken.address);
+  positionAfter = await poolContract.positions(expectedPositionId)
+  positionTokens = await hre.ethers.getContractAt('PositionERC1155', poolTokenContract.address);
   positionTokenBalanceAfter = await positionTokens.balanceOf(signer.address, expectedPositionId);
   if (!params.positionId)
     expect(positionTokenBalanceAfter.sub(positionTokenBalanceBefore)).to.be.equal(BigNumber.from(1))

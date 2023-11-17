@@ -37,6 +37,7 @@ contract PoolsharkRouter is
 
     struct MintCallbackData {
         address sender;
+        bool wrapped;
     }
 
     struct SwapCallbackData {
@@ -73,24 +74,25 @@ contract PoolsharkRouter is
         // validate sender is a canonical limit pool
         canonicalLimitPoolsOnly(constants);
 
-        // decode original sender
+        // decode original msg.sender
         SwapCallbackData memory _data = abi.decode(data, (SwapCallbackData));
         
         // transfer from swap caller
         if (amount0Delta < 0) {
             if (constants.token0 == wethAddress && _data.wrapped) {
-                wrapEth(_data.sender, uint256(-amount0Delta));
+                wrapEth(uint256(-amount0Delta));
             } else {
                 SafeTransfers.transferInto(constants.token0, _data.sender, uint256(-amount0Delta));   
             }
         }
         if (amount1Delta < 0) {
             if (constants.token1 == wethAddress && _data.wrapped) {
-                wrapEth(_data.sender, uint256(-amount1Delta));
+                wrapEth(uint256(-amount1Delta));
             } else {
                 SafeTransfers.transferInto(constants.token1, _data.sender, uint256(-amount1Delta));
             }
         }
+        // transfer to swap caller
         if (amount0Delta > 0) {
             if (constants.token0 == wethAddress && _data.wrapped) {
                 // unwrap WETH and send to recipient
@@ -122,14 +124,14 @@ contract PoolsharkRouter is
         // transfer from swap caller
         if (amount0Delta < 0) {
             if (constants.token0 == wethAddress && _data.wrapped) {
-                wrapEth(_data.sender, uint256(-amount0Delta));
+                wrapEth(uint256(-amount0Delta));
             } else {
                 SafeTransfers.transferInto(constants.token0, _data.sender, uint256(-amount0Delta));   
             }
         }
         if (amount1Delta < 0) {
             if (constants.token1 == wethAddress && _data.wrapped) {
-                wrapEth(_data.sender, uint256(-amount1Delta));
+                wrapEth(uint256(-amount1Delta));
             } else {
                 SafeTransfers.transferInto(constants.token1, _data.sender, uint256(-amount1Delta));
             }
@@ -164,10 +166,18 @@ contract PoolsharkRouter is
         
         // transfer from swap caller
         if (amount0Delta < 0) {
-            SafeTransfers.transferInto(constants.token0, _data.sender, uint256(-amount0Delta));
+            if (constants.token0 == wethAddress && _data.wrapped) {
+                wrapEth(uint256(-amount0Delta));
+            } else {
+                SafeTransfers.transferInto(constants.token0, _data.sender, uint256(-amount0Delta));   
+            }
         }
         if (amount1Delta < 0) {
-            SafeTransfers.transferInto(constants.token1, _data.sender, uint256(-amount1Delta));
+            if (constants.token1 == wethAddress && _data.wrapped) {
+                wrapEth(uint256(-amount1Delta));
+            } else {
+                SafeTransfers.transferInto(constants.token1, _data.sender, uint256(-amount1Delta));
+            }
         }
     }
 
@@ -187,52 +197,81 @@ contract PoolsharkRouter is
 
         // transfer from swap caller
         if (amount0Delta < 0) {
-            SafeTransfers.transferInto(constants.token0, _data.sender, uint256(-amount0Delta));
+            if (constants.token0 == wethAddress && _data.wrapped) {
+                wrapEth(uint256(-amount0Delta));
+            } else {
+                SafeTransfers.transferInto(constants.token0, _data.sender, uint256(-amount0Delta));   
+            }
         }
         if (amount1Delta < 0) {
-            SafeTransfers.transferInto(constants.token1, _data.sender, uint256(-amount1Delta));
+            if (constants.token1 == wethAddress && _data.wrapped) {
+                wrapEth(uint256(-amount1Delta));
+            } else {
+                SafeTransfers.transferInto(constants.token1, _data.sender, uint256(-amount1Delta));
+            }
         }
     }
 
     function multiMintLimit(
         address[] memory pools,
         MintLimitParams[] memory params
-    ) external {
+    ) external payable {
         if (pools.length != params.length) require(false, 'InputArrayLengthsMismatch()');
         for (uint i = 0; i < pools.length;) {
-            params[i].callbackData = abi.encode(MintCallbackData({sender: msg.sender}));
+            params[i].callbackData = abi.encode(MintCallbackData({
+                sender: msg.sender,
+                wrapped: msg.value > 0
+            }));
             ILimitPool(pools[i]).mintLimit(params[i]);
             unchecked {
                 ++i;
             }
+        }
+        if (address(this).balance > 0) {
+            (bool success, ) = msg.sender.call{value: address(this).balance}("");
+            if (!success) require(false, "MultiMintLimit::EthTransferFailed()");
         }
     }
 
     function multiMintRange(
         address[] memory pools,
         MintRangeParams[] memory params
-    ) external {
+    ) external payable {
         if (pools.length != params.length) require(false, 'InputArrayLengthsMismatch()');
         for (uint i = 0; i < pools.length;) {
-            params[i].callbackData = abi.encode(MintCallbackData({sender: msg.sender}));
+            params[i].callbackData = abi.encode(MintCallbackData({
+                sender: msg.sender,
+                wrapped: msg.value > 0
+            }));
             IRangePool(pools[i]).mintRange(params[i]);
             unchecked {
                 ++i;
             }
+        }
+        if (address(this).balance > 0) {
+            (bool success, ) = msg.sender.call{value: address(this).balance}("");
+            if (!success) require(false, "MultiMintRange::EthTransferFailed()");
         }
     }
 
     function multiMintCover(
         address[] memory pools,
         PoolsharkStructs.MintCoverParams[] memory params
-    ) external {
+    ) external payable {
         if (pools.length != params.length) require(false, 'InputArrayLengthsMismatch()');
         for (uint i = 0; i < pools.length;) {
-            params[i].callbackData = abi.encode(MintCallbackData({sender: msg.sender}));
+            params[i].callbackData = abi.encode(MintCallbackData({
+                sender: msg.sender,
+                wrapped: msg.value > 0
+            }));
             ICoverPool(pools[i]).mint(params[i]);
             unchecked {
                 ++i;
             }
+        }
+        if (address(this).balance > 0) {
+            (bool success, ) = msg.sender.call{value: address(this).balance}("");
+            if (!success) require(false, "MultiMintCover::EthTransferFailed()");
         }
     }
 
@@ -333,7 +372,7 @@ contract PoolsharkRouter is
         }
         if (address(this).balance > 0) {
             (bool success, ) = msg.sender.call{value: address(this).balance}("");
-            if (!success) require(false, "Callback::EthTransferFailed()");
+            if (!success) require(false, "MultiSwapSplit::EthTransferFailed()");
         }
     }
 
@@ -359,7 +398,7 @@ contract PoolsharkRouter is
         ILimitPoolFactory.LimitPoolParams memory params,
         MintRangeParams[] memory mintRangeParams,
         MintLimitParams[] memory mintLimitParams
-    ) external returns (
+    ) external payable returns (
         address pool,
         address poolToken 
     ) {
@@ -385,7 +424,10 @@ contract PoolsharkRouter is
         // mint initial range positions
         for (uint i = 0; i < mintRangeParams.length;) {
             mintRangeParams[i].positionId = 0;
-            mintRangeParams[i].callbackData = abi.encode(MintCallbackData({sender: msg.sender}));
+            mintRangeParams[i].callbackData = abi.encode(MintCallbackData({
+                sender: msg.sender,
+                wrapped: msg.value > 0
+            }));
             try IRangePool(pool).mintRange(mintRangeParams[i]){
             } catch {}
             unchecked {
@@ -395,7 +437,10 @@ contract PoolsharkRouter is
         // mint initial limit positions
         for (uint i = 0; i < mintLimitParams.length;) {
             mintLimitParams[i].positionId = 0;
-            mintLimitParams[i].callbackData = abi.encode(MintCallbackData({sender: msg.sender}));
+            mintLimitParams[i].callbackData = abi.encode(MintCallbackData({
+                sender: msg.sender,
+                wrapped: msg.value > 0
+            }));
             try ILimitPool(pool).mintLimit(mintLimitParams[i]) {
             } catch {}
             unchecked {
@@ -407,7 +452,7 @@ contract PoolsharkRouter is
     function createCoverPoolAndMint(
         ICoverPoolFactory.CoverPoolParams memory params,
         MintCoverParams[] memory mintCoverParams
-    ) external returns (
+    ) external payable returns (
         address pool,
         address poolToken 
     ) {
@@ -430,7 +475,10 @@ contract PoolsharkRouter is
         // mint initial cover positions
         for (uint i = 0; i < mintCoverParams.length;) {
             mintCoverParams[i].positionId = 0;
-            mintCoverParams[i].callbackData = abi.encode(MintCallbackData({sender: msg.sender}));
+            mintCoverParams[i].callbackData = abi.encode(MintCallbackData({
+                sender: msg.sender,
+                wrapped: msg.value > 0
+            }));
             try ICoverPool(pool).mint(mintCoverParams[i]){
             } catch {}
             unchecked {
@@ -631,17 +679,12 @@ contract PoolsharkRouter is
         return abi.encodePacked(value1, value2, value3);
     }
 
-    function wrapEth(address sender, uint256 amount) private {
+    function wrapEth(uint256 amount) private {
         // wrap necessary amount of WETH
         IWETH9 weth = IWETH9(wethAddress);
         weth.deposit{value: amount}();
         // transfer weth into pool
-        SafeTransfers.transferOut(msg.sender, wethAddress, amount);
-        // return remaining to sender
-        if (address(this).balance > 0) {
-            (bool success, ) = sender.call{value: address(this).balance}("");
-            if (!success) require(false, "Callback::EthTransferFailed()");
-        }  
+        SafeTransfers.transferOut(msg.sender, wethAddress, amount);  
     }
 
     function unwrapEth(address recipient, uint256 amount) private {
@@ -649,7 +692,7 @@ contract PoolsharkRouter is
         // unwrap WETH and send to recipient
         weth.withdraw(amount);
         // send balance to recipient
-        (bool success, ) = recipient.call{value: address(this).balance}("");
+        (bool success, ) = recipient.call{value: amount}("");
         if (!success) require(false, "Callback::EthTransferFailed()");
     }
 }

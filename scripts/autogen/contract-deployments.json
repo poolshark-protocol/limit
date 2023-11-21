@@ -12,7 +12,7 @@
         },
         "token1": {
             "contractName": "Token20",
-            "contractAddress": "0x19beE8e887a5db5cf20A841eb4DAACBCacF14B1b",
+            "contractAddress": "0xebff7a98149b4774c9743c5d1f382305fe5422c9",
             "constructorArguments": [
                 "Dai Stablecoin",
                 "DAI",
@@ -146,7 +146,7 @@
         },
         "limitPool": {
             "contractName": "LimitPool",
-            "contractAddress": "0x0b77fb84d0f1485abc8d192bd6d8e1b68b957992",
+            "contractAddress": "0xeb6f3a17edba629a5ad3eeeff9af893c401d9f8a",
             "constructorArguments": [
                 "0x434f4e5354414e542d50524f4455435400000000000000000000000000000000",
                 "0x0BfaaAfa6e8fB009cD4e2Bd3693F2EEC2d18B053",

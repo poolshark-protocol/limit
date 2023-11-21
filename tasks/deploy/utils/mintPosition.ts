@@ -88,8 +88,8 @@ export class MintPosition {
         // const aliceId = await validateMintRange({
         //     signer: hre.props.alice,
         //     recipient: '0x9dA9409D17DeA285B078af06206941C049F692Dc',
-        //     lower: '-500000',
-        //     upper: '500000',
+        //     lower: '-400000',
+        //     upper: '100000',
         //     amount0: token0Amount.mul(1000),
         //     amount1: token1Amount.mul(1000),
         //     balance0Decrease: BigNumber.from('624999999999999999'),
@@ -131,9 +131,9 @@ export class MintPosition {
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             zeroForOne: false,
-            amountIn: token1Amount.div(100),
-            priceLimit: BigNumber.from('1461446703485210103287273052203988822378723970342'),
-            balanceInDecrease: token1Amount.div(10000),
+            amountIn: token1Amount.mul(100),
+            priceLimit: BigNumber.from('3256300000000000000000000'),
+            balanceInDecrease: token1Amount.mul(10000),
             balanceOutIncrease: '15641085361593105857',
             revertMessage:'',
         })

@@ -120,7 +120,8 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
         if (poolImpl_ == tokenImpl_) revert InvalidImplAddress();
         _poolImpls[poolTypeId_] = poolImpl_;
         _tokenImpls[poolTypeId_] = tokenImpl_;
-        emit PoolTypeEnabled(poolTypeName_, poolTypeId_, poolImpl_, tokenImpl_);
+        _poolTypeNames.push(poolTypeName_);
+        emit PoolTypeEnabled(poolTypeId_, poolTypeName_, poolImpl_, tokenImpl_);
     }
 
     function setFactory(

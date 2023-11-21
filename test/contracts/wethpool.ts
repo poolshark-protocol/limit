@@ -82,7 +82,6 @@ describe('WethPool Tests', function () {
     })
 
     it('pool0 - Should mint, swap from native, and swap to native', async function () {
-        console.log('weth pool address', hre.props.wethPool.address)
         const aliceLiquidity = '10405966812730338361'
         // mint should revert
         const aliceId = await validateMintRange({

@@ -22,13 +22,7 @@ library Claims {
     ) internal view returns (
         PoolsharkStructs.BurnLimitParams memory,
         LimitPoolStructs.BurnLimitCache memory
-    ) {
-        // validate position liquidity
-        if (cache.position.liquidity == 0)
-            require(false, 'LimitPosition::NoPositionFound()');
-        if (cache.liquidityBurned > cache.position.liquidity)
-            require (false, 'LimitPosition::NotEnoughLiquidity()');
-        
+    ) { 
         if (params.claim < cache.position.lower ||
                 params.claim > cache.position.upper)
             require (false, 'ClaimTick::OutsidePositionBounds()');
@@ -103,7 +97,7 @@ library Claims {
                     params.claim = cache.position.upper;
                     cache.priceClaim = cache.priceUpper;
                     cache.claimTick = ticks[cache.position.upper].limit;
-                    cache.liquidityBurned = cache.position.liquidity;
+                    cache.liquidityBurned = 0;
                 } else {
                     // check claim tick passed is valid
                     int24 claimTickNext = TickMap.next(tickMap, params.claim, cache.constants.tickSpacing, false);
@@ -122,7 +116,7 @@ library Claims {
                     params.claim = cache.position.lower;
                     cache.priceClaim = cache.priceLower;
                     cache.claimTick = ticks[cache.position.lower].limit;
-                    cache.liquidityBurned = cache.position.liquidity;
+                    cache.liquidityBurned = 0;
                 } else {
                     // check claim tick passed is valid
                     int24 claimTickNext = TickMap.previous(tickMap, params.claim, cache.constants.tickSpacing, false);

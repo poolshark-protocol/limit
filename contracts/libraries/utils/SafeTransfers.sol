@@ -144,8 +144,6 @@ library SafeTransfers {
         // Calculate the amount that was *actually* transferred
         uint256 balanceAfter = IERC20(token).balanceOf(address(this));
 
-        console.log('balance check:', balanceAfter);
-
         return balanceAfter - balanceBefore; // underflow already checked above, just subtract
     }
 }

@@ -15,7 +15,7 @@ class DeployLimitPoolsTask {
 }
 
 task(DEPLOY_LIMITPOOLS)
-    .setDescription('Deploys Hedge Pools')
+    .setDescription('Deploys Cover Pools')
     .setAction(async function ({ ethers }) {
         const deployLimitPools: DeployLimitPoolsTask = new DeployLimitPoolsTask()
 
@@ -27,5 +27,5 @@ task(DEPLOY_LIMITPOOLS)
 
         await deployLimitPools.deployLimitPools.postDeployment()
 
-        console.log('Hedge pool deployment complete.\n')
+        console.log('Cover pool deployment complete.\n')
     })

@@ -72,10 +72,10 @@ describe('LimitPool Tests', function () {
         await mintSigners20(hre.props.token1, tokenAmountBn.mul(10), [hre.props.alice, hre.props.bob])
 
         // sets ether balance
-        await hre.network.provider.send("hardhat_setBalance", [
-            hre.props.alice.address,
-            ethers.utils.parseEther("50").toHexString(),
-        ]);
+        // await hre.network.provider.send("hardhat_setBalance", [
+        //     hre.props.alice.address,
+        //     ethers.utils.parseEther("50").toHexString(),
+        // ]);
 
         if (debugMode) await getLiquidity(true, true)
         if (debugMode) await getLiquidity(false, true)

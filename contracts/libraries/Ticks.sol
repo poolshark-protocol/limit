@@ -91,8 +91,6 @@ library Ticks {
         state.pool0.tickAtPrice = startTick;
         state.pool1.tickAtPrice = startTick;
 
-        console.log('start tick', uint24(startTick));
-
         // intialize samples
         state.pool = Samples.initialize(samples, state.pool);
 

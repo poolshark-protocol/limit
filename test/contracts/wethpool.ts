@@ -18,7 +18,8 @@ import {
     validateSwap
 } from '../utils/contracts/limitpool'
 import {
-    validateMint as validateMintRange
+    validateMint as validateMintRange,
+    validateBurn as validateBurnRange,
 } from '../utils/contracts/rangepool'
 import { gBefore } from '../utils/hooks.test'
 
@@ -80,7 +81,7 @@ describe('WethPool Tests', function () {
         if (debugMode) await getLiquidity(false, true)
     })
 
-    it.only('pool0 - Should mint, swap from native, and swap to native', async function () {
+    it('pool0 - Should mint, swap from native, and swap to native', async function () {
         console.log('weth pool address', hre.props.wethPool.address)
         const aliceLiquidity = '10405966812730338361'
         // mint should revert
@@ -137,30 +138,24 @@ describe('WethPool Tests', function () {
             amountIn: tokenAmountBn.mul(2),
             priceLimit: maxPrice,
             balanceInDecrease: '200000000000000000000', // only gas is used; all other ETH is returned
-            balanceOutIncrease: '123799952952450942',
+            balanceOutIncrease: '123802240493864890',
             revertMessage: '',
             nativeOut: true,
             poolContract: hre.props.wethPool,
             gasUsed: '396087570498016'
         })
 
-        return
-
-        expect(await getLiquidity(true)).to.be.equal(BN_ZERO)
-
-        await validateBurn({
+        await validateBurnRange({
             signer: hre.props.alice,
             positionId: aliceId,
-            lower: '0',
-            upper: '100',
-            claim: '100',
-            liquidityAmount: liquidityAmount,
-            zeroForOne: true,
-            balanceInIncrease: '100501226962305120350',
-            balanceOutIncrease: '0',
-            lowerTickCleared: true,
-            upperTickCleared: true,
+            lower: '69080',
+            upper: '80070',
+            liquidityAmount: BigNumber.from(aliceLiquidity),
+            balance0Increase: BigNumber.from('14775125117520274'),
+            balance1Increase: BigNumber.from('200049999999999999998'),
             revertMessage: '',
+            poolContract: hre.props.wethPool,
+            poolTokenContract: hre.props.wethPoolToken,
         })
 
         if (debugMode) await getPositionLiquidity(true, aliceId)

@@ -15,7 +15,7 @@ class DeployLimitPoolTask {
 }
 
 task(DEPLOY_LIMITPOOL)
-    .setDescription('Deploys Cover Pool')
+    .setDescription('Deploys Limit Pool')
     .setAction(async function ({ ethers }) {
         const deployLimitPool: DeployLimitPoolTask = new DeployLimitPoolTask()
 
@@ -27,5 +27,5 @@ task(DEPLOY_LIMITPOOL)
 
         await deployLimitPool.deployLimitPool.postDeployment()
 
-        console.log('Li pool deployment complete.\n')
+        console.log('Limit pool deployment complete.\n')
     })

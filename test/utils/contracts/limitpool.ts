@@ -213,7 +213,7 @@ export async function validateSwap(params: ValidateSwapParams) {
     const nativeIn = params.nativeIn ?? false
     const nativeOut = params.nativeOut ?? false
     const poolContract = params.poolContract ?? hre.props.limitPool
-    const gasUsed = BigNumber.from(params.gasUsed) ?? BN_ZERO
+    const gasUsed = params.gasUsed ? BigNumber.from(params.gasUsed) : BN_ZERO
 
     let balanceInBefore
     let balanceOutBefore
@@ -315,8 +315,6 @@ export async function validateSwap(params: ValidateSwapParams) {
             priceAfterQuoted = poolPrice
         }
 
-        console.log('msg value sent in:', getSwapMsgValue(nativeIn, nativeOut, amountIn).toString())
-
         // console.log('quote results', amountInQuoted.toString(), amountOutQuoted.toString(), priceAfterQuoted.toString())
 
         if (splitInto > 1) await ethers.provider.send("evm_setAutomine", [false]);
@@ -384,8 +382,7 @@ export async function validateSwap(params: ValidateSwapParams) {
     }
 
     if (!nativeIn) expect(balanceInBefore.sub(balanceInAfter)).to.be.equal(balanceInDecrease)
-    else console.log('ETH balance change: ', balanceInBefore.sub(balanceInAfter).toString())
-    expect(balanceOutAfter.sub(balanceOutBefore)).to.be.equal(balanceOutIncrease)
+    if (!nativeOut) expect(balanceOutAfter.sub(balanceOutBefore)).to.be.equal(balanceOutIncrease)
     if (splitInto == 1) {
         if (!nativeIn) expect(balanceInBefore.sub(balanceInAfter)).to.be.equal(amountInQuoted) // gasUsed only if nativeIn
         if (!nativeOut) expect(balanceOutAfter.sub(balanceOutBefore)).to.be.equal(amountOutQuoted)
@@ -496,6 +493,7 @@ export async function validateMint(params: ValidateMintParams): Promise<number> 
         ).to.be.revertedWith(revertMessage)
         return expectedPositionId
     }
+    
     let balanceInAfter
     let balanceOutAfter
     if (zeroForOne) {

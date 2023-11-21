@@ -27,5 +27,5 @@ task(INCREASE_SAMPLES)
 
         await deployLimitPools.deployLimitPools.postDeployment()
 
-        console.log('Hedge pool deployment complete.\n')
+        console.log('Cover pool deployment complete.\n')
     })

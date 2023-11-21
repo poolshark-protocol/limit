@@ -322,7 +322,6 @@ export class InitialSetup {
                     'weth9',
                     []
                 )
-                console.log('weth9 address:', hre.props.weth9.address, hre.network.name)
                 // add 500 fee tier
                 let enableFeeTierTxn = await hre.props.limitPoolManager.enableFeeTier(
                     500,
@@ -355,8 +354,6 @@ export class InitialSetup {
                 await wethPoollTxn.wait();
     
                 hre.nonce += 1;
-
-                console.log('weth pool created');
     
                 [limitPoolAddress, limitPoolTokenAddress] = await hre.props.limitPoolFactory.getLimitPool(
                     hre.props.token0.address,
@@ -485,8 +482,6 @@ export class InitialSetup {
                     )
                 ).contractAddress
             }
-
-            console.log('addresses:', limitPoolFactoryAddress, coverPoolFactoryAddress, weth9Address)
             await this.deployAssist.deployContractWithRetry(
                 network,
                 // @ts-ignore

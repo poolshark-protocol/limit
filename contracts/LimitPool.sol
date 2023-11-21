@@ -227,7 +227,7 @@ contract LimitPool is
 
     function sample(
         uint32[] memory secondsAgo
-    ) external view
+    ) external view override
     returns(
         int56[]   memory tickSecondsAccum,
         uint160[] memory secondsPerLiquidityAccum,

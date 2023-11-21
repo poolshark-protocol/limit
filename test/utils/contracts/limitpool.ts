@@ -671,7 +671,7 @@ export async function validateBurn(params: ValidateBurnParams) {
             if (expectedPositionLower) {
                 expect(positionAfter.lower).to.be.equal(expectedPositionLower)
             } else {
-                expect(positionAfter.lower).to.be.equal(expectedLower ? expectedLower : claim)   
+                expect(positionAfter.lower).to.be.equal(expectedLower ? expectedLower : claim)
             }
             expect(positionAfter.upper).to.be.equal(upper)
         }

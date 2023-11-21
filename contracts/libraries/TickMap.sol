@@ -3,7 +3,6 @@ pragma solidity 0.8.13;
 
 import './math/ConstantProduct.sol';
 import '../interfaces/structs/PoolsharkStructs.sol';
-import 'hardhat/console.sol';
 
 library TickMap {
 
@@ -203,13 +202,10 @@ library TickMap {
             locals.wordIndex,
             locals.blockIndex
         ) = getIndices(tick, tickSpacing);
-        console.log('grabbing word value', locals.wordIndex, locals.tickIndex, tickMap.ticks[locals.wordIndex]);
         locals.word = tickMap.ticks[locals.wordIndex] & ((1 << (locals.tickIndex & 0xFF)) - 1);
-        console.log('word value:', locals.word, tick < stopTick);
         while (locals.word != 0 && tick > stopTick) {
             // ticks left within word
             tick = _tick((locals.wordIndex << 8) | _msb(locals.word), tickSpacing);
-            console.log('ticks found within word', uint24(tick));
             previousTicks[ticksIncluded] = tick;
             unchecked {
                 ++ticksIncluded;
@@ -250,14 +246,11 @@ library TickMap {
             locals.blockIndex
         ) = getIndices(tick, tickSpacing);
         if ((locals.tickIndex & 0xFF) != 255) {
-            console.log('grabbing word value', locals.wordIndex, locals.tickIndex, tickMap.ticks[locals.wordIndex]);
            locals.word = tickMap.ticks[locals.wordIndex] & ~((1 << ((locals.tickIndex & 0xFF) + 1)) - 1);
         }
-        console.log('word value:', locals.word, tick < stopTick);
         while (locals.word != 0 && tick < stopTick) {
             // ticks left within word
             tick = _tick((locals.wordIndex << 8) | _lsb(locals.word), tickSpacing);
-            console.log('ticks found within word', uint24(tick));
             nextTicks[ticksIncluded] = tick;
             unchecked {
                 ++ticksIncluded;
@@ -270,7 +263,6 @@ library TickMap {
             }
         }
         // no ticks left within word
-        // int24 firstTickNextWord =  
         return (nextTicks, ticksIncluded, _tick((locals.wordIndex + 1) << 8 | _lsb(1), tickSpacing));
     }
 

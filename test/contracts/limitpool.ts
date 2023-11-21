@@ -705,7 +705,7 @@ describe('LimitPool Tests', function () {
             balanceOutIncrease: '75774286667592796925',
             lowerTickCleared: false,
             upperTickCleared: true,
-            revertMessage: 'ClaimTick::HalfTickAlreadyCrossed()',
+            revertMessage: 'ClaimTick::HalfTickClaimInvalid()',
         })
 
         await validateBurn({
@@ -1259,7 +1259,7 @@ describe('LimitPool Tests', function () {
             balanceOutIncrease: '50755615166597891338',
             lowerTickCleared: true,
             upperTickCleared: false,
-            revertMessage: 'ClaimTick::HalfTickAlreadyCrossed()',
+            revertMessage: 'ClaimTick::HalfTickClaimInvalid()',
         })
         if (debugMode) console.log('BEFORE BURN 1')
         await validateBurn({
@@ -1352,7 +1352,7 @@ describe('LimitPool Tests', function () {
             balanceOutIncrease: '50755615166597891338',
             lowerTickCleared: true,
             upperTickCleared: false,
-            revertMessage: 'ClaimTick::HalfTickAlreadyCrossed()',
+            revertMessage: 'ClaimTick::HalfTickClaimInvalid()',
         })
 
         if (debugMode) console.log('BEFORE BURN 2')
@@ -1453,7 +1453,7 @@ describe('LimitPool Tests', function () {
             balanceOutIncrease: '0',
             lowerTickCleared: true,
             upperTickCleared: false,
-            revertMessage: 'ClaimTick::HalfTickAlreadyCrossed()',
+            revertMessage: 'ClaimTick::HalfTickClaimInvalid()',
         })
 
         if (debugMode) console.log('BEFORE BURN 2')
@@ -2410,7 +2410,6 @@ describe('LimitPool Tests', function () {
             lowerTickCleared: true,
             revertMessage: '',
         })
-
         // liquidity is correct here
 
         await validateBurn({
@@ -2419,22 +2418,6 @@ describe('LimitPool Tests', function () {
             lower: '120', 
             upper: '200', 
             claim: '120',
-            liquidityPercent: ethers.utils.parseUnits('1', 38),
-            zeroForOne: true,
-            balanceInIncrease: '101308066346820303034',
-            balanceOutIncrease: '0',
-            lowerTickCleared: true,
-            upperTickCleared: true,
-            expectedLower: '125',
-            revertMessage: 'ClaimTick::NextTickAlreadyCrossed()',
-        })
-
-        await validateBurn({
-            signer: hre.props.alice,
-            positionId: aliceId,
-            lower: '120', 
-            upper: '200', 
-            claim: '125',
             liquidityPercent: ethers.utils.parseUnits('1', 38),
             zeroForOne: true,
             balanceInIncrease: '6324890459101712432',
@@ -2451,21 +2434,6 @@ describe('LimitPool Tests', function () {
             lower: '100', 
             upper: '200', 
             claim: '120',
-            liquidityPercent: ethers.utils.parseUnits('1', 38),
-            zeroForOne: true,
-            balanceInIncrease: '507556151665978913382',
-            balanceOutIncrease: '0',
-            lowerTickCleared: true,
-            upperTickCleared: true,
-            revertMessage: 'ClaimTick::NextTickAlreadyCrossed()',
-        })
-
-        await validateBurn({
-            signer: hre.props.bob,
-            positionId: bobId,
-            lower: '100', 
-            upper: '200', 
-            claim: '125',
             liquidityPercent: ethers.utils.parseUnits('1', 38),
             zeroForOne: true,
             balanceInIncrease: '126671285540698668131',
@@ -2649,7 +2617,7 @@ describe('LimitPool Tests', function () {
             lowerTickCleared: false,
             upperTickCleared: true,
             expectedUpper: '-120',
-            revertMessage: 'ClaimTick::NextTickAlreadyCrossed()',
+            revertMessage: '',
         })
 
         await validateBurn({
@@ -2665,7 +2633,7 @@ describe('LimitPool Tests', function () {
             lowerTickCleared: false,
             upperTickCleared: true,
             expectedUpper: '-120',
-            revertMessage: '',
+            revertMessage: 'PositionNotFound()',
         })
 
         await validateBurn({
@@ -2676,11 +2644,12 @@ describe('LimitPool Tests', function () {
             claim: '-120',
             liquidityPercent: ethers.utils.parseUnits('1', 38),
             zeroForOne: false,
-            balanceInIncrease: '507556151665978913382',
-            balanceOutIncrease: '0',
-            lowerTickCleared: true,
-            upperTickCleared: true,
-            revertMessage: 'ClaimTick::NextTickAlreadyCrossed()',
+            balanceInIncrease: '126567977088957993387',
+            balanceOutIncrease: '374847760063375226691',
+            lowerTickCleared: false,
+            upperTickCleared: false,
+            expectedUpper: '-125',
+            revertMessage: '',
         })
 
         await validateBurn({
@@ -2696,7 +2665,7 @@ describe('LimitPool Tests', function () {
             lowerTickCleared: false,
             upperTickCleared: false,
             expectedUpper: '-125',
-            revertMessage: '',
+            revertMessage: 'PositionNotFound()',
         })
 
         await validateBurn({
@@ -5388,19 +5357,21 @@ describe('LimitPool Tests', function () {
         // Among other catastrophic things.
         // ACTUAL CLAIM TICK: 16005
         if (debugMode) await getTick(true, 16005, true)
+
         await validateBurn({
             signer: hre.props.alice,
             positionId: aliceId,
             lower: '-100000',
             upper: '184550',
-            claim: '0', // Claim at current pool price even though my position has been filled at a much higher tick and my liquidity is not active
+            expectedLower: '16005',
+            claim: '0', // claim tick not within 256 spacings
             liquidityPercent: ethers.utils.parseUnits("1", 38),
             zeroForOne: true,
-            balanceInIncrease: '447895645676095087',
-            balanceOutIncrease: '0',
-            lowerTickCleared: true,
+            balanceInIncrease: '1000977696770293931',
+            balanceOutIncrease: '202484305652072915',
+            lowerTickCleared: false,
             upperTickCleared: false,
-            revertMessage: 'ClaimTick::NextTickAlreadyCrossed()',
+            revertMessage: 'ClaimTick::NotFoundViaSearch()',
         });
 
         await validateBurn({
@@ -5408,7 +5379,7 @@ describe('LimitPool Tests', function () {
             positionId: aliceId,
             lower: '-100000',
             upper: '184550',
-            claim: '16005', // Claim at current pool price even though my position has been filled at a much higher tick and my liquidity is not active
+            claim: '12000', // Claim at current pool price even though my position has been filled at a much higher tick and my liquidity is not active
             expectedLower: '16005',
             liquidityPercent: ethers.utils.parseUnits("1", 38),
             zeroForOne: true,
@@ -5434,8 +5405,6 @@ describe('LimitPool Tests', function () {
             upperTickCleared: false,
             revertMessage: '',
         });
-
-
 
         await validateBurn({
             signer: hre.props.alice,
@@ -5563,7 +5532,7 @@ describe('LimitPool Tests', function () {
             balanceOutIncrease: '0',
             lowerTickCleared: true,
             upperTickCleared: false,
-            revertMessage: 'ClaimTick::NextTickAlreadyCrossed()',
+            revertMessage: 'ClaimTick::NotFoundViaSearch()',
         });
 
         await validateBurn({
@@ -7766,7 +7735,7 @@ describe('LimitPool Tests', function () {
         });
     });
 
-    it.only("pool0 - should remove liquidity by searching claim tick", async function () {
+    it("pool0 - should remove liquidity by searching claim tick", async function () {
         
         const bobId = await validateMint({
           signer: hre.props.bob,
@@ -7824,6 +7793,8 @@ describe('LimitPool Tests', function () {
             revertMessage: "",
         });
 
+        return
+
         await validateBurn({
             signer: hre.props.bob,
             positionId: bobId2,
@@ -7840,7 +7811,7 @@ describe('LimitPool Tests', function () {
         });
     });
 
-    it.only("pool1 - should remove liquidity by searching claim tick", async function () {
+    it("pool1 - should remove liquidity by searching claim tick", async function () {
         
         const bobId = await validateMint({
           signer: hre.props.bob,

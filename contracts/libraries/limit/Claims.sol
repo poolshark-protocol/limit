@@ -6,11 +6,13 @@ import './EpochMap.sol';
 import '../TickMap.sol';
 import '../utils/String.sol';
 import '../utils/SafeCast.sol';
-import 'hardhat/console.sol';
 
 library Claims {
 
     using SafeCast for uint256;
+
+    // if claim tick searched, look max 512 spacings ahead
+    uint256 public constant maxWordsSearched = 4;
 
     function validate(
         mapping(int24 => LimitPoolStructs.Tick) storage ticks,
@@ -88,7 +90,7 @@ library Claims {
         if (params.claim == (params.zeroForOne ? cache.position.upper : cache.position.lower)) {
             // check if final tick crossed
             cache.liquidityBurned = 0;
-             if (claimTickEpoch <= cache.position.epochLast)
+            if (claimTickEpoch <= cache.position.epochLast)
                 // nothing to search
                 require (false, 'ClaimTick::FinalTickNotCrossedYet()');
         } else if (cache.liquidityBurned > 0) {
@@ -163,7 +165,7 @@ library Claims {
         LimitPoolStructs.GetDeltasLocals memory locals;
 
         if (params.claim % constants.tickSpacing != 0)
-        // this should pass price at the claim tick
+            // this should pass price at the claim tick
             locals.previousFullTick = TickMap.roundBack(params.claim, constants, params.zeroForOne, ConstantProduct.getPriceAtTick(params.claim, constants));
         else
             locals.previousFullTick = params.claim;
@@ -214,7 +216,7 @@ library Claims {
         locals.ticksFound = new int24[](256);
         locals.searchTick = params.claim;
         if (params.zeroForOne) {
-            for (int i=0; i<2;) {
+            for (uint i=0; i < maxWordsSearched;) {
                 // push ticks from up to 2 storage slots onto array
                 (locals.ticksFound, locals.ticksIncluded, locals.searchTick) = TickMap.nextTicksWithinWord(
                     tickMap,
@@ -224,9 +226,9 @@ library Claims {
                     locals.ticksFound,
                     locals.ticksIncluded
                 );
-                console.log('ticks found:', locals.ticksIncluded, uint24(locals.ticksFound[locals.ticksIncluded - 1]), uint24(locals.searchTick));
-                // if searchTick is within range add to ticksFound
-                if (locals.searchTick < cache.position.upper) {
+                // console.log('ticks found:', locals.ticksIncluded, uint24(locals.ticksFound[locals.ticksIncluded - 1]), uint24(locals.searchTick));
+                // if searchTick exists and is within range add to ticksFound
+                if (locals.searchTick < cache.position.upper && TickMap.get(tickMap, locals.searchTick, cache.constants.tickSpacing)) {
                     locals.ticksFound[locals.ticksIncluded] = locals.searchTick;
                     unchecked {
                         ++locals.ticksIncluded;
@@ -251,9 +253,9 @@ library Claims {
                     locals.ticksFound,
                     locals.ticksIncluded
                 );
-                console.log('ticks found:', locals.ticksIncluded, uint24(locals.ticksFound[locals.ticksIncluded - 1]), uint24(locals.searchTick));
-                // if searchTick is within range add to ticksFound
-                if (locals.searchTick > cache.position.lower) {
+                // console.log('ticks found:', locals.ticksIncluded, uint24(locals.ticksFound[locals.ticksIncluded - 1]), uint24(locals.searchTick));
+                // if searchTick exists and is within range add to ticksFound
+                if (locals.searchTick > cache.position.lower && TickMap.get(tickMap, locals.searchTick, cache.constants.tickSpacing)) {
                     locals.ticksFound[locals.ticksIncluded] = locals.searchTick;
                     unchecked {
                         ++locals.ticksIncluded;
@@ -283,8 +285,7 @@ library Claims {
             
             // set ticks
             locals.searchTick = locals.ticksFound[locals.searchIdx];
-            console.log('search tick set:', uint24(locals.searchIdx), uint24(-locals.searchTick));
-            if (locals.searchIdx < locals.ticksIncluded) {
+            if (locals.searchIdx + 1 < locals.ticksIncluded) {
                 // tick ahead in array
                 locals.searchTickAhead = locals.ticksFound[locals.searchIdx + 1];
             } else {
@@ -314,7 +315,6 @@ library Claims {
                 break;
             }
         }
-        console.log('claim tick found:', uint24(-locals.searchTick));
 
         // final check on valid claim tick
         if (locals.claimTickEpoch <= cache.position.epochLast ||
@@ -322,11 +322,16 @@ library Claims {
             require(false, "ClaimTick::NotFoundViaSearch()");
         }
         
-        params.claim = TickMap.roundBack(locals.searchTick, cache.constants, params.zeroForOne, cache.priceClaim);
-        cache.priceClaim = ConstantProduct.getPriceAtTick(locals.searchTick, cache.constants);
         cache.claimTick = ticks[locals.searchTick].limit;
-
-        console.log('search results:', uint24(-params.claim), uint128(cache.claimTick.liquidityDelta));
+        if ((locals.searchTick % cache.constants.tickSpacing) == 0)
+            cache.priceClaim = ConstantProduct.getPriceAtTick(locals.searchTick, cache.constants);
+        else {
+            cache.priceClaim = cache.claimTick.priceAt;
+        }
+        if (cache.liquidityBurned == 0)
+            params.claim = TickMap.roundBack(locals.searchTick, cache.constants, params.zeroForOne, cache.priceClaim);
+        else
+            params.claim = locals.searchTick;
 
         return (params, cache, locals.claimTickEpoch);
     }

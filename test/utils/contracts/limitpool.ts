@@ -775,6 +775,7 @@ export async function validateBurn(params: ValidateBurnParams) {
 
 export function getSwapMsgValue(nativeIn: boolean, nativeOut: boolean, amountIn: BigNumber): BigNumber {
     if (nativeIn) {
+        console.log('msg value set: ', amountIn.toString())
         return amountIn
     } else if (nativeOut) {
         return BN_ONE

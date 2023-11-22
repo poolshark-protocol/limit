@@ -9,12 +9,6 @@ import {
     LimitPoolState,
     getLiquidity,
     getPositionLiquidity,
-    getPrice,
-    getSwapEpoch,
-    getTick,
-    getTickAtPrice,
-    validateBurn,
-    validateMint,
     validateSwap
 } from '../utils/contracts/limitpool'
 import {
@@ -82,81 +76,103 @@ describe('WethPool Tests', function () {
     })
 
     it('pool0 - Should mint, swap from native, and swap to native', async function () {
-        const aliceLiquidity = '10405966812730338361'
-        // mint should revert
-        const aliceId = await validateMintRange({
-            signer: hre.props.alice,
-            recipient: hre.props.alice.address,
-            lower: '69080',
-            upper: '80070',
-            amount0: BigNumber.from(tokenAmount),
-            amount1: BigNumber.from(tokenAmount),
-            balance0Decrease: BigNumber.from('62417722102310161'),
-            balance1Decrease: BigNumber.from('99999999999999999996'),
-            liquidityIncrease: BigNumber.from(aliceLiquidity),
-            revertMessage: '',
-            poolContract: hre.props.wethPool,
-            poolTokenContract: hre.props.wethPoolToken
-        })
+        
+        const wethToken0 = hre.props.weth9.address == (await hre.props.wethPool.token0())
+        console.log('weth token0', wethToken0)
 
-        // no-op swap
-        await validateSwap({
-            signer: hre.props.alice,
-            recipient: hre.props.alice.address,
-            zeroForOne: true,
-            amountIn: tokenAmountBn.mul(2),
-            priceLimit: maxPrice,
-            balanceInDecrease: '396087570498016', // only gas is used; all other ETH is returned
-            balanceOutIncrease: '0',
-            revertMessage: '',
-            nativeIn: true,
-            poolContract: hre.props.wethPool,
-            gasUsed: '396087570498016'
-        })
+        if (wethToken0) {
+            let globalState = await hre.props.wethPool.globalState()
+            console.log('weth pool start:', globalState.pool.price.toString(), globalState.pool.liquidity.toString())
+            const aliceLiquidity = '10405966812730338361'
+            // mint should revert
+            const aliceId = await validateMintRange({
+                signer: hre.props.alice,
+                recipient: hre.props.alice.address,
+                lower: '69080',
+                upper: '80070',
+                amount0: BigNumber.from(tokenAmount),
+                amount1: BigNumber.from(tokenAmount),
+                balance0Decrease: BigNumber.from('62417722102310161'),
+                balance1Decrease: BigNumber.from('99999999999999999996'),
+                liquidityIncrease: BigNumber.from(aliceLiquidity),
+                revertMessage: '',
+                poolContract: hre.props.wethPool,
+                poolTokenContract: hre.props.wethPoolToken
+            })
+            globalState = await hre.props.wethPool.globalState()
+            console.log('weth pool swap1:', globalState.pool.price.toString(), globalState.pool.liquidity.toString())
+            
+            // no-op swap
+            await validateSwap({
+                signer: hre.props.alice,
+                recipient: hre.props.alice.address,
+                zeroForOne: wethToken0,
+                amountIn: tokenAmountBn.mul(2),
+                priceLimit: wethToken0 ? maxPrice : minPrice,
+                balanceInDecrease: '396087570498016', // only gas is used; all other ETH is returned
+                balanceOutIncrease: '0',
+                revertMessage: '',
+                nativeIn: true,
+                poolContract: hre.props.wethPool,
+                gasUsed: '396087570498016'
+            })
+            
+            globalState = await hre.props.wethPool.globalState()
+            console.log('weth pool swap2:', globalState.pool.price.toString(), globalState.pool.liquidity.toString())
+            
+            // wrap ETH and swap
+            await validateSwap({
+                signer: hre.props.alice,
+                recipient: hre.props.alice.address,
+                zeroForOne: wethToken0,
+                amountIn: tokenAmountBn.mul(2),
+                priceLimit: wethToken0 ? minPrice : maxPrice,
+                balanceInDecrease: '396087570498016', //TODO: set close to acutal ETH value
+                balanceOutIncrease: wethToken0 ? '99949999999999999995' : '62386513241259004',
+                revertMessage: '',
+                nativeIn: true,
+                poolContract: hre.props.wethPool,
+                gasUsed: '396087570498016'
+            })
 
-        // wrap ETH and swap
-        await validateSwap({
-            signer: hre.props.alice,
-            recipient: hre.props.alice.address,
-            zeroForOne: true,
-            amountIn: tokenAmountBn.mul(2),
-            priceLimit: minPrice,
-            balanceInDecrease: '396087570498016', //TODO: set close to acutal ETH value
-            balanceOutIncrease: '99949999999999999995',
-            revertMessage: '',
-            nativeIn: true,
-            poolContract: hre.props.wethPool,
-            gasUsed: '396087570498016'
-        })
+            globalState = await hre.props.wethPool.globalState()
+            console.log('weth pool swap3 price', globalState.pool.price.toString(), globalState.pool.liquidity.toString())
 
-        // swap to WETH and unwrap
-        await validateSwap({
-            signer: hre.props.alice,
-            recipient: hre.props.alice.address,
-            zeroForOne: false,
-            amountIn: tokenAmountBn.mul(2),
-            priceLimit: maxPrice,
-            balanceInDecrease: '200000000000000000000',
-            balanceOutIncrease: '123802240493864890', //TODO: set close to acutal ETH value
-            revertMessage: '',
-            nativeOut: true,
-            poolContract: hre.props.wethPool,
-            gasUsed: '396087570498016'
-        })
+            // swap to WETH and unwrap
+            await validateSwap({
+                signer: hre.props.alice,
+                recipient: hre.props.alice.address,
+                zeroForOne: !wethToken0,
+                amountIn: tokenAmountBn.mul(2),
+                priceLimit: wethToken0 ? maxPrice : minPrice,
+                balanceInDecrease: wethToken0 ? '200000000000000000000' : '139118081063935784',
+                balanceOutIncrease: '123802240493864890', //TODO: set close to acutal ETH value
+                revertMessage: '',
+                nativeOut: true,
+                poolContract: hre.props.wethPool,
+                gasUsed: '396087570498016'
+            })
 
-        await validateBurnRange({
-            signer: hre.props.alice,
-            positionId: aliceId,
-            lower: '69080',
-            upper: '80070',
-            liquidityAmount: BigNumber.from(aliceLiquidity),
-            balance0Increase: BigNumber.from('14775125117520274'),
-            balance1Increase: BigNumber.from('200049999999999999998'),
-            revertMessage: '',
-            poolContract: hre.props.wethPool,
-            poolTokenContract: hre.props.wethPoolToken,
-        })
+            globalState = await hre.props.wethPool.globalState()
+            console.log('weth pool burn price', globalState.pool.price.toString(), globalState.pool.liquidity.toString())
 
-        if (debugMode) await getPositionLiquidity(true, aliceId)
+            await validateBurnRange({
+                signer: hre.props.alice,
+                positionId: aliceId,
+                lower: '69080',
+                upper: '80070',
+                liquidityAmount: BigNumber.from(aliceLiquidity),
+                balance0Increase: BigNumber.from('14775125117520274'),
+                balance1Increase: BigNumber.from('200049999999999999998'),
+                revertMessage: '',
+                poolContract: hre.props.wethPool,
+                poolTokenContract: hre.props.wethPoolToken,
+            })
+
+            globalState = await hre.props.wethPool.globalState()
+            console.log('weth pool end price', globalState.pool.price.toString(), globalState.pool.liquidity.toString())
+
+            if (debugMode) await getPositionLiquidity(true, aliceId)
+        }   
     })
 })

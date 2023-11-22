@@ -7,7 +7,6 @@ import './interfaces/IPool.sol';
 import './interfaces/limit/ILimitPoolManager.sol';
 import './base/storage/LimitPoolStorage.sol';
 import './base/storage/LimitPoolImmutables.sol';
-import './utils/LimitPoolErrors.sol';
 import './libraries/pool/SwapCall.sol';
 import './libraries/pool/QuoteCall.sol';
 import './libraries/pool/FeesCall.sol';
@@ -300,7 +299,7 @@ contract LimitPool is
     }
 
     function _onlyOwner() private view {
-        if (msg.sender != owner()) revert OwnerOnly();
+        if (msg.sender != owner()) require(false, 'OwnerOnly()');
     }
 
     function _onlyCanoncialClones() private view {
@@ -329,6 +328,6 @@ contract LimitPool is
     }
 
     function _onlyFactory() private view {
-        if (msg.sender != factory) revert FactoryOnly();
+        if (msg.sender != factory) require(false, 'FactoryOnly()');
     }
 }

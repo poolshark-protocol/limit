@@ -9,6 +9,7 @@ const { mine } = require("@nomicfoundation/hardhat-network-helpers");
 export const Q64x96 = BigNumber.from('2').pow(96)
 export const BN_ZERO = BigNumber.from('0')
 export const BN_ONE = BigNumber.from('1')
+export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
 
 export interface RangePosition {
     feeGrowthInside0Last: BigNumber

@@ -8,7 +8,6 @@ import './interfaces/structs/RangePoolStructs.sol';
 import './interfaces/limit/ILimitPoolFactory.sol';
 import './interfaces/limit/ILimitPoolManager.sol';
 import './base/events/LimitPoolFactoryEvents.sol';
-import './utils/LimitPoolErrors.sol';
 import './external/solady/LibClone.sol';
 import './libraries/utils/SafeCast.sol';
 import './libraries/math/ConstantProduct.sol';
@@ -17,8 +16,7 @@ contract LimitPoolFactory is
     ILimitPoolFactory,
     LimitPoolStructs,
     RangePoolStructs,
-    LimitPoolFactoryEvents,
-    LimitPoolFactoryErrors
+    LimitPoolFactoryEvents
 {
     using LibClone for address;
     using SafeCast for uint256;
@@ -41,7 +39,7 @@ contract LimitPoolFactory is
     ) {
         // validate token pair
         if (params.tokenIn == params.tokenOut || params.tokenIn == address(0) || params.tokenOut == address(0)) {
-            revert InvalidTokenAddress();
+            require(false, 'InvalidTokenAddress()');
         }
 
         // sort tokens by address
@@ -52,14 +50,14 @@ contract LimitPoolFactory is
         // check if tick spacing supported
         constants.swapFee = params.swapFee;
         constants.tickSpacing = ILimitPoolManager(owner).feeTiers(params.swapFee);
-        if (constants.tickSpacing == 0) revert FeeTierNotSupported();
+        if (constants.tickSpacing == 0) require(false, 'FeeTierNotSupported()');
 
         // check if pool type supported
         (
             address poolImpl,
             address tokenImpl
          ) = ILimitPoolManager(owner).poolTypes(params.poolTypeId);
-        if (poolImpl == address(0) || tokenImpl == address(0)) revert PoolTypeNotSupported();
+        if (poolImpl == address(0) || tokenImpl == address(0)) require(false, 'PoolTypeNotSupported()');
 
         // generate key for pool
         bytes32 key = keccak256(abi.encode(
@@ -70,7 +68,7 @@ contract LimitPoolFactory is
         ));
 
         // check if pool already exists
-        if (pools[key] != address(0)) revert PoolAlreadyExists();
+        if (pools[key] != address(0)) require(false, 'PoolAlreadyExists()');
 
         // set immutables
         constants.owner = owner;
@@ -140,14 +138,14 @@ contract LimitPoolFactory is
 
         // check if tick spacing supported
         int16 tickSpacing = ILimitPoolManager(owner).feeTiers(swapFee);
-        if (tickSpacing == 0) revert FeeTierNotSupported();
+        if (tickSpacing == 0) require(false, 'FeeTierNotSupported()');
 
         // check if pool type supported
         (
             address poolImpl,
             address tokenImpl
          ) = ILimitPoolManager(owner).poolTypes(poolTypeId);
-        if (poolImpl == address(0) || tokenImpl == address(0)) revert PoolTypeNotSupported();
+        if (poolImpl == address(0) || tokenImpl == address(0)) require(false, 'PoolTypeNotSupported()');
 
         // generate key for pool
         bytes32 key = keccak256(abi.encode(

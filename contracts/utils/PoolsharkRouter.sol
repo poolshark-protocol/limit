@@ -171,8 +171,6 @@ contract PoolsharkRouter is
         }
     }
 
-    //SOLUTION: two different callbacks for range and limit [X]
-
     /// @inheritdoc ILimitPoolMintRangeCallback
     function limitPoolMintRangeCallback(
         int256 amount0Delta,

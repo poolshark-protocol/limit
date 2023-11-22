@@ -19,13 +19,13 @@ abstract contract LimitPoolManagerEvents is PoolsharkStructs {
     event OwnerTransfer(address indexed previousOwner, address indexed newOwner);
     event ProtocolSwapFeesModified(
         address[] pools,
-        uint16[] protocolSwapFees0,
-        uint16[] protocolSwapFees1
+        int16[] protocolSwapFees0,
+        int16[] protocolSwapFees1
     );
     event ProtocolFillFeesModified(
         address[] pools,
-        uint16[] protocolFillFees0,
-        uint16[] protocolFillFees1
+        int16[] protocolFillFees0,
+        int16[] protocolFillFees1
     );
     event ProtocolFeesCollected(
         address[] pools,

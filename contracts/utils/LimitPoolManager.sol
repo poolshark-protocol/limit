@@ -28,9 +28,11 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
 
     error InvalidSwapFee();
     error InvalidTickSpacing();
-    error InvalidImplAddress();
-    error TickSpacingAlreadyEnabled();
-    error ImplementationAlreadyExists();
+    error InvalidPoolImplAddress();
+    error InvalidTokenImplAddress();
+    error InvalidImplAddresses();
+    error FeeTierAlreadyEnabled();
+    error PoolTypeAlreadyExists();
     error MaxPoolTypesCountExceeded();
 
     constructor() {
@@ -98,7 +100,7 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
         uint16 swapFee,
         int16 tickSpacing
     ) external onlyOwner {
-        if (_feeTiers[swapFee] != 0) revert TickSpacingAlreadyEnabled();
+        if (_feeTiers[swapFee] != 0) revert FeeTierAlreadyEnabled();
         if (tickSpacing <= 0) revert InvalidTickSpacing();
         if (tickSpacing % 2 != 0) revert InvalidTickSpacing();
         if (swapFee == 0) revert InvalidSwapFee();
@@ -114,10 +116,10 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
     ) external onlyOwner {
         uint8 poolTypeId_ = _poolTypeNames.length.toUint8();
         if (poolTypeId_ > type(uint8).max) revert MaxPoolTypesCountExceeded();
-        if (_poolImpls[poolTypeId_] != address(0)) revert ImplementationAlreadyExists();
-        if (poolImpl_ == address(0) || tokenImpl_ == address(0)) revert InvalidImplAddress();
+        if (poolImpl_ == address(0)) revert InvalidPoolImplAddress();
+        if (tokenImpl_ == address(0)) revert InvalidTokenImplAddress();
         /// @dev - prevent same addresses since factory does not support this
-        if (poolImpl_ == tokenImpl_) revert InvalidImplAddress();
+        if (poolImpl_ == tokenImpl_) revert InvalidImplAddresses();
         _poolImpls[poolTypeId_] = poolImpl_;
         _tokenImpls[poolTypeId_] = tokenImpl_;
         _poolTypeNames.push(poolTypeName_);
@@ -168,10 +170,10 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
         }
         uint128[] memory token0FeesCollected = new uint128[](pools.length);
         uint128[] memory token1FeesCollected = new uint128[](pools.length);
-        uint16[] memory protocolSwapFees0 = new uint16[](pools.length);
-        uint16[] memory protocolSwapFees1 = new uint16[](pools.length);
-        uint16[] memory protocolFillFees0 = new uint16[](pools.length);
-        uint16[] memory protocolFillFees1 = new uint16[](pools.length);
+        int16[] memory protocolSwapFees0 = new int16[](pools.length);
+        int16[] memory protocolSwapFees1 = new int16[](pools.length);
+        int16[] memory protocolFillFees0 = new int16[](pools.length);
+        int16[] memory protocolFillFees1 = new int16[](pools.length);
         for (uint i; i < pools.length;) {
             (
                 token0FeesCollected[i],
@@ -180,16 +182,28 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
                 feesParams[i]
             );
             if ((feesParams[i].setFeesFlags & PROTOCOL_SWAP_FEE_0) > 0) {
-                protocolSwapFees0[i] = feesParams[i].protocolSwapFee0;
+                protocolSwapFees0[i] = int16(feesParams[i].protocolSwapFee0);
+            } else {
+                // no protocol fee change
+                protocolSwapFees0[i] = -1;
             }
             if ((feesParams[i].setFeesFlags & PROTOCOL_SWAP_FEE_1) > 0) {
-                protocolSwapFees1[i] = feesParams[i].protocolSwapFee1;
+                protocolSwapFees1[i] = int16(feesParams[i].protocolSwapFee1);
+            } else {
+                // no protocol fee change
+                protocolSwapFees1[i] = -1;
             }
             if ((feesParams[i].setFeesFlags & PROTOCOL_FILL_FEE_0) > 0) {
-                protocolFillFees0[i] = feesParams[i].protocolFillFee0;
+                protocolFillFees0[i] = int16(feesParams[i].protocolFillFee0);
+            } else {
+                // no protocol fee change
+                protocolFillFees0[i] = -1;
             }
             if ((feesParams[i].setFeesFlags & PROTOCOL_FILL_FEE_1) > 0) {
-                protocolFillFees1[i] = feesParams[i].protocolFillFee1;
+                protocolFillFees1[i] = int16(feesParams[i].protocolFillFee1);
+            } else {
+                // no protocol fee change
+                protocolFillFees1[i] = -1;
             }
             // else values will remain zero
             unchecked {

@@ -4,9 +4,8 @@ pragma solidity 0.8.13;
 import '../../interfaces/structs/RangePoolStructs.sol';
 import '../../interfaces/structs/LimitPoolStructs.sol';
 import '../../interfaces/limit/ILimitPoolFactory.sol';
-import '../../utils/LimitPoolErrors.sol';
 
-abstract contract LimitPoolStorage is LimitPoolStructs, RangePoolStructs, LimitPoolErrors {
+abstract contract LimitPoolStorage is LimitPoolStructs, RangePoolStructs {
     GlobalState public globalState;
     TickMap public rangeTickMap;
     TickMap public limitTickMap;

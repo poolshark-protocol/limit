@@ -78,8 +78,6 @@ contract PoolsharkRouter is
         // decode original msg.sender
         SwapCallbackData memory _data = abi.decode(data, (SwapCallbackData));
 
-        if (_data.wrapped) console.log('token match check', constants.token0 == wethAddress, constants.token1 == wethAddress);
-        
         // transfer from swap caller
         if (amount0Delta < 0) {
             if (constants.token0 == wethAddress && _data.wrapped) {
@@ -246,7 +244,6 @@ contract PoolsharkRouter is
                 sender: msg.sender,
                 wrapped: msg.value > 0
             }));
-            if (msg.value > 0) console.log('msg.value:', msg.value);
             IRangePool(pools[i]).mintRange(params[i]);
             unchecked {
                 ++i;
@@ -342,7 +339,6 @@ contract PoolsharkRouter is
                 wrapped: msg.value > 0
             }));
             if (msg.value > 0) {
-                console.log('msg.value:', msg.value);
                 IPool pool = IPool(pools[i]);
                 address tokenIn = params[i].zeroForOne ? pool.token0() : pool.token1();
                 address tokenOut = params[i].zeroForOne ? pool.token1() : pool.token0();
@@ -377,7 +373,6 @@ contract PoolsharkRouter is
         }
         if (address(this).balance > 0) {
             // return eth balance to msg.sender
-            console.log('returning eth balance:', address(this).balance);
             SafeTransfers.transferOut(msg.sender, ethAddress, address(this).balance);
         }
     }
@@ -696,13 +691,10 @@ contract PoolsharkRouter is
     function wrapEth(uint256 amount) private {
         // wrap necessary amount of WETH
         IWETH9 weth = IWETH9(wethAddress);
-        console.log('wrapping eth:', amount, address(this).balance);
         if (amount > address(this).balance) require(false, 'WrapEth::LowEthBalance()');
         weth.deposit{value: amount}();
-        console.log('eth wrapped');
         // transfer weth into pool
         SafeTransfers.transferOut(msg.sender, wethAddress, amount);
-        console.log('weth transferred in');
     }
 
     function unwrapEth(address recipient, uint256 amount) private {

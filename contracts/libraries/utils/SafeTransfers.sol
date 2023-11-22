@@ -20,9 +20,10 @@ library SafeTransfers {
         address token,
         uint256 amount
     ) internal {
+        bool success;
         if (token == address(0)) {
-            if (address(this).balance < amount) require(false, 'TransferFailed(address(this), to');
-            payable(to).transfer(amount);
+            (success, ) = to.call{value: amount}("");
+            if (!success) require(false, "SafeTransfers::EthTransferFailed()");
             return;
         }
         if (amount == 0) return;
@@ -32,7 +33,7 @@ library SafeTransfers {
         // slither-disable-next-line unchecked-transfer
         erc20Token.transfer(to, amount);
 
-        bool success;
+        success = false;
         assembly {
             switch returndatasize()
             case 0 {
@@ -64,7 +65,7 @@ library SafeTransfers {
     // slither-disable-next-line assembly
     function transferInto(address token, address sender, uint256 amount) internal returns (uint256) {
         if (token == address(0)) {
-            if (msg.value < amount) require(false, 'TransferFailed(msg.sender, address(this)');
+            if (msg.value < amount) require(false, 'SafeTransfers::LowEthAmountSent()');
             return amount;
         }
         IERC20 erc20Token = IERC20(token);

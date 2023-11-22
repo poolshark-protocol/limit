@@ -25,6 +25,7 @@ contract PoolsharkRouter is
     using SafeCast for uint256;
     using SafeCast for int256;
 
+    address public constant ethAddress = address(0);
     address public immutable wethAddress;
     address public immutable limitPoolFactory;
     address public immutable coverPoolFactory;
@@ -143,7 +144,7 @@ contract PoolsharkRouter is
             }
         }
         if (amount1Delta > 0) {
-            if (constants.token0 == wethAddress && _data.wrapped) {
+            if (constants.token1 == wethAddress && _data.wrapped) {
                 // unwrap WETH and send to recipient
                 unwrapEth(_data.recipient, uint256(amount1Delta));
             }
@@ -228,8 +229,8 @@ contract PoolsharkRouter is
             }
         }
         if (address(this).balance > 0) {
-            (bool success, ) = msg.sender.call{value: address(this).balance}("");
-            if (!success) require(false, "MultiMintLimit::EthTransferFailed()");
+            // return eth balance to msg.sender
+            SafeTransfers.transferOut(msg.sender, ethAddress, address(this).balance);
         }
     }
 
@@ -249,8 +250,8 @@ contract PoolsharkRouter is
             }
         }
         if (address(this).balance > 0) {
-            (bool success, ) = msg.sender.call{value: address(this).balance}("");
-            if (!success) require(false, "MultiMintRange::EthTransferFailed()");
+            // return eth balance to msg.sender
+            SafeTransfers.transferOut(msg.sender, ethAddress, address(this).balance);
         }
     }
 
@@ -270,8 +271,8 @@ contract PoolsharkRouter is
             }
         }
         if (address(this).balance > 0) {
-            (bool success, ) = msg.sender.call{value: address(this).balance}("");
-            if (!success) require(false, "MultiMintCover::EthTransferFailed()");
+            // return eth balance to msg.sender
+            SafeTransfers.transferOut(msg.sender, ethAddress, address(this).balance);
         }
     }
 
@@ -371,8 +372,8 @@ contract PoolsharkRouter is
             }
         }
         if (address(this).balance > 0) {
-            (bool success, ) = msg.sender.call{value: address(this).balance}("");
-            if (!success) require(false, "MultiSwapSplit::EthTransferFailed()");
+            // return eth balance to msg.sender
+            SafeTransfers.transferOut(msg.sender, ethAddress, address(this).balance);
         }
     }
 
@@ -447,6 +448,10 @@ contract PoolsharkRouter is
                 ++i;
             }
         }
+        if (address(this).balance > 0) {
+            // send remaining eth to msg.sender
+            SafeTransfers.transferOut(msg.sender, ethAddress, address(this).balance);
+        }
     }
 
     function createCoverPoolAndMint(
@@ -484,6 +489,10 @@ contract PoolsharkRouter is
             unchecked {
                 ++i;
             }
+        }
+        if (address(this).balance > 0) {
+            // send remaining eth to msg.sender
+            SafeTransfers.transferOut(msg.sender, ethAddress, address(this).balance);
         }
     }
 
@@ -682,6 +691,7 @@ contract PoolsharkRouter is
     function wrapEth(uint256 amount) private {
         // wrap necessary amount of WETH
         IWETH9 weth = IWETH9(wethAddress);
+        if (amount > address(this).balance) require(false, 'WrapEth::LowEthBalance()');
         weth.deposit{value: amount}();
         // transfer weth into pool
         SafeTransfers.transferOut(msg.sender, wethAddress, amount);  
@@ -692,7 +702,6 @@ contract PoolsharkRouter is
         // unwrap WETH and send to recipient
         weth.withdraw(amount);
         // send balance to recipient
-        (bool success, ) = recipient.call{value: amount}("");
-        if (!success) require(false, "Callback::EthTransferFailed()");
+        SafeTransfers.transferOut(recipient, ethAddress, amount);
     }
 }

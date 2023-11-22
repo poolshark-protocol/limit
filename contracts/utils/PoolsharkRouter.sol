@@ -2,6 +2,7 @@
 pragma solidity 0.8.13;
 
 import '../interfaces/IPool.sol';
+import '../interfaces/IWETH9.sol';
 import '../interfaces/range/IRangePool.sol';
 import '../interfaces/limit/ILimitPool.sol';
 import '../interfaces/cover/ICoverPool.sol';
@@ -24,6 +25,8 @@ contract PoolsharkRouter is
     using SafeCast for uint256;
     using SafeCast for int256;
 
+    address public constant ethAddress = address(0);
+    address public immutable wethAddress;
     address public immutable limitPoolFactory;
     address public immutable coverPoolFactory;
 
@@ -35,24 +38,31 @@ contract PoolsharkRouter is
 
     struct MintCallbackData {
         address sender;
+        bool wrapped;
     }
 
     struct SwapCallbackData {
         address sender;
+        address recipient;
+        bool wrapped;
     }
 
     constructor(
         address limitPoolFactory_,
-        address coverPoolFactory_
+        address coverPoolFactory_,
+        address wethAddress_
     ) {
         limitPoolFactory = limitPoolFactory_;
         coverPoolFactory = coverPoolFactory_;
+        wethAddress = wethAddress_;
         emit RouterDeployed(
             address(this),
             limitPoolFactory,
             coverPoolFactory
         );
     }
+
+    receive() external payable {}
 
     /// @inheritdoc ILimitPoolSwapCallback
     function limitPoolSwapCallback(
@@ -65,15 +75,36 @@ contract PoolsharkRouter is
         // validate sender is a canonical limit pool
         canonicalLimitPoolsOnly(constants);
 
-        // decode original sender
+        // decode original msg.sender
         SwapCallbackData memory _data = abi.decode(data, (SwapCallbackData));
         
         // transfer from swap caller
         if (amount0Delta < 0) {
-            SafeTransfers.transferInto(constants.token0, _data.sender, uint256(-amount0Delta));
+            if (constants.token0 == wethAddress && _data.wrapped) {
+                wrapEth(uint256(-amount0Delta));
+            } else {
+                SafeTransfers.transferInto(constants.token0, _data.sender, uint256(-amount0Delta));   
+            }
         }
         if (amount1Delta < 0) {
-            SafeTransfers.transferInto(constants.token1, _data.sender, uint256(-amount1Delta));
+            if (constants.token1 == wethAddress && _data.wrapped) {
+                wrapEth(uint256(-amount1Delta));
+            } else {
+                SafeTransfers.transferInto(constants.token1, _data.sender, uint256(-amount1Delta));
+            }
+        }
+        // transfer to swap caller
+        if (amount0Delta > 0) {
+            if (constants.token0 == wethAddress && _data.wrapped) {
+                // unwrap WETH and send to recipient
+                unwrapEth(_data.recipient, uint256(amount0Delta));
+            }
+        }
+        if (amount1Delta > 0) {
+            if (constants.token1 == wethAddress && _data.wrapped) {
+                // unwrap WETH and send to recipient
+                unwrapEth(_data.recipient, uint256(amount1Delta));
+            }
         }
     }
 
@@ -93,10 +124,30 @@ contract PoolsharkRouter is
         
         // transfer from swap caller
         if (amount0Delta < 0) {
-            SafeTransfers.transferInto(constants.token0, _data.sender, uint256(-amount0Delta));
+            if (constants.token0 == wethAddress && _data.wrapped) {
+                wrapEth(uint256(-amount0Delta));
+            } else {
+                SafeTransfers.transferInto(constants.token0, _data.sender, uint256(-amount0Delta));   
+            }
         }
         if (amount1Delta < 0) {
-            SafeTransfers.transferInto(constants.token1, _data.sender, uint256(-amount1Delta));
+            if (constants.token1 == wethAddress && _data.wrapped) {
+                wrapEth(uint256(-amount1Delta));
+            } else {
+                SafeTransfers.transferInto(constants.token1, _data.sender, uint256(-amount1Delta));
+            }
+        }
+        if (amount0Delta > 0) {
+            if (constants.token0 == wethAddress && _data.wrapped) {
+                // unwrap WETH and send to recipient
+                unwrapEth(_data.recipient, uint256(amount0Delta));
+            }
+        }
+        if (amount1Delta > 0) {
+            if (constants.token1 == wethAddress && _data.wrapped) {
+                // unwrap WETH and send to recipient
+                unwrapEth(_data.recipient, uint256(amount1Delta));
+            }
         }
     }
 
@@ -116,10 +167,18 @@ contract PoolsharkRouter is
         
         // transfer from swap caller
         if (amount0Delta < 0) {
-            SafeTransfers.transferInto(constants.token0, _data.sender, uint256(-amount0Delta));
+            if (constants.token0 == wethAddress && _data.wrapped) {
+                wrapEth(uint256(-amount0Delta));
+            } else {
+                SafeTransfers.transferInto(constants.token0, _data.sender, uint256(-amount0Delta));   
+            }
         }
         if (amount1Delta < 0) {
-            SafeTransfers.transferInto(constants.token1, _data.sender, uint256(-amount1Delta));
+            if (constants.token1 == wethAddress && _data.wrapped) {
+                wrapEth(uint256(-amount1Delta));
+            } else {
+                SafeTransfers.transferInto(constants.token1, _data.sender, uint256(-amount1Delta));
+            }
         }
     }
 
@@ -139,52 +198,81 @@ contract PoolsharkRouter is
 
         // transfer from swap caller
         if (amount0Delta < 0) {
-            SafeTransfers.transferInto(constants.token0, _data.sender, uint256(-amount0Delta));
+            if (constants.token0 == wethAddress && _data.wrapped) {
+                wrapEth(uint256(-amount0Delta));
+            } else {
+                SafeTransfers.transferInto(constants.token0, _data.sender, uint256(-amount0Delta));   
+            }
         }
         if (amount1Delta < 0) {
-            SafeTransfers.transferInto(constants.token1, _data.sender, uint256(-amount1Delta));
+            if (constants.token1 == wethAddress && _data.wrapped) {
+                wrapEth(uint256(-amount1Delta));
+            } else {
+                SafeTransfers.transferInto(constants.token1, _data.sender, uint256(-amount1Delta));
+            }
         }
     }
 
     function multiMintLimit(
         address[] memory pools,
         MintLimitParams[] memory params
-    ) external {
+    ) external payable {
         if (pools.length != params.length) require(false, 'InputArrayLengthsMismatch()');
         for (uint i = 0; i < pools.length;) {
-            params[i].callbackData = abi.encode(MintCallbackData({sender: msg.sender}));
+            params[i].callbackData = abi.encode(MintCallbackData({
+                sender: msg.sender,
+                wrapped: msg.value > 0
+            }));
             ILimitPool(pools[i]).mintLimit(params[i]);
             unchecked {
                 ++i;
             }
+        }
+        if (address(this).balance > 0) {
+            // return eth balance to msg.sender
+            SafeTransfers.transferOut(msg.sender, ethAddress, address(this).balance);
         }
     }
 
     function multiMintRange(
         address[] memory pools,
         MintRangeParams[] memory params
-    ) external {
+    ) external payable {
         if (pools.length != params.length) require(false, 'InputArrayLengthsMismatch()');
         for (uint i = 0; i < pools.length;) {
-            params[i].callbackData = abi.encode(MintCallbackData({sender: msg.sender}));
+            params[i].callbackData = abi.encode(MintCallbackData({
+                sender: msg.sender,
+                wrapped: msg.value > 0
+            }));
             IRangePool(pools[i]).mintRange(params[i]);
             unchecked {
                 ++i;
             }
+        }
+        if (address(this).balance > 0) {
+            // return eth balance to msg.sender
+            SafeTransfers.transferOut(msg.sender, ethAddress, address(this).balance);
         }
     }
 
     function multiMintCover(
         address[] memory pools,
         PoolsharkStructs.MintCoverParams[] memory params
-    ) external {
+    ) external payable {
         if (pools.length != params.length) require(false, 'InputArrayLengthsMismatch()');
         for (uint i = 0; i < pools.length;) {
-            params[i].callbackData = abi.encode(MintCallbackData({sender: msg.sender}));
+            params[i].callbackData = abi.encode(MintCallbackData({
+                sender: msg.sender,
+                wrapped: msg.value > 0
+            }));
             ICoverPool(pools[i]).mint(params[i]);
             unchecked {
                 ++i;
             }
+        }
+        if (address(this).balance > 0) {
+            // return eth balance to msg.sender
+            SafeTransfers.transferOut(msg.sender, ethAddress, address(this).balance);
         }
     }
 
@@ -231,7 +319,7 @@ contract PoolsharkRouter is
     function multiSwapSplit(
         address[] memory pools,
         SwapParams[] memory params 
-    ) external {
+    ) external payable {
         if (pools.length != params.length) require(false, 'InputArrayLengthsMismatch()');
         for (uint i = 0; i < pools.length;) {
             if (i > 0) {
@@ -244,7 +332,23 @@ contract PoolsharkRouter is
             }
         }
         for (uint i = 0; i < pools.length && params[0].amount > 0;) {
-            params[i].callbackData = abi.encode(SwapCallbackData({sender: msg.sender}));
+            // if msg.value > 0 we either need to wrap or unwrap the native gas token
+            params[i].callbackData = abi.encode(SwapCallbackData({
+                sender: msg.sender,
+                recipient: params[i].to,
+                wrapped: msg.value > 0
+            }));
+            if (msg.value > 0) {
+                IPool pool = IPool(pools[i]);
+                address tokenIn = params[i].zeroForOne ? pool.token0() : pool.token1();
+                address tokenOut = params[i].zeroForOne ? pool.token1() : pool.token0();
+                if (tokenOut == wethAddress) {
+                    // send weth to router for unwrapping
+                    params[i].to = address(this);
+                } else if (tokenIn != wethAddress) {
+                    require (false, "NonNativeTokenPair()");
+                }
+            }
             (
                 int256 amount0Delta,
                 int256 amount1Delta
@@ -266,6 +370,10 @@ contract PoolsharkRouter is
             unchecked {
                 ++i;
             }
+        }
+        if (address(this).balance > 0) {
+            // return eth balance to msg.sender
+            SafeTransfers.transferOut(msg.sender, ethAddress, address(this).balance);
         }
     }
 
@@ -291,7 +399,7 @@ contract PoolsharkRouter is
         ILimitPoolFactory.LimitPoolParams memory params,
         MintRangeParams[] memory mintRangeParams,
         MintLimitParams[] memory mintLimitParams
-    ) external returns (
+    ) external payable returns (
         address pool,
         address poolToken 
     ) {
@@ -317,8 +425,12 @@ contract PoolsharkRouter is
         // mint initial range positions
         for (uint i = 0; i < mintRangeParams.length;) {
             mintRangeParams[i].positionId = 0;
-            mintRangeParams[i].callbackData = abi.encode(MintCallbackData({sender: msg.sender}));
-            IRangePool(pool).mintRange(mintRangeParams[i]);
+            mintRangeParams[i].callbackData = abi.encode(MintCallbackData({
+                sender: msg.sender,
+                wrapped: msg.value > 0
+            }));
+            try IRangePool(pool).mintRange(mintRangeParams[i]){
+            } catch {}
             unchecked {
                 ++i;
             }
@@ -326,18 +438,26 @@ contract PoolsharkRouter is
         // mint initial limit positions
         for (uint i = 0; i < mintLimitParams.length;) {
             mintLimitParams[i].positionId = 0;
-            mintLimitParams[i].callbackData = abi.encode(MintCallbackData({sender: msg.sender}));
-            ILimitPool(pool).mintLimit(mintLimitParams[i]);
+            mintLimitParams[i].callbackData = abi.encode(MintCallbackData({
+                sender: msg.sender,
+                wrapped: msg.value > 0
+            }));
+            try ILimitPool(pool).mintLimit(mintLimitParams[i]) {
+            } catch {}
             unchecked {
                 ++i;
             }
+        }
+        if (address(this).balance > 0) {
+            // send remaining eth to msg.sender
+            SafeTransfers.transferOut(msg.sender, ethAddress, address(this).balance);
         }
     }
 
     function createCoverPoolAndMint(
         ICoverPoolFactory.CoverPoolParams memory params,
         MintCoverParams[] memory mintCoverParams
-    ) external returns (
+    ) external payable returns (
         address pool,
         address poolToken 
     ) {
@@ -360,11 +480,19 @@ contract PoolsharkRouter is
         // mint initial cover positions
         for (uint i = 0; i < mintCoverParams.length;) {
             mintCoverParams[i].positionId = 0;
-            mintCoverParams[i].callbackData = abi.encode(MintCallbackData({sender: msg.sender}));
-            ICoverPool(pool).mint(mintCoverParams[i]);
+            mintCoverParams[i].callbackData = abi.encode(MintCallbackData({
+                sender: msg.sender,
+                wrapped: msg.value > 0
+            }));
+            try ICoverPool(pool).mint(mintCoverParams[i]){
+            } catch {}
             unchecked {
                 ++i;
             }
+        }
+        if (address(this).balance > 0) {
+            // send remaining eth to msg.sender
+            SafeTransfers.transferOut(msg.sender, ethAddress, address(this).balance);
         }
     }
 
@@ -390,7 +518,7 @@ contract PoolsharkRouter is
         locals.emptyResults = 0;
         for (uint sorted = 0; sorted < results.length;) {
             // if exactIn, sort by most output
-            // if exactOut, sort by least input
+            // if exactOut, sort by most output then least input
             locals.sortAmount = params[0].exactIn ? int256(0) : type(int256).max;
             locals.sortIndex = type(uint256).max;
             for (uint index = 0; index < results.length;) {
@@ -450,6 +578,20 @@ contract PoolsharkRouter is
             locals.prunedResults = locals.sortedResults;
         }
         return locals.prunedResults;
+    }
+
+    function multiCall(
+        address[] memory pools,
+        SwapParams[] memory params 
+    ) external {
+        if (pools.length != params.length) require(false, 'InputArrayLengthsMismatch()');
+        for (uint i = 0; i < pools.length;) {
+            params[i].callbackData = abi.encode(SwapCallbackData({sender: msg.sender, recipient: params[i].to, wrapped: true}));
+            ICoverPool(pools[i]).swap(params[i]);
+            unchecked {
+                ++i;
+            }
+        }
     }
 
     function canonicalLimitPoolsOnly(
@@ -544,5 +686,22 @@ contract PoolsharkRouter is
             constants.minAmountLowerPriced
         );
         return abi.encodePacked(value1, value2, value3);
+    }
+
+    function wrapEth(uint256 amount) private {
+        // wrap necessary amount of WETH
+        IWETH9 weth = IWETH9(wethAddress);
+        if (amount > address(this).balance) require(false, 'WrapEth::LowEthBalance()');
+        weth.deposit{value: amount}();
+        // transfer weth into pool
+        SafeTransfers.transferOut(msg.sender, wethAddress, amount);  
+    }
+
+    function unwrapEth(address recipient, uint256 amount) private {
+        IWETH9 weth = IWETH9(wethAddress);
+        // unwrap WETH and send to recipient
+        weth.withdraw(amount);
+        // send balance to recipient
+        SafeTransfers.transferOut(recipient, ethAddress, amount);
     }
 }

@@ -71,6 +71,12 @@ describe('LimitPool Tests', function () {
 
         await mintSigners20(hre.props.token1, tokenAmountBn.mul(10), [hre.props.alice, hre.props.bob])
 
+        // sets ether balance
+        // await hre.network.provider.send("hardhat_setBalance", [
+        //     hre.props.alice.address,
+        //     ethers.utils.parseEther("50").toHexString(),
+        // ]);
+
         if (debugMode) await getLiquidity(true, true)
         if (debugMode) await getLiquidity(false, true)
     })
@@ -84,6 +90,11 @@ describe('LimitPool Tests', function () {
     // calculate fee growth off the range liquidity amount
     // cross tick and know which ticks to clear out based on active liquidity
     // pass global state instead of swapPool for MintLimit
+
+    // create pool that uses weth
+    // then mint position using ETH
+    // then swap against pool uisng ETH as input
+    // then swap against pool using ETH as output
 
     it('pool0 - Should mint, fill, and burn 29', async function () {
         const aliceLiquidity = '20051041647900280328782'

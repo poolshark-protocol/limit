@@ -121,7 +121,7 @@ describe('WethPool Tests', function () {
             zeroForOne: true,
             amountIn: tokenAmountBn.mul(2),
             priceLimit: minPrice,
-            balanceInDecrease: '396087570498016', // only gas is used; all other ETH is returned
+            balanceInDecrease: '396087570498016', //TODO: set close to acutal ETH value
             balanceOutIncrease: '99949999999999999995',
             revertMessage: '',
             nativeIn: true,
@@ -136,8 +136,8 @@ describe('WethPool Tests', function () {
             zeroForOne: false,
             amountIn: tokenAmountBn.mul(2),
             priceLimit: maxPrice,
-            balanceInDecrease: '200000000000000000000', // only gas is used; all other ETH is returned
-            balanceOutIncrease: '123802240493864890',
+            balanceInDecrease: '200000000000000000000',
+            balanceOutIncrease: '123802240493864890', //TODO: set close to acutal ETH value
             revertMessage: '',
             nativeOut: true,
             poolContract: hre.props.wethPool,

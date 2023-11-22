@@ -129,7 +129,7 @@ library RangePositions {
     ) {
         cache.priceLower = ConstantProduct.getPriceAtTick(cache.position.lower, cache.constants);
         cache.priceUpper = ConstantProduct.getPriceAtTick(cache.position.upper, cache.constants);
-        cache.liquidityBurned = uint256(params.burnPercent) * cache.position.liquidity / 1e38;
+        cache.liquidityBurned = _convert(cache.position.liquidity, params.burnPercent);
         if (cache.liquidityBurned  == 0) {
             return cache;
         }
@@ -237,7 +237,7 @@ library RangePositions {
         RangePoolStructs.RangePositionCache memory cache;
         /// @dev - only true if burn call
         if (params.burnPercent > 0) {
-            cache.liquidityAmount = uint256(params.burnPercent) * position.liquidity / 1e38;
+            cache.liquidityAmount = _convert(position.liquidity, params.burnPercent);
             if (position.liquidity == cache.liquidityAmount)
                 IPositionERC1155(constants.poolToken).burn(msg.sender, params.positionId, 1, constants);
         }
@@ -412,5 +412,17 @@ library RangePositions {
                 cache.amount1
             );
         }
+    }
+
+    function _convert(
+        uint128 liquidity,
+        uint128 percent
+    ) internal pure returns (
+        uint128
+    ) {
+        // convert percentage to liquidity amount
+        if (percent > 1e38) percent = 1e38;
+        if (liquidity == 0 && percent > 0) require (false, 'PositionNotFound()');
+        return uint128(uint256(liquidity) * uint256(percent) / 1e38);
     }
 }

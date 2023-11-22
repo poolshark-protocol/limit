@@ -47,7 +47,7 @@ library MintRangeCall {
         if (params.positionId > 0) {
             cache.position = positions[params.positionId];
             // existing position
-            cache.owner = Bytes.getSender(params.callbackData);
+            cache.owner = Bytes.getSender(params.callbackData, 0);
             // require balance held for existing position
             if (PositionTokens.balanceOf(cache.constants, cache.owner, params.positionId) == 0)
                 require(false, 'PositionOwnerMismatch()');

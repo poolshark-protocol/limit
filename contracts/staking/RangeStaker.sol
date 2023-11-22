@@ -4,7 +4,8 @@ pragma solidity 0.8.13;
 import '../interfaces/IPool.sol';
 import '../interfaces/IPositionERC1155.sol';
 import '../interfaces/range/IRangePool.sol';
-import '../interfaces/limit/ILimitPool.sol';
+import '../interfaces/limit/ILimitPoolView.sol';
+import '../interfaces/limit/ILimitPoolStorageView.sol';
 import '../interfaces/limit/ILimitPoolFactory.sol';
 import '../interfaces/limit/ILimitPoolManager.sol';
 import '../base/events/RangeStakerEvents.sol';
@@ -77,12 +78,12 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
             locals.stake.positionId = params.positionId;
         else {
             // grab positionIdNext from pool
-            (,,,,locals.positionIdNext,,) = ILimitPool(params.pool).globalState();
+            (,,,,locals.positionIdNext,,) = ILimitPoolStorageView(params.pool).globalState();
             locals.stake.positionId = locals.positionIdNext - 1;
         }
 
         // stake info
-        locals.constants = ILimitPool(params.pool).immutables();
+        locals.constants = ILimitPoolView(params.pool).immutables();
         locals.stake.pool = params.pool;
         locals.poolToken = IPool(params.pool).poolToken();
         locals.stakeKey = keccak256(abi.encode(

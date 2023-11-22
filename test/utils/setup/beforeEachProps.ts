@@ -17,6 +17,7 @@ import {
     SampleCall,
     SnapshotRangeCall,
     SnapshotLimitCall,
+    WETH9,
 } from '../../../typechain'
 import { InitialSetup } from './initialSetup'
 import { MintRangeCall } from '../../../typechain'
@@ -27,7 +28,8 @@ import { QuoteCall } from '../../../typechain'
 export interface BeforeEachProps {
     //shared
     limitPool: LimitPool
-    limitPool2: LimitPool
+    wethPool: LimitPool
+    wethPoolToken: PositionERC1155
     limitPoolImpl: LimitPool
     limitPoolToken: PositionERC1155
     limitPoolManager: LimitPoolManager
@@ -55,7 +57,7 @@ export interface BeforeEachProps {
     tokenB: Token20
     token0: Token20
     token1: Token20
-    token20: Token20
+    weth9: WETH9
     admin: SignerWithAddress
     alice: SignerWithAddress
     bob: SignerWithAddress
@@ -86,7 +88,8 @@ export class GetBeforeEach {
     public retrieveProps(): BeforeEachProps {
         //shared
         let limitPool: LimitPool
-        let limitPool2: LimitPool
+        let wethPool: LimitPool
+        let wethPoolToken: PositionERC1155
         let limitPoolImpl: LimitPool
         let limitPoolToken: PositionERC1155
         let limitPoolManager: LimitPoolManager
@@ -114,7 +117,7 @@ export class GetBeforeEach {
         let tokenB: Token20
         let token0: Token20
         let token1: Token20
-        let token20: Token20
+        let weth9: WETH9
         let admin: SignerWithAddress
         let alice: SignerWithAddress
         let bob: SignerWithAddress
@@ -123,7 +126,8 @@ export class GetBeforeEach {
         return {
             //shared
             limitPool,
-            limitPool2,
+            wethPool,
+            wethPoolToken,
             limitPoolImpl,
             limitPoolToken,
             limitPoolManager,
@@ -151,7 +155,7 @@ export class GetBeforeEach {
             tokenB,
             token0,
             token1,
-            token20,
+            weth9,
             admin,
             alice,
             bob,

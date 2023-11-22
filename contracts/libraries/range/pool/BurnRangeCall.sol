@@ -40,7 +40,6 @@ library BurnRangeCall {
         // check positionId owner
         if (PositionTokens.balanceOf(cache.constants, msg.sender, params.positionId) == 0)
             require(false, 'PositionNotFound()');
-        if (params.burnPercent > 1e38) params.burnPercent = 1e38;
         ( 
             cache.position,
             cache.amount0,

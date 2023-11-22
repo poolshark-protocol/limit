@@ -2,10 +2,13 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { expect } from 'chai'
 import { sign } from 'crypto';
 import { BigNumber, Contract } from 'ethers'
+import { LimitPool } from '../../../typechain';
+import { gasUsed } from '../blocks';
 const { mine } = require("@nomicfoundation/hardhat-network-helpers");
 
 export const Q64x96 = BigNumber.from('2').pow(96)
 export const BN_ZERO = BigNumber.from('0')
+export const BN_ONE = BigNumber.from('1')
 
 export interface RangePosition {
     feeGrowthInside0Last: BigNumber
@@ -112,6 +115,10 @@ export interface ValidateSwapParams {
     revertMessage: string
     syncRevertMessage?: string
     splitInto?: number
+    nativeIn?: boolean
+    nativeOut?: boolean
+    poolContract?: LimitPool
+    gasUsed?: string
 }
 
 export interface ValidateBurnParams {
@@ -203,22 +210,36 @@ export async function validateSwap(params: ValidateSwapParams) {
     const revertMessage = params.revertMessage
     const syncRevertMessage = params.syncRevertMessage
     const splitInto = params.splitInto && params.splitInto > 1 ? params.splitInto : 1
+    const nativeIn = params.nativeIn ?? false
+    const nativeOut = params.nativeOut ?? false
+    const poolContract = params.poolContract ?? hre.props.limitPool
+    const gasUsed = params.gasUsed ? BigNumber.from(params.gasUsed) : BN_ZERO
 
     let balanceInBefore
     let balanceOutBefore
+    const token0 = await hre.ethers.getContractAt('Token20', await poolContract.token0())
+    const token1 = await hre.ethers.getContractAt('Token20', await poolContract.token1())
     if (zeroForOne) {
-        balanceInBefore = await hre.props.token0.balanceOf(signer.address)
-        balanceOutBefore = await hre.props.token1.balanceOf(signer.address)
-        await hre.props.token0.connect(signer).approve(hre.props.poolRouter.address, amountIn)
+        balanceInBefore = nativeIn
+                                ? await hre.ethers.provider.getBalance(signer.address)
+                                : await token0.balanceOf(signer.address)
+        balanceOutBefore = nativeOut
+                                ? await hre.ethers.provider.getBalance(signer.address)
+                                : await token1.balanceOf(signer.address)
+        await token0.connect(signer).approve(hre.props.poolRouter.address, amountIn)
     } else {
-        balanceInBefore = await hre.props.token1.balanceOf(signer.address)
-        balanceOutBefore = await hre.props.token0.balanceOf(signer.address)
-        await hre.props.token1.connect(signer).approve(hre.props.poolRouter.address, amountIn)
+        balanceInBefore = nativeIn
+                                ? await hre.ethers.provider.getBalance(signer.address)
+                                : await token1.balanceOf(signer.address)
+        balanceOutBefore = nativeOut
+                                ? await hre.ethers.provider.getBalance(signer.address)
+                                : await token0.balanceOf(signer.address)
+        await token1.connect(signer).approve(hre.props.poolRouter.address, amountIn)
     }
 
     const poolBefore: LimitPoolState = zeroForOne
-        ? (await hre.props.limitPool.globalState()).pool1
-        : (await hre.props.limitPool.globalState()).pool0
+        ? (await poolContract.globalState()).pool1
+        : (await poolContract.globalState()).pool0
     const liquidityBefore = poolBefore.liquidity
     const priceBefore = poolBefore.price
 
@@ -228,11 +249,13 @@ export async function validateSwap(params: ValidateSwapParams) {
     let amountOutQuoted
     let priceAfterQuoted
 
+    let etherUsed = BN_ZERO
+
     if (revertMessage == '') {
-        const poolPrice = zeroForOne ? (await (hre.props.limitPool.globalState())).pool0.price
-                                     : (await (hre.props.limitPool.globalState())).pool1.price
+        const poolPrice = zeroForOne ? (await (poolContract.globalState())).pool0.price
+                                     : (await (poolContract.globalState())).pool1.price
         // const quote = await hre.props.poolRouter.multiQuote(
-        //     [hre.props.limitPool.address, hre.props.limitPool.address],
+        //     [poolContract.address, poolContract.address],
         //     [{
         //         priceLimit: poolPrice,
         //         amount: amountIn,
@@ -276,7 +299,7 @@ export async function validateSwap(params: ValidateSwapParams) {
         //     ],
         //     true
         // )
-        const quote = await hre.props.limitPool.quote({
+        const quote = await poolContract.quote({
             priceLimit: priceLimit,
             amount: amountIn,
             zeroForOne: zeroForOne,
@@ -299,11 +322,11 @@ export async function validateSwap(params: ValidateSwapParams) {
             let txn = await hre.props.poolRouter
             .connect(signer)
             .multiSwapSplit(
-            [hre.props.limitPool.address, hre.props.limitPool.address],
+            [poolContract.address, poolContract.address],
                 [{
                     to: signer.address,
-                    priceLimit: zeroForOne ? (await (hre.props.limitPool.globalState())).pool0.price
-                                           : (await (hre.props.limitPool.globalState())).pool1.price,
+                    priceLimit: zeroForOne ? (await (poolContract.globalState())).pool0.price
+                                           : (await (poolContract.globalState())).pool1.price,
                     amount: amountIn,
                     zeroForOne: zeroForOne,
                     exactIn: true,
@@ -317,8 +340,10 @@ export async function validateSwap(params: ValidateSwapParams) {
                     exactIn: true,
                     callbackData: ethers.utils.formatBytes32String('')
                 },
-                ], {gasLimit: 3000000})
-            if (splitInto == 1) await txn.wait()
+                ], {gasLimit: 3000000, value: getSwapMsgValue(nativeIn, nativeOut, amountIn)})
+            if (splitInto == 1) {
+                const receipt = await txn.wait();
+            }
         }
         if (splitInto > 1){
             await ethers.provider.send('evm_mine')
@@ -329,7 +354,7 @@ export async function validateSwap(params: ValidateSwapParams) {
             hre.props.poolRouter
             .connect(signer)
             .multiSwapSplit(
-            [hre.props.limitPool.address],  
+            [poolContract.address],  
             [{
               to: signer.address,
               zeroForOne: zeroForOne,
@@ -337,7 +362,7 @@ export async function validateSwap(params: ValidateSwapParams) {
               priceLimit: priceLimit,
               exactIn: true,
               callbackData: ethers.utils.formatBytes32String('')
-            }], {gasLimit: 3000000})
+            }], {gasLimit: 3000000, value: getSwapMsgValue(nativeIn, nativeOut, amountIn)})
         ).to.be.revertedWith(revertMessage)
         return
     }
@@ -345,21 +370,25 @@ export async function validateSwap(params: ValidateSwapParams) {
     let balanceInAfter
     let balanceOutAfter
     if (zeroForOne) {
-        balanceInAfter = await hre.props.token0.balanceOf(signer.address)
-        balanceOutAfter = await hre.props.token1.balanceOf(signer.address)
+        balanceInAfter = nativeIn ? (await hre.ethers.provider.getBalance(signer.address))
+                                  : await token0.balanceOf(signer.address)
+        balanceOutAfter = nativeOut ? await hre.ethers.provider.getBalance(signer.address)
+                                    : await token1.balanceOf(signer.address)
     } else {
-        balanceInAfter = await hre.props.token1.balanceOf(signer.address)
-        balanceOutAfter = await hre.props.token0.balanceOf(signer.address)
+        balanceInAfter = nativeIn ? (await hre.ethers.provider.getBalance(signer.address))
+                                  : await token1.balanceOf(signer.address)
+        balanceOutAfter = nativeOut ? await hre.ethers.provider.getBalance(signer.address)
+                                    : await token0.balanceOf(signer.address)
     }
 
-    expect(balanceInBefore.sub(balanceInAfter)).to.be.equal(balanceInDecrease)
-    expect(balanceOutAfter.sub(balanceOutBefore)).to.be.equal(balanceOutIncrease)
+    if (!nativeIn) expect(balanceInBefore.sub(balanceInAfter)).to.be.equal(balanceInDecrease)
+    if (!nativeOut) expect(balanceOutAfter.sub(balanceOutBefore)).to.be.equal(balanceOutIncrease)
     if (splitInto == 1) {
-        expect(balanceInBefore.sub(balanceInAfter)).to.be.equal(amountInQuoted)
-        expect(balanceOutAfter.sub(balanceOutBefore)).to.be.equal(amountOutQuoted)
+        if (!nativeIn) expect(balanceInBefore.sub(balanceInAfter)).to.be.equal(amountInQuoted) // gasUsed only if nativeIn
+        if (!nativeOut) expect(balanceOutAfter.sub(balanceOutBefore)).to.be.equal(amountOutQuoted)
     }
 
-    const poolAfter: RangePoolState = (await hre.props.limitPool.globalState()).pool
+    const poolAfter: RangePoolState = (await poolContract.globalState()).pool
     const liquidityAfter = poolAfter.liquidity
     const priceAfter = poolAfter.price
 
@@ -464,6 +493,7 @@ export async function validateMint(params: ValidateMintParams): Promise<number> 
         ).to.be.revertedWith(revertMessage)
         return expectedPositionId
     }
+    
     let balanceInAfter
     let balanceOutAfter
     if (zeroForOne) {
@@ -671,7 +701,7 @@ export async function validateBurn(params: ValidateBurnParams) {
             if (expectedPositionLower) {
                 expect(positionAfter.lower).to.be.equal(expectedPositionLower)
             } else {
-                expect(positionAfter.lower).to.be.equal(expectedLower ? expectedLower : claim)   
+                expect(positionAfter.lower).to.be.equal(expectedLower ? expectedLower : claim)
             }
             expect(positionAfter.upper).to.be.equal(upper)
         }
@@ -740,4 +770,14 @@ export async function validateBurn(params: ValidateBurnParams) {
         BN_ZERO.sub(positionLiquidityChange)
     )
     expect(liquidityGlobalAfter.sub(liquidityGlobalBefore)).to.be.equal(BN_ZERO.sub(positionLiquidityChange))
+}
+
+export function getSwapMsgValue(nativeIn: boolean, nativeOut: boolean, amountIn: BigNumber): BigNumber {
+    if (nativeIn) {
+        return amountIn
+    } else if (nativeOut) {
+        return BN_ONE
+    } else {
+        return BN_ZERO
+    }
 }

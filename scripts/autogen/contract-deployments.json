@@ -12,7 +12,7 @@
         },
         "token1": {
             "contractName": "Token20",
-            "contractAddress": "0x19beE8e887a5db5cf20A841eb4DAACBCacF14B1b",
+            "contractAddress": "0xebff7a98149b4774c9743c5d1f382305fe5422c9",
             "constructorArguments": [
                 "Dai Stablecoin",
                 "DAI",
@@ -136,16 +136,17 @@
         },
         "poolRouter": {
             "contractName": "PoolsharkRouter",
-            "contractAddress": "0xa6fc46d68fc05f0b68d0f79d548391e6d6a576ef",
+            "contractAddress": "0xee5856991f98204e10e1dc4571231708a0b7f20b",
             "constructorArguments": [
                 "0xd0219266568eae5c1eea960e3eacf1a1e149aab0",
-                "0xf8f75a39663e97d36da4be2882608513512f4cf0"
+                "0xf8f75a39663e97d36da4be2882608513512f4cf0",
+                "0x4cd24cddfd0b2adf3ef17a203bc34eaf650a380d"
             ],
-            "created": "2023-10-18T13:52:14.380Z"
+            "created": "2023-11-17T20:25:57.719Z"
         },
         "limitPool": {
             "contractName": "LimitPool",
-            "contractAddress": "0x0b77fb84d0f1485abc8d192bd6d8e1b68b957992",
+            "contractAddress": "0xeb6f3a17edba629a5ad3eeeff9af893c401d9f8a",
             "constructorArguments": [
                 "0x434f4e5354414e542d50524f4455435400000000000000000000000000000000",
                 "0x0BfaaAfa6e8fB009cD4e2Bd3693F2EEC2d18B053",
@@ -181,6 +182,12 @@
                 8
             ],
             "created": "2023-10-20T14:15:30.017Z"
+        },
+        "weth9": {
+            "contractName": "WETH9",
+            "contractAddress": "0x4cd24cddfd0b2adf3ef17a203bc34eaf650a380d",
+            "constructorArguments": [],
+            "created": "2023-11-06T13:28:54.430Z"
         }
     },
     "scrollSepolia": {

@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.13;
 
+import './interfaces/IPool.sol';
 import './interfaces/range/IRangePool.sol';
 import './interfaces/limit/ILimitPool.sol';
-import './interfaces/IPool.sol';
+import './interfaces/limit/ILimitPoolView.sol';
 import './interfaces/limit/ILimitPoolManager.sol';
 import './base/storage/LimitPoolStorage.sol';
 import './base/storage/LimitPoolImmutables.sol';
@@ -25,6 +26,8 @@ import './external/openzeppelin/security/ReentrancyGuard.sol';
 
 /// @notice Poolshark Limit Pool Implementation
 contract LimitPool is
+    ILimitPool,
+    ILimitPoolView,
     LimitPoolStorage,
     LimitPoolImmutables,
     ReentrancyGuard
@@ -225,7 +228,7 @@ contract LimitPool is
 
     function sample(
         uint32[] memory secondsAgo
-    ) external view
+    ) external view override
     returns(
         int56[]   memory tickSecondsAccum,
         uint160[] memory secondsPerLiquidityAccum,

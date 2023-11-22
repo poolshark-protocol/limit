@@ -97,7 +97,7 @@ contract PoolsharkRouter is
 
         // decode original msg.sender
         SwapCallbackData memory _data = abi.decode(data, (SwapCallbackData));
-        
+
         // transfer from swap caller
         if (amount0Delta < 0) {
             if (constants.token0 == wethAddress && _data.wrapped) {
@@ -761,7 +761,7 @@ contract PoolsharkRouter is
         if (amount > address(this).balance) require(false, 'WrapEth::LowEthBalance()');
         weth.deposit{value: amount}();
         // transfer weth into pool
-        SafeTransfers.transferOut(msg.sender, wethAddress, amount);  
+        SafeTransfers.transferOut(msg.sender, wethAddress, amount);
     }
 
     function unwrapEth(address recipient, uint256 amount) private {

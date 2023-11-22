@@ -61,8 +61,9 @@ library SwapCall {
         );
 
         // check balance requirements after callback
-        if (balance(params, cache) < balanceStart + cache.input)
-            require(false, 'SwapInputAmountTooLow()');
+        if (balance(params, cache) < balanceStart + cache.input) {
+           require(false, 'SwapInputAmountTooLow()');
+        }
 
         return (
             params.zeroForOne ? 

@@ -5,9 +5,8 @@ import '../../interfaces/structs/RangePoolStructs.sol';
 import '../../interfaces/structs/LimitPoolStructs.sol';
 import '../../interfaces/limit/ILimitPoolFactory.sol';
 import '../../interfaces/limit/ILimitPoolStorageView.sol';
-import '../../utils/LimitPoolErrors.sol';
 
-abstract contract LimitPoolStorage is ILimitPoolStorageView, RangePoolStructs, LimitPoolErrors {
+abstract contract LimitPoolStorage is ILimitPoolStorageView, RangePoolStructs {
     GlobalState public globalState; ///@dev - holds pool state and other contract storage
     TickMap public rangeTickMap; ///@dev - tick bitmap for range ticks
     TickMap public limitTickMap; ///@dev - tick bitmap for limit ticks

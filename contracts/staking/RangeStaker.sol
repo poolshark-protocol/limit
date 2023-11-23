@@ -12,6 +12,7 @@ import '../base/events/RangeStakerEvents.sol';
 import '../libraries/utils/SafeCast.sol';
 import '../libraries/utils/SafeTransfers.sol';
 import '../libraries/math/OverflowMath.sol';
+import 'hardhat/console.sol';
 
 /**
  * @dev Defines the actions which can be executed by the factory admin.
@@ -38,7 +39,7 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
     }
 
     struct RangeStakingParams {
-        address factory;
+        address limitPoolFactory;
         uint32 startTime;
         uint32 endTime;
     }
@@ -48,9 +49,10 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
     ) {
         owner = msg.sender;
         feeTo = msg.sender;
-        limitPoolFactory = params.factory;
+        limitPoolFactory = params.limitPoolFactory;
         startTimestamp = params.startTime;
         endTimestamp = params.endTime;
+        console.log('selector found:', uint32(RangeStaker.supportsInterface.selector));
     }
 
     struct StakeRangeLocals {
@@ -69,6 +71,9 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
         uint32 positionIdNext;
     }
 
+    // stakeRange called after mint completes
+    // to, pool, positionId (returned from mint)
+
     function stakeRange(StakeRangeParams memory params) external {
 
         StakeRangeLocals memory locals;
@@ -86,6 +91,7 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
         locals.constants = ILimitPoolView(params.pool).immutables();
         locals.stake.pool = params.pool;
         locals.poolToken = IPool(params.pool).poolToken();
+        console.log('stake encode:', params.to, locals.stake.pool, locals.stake.positionId);
         locals.stakeKey = keccak256(abi.encode(
             params.to,
             locals.stake.pool,
@@ -97,11 +103,14 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
 
         // check position exists
         if (!locals.stake.isStaked) {
+            console.log('pool callback', params.pool);
             (
                 ,,
                 locals.stake.liquidity,,
             ) = IRangePool(params.pool).positions(locals.stake.positionId);
+            console.log('position liquidity grabbed', params.pool);
         } else {
+            console.log('saved liquidity', rangeStakes[locals.stakeKey].liquidity);
             locals.stake.liquidity = rangeStakes[locals.stakeKey].liquidity;
         }
 
@@ -191,6 +200,8 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
             locals.stake.liquidity
         );
 
+        console.log('saving pool:', locals.stake.pool);
+
         // store position stake in mapping
         rangeStakes[locals.stakeKey] = locals.stake;
     }
@@ -202,12 +213,15 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
         locals.poolToken = IPool(params.pool).poolToken();
         locals.stakeKey = keccak256(abi.encode(
             msg.sender,
-            locals.stake.pool,
-            locals.stake.positionId
+            params.pool,
+            params.positionId
         ));
 
         // load previous stake
         locals.stake = rangeStakes[locals.stakeKey];
+
+        
+        console.log('unstake decode:', msg.sender, locals.stake.pool, locals.stake.positionId);
 
         if (locals.stake.pool == address(0)) {
             // range stake does not exist
@@ -414,8 +428,9 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
         if (feeTo != msg.sender) require (false, 'FeeToOnly()');
     }
 
-    function supportsInterface(bytes4 interfaceID) external pure returns (bool) {
-      return  interfaceID == 0x01ffc9a7 ||    // ERC-165 support
-              interfaceID == 0xd9b67a26;      // ERC-1155 support
+    function supportsInterface(bytes4 interfaceId) external view returns (bool) {
+      console.log('interface found');
+      return  interfaceId == 0x01ffc9a7 ||    // ERC-165 support
+              interfaceId == 0xd9b67a26;      // ERC-1155 support
     }
 }

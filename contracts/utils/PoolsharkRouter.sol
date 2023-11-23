@@ -16,6 +16,7 @@ import '../libraries/utils/SafeTransfers.sol';
 import '../libraries/utils/SafeCast.sol';
 import '../interfaces/structs/PoolsharkStructs.sol';
 import '../external/solady/LibClone.sol';
+import 'hardhat/console.sol';
 
 contract PoolsharkRouter is
     PoolsharkStructs,
@@ -45,9 +46,7 @@ contract PoolsharkRouter is
 
     struct MintRangeCallbackData {
         address sender;
-        address staker;
         address recipient;
-        uint32 positionId;
         bool wrapped;
     }
 
@@ -177,6 +176,7 @@ contract PoolsharkRouter is
         int256 amount1Delta,
         bytes calldata data
     ) external override {
+        console.log('mint range callback', uint256(-amount0Delta), uint256(-amount1Delta));
         PoolsharkStructs.LimitImmutables memory constants = ILimitPoolView(msg.sender).immutables();
 
         // validate sender is a canonical limit pool
@@ -184,15 +184,6 @@ contract PoolsharkRouter is
 
         // decode original sender
         MintRangeCallbackData memory _data = abi.decode(data, (MintRangeCallbackData));
-
-        // call staking contract if !address(0) and assign to recipient
-        if (_data.staker != address(0)) {
-            IRangeStaker(_data.staker).stake(StakeRangeParams({
-                to: _data.recipient,
-                pool: msg.sender,
-                positionId: _data.positionId // indicates latest position minted
-            }));
-        }
 
         // transfer from mint caller
         if (amount0Delta < 0) {
@@ -293,21 +284,31 @@ contract PoolsharkRouter is
     ) external payable {
         if (pools.length != params.length) require(false, 'InputArrayLengthsMismatch()');
         for (uint i = 0; i < pools.length;) {
+            address staker;
             {
                 MintRangeCallbackData memory callbackData = MintRangeCallbackData({
                     sender: msg.sender,
                     recipient: params[i].to,
-                    staker: abi.decode(params[i].callbackData, (MintRangeInputData)).staker,
-                    positionId: params[i].positionId,
                     wrapped: msg.value > 0
                 });
+                staker = abi.decode(params[i].callbackData, (MintRangeInputData)).staker; 
+                if (staker != address(0)) {
+                    params[i].to = staker;
+                }
+                console.log('staker address router', abi.decode(params[i].callbackData, (MintRangeInputData)).staker);
                 params[i].callbackData = abi.encode(callbackData);
-                if (callbackData.staker != address(0))
-                    // mint range position to staking contract
-                    params[i].to = callbackData.staker;
+                console.log('params.to address:', params[i].to);
             }
-            try IRangePool(pools[i]).mintRange(params[i]) {
-            } catch {}
+            IRangePool(pools[i]).mintRange(params[i]);
+            if (staker != address(0)) {
+                IRangeStaker(staker).stakeRange(StakeRangeParams({
+                    to: abi.decode(params[i].callbackData, (MintRangeCallbackData)).recipient,
+                    pool: pools[i],
+                    positionId: params[i].positionId
+                }));
+            }
+            // call to staking contract using positionId returned from mintRange
+            // fees and staked position will go to params.to
             unchecked {
                 ++i;
             }
@@ -488,16 +489,26 @@ contract PoolsharkRouter is
         }
         // mint initial range positions
         for (uint i = 0; i < mintRangeParams.length;) {
+            address staker;
             mintRangeParams[i].positionId = 0;
             mintRangeParams[i].callbackData = abi.encode(MintRangeCallbackData({
                 sender: msg.sender,
                 recipient: mintRangeParams[i].to,
-                staker: abi.decode(mintRangeParams[i].callbackData, (MintRangeInputData)).staker,
-                positionId: 0, // new position
                 wrapped: msg.value > 0
             }));
+            staker = abi.decode(mintRangeParams[i].callbackData, (MintRangeInputData)).staker; 
+            if (staker != address(0)) {
+                mintRangeParams[i].to = staker;
+            }
             try IRangePool(pool).mintRange(mintRangeParams[i]) {
             } catch {}
+            if (staker != address(0)) {
+                IRangeStaker(staker).stakeRange(StakeRangeParams({
+                    to: abi.decode(mintRangeParams[i].callbackData, (MintRangeCallbackData)).recipient,
+                    pool: pool,
+                    positionId: 0
+                }));
+            }
             unchecked {
                 ++i;
             }

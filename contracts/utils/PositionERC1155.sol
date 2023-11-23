@@ -7,6 +7,7 @@ import '../base/storage/PositionERC1155Immutables.sol';
 import "../interfaces/IPositionERC1155.sol";
 import '../external/solady/LibClone.sol';
 import '../libraries/utils/String.sol';
+import 'hardhat/console.sol';
 
 // needs to be deployed as a separate clone
 // poolImpls; tokenImpls
@@ -312,9 +313,10 @@ contract PositionERC1155 is
         if (_target.code.length == 0) return true;
         bytes memory encodedParams = abi.encodeWithSelector(
             IERC165.supportsInterface.selector,
-            0xd9b67a26 // ERC-1155 support
+            bytes4(0xd9b67a26) // ERC-1155 support
         );
         (bool success, bytes memory result) = _target.staticcall{gas: 30_000}(encodedParams);
+        console.log('supportsInterface results:', uint32(IERC165.supportsInterface.selector), success, result.length);
         if (result.length < 32) return false;
         return success && abi.decode(result, (bool));
     }

@@ -211,7 +211,6 @@ library Claims {
         locals.searchTick = params.claim;
         if (params.zeroForOne) {
             for (uint i=0; i < maxWordsSearched;) {
-                // push ticks from up to 2 storage slots onto array
                 (locals.ticksFound, locals.ticksIncluded, locals.searchTick) = TickMap.nextTicksWithinWord(
                     tickMap,
                     locals.searchTick,
@@ -220,8 +219,7 @@ library Claims {
                     locals.ticksFound,
                     locals.ticksIncluded
                 );
-                // console.log('ticks found:', locals.ticksIncluded, uint24(locals.ticksFound[locals.ticksIncluded - 1]), uint24(locals.searchTick));
-                // if searchTick exists and is within range add to ticksFound
+                // add start of next word if tick exists and is within range
                 if (locals.searchTick < cache.position.upper && TickMap.get(tickMap, locals.searchTick, cache.constants.tickSpacing)) {
                     locals.ticksFound[locals.ticksIncluded] = locals.searchTick;
                     unchecked {
@@ -247,8 +245,7 @@ library Claims {
                     locals.ticksFound,
                     locals.ticksIncluded
                 );
-                // console.log('ticks found:', locals.ticksIncluded, uint24(locals.ticksFound[locals.ticksIncluded - 1]), uint24(locals.searchTick));
-                // if searchTick exists and is within range add to ticksFound
+                // add start of next word if tick exists and is within range
                 if (locals.searchTick > cache.position.lower && TickMap.get(tickMap, locals.searchTick, cache.constants.tickSpacing)) {
                     locals.ticksFound[locals.ticksIncluded] = locals.searchTick;
                     unchecked {

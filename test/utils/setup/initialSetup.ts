@@ -2,7 +2,7 @@ import { SUPPORTED_NETWORKS } from '../../../scripts/constants/supportedNetworks
 import { DeployAssist } from '../../../scripts/util/deployAssist'
 import { ContractDeploymentsKeys } from '../../../scripts/util/files/contractDeploymentKeys'
 import { ContractDeploymentsJson } from '../../../scripts/util/files/contractDeploymentsJson'
-import { BurnLimitCall__factory, LimitPool__factory, MintLimitCall__factory, LimitPositions__factory, QuoteCall__factory, PositionERC1155__factory, LimitTicks__factory, FeesCall__factory, SampleCall__factory, SnapshotRangeCall__factory, SnapshotLimitCall__factory, WETH9__factory } from '../../../typechain'
+import { BurnLimitCall__factory, LimitPool__factory, MintLimitCall__factory, LimitPositions__factory, QuoteCall__factory, PositionERC1155__factory, LimitTicks__factory, FeesCall__factory, SampleCall__factory, SnapshotRangeCall__factory, SnapshotLimitCall__factory, WETH9__factory, RangeStaker, RangeStaker__factory } from '../../../typechain'
 import { BurnRangeCall__factory } from '../../../typechain'
 import { SwapCall__factory } from '../../../typechain'
 import { MintRangeCall__factory } from '../../../typechain'
@@ -32,6 +32,7 @@ export class InitialSetup {
     private deployTokens = false
     private deployPools = false
     private deployContracts = false
+    private deployStaker = false
 
     constructor() {
         this.deployAssist = new DeployAssist()
@@ -493,6 +494,35 @@ export class InitialSetup {
                   weth9Address
                 ]
             )
+        }
+        if (hre.network.name == 'hardhat' || this.deployStaker) {
+            let limitPoolFactoryAddress;
+            if (hre.network.name == 'hardhat') {
+                limitPoolFactoryAddress = hre.props.limitPoolFactory.address
+            } else {
+                limitPoolFactoryAddress = (
+                    await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
+                        {
+                            networkName: hre.network.name,
+                            objectName: 'limitPoolFactory',
+                        },
+                        'readLimitPoolSetup'
+                    )
+                ).contractAddress 
+            }
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                RangeStaker__factory,
+                'rangeStaker',
+                [
+                    {
+                        limitPoolFactory: limitPoolFactoryAddress,
+                        startTime: 0,
+                        endTime: 2000707154
+                    }
+                ]
+            )   
         }
         return hre.nonce
     }

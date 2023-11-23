@@ -47,7 +47,7 @@ interface IRangePool is RangePoolStructs {
         int24 averageTick
     );
 
-    function positions(uint32) external view returns (
+    function positions(uint256 positionId) external view returns (
         uint256 feeGrowthInside0Last,
         uint256 feeGrowthInside1Last,
         uint128 liquidity,

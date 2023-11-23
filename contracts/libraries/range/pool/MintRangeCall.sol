@@ -5,7 +5,6 @@ import '../../../interfaces/structs/RangePoolStructs.sol';
 import '../../../interfaces/callbacks/ILimitPoolCallback.sol';
 import '../../../interfaces/IERC20Minimal.sol';
 import '../../utils/SafeTransfers.sol';
-import '../../utils/Bytes.sol';
 import '../../utils/Collect.sol';
 import '../../utils/PositionTokens.sol';
 import '../RangePositions.sol';
@@ -47,7 +46,7 @@ library MintRangeCall {
         if (params.positionId > 0) {
             cache.position = positions[params.positionId];
             // existing position
-            cache.owner = Bytes.getSender(params.callbackData, 0);
+            cache.owner = params.to;
             // require balance held for existing position
             if (PositionTokens.balanceOf(cache.constants, cache.owner, params.positionId) == 0)
                 require(false, 'PositionOwnerMismatch()');
@@ -57,8 +56,8 @@ library MintRangeCall {
             // update existing position
             (
                 cache.position,
-                cache.amount0,
-                cache.amount1
+                cache.feesAccrued0,
+                cache.feesAccrued1
             ) = RangePositions.update(
                     ticks,
                     cache.position,
@@ -99,8 +98,8 @@ library MintRangeCall {
             cache.position.upper,
             params.positionId,
             cache.liquidityMinted.toUint128(),
-            -cache.amount0, /// @dev - emit balance delta from pool POV
-            -cache.amount1
+            -(cache.amount0 + cache.feesAccrued0), /// @dev - emit token0 balance delta
+            -(cache.amount1 + cache.feesAccrued1)  /// @dev - emit token1 balance delta
         );
 
         // update position with latest fees accrued
@@ -116,12 +115,12 @@ library MintRangeCall {
         save(positions, globalState, cache, params.positionId);
 
         // transfer positive amounts back to user
-        if (cache.amount0 > 0 || cache.amount1 > 0)
+        if (cache.feesAccrued0 > 0 || cache.feesAccrued1 > 0)
             Collect.range(
                 cache.constants,
                 cache.owner,
-                cache.amount0,
-                cache.amount1
+                cache.feesAccrued0,
+                cache.feesAccrued1
             );
 
         // check starting balances

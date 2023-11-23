@@ -2,7 +2,8 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { expect } from 'chai'
 import { BigNumber, Contract } from 'ethers'
 import { LimitPool, PositionERC1155 } from '../../../typechain'
-import { BN_ONE, RangePoolState, RangeTick, Tick } from './limitpool'
+import { BN_ONE, RangePoolState, RangeStake, RangeTick, Tick } from './limitpool'
+import { getMintRangeInputData } from './poolsharkrouter'
 
 export const Q64x96 = BigNumber.from('2').pow(96)
 export const BN_ZERO = BigNumber.from('0')
@@ -86,6 +87,7 @@ export interface ValidateBurnParams {
   revertMessage: string
   poolContract?: LimitPool
   poolTokenContract?: PositionERC1155
+  staked?: boolean
 }
 
 export interface ValidateStakeParams {
@@ -352,7 +354,6 @@ export async function validateMint(params: ValidateMintParams): Promise<number> 
   positionBefore = await poolContract.positions(positionId)
   positionTokens = await hre.ethers.getContractAt('PositionERC1155', poolTokenContract.address);
   positionTokenBalanceBefore = await positionTokens.balanceOf(stake ? hre.props.rangeStaker.address : signer.address, expectedPositionId);
-  console.log('staker address sent in', hre.props.rangeStaker.address)
   if (params.positionId)
     expect(positionTokenBalanceBefore).to.be.equal(1)
   if (revertMessage == '') {
@@ -368,27 +369,7 @@ export async function validateMint(params: ValidateMintParams): Promise<number> 
             positionId: positionId,
             amount0: amount0,
             amount1: amount1,
-            callbackData: !stake ? ethers.utils.formatBytes32String('')
-                                 : ethers.utils.defaultAbiCoder.encode(
-                                  [
-                                    {
-                                      components: [
-                                        {
-                                          internalType: "address",
-                                          name: "staker",
-                                          type: "address",
-                                        },
-                                      ],
-                                      name: "params",
-                                      type: "tuple",
-                                    }
-                                  ],
-                                  [
-                                    {
-                                      staker: hre.props.rangeStaker.address
-                                    }
-                                  ]
-                                  )
+            callbackData: getMintRangeInputData(stake),
           }
         ], {gasLimit: 3_000_000})
     await txn.wait()
@@ -406,11 +387,7 @@ export async function validateMint(params: ValidateMintParams): Promise<number> 
             positionId: positionId,
             amount0: amount0,
             amount1: amount1,
-            callbackData: !stake ? ethers.utils.formatBytes32String('') 
-                          : ethers.utils.defaultAbiCoder.encode(
-                              ["address"], // encode as address array
-                              [ [hre.props.rangeStaker.address] ]
-                            )
+            callbackData: getMintRangeInputData(stake),
           }
         ])
     ).to.be.revertedWith(revertMessage)
@@ -443,6 +420,20 @@ export async function validateMint(params: ValidateMintParams): Promise<number> 
     BN_ZERO.sub(liquidityIncrease)
   )
   expect(positionAfter.liquidity.sub(positionBefore.liquidity)).to.be.equal(liquidityIncrease)
+  if (stake) {
+    // check fg0/1 and liquidity match
+    const stakeKey = ethers.utils.keccak256(ethers.utils.defaultAbiCoder.encode(
+      ["address", "address", "uint32"], // encode as address array
+      [ recipient, poolContract.address, expectedPositionId ]
+    ))
+    const rangeStake: RangeStake = await hre.props.rangeStaker.rangeStakes(stakeKey)
+    expect(positionAfter.feeGrowthInside0Last).to.be.equal(rangeStake.feeGrowthInside0Last)
+    expect(positionAfter.feeGrowthInside1Last).to.be.equal(rangeStake.feeGrowthInside1Last)
+    expect(positionAfter.liquidity).to.be.equal(rangeStake.liquidity)
+    expect(rangeStake.positionId).to.be.equal(expectedPositionId)
+    expect(rangeStake.pool).to.be.equal(poolContract.address)
+    expect(rangeStake.isStaked).to.be.equal(true)
+  }
   return expectedPositionId
 }
 
@@ -456,6 +447,7 @@ export async function validateBurn(params: ValidateBurnParams) {
   const revertMessage = params.revertMessage
   const poolContract = params.poolContract ?? hre.props.limitPool
   const poolTokenContract = params.poolTokenContract ?? hre.props.limitPoolToken
+  const staked = params.staked ?? false
 
   let balance0Before
   let balance1Before
@@ -474,7 +466,7 @@ export async function validateBurn(params: ValidateBurnParams) {
   upperTickBefore = (await poolContract.ticks(upper)).range
   // check position token balance
   positionToken = poolTokenContract
-  positionTokenBalanceBefore = await positionToken.balanceOf(signer.address, params.positionId);
+  positionTokenBalanceBefore = await positionToken.balanceOf(staked ? hre.props.rangeStaker.address : signer.address, params.positionId);
   positionBefore = await poolContract.positions(params.positionId)
   let burnPercent = params.burnPercent
   let positionSnapshot: [BigNumber, BigNumber, BigNumber, BigNumber]
@@ -487,13 +479,23 @@ export async function validateBurn(params: ValidateBurnParams) {
 
   if (revertMessage == '') {
     positionSnapshot = await poolContract.snapshotRange(params.positionId)
-    const burnTxn = await poolContract
+    const burnTxn = !staked ? await poolContract
       .connect(signer)
       .burnRange({
         to: params.signer.address,
         positionId: params.positionId,
         burnPercent: burnPercent
     })
+    : await hre.props.rangeStaker
+    .connect(signer)
+    .burnRangeStake(
+      poolContract.address,
+      {
+        to: params.signer.address,
+        positionId: params.positionId,
+        burnPercent: burnPercent
+      }
+    )
     await burnTxn.wait()
   } else {
     await expect(
@@ -521,7 +523,7 @@ export async function validateBurn(params: ValidateBurnParams) {
   lowerTickAfter = (await poolContract.ticks(lower)).range
   upperTickAfter = (await poolContract.ticks(upper)).range
   // check position token balance after
-  positionTokenBalanceAfter = await positionToken.balanceOf(signer.address, params.positionId);
+  positionTokenBalanceAfter = await positionToken.balanceOf(staked ? hre.props.rangeStaker.address : signer.address, params.positionId);
   positionAfter = await poolContract.positions(params.positionId)
   if (burnPercent.eq(ethers.utils.parseUnits('1', 38)))
     expect(positionTokenBalanceAfter.sub(positionTokenBalanceBefore)).to.be.equal(-1)
@@ -569,7 +571,8 @@ export async function validateStake(params: ValidateStakeParams) {
       .stakeRange({
         to: params.recipient,
         pool: hre.props.limitPool.address,
-        positionId: params.positionId
+        positionId: params.positionId,
+        isMint: false
     })
     await unstakeTxn.wait()
   } else {
@@ -578,7 +581,8 @@ export async function validateStake(params: ValidateStakeParams) {
       .stakeRange({
         to: params.recipient,
         pool: hre.props.limitPool.address,
-        positionId: params.positionId
+        positionId: params.positionId,
+        isMint: false
     })
     ).to.be.revertedWith(revertMessage)
     return

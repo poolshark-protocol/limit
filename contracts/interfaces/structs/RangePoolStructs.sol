@@ -48,6 +48,8 @@ interface RangePoolStructs is PoolsharkStructs {
         uint160 priceUpper;
         int128 amount0;
         int128 amount1;
+        int128 feesAccrued0;
+        int128 feesAccrued1;
     }
 
     struct BurnRangeCache {

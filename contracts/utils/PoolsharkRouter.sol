@@ -16,7 +16,6 @@ import '../libraries/utils/SafeTransfers.sol';
 import '../libraries/utils/SafeCast.sol';
 import '../interfaces/structs/PoolsharkStructs.sol';
 import '../external/solady/LibClone.sol';
-import 'hardhat/console.sol';
 
 contract PoolsharkRouter is
     PoolsharkStructs,
@@ -176,7 +175,6 @@ contract PoolsharkRouter is
         int256 amount1Delta,
         bytes calldata data
     ) external override {
-        console.log('mint range callback', uint256(-amount0Delta), uint256(-amount1Delta));
         PoolsharkStructs.LimitImmutables memory constants = ILimitPoolView(msg.sender).immutables();
 
         // validate sender is a canonical limit pool
@@ -295,16 +293,15 @@ contract PoolsharkRouter is
                 if (staker != address(0)) {
                     params[i].to = staker;
                 }
-                console.log('staker address router', abi.decode(params[i].callbackData, (MintRangeInputData)).staker);
                 params[i].callbackData = abi.encode(callbackData);
-                console.log('params.to address:', params[i].to);
             }
             IRangePool(pools[i]).mintRange(params[i]);
             if (staker != address(0)) {
                 IRangeStaker(staker).stakeRange(StakeRangeParams({
                     to: abi.decode(params[i].callbackData, (MintRangeCallbackData)).recipient,
                     pool: pools[i],
-                    positionId: params[i].positionId
+                    positionId: params[i].positionId,
+                    isMint: true
                 }));
             }
             // call to staking contract using positionId returned from mintRange
@@ -506,7 +503,8 @@ contract PoolsharkRouter is
                 IRangeStaker(staker).stakeRange(StakeRangeParams({
                     to: abi.decode(mintRangeParams[i].callbackData, (MintRangeCallbackData)).recipient,
                     pool: pool,
-                    positionId: 0
+                    positionId: 0,
+                    isMint: true
                 }));
             }
             unchecked {

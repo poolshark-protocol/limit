@@ -77,6 +77,15 @@ export interface RangeTick {
     tickSecondsAccumOutside: BigNumber
 }
 
+export interface RangeStake {
+    pool: string
+    feeGrowthInside0Last: BigNumber
+    feeGrowthInside1Last: BigNumber
+    liquidity: BigNumber
+    positionId: number
+    isStaked: boolean
+}
+
 export interface LimitTick {
     priceAt: BigNumber
     liquidityDelta: BigNumber

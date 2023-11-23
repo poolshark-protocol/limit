@@ -22,7 +22,7 @@ import {
 import { gBefore } from '../../utils/hooks.test'
 
 alice: SignerWithAddress
-describe('WethPool Tests', function () {
+describe('RangeStaker Tests', function () {
     let tokenAmount: string
     let tokenAmountBn: BigNumber
     let token0Decimals: number
@@ -91,7 +91,6 @@ describe('WethPool Tests', function () {
             balanceOutIncrease: '0',
             revertMessage: '',
         })
-        console.log('limit pool address:', hre.props.limitPool.address)
         const aliceId = await validateMint({
           signer: hre.props.alice,
           recipient: hre.props.alice.address,
@@ -149,7 +148,7 @@ describe('WethPool Tests', function () {
         // advance past end time
     })
 
-    it.only('pool0 - Should mint, then stake separately, then unstake and burn', async function () {
+    it('pool0 - Should mint, then stake separately, then unstake and burn', async function () {
         const aliceLiquidity = BigNumber.from('419027207938949970576')
         await validateSwap({
             signer: hre.props.alice,
@@ -161,7 +160,6 @@ describe('WethPool Tests', function () {
             balanceOutIncrease: '0',
             revertMessage: '',
         })
-        console.log('limit pool address:', hre.props.limitPool.address)
         const aliceId = await validateMint({
           signer: hre.props.alice,
           recipient: hre.props.alice.address,
@@ -226,9 +224,141 @@ describe('WethPool Tests', function () {
             balance1Increase: BN_ZERO,
             revertMessage: '',
         })
-        6+
-        // earn fees and mint a second time
+        // burn half of staked position
+    })
+
+    it('pool0 - Should mint, then mint again and return fees to position owner', async function () {
+        const aliceLiquidity = BigNumber.from('419027207938949970576')
+        const aliceLiquidity2 = BigNumber.from('459844046199927274765')
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: true,
+            amountIn: BigNumber.from(tokenAmount),
+            priceLimit: BigNumber.from('79450223072165328185028130650'),
+            balanceInDecrease: '0',
+            balanceOutIncrease: '0',
+            revertMessage: '',
+        })
+        const aliceId = await validateMint({
+          signer: hre.props.alice,
+          recipient: hre.props.alice.address,
+          lower: '10000',
+          upper: '20000',
+          amount0: BigNumber.from(tokenAmount),
+          amount1: BigNumber.from(tokenAmount),
+          balance0Decrease: BigNumber.from('100000000000000000000'),
+          balance1Decrease: BigNumber.from('0'),
+          liquidityIncrease: aliceLiquidity,
+          revertMessage: '',
+          collectRevertMessage: '',
+          stake: true
+        })
+
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: false,
+            amountIn: BigNumber.from(tokenAmount).div(4),
+            priceLimit: maxPrice,
+            balanceInDecrease: '25000000000000000000',
+            balanceOutIncrease: '8871796901358525748',
+            revertMessage: '',
+        })
+
+        // on second mint we have updated liquidity
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '10000',
+            upper: '20000',
+            positionId: aliceId,
+            amount0: BigNumber.from(tokenAmount),
+            amount1: BigNumber.from(tokenAmount),
+            balance0Decrease: BigNumber.from('99995561882490566021'),
+            balance1Decrease: BigNumber.from('27435214079638242718'),
+            liquidityIncrease: aliceLiquidity2,
+            revertMessage: '',
+            collectRevertMessage: '',
+            stake: true
+        })
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '10000',
+            upper: '20000',
+            positionId: aliceId,
+            liquidityAmount: aliceLiquidity.add(aliceLiquidity2),
+            balance0Increase: BigNumber.from('191123764981132040271'),
+            balance1Increase: BigNumber.from('52435214079638242717'),
+            revertMessage: '',
+            staked: true
+        })
         // burn half of staked position
         // advance past end time
     })
+
+    it('pool0 - Should mint, then mint again and return fees to position owner', async function () {
+        const aliceLiquidity = BigNumber.from('419027207938949970576')
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: true,
+            amountIn: BigNumber.from(tokenAmount),
+            priceLimit: BigNumber.from('79450223072165328185028130650'),
+            balanceInDecrease: '0',
+            balanceOutIncrease: '0',
+            revertMessage: '',
+        })
+        const aliceId = await validateMint({
+          signer: hre.props.alice,
+          recipient: hre.props.alice.address,
+          lower: '10000',
+          upper: '20000',
+          amount0: BigNumber.from(tokenAmount),
+          amount1: BigNumber.from(tokenAmount),
+          balance0Decrease: BigNumber.from('100000000000000000000'),
+          balance1Decrease: BigNumber.from('0'),
+          liquidityIncrease: aliceLiquidity,
+          revertMessage: '',
+          collectRevertMessage: '',
+          stake: true
+        })
+
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: false,
+            amountIn: BigNumber.from(tokenAmount).div(4),
+            priceLimit: maxPrice,
+            balanceInDecrease: '25000000000000000000',
+            balanceOutIncrease: '8871796901358525748',
+            revertMessage: '',
+        })
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '10000',
+            upper: '20000',
+            positionId: aliceId,
+            liquidityAmount: aliceLiquidity.div(2),
+            balance0Increase: BigNumber.from('45566320608075454114'),
+            balance1Increase: BigNumber.from('12499999999999999999'),
+            revertMessage: '',
+            staked: true
+        })
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '10000',
+            upper: '20000',
+            positionId: aliceId,
+            liquidityAmount: aliceLiquidity.div(2),
+            burnPercent: ethers.utils.parseUnits('1', 38),
+            balance0Increase: BigNumber.from('45561882490566020135'),
+            balance1Increase: BigNumber.from('12499999999999999999'),
+            revertMessage: '',
+            staked: true
+        })
+    });
 })

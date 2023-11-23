@@ -12,7 +12,7 @@ import '../base/events/RangeStakerEvents.sol';
 import '../libraries/utils/SafeCast.sol';
 import '../libraries/utils/SafeTransfers.sol';
 import '../libraries/math/OverflowMath.sol';
-import 'hardhat/console.sol';
+import '../external/solady/LibClone.sol';
 
 /**
  * @dev Defines the actions which can be executed by the factory admin.
@@ -24,35 +24,50 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
     address public feeTo;
     address public owner;
     mapping(bytes32 => RangeStake) public rangeStakes;
+    mapping(address => TotalStake) public totalStakes;
+    mapping(bytes32 => RewardDistribution) public rewardDistributions;
+    mapping(bytes32 => bool) public rewardsClaimed;
 
     using SafeCast for uint256;
 
     uint256 internal constant Q128 = 0x100000000000000000000000000000000;
 
+    struct TotalStake {
+        uint128 feeGrowth0AccruedTotal;
+        uint128 feeGrowth1AccruedTotal;
+    }
+
     struct RangeStake {
         address pool;
         uint256 feeGrowthInside0Last;
         uint256 feeGrowthInside1Last;
+        uint128 feeGrowth0Accrued;
+        uint128 feeGrowth1Accrued;
         uint128 liquidity;
         uint32 positionId;
         bool isStaked;
     }
 
-    struct RangeStakingParams {
+    struct RewardDistribution {
+        address pool;
+        address token;
+        uint256 tokenAmount;
+    }
+
+    struct RangeStakerParams {
         address limitPoolFactory;
         uint32 startTime;
         uint32 endTime;
     }
 
     constructor(
-        RangeStakingParams memory params
+        RangeStakerParams memory params
     ) {
         owner = msg.sender;
         feeTo = msg.sender;
         limitPoolFactory = params.limitPoolFactory;
         startTimestamp = params.startTime;
         endTimestamp = params.endTime;
-        console.log('selector found:', uint32(RangeStaker.supportsInterface.selector));
     }
 
     struct StakeRangeLocals {
@@ -67,21 +82,24 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
         uint256 positionBalance;
         uint256 token0Balance;
         uint256 token1Balance;
-        uint128 positionLiquidity;
+        uint128 newPositionLiquidity;
         uint32 positionIdNext;
     }
 
-    // stakeRange called after mint completes
-    // to, pool, positionId (returned from mint)
-
     function stakeRange(StakeRangeParams memory params) external {
+
+        // load pool constants
+        PoolsharkStructs.LimitImmutables memory constants = ILimitPoolView(params.pool).immutables();
+        
+        // validate deterministic address
+        canonicalLimitPoolsOnly(params.pool, constants);
 
         StakeRangeLocals memory locals;
 
-        if (params.positionId != 0)
+        if (params.positionId != 0) {
             // use positionId passed in
             locals.stake.positionId = params.positionId;
-        else {
+        } else {
             // grab positionIdNext from pool
             (,,,,locals.positionIdNext,,) = ILimitPoolStorageView(params.pool).globalState();
             locals.stake.positionId = locals.positionIdNext - 1;
@@ -91,7 +109,6 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
         locals.constants = ILimitPoolView(params.pool).immutables();
         locals.stake.pool = params.pool;
         locals.poolToken = IPool(params.pool).poolToken();
-        console.log('stake encode:', params.to, locals.stake.pool, locals.stake.positionId);
         locals.stakeKey = keccak256(abi.encode(
             params.to,
             locals.stake.pool,
@@ -100,17 +117,22 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
 
         // load previous fee growth and staked flag
         locals.stake.isStaked = rangeStakes[locals.stakeKey].isStaked;
+        locals.stake.feeGrowth0Accrued = rangeStakes[locals.stakeKey].feeGrowth0Accrued;
+        locals.stake.feeGrowth1Accrued = rangeStakes[locals.stakeKey].feeGrowth1Accrued;
 
         // check position exists
         if (!locals.stake.isStaked) {
-            console.log('pool callback', params.pool);
+            // if old position and staking through mint revert
+            if (params.positionId != 0 && params.isMint) {
+                /// @dev - this avoids fees earned being lost since
+                /// we do not have the previous fee growth 
+                require(false, 'RangeStake::SecondMintAndStakeMustBeSeparate()');
+            }
             (
                 ,,
                 locals.stake.liquidity,,
             ) = IRangePool(params.pool).positions(locals.stake.positionId);
-            console.log('position liquidity grabbed', params.pool);
         } else {
-            console.log('saved liquidity', rangeStakes[locals.stakeKey].liquidity);
             locals.stake.liquidity = rangeStakes[locals.stakeKey].liquidity;
         }
 
@@ -130,14 +152,6 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
                 1
             );
         }
- 
-        // ensure fees go to position owner
-        locals.token0Balance = IERC20(locals.constants.token0).balanceOf(address(this));
-        locals.token1Balance = IERC20(locals.constants.token1).balanceOf(address(this));
-        if (locals.token0Balance > 0)
-            SafeTransfers.transferOut(params.to, locals.constants.token0, locals.token0Balance);
-        if (locals.token1Balance > 0)
-            SafeTransfers.transferOut(params.to, locals.constants.token1, locals.token1Balance);
 
         // start tracking fee growth from after compound
         if (!locals.stake.isStaked) {
@@ -168,21 +182,37 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
             (
                 locals.stake.feeGrowthInside0Last,
                 locals.stake.feeGrowthInside1Last,
-                locals.stake.liquidity,,
+                locals.newPositionLiquidity,,
             ) = IRangePool(params.pool).positions(params.positionId);
 
+            // increment fee growth accrued if inside reward period
+            locals.feeGrowth0Accrued = OverflowMath.mulDiv(
+                locals.stake.feeGrowthInside0Last - locals.feeGrowthInside0Start,
+                locals.stake.liquidity,
+                Q128
+            );
+            locals.feeGrowth1Accrued = OverflowMath.mulDiv(
+                locals.stake.feeGrowthInside1Last - locals.feeGrowthInside1Start,
+                locals.stake.liquidity,
+                Q128
+            );
+            // transfer fees earned to owner
+            if (locals.feeGrowth0Accrued > 0)
+                SafeTransfers.transferOut(params.to, locals.constants.token0, locals.feeGrowth0Accrued);
+            if (locals.feeGrowth1Accrued > 0)
+                SafeTransfers.transferOut(params.to, locals.constants.token1, locals.feeGrowth1Accrued);
+
             if (block.timestamp < startTimestamp || block.timestamp >= endTimestamp) {
-                // increment fee growth accrued if inside reward period
-                locals.feeGrowth0Accrued = OverflowMath.mulDiv(
-                    locals.stake.feeGrowthInside0Last - locals.feeGrowthInside0Start,
-                    locals.stake.liquidity,
-                    Q128
-                );
-                locals.feeGrowth1Accrued = OverflowMath.mulDiv(
-                    locals.stake.feeGrowthInside1Last - locals.feeGrowthInside1Start,
-                    locals.stake.liquidity,
-                    Q128
-                );
+                // increase range stake accrual
+                locals.stake.feeGrowth0Accrued += locals.feeGrowth0Accrued.toUint128();
+                locals.stake.feeGrowth1Accrued += locals.feeGrowth1Accrued.toUint128();
+                
+                // increase total stake accrual
+                TotalStake memory totalStake = totalStakes[locals.stake.pool];
+                totalStake.feeGrowth0AccruedTotal += locals.feeGrowth0Accrued.toUint128();
+                totalStake.feeGrowth1AccruedTotal += locals.feeGrowth1Accrued.toUint128();
+                totalStakes[locals.stake.pool] = totalStake;
+
                 emit StakeRangeAccrued(
                     locals.stake.pool,
                     locals.stake.positionId,
@@ -190,6 +220,9 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
                     locals.feeGrowth1Accrued
                 );
             }
+
+            // update position liquidity
+            locals.stake.liquidity = locals.newPositionLiquidity;
         }
 
         emit StakeRange(
@@ -200,13 +233,11 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
             locals.stake.liquidity
         );
 
-        console.log('saving pool:', locals.stake.pool);
-
         // store position stake in mapping
         rangeStakes[locals.stakeKey] = locals.stake;
     }
 
-    function unstakeRange(StakeRangeParams memory params) external {
+    function unstakeRange(UnstakeRangeParams memory params) external {
 
         StakeRangeLocals memory locals;
 
@@ -219,9 +250,6 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
 
         // load previous stake
         locals.stake = rangeStakes[locals.stakeKey];
-
-        
-        console.log('unstake decode:', msg.sender, locals.stake.pool, locals.stake.positionId);
 
         if (locals.stake.pool == address(0)) {
             // range stake does not exist
@@ -265,6 +293,17 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
                 locals.stake.liquidity,
                 Q128
             );
+
+            // increase range stake accrual
+            locals.stake.feeGrowth0Accrued += locals.feeGrowth0Accrued.toUint128();
+            locals.stake.feeGrowth1Accrued += locals.feeGrowth1Accrued.toUint128();
+            
+            // increase total stake accrual
+            TotalStake memory totalStake = totalStakes[locals.stake.pool];
+            totalStake.feeGrowth0AccruedTotal += locals.feeGrowth0Accrued.toUint128();
+            totalStake.feeGrowth1AccruedTotal += locals.feeGrowth1Accrued.toUint128();
+            totalStakes[locals.stake.pool] = totalStake;
+
             emit StakeRangeAccrued(
                 locals.stake.pool,
                 locals.stake.positionId,
@@ -301,8 +340,8 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
 
         locals.stakeKey = keccak256(abi.encode(
             msg.sender,
-            locals.stake.pool,
-            locals.stake.positionId
+            pool,
+            params.positionId
         ));
 
         // load previous stake
@@ -346,6 +385,17 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
                 locals.stake.liquidity,
                 Q128
             );
+
+            // increase range stake accrual
+            locals.stake.feeGrowth0Accrued += locals.feeGrowth0Accrued.toUint128();
+            locals.stake.feeGrowth1Accrued += locals.feeGrowth1Accrued.toUint128();
+            
+            // increase total stake accrual
+            TotalStake memory totalStake = totalStakes[locals.stake.pool];
+            totalStake.feeGrowth0AccruedTotal += locals.feeGrowth0Accrued.toUint128();
+            totalStake.feeGrowth1AccruedTotal += locals.feeGrowth1Accrued.toUint128();
+            totalStakes[locals.stake.pool] = totalStake;
+
             emit StakeRangeAccrued(
                 locals.stake.pool,
                 locals.stake.positionId,
@@ -428,9 +478,48 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
         if (feeTo != msg.sender) require (false, 'FeeToOnly()');
     }
 
-    function supportsInterface(bytes4 interfaceId) external view returns (bool) {
-      console.log('interface found');
+    function supportsInterface(bytes4 interfaceId) external pure returns (bool) {
       return  interfaceId == 0x01ffc9a7 ||    // ERC-165 support
               interfaceId == 0xd9b67a26;      // ERC-1155 support
+    }
+
+    function canonicalLimitPoolsOnly(
+        address pool,
+        PoolsharkStructs.LimitImmutables memory constants
+    ) private view {
+        // generate key for pool
+        bytes32 key = keccak256(abi.encode(
+            constants.poolImpl,
+            constants.token0,
+            constants.token1,
+            constants.swapFee
+        ));
+
+        // compute address
+        address predictedAddress = LibClone.predictDeterministicAddress(
+            constants.poolImpl,
+            encodeLimit(constants),
+            key,
+            limitPoolFactory
+        );
+
+        // revert on sender mismatch
+        if (pool != predictedAddress) require(false, 'InvalidCallerAddress()');
+    }
+
+    function encodeLimit(
+        LimitImmutables memory constants
+    ) private pure returns (bytes memory) {
+        return abi.encodePacked(
+                constants.owner,
+                constants.token0,
+                constants.token1,
+                constants.poolToken,
+                constants.bounds.min,
+                constants.bounds.max,
+                constants.genesisTime,
+                constants.tickSpacing,
+                constants.swapFee
+        );
     }
 }

@@ -16,6 +16,8 @@ import {
     validateBurn as validateBurnRange,
     validateMint,
     validateUnstake,
+    validateBurn,
+    validateStake,
 } from '../../utils/contracts/rangepool'
 import { gBefore } from '../../utils/hooks.test'
 
@@ -108,23 +110,125 @@ describe('WethPool Tests', function () {
         await validateUnstake({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
+            positionId: 2,
+            revertMessage: 'RangeUnstake::StakeNotFound()'
+        })
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '10000',
+            upper: '20000',
+            positionId: aliceId,
+            liquidityAmount: aliceLiquidity,
+            balance0Increase: BigNumber.from(tokenAmount).sub(1),
+            balance1Increase: BN_ZERO,
+            revertMessage: 'PositionNotFound()',
+        })
+
+        await validateUnstake({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
             positionId: aliceId,
             revertMessage: ''
         })
-        return
-    
-     //   if (debugMode) await getSample()
-        if (debugMode) await getRangeBalanceOf(hre.props.alice.address, aliceId)
-        if (debugMode) await getSnapshot(aliceId)
+
         await validateBurn({
+            signer: hre.props.alice,
+            lower: '10000',
+            upper: '20000',
+            positionId: aliceId,
+            liquidityAmount: aliceLiquidity,
+            balance0Increase: BigNumber.from(tokenAmount).sub(1),
+            balance1Increase: BN_ZERO,
+            revertMessage: '',
+        })
+
+        // mint and stake separately
+        // earn fees and mint a second time
+        // burn half of staked position
+        // advance past end time
+    })
+
+    it.only('pool0 - Should mint, then stake separately, then unstake and burn', async function () {
+        const aliceLiquidity = BigNumber.from('419027207938949970576')
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: true,
+            amountIn: BigNumber.from(tokenAmount),
+            priceLimit: BigNumber.from('79450223072165328185028130650'),
+            balanceInDecrease: '0',
+            balanceOutIncrease: '0',
+            revertMessage: '',
+        })
+        console.log('limit pool address:', hre.props.limitPool.address)
+        const aliceId = await validateMint({
           signer: hre.props.alice,
+          recipient: hre.props.alice.address,
           lower: '10000',
           upper: '20000',
-          positionId: aliceId,
-          liquidityAmount: aliceLiquidity,
-          balance0Increase: tokenAmount.sub(1),
-          balance1Increase: BN_ZERO,
+          amount0: BigNumber.from(tokenAmount),
+          amount1: BigNumber.from(tokenAmount),
+          balance0Decrease: BigNumber.from('100000000000000000000'),
+          balance1Decrease: BigNumber.from('0'),
+          liquidityIncrease: BigNumber.from(aliceLiquidity),
           revertMessage: '',
+          collectRevertMessage: '',
+          stake: false
         })
+
+        await validateStake({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            positionId: 10,
+            revertMessage: 'RangeStake::PositionNotFound()'
+        })
+
+        await validateUnstake({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            positionId: aliceId,
+            revertMessage: 'RangeUnstake::StakeNotFound()'
+        })
+
+        await validateStake({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            positionId: aliceId,
+            revertMessage: ''
+        })
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '10000',
+            upper: '20000',
+            positionId: aliceId,
+            liquidityAmount: aliceLiquidity,
+            balance0Increase: BigNumber.from(tokenAmount).sub(1),
+            balance1Increase: BN_ZERO,
+            revertMessage: 'PositionNotFound()',
+        })
+
+        await validateUnstake({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            positionId: aliceId,
+            revertMessage: ''
+        })
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '10000',
+            upper: '20000',
+            positionId: aliceId,
+            liquidityAmount: aliceLiquidity,
+            balance0Increase: BigNumber.from(tokenAmount).sub(1),
+            balance1Increase: BN_ZERO,
+            revertMessage: '',
+        })
+        6+
+        // earn fees and mint a second time
+        // burn half of staked position
+        // advance past end time
     })
 })

@@ -88,6 +88,17 @@ export interface ValidateBurnParams {
   poolTokenContract?: PositionERC1155
 }
 
+export interface ValidateStakeParams {
+  signer: SignerWithAddress
+  recipient: string
+  positionId: number
+  balance0Increase?: BigNumber
+  balance1Increase?: BigNumber
+  revertMessage: string
+  poolContract?: LimitPool
+  poolTokenContract?: PositionERC1155
+}
+
 export interface ValidateUnstakeParams {
   signer: SignerWithAddress
   recipient: string
@@ -521,6 +532,74 @@ export async function validateBurn(params: ValidateBurnParams) {
     liquidityAmount
   )
   expect(positionAfter.liquidity.sub(positionBefore.liquidity)).to.be.equal(BN_ZERO.sub(liquidityAmount))
+}
+
+export async function validateStake(params: ValidateStakeParams) {
+  const signer = params.signer
+  // let liquidityAmount = params.liquidityAmount
+  const balance0Increase = params.balance0Increase ?? BN_ZERO
+  const balance1Increase = params.balance1Increase ?? BN_ZERO
+  const revertMessage = params.revertMessage
+  const poolContract = params.poolContract ?? hre.props.limitPool
+  const poolTokenContract = hre.props.limitPoolToken
+
+  let balance0Before
+  let balance1Before
+  const token0 = await hre.ethers.getContractAt('Token20', await poolContract.token0())
+  const token1 = await hre.ethers.getContractAt('Token20', await poolContract.token1())
+  balance0Before = await token0.balanceOf(signer.address)
+  balance1Before = await token1.balanceOf(signer.address)
+
+  let lowerTickBefore: RangeTick
+  let upperTickBefore: RangeTick
+  let positionBefore: Position
+  let positionToken: PositionERC1155
+  let positionTokenBalanceBefore: BigNumber
+  let positionTokenTotalSupply: BigNumber
+  // check position token balance
+  positionToken = poolTokenContract
+  positionTokenBalanceBefore = await positionToken.balanceOf(hre.props.rangeStaker.address, params.positionId);
+  positionBefore = await poolContract.positions(params.positionId)
+  let positionSnapshot: [BigNumber, BigNumber, BigNumber, BigNumber]
+  const approveTxn = await poolTokenContract.connect(signer).setApprovalForAll(hre.props.rangeStaker.address, true)
+  if (revertMessage == '') {
+    positionSnapshot = await poolContract.snapshotRange(params.positionId)
+    const unstakeTxn = await hre.props.rangeStaker
+      .connect(signer)
+      .stakeRange({
+        to: params.recipient,
+        pool: hre.props.limitPool.address,
+        positionId: params.positionId
+    })
+    await unstakeTxn.wait()
+  } else {
+    await expect(
+      hre.props.rangeStaker.connect(signer)
+      .stakeRange({
+        to: params.recipient,
+        pool: hre.props.limitPool.address,
+        positionId: params.positionId
+    })
+    ).to.be.revertedWith(revertMessage)
+    return
+  }
+
+  let balance0After
+  let balance1After
+  balance0After = await token0.balanceOf(signer.address)
+  balance1After = await token1.balanceOf(signer.address)
+
+  expect(balance0After.sub(balance0Before)).to.be.equal(balance0Increase)
+  expect(balance1After.sub(balance1Before)).to.be.equal(balance1Increase)
+
+  let lowerTickAfter: RangeTick
+  let upperTickAfter: RangeTick
+  let positionAfter: Position
+  let positionTokenBalanceAfter: BigNumber
+  // check position token balance after
+  positionTokenBalanceAfter = await positionToken.balanceOf(hre.props.rangeStaker.address, params.positionId);
+  positionAfter = await poolContract.positions(params.positionId)
+  expect(positionTokenBalanceAfter.sub(positionTokenBalanceBefore)).to.be.equal(BN_ONE)
 }
 
 export async function validateUnstake(params: ValidateUnstakeParams) {

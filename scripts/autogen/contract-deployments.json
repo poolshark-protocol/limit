@@ -2,10 +2,10 @@
     "arb_goerli": {
         "token0": {
             "contractName": "Token20",
-            "contractAddress": "0x0BfaaAfa6e8fB009cD4e2Bd3693F2EEC2d18B053",
+            "contractAddress": "0x19bee8e887a5db5cf20a841eb4daacbcacf14b1b",
             "constructorArguments": [
-                "Wrapped Ether",
-                "WETH",
+                "Dai Stablecoin",
+                "DAI",
                 18
             ],
             "created": "2023-08-23T15:56:24.715Z"
@@ -14,9 +14,9 @@
             "contractName": "Token20",
             "contractAddress": "0xebff7a98149b4774c9743c5d1f382305fe5422c9",
             "constructorArguments": [
-                "Dai Stablecoin",
-                "DAI",
-                18
+                "USD Coin",
+                "USDC",
+                6
             ],
             "created": "2023-08-23T15:56:24.723Z"
         },

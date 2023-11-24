@@ -52,6 +52,7 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
         address pool;
         address token;
         uint256 tokenAmount;
+        uint160 averageSqrtPrice;
     }
 
     struct RangeStakerParams {
@@ -89,12 +90,11 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
     function stakeRange(StakeRangeParams memory params) external {
 
         // load pool constants
-        PoolsharkStructs.LimitImmutables memory constants = ILimitPoolView(params.pool).immutables();
+        StakeRangeLocals memory locals;
+        locals.constants = ILimitPoolView(params.pool).immutables();
         
         // validate deterministic address
-        canonicalLimitPoolsOnly(params.pool, constants);
-
-        StakeRangeLocals memory locals;
+        canonicalLimitPoolsOnly(params.pool, locals.constants);
 
         if (params.positionId != 0) {
             // use positionId passed in
@@ -106,7 +106,6 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
         }
 
         // stake info
-        locals.constants = ILimitPoolView(params.pool).immutables();
         locals.stake.pool = params.pool;
         locals.poolToken = IPool(params.pool).poolToken();
         locals.stakeKey = keccak256(abi.encode(

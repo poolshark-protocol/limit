@@ -29,10 +29,10 @@ export class InitialSetup {
 
     /// DEPLOY CONFIG
     private deployRouter = true
-    private deployTokens = false
-    private deployPools = false
-    private deployContracts = false
-    private deployStaker = false
+    private deployTokens = true
+    private deployPools = true
+    private deployContracts = true
+    private deployStaker = true
 
     constructor() {
         this.deployAssist = new DeployAssist()
@@ -71,7 +71,7 @@ export class InitialSetup {
                 // @ts-ignore
                 Token20__factory,
                 'tokenA',
-                ['ChainLink Token', 'LINK', this.token0Decimals]
+                ['Wrapped Ether', 'WETH', this.token0Decimals]
             )
         
             await this.deployAssist.deployContractWithRetry(
@@ -79,7 +79,7 @@ export class InitialSetup {
                 // @ts-ignore
                 Token20__factory,
                 'tokenB',
-                ['Wrapped BTC', 'WBTC', this.token1Decimals]
+                ['Dai Stablecoin', 'DAI', this.token1Decimals]
             )
     
             const tokenOrder = hre.props.tokenA.address.localeCompare(hre.props.tokenB.address) < 0

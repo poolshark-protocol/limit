@@ -4,8 +4,8 @@ import {
 } from '@graphprotocol/graph-ts'
 import { MintLimit } from "../../../generated/LimitPoolFactory/LimitPool"
 import { ONE_BI } from "../../constants/constants"
-import { BIGINT_ONE, convertTokenToDecimal } from "../utils/helpers"
-import { safeLoadBasePrice, safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadLimitPosition, safeLoadLimitTick, safeLoadToken, safeLoadTvlUpdateLog } from "../utils/loads"
+import { BIGDECIMAL_ZERO, BIGINT_ONE, BIGINT_ZERO, convertTokenToDecimal } from "../utils/helpers"
+import { safeLoadBasePrice, safeLoadHistoricalOrder, safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadLimitPosition, safeLoadLimitTick, safeLoadToken, safeLoadTvlUpdateLog } from "../utils/loads"
 import { findEthPerToken } from '../utils/price'
 import { updateDerivedTVLAmounts } from '../utils/tvl'
 
@@ -43,6 +43,21 @@ export function handleMintLimit(event: MintLimit): void {
     let upperTick = loadUpperTick.entity
     let tokenIn = loadTokenIn.entity
     let tokenOut = loadTokenOut.entity
+
+    let loadOrder = safeLoadHistoricalOrder(pool.id, zeroForOneParam, event.transaction.hash, pool.txnCount) // 9
+    let order = loadOrder.entity
+    order.id = poolAddress
+                .concat(zeroForOneParam.toString())
+                .concat(event.transaction.hash.toHex())
+                .concat(position.positionId.toString())
+    if (!loadOrder.exists) {
+        order.createdAtTimestamp = event.block.timestamp
+    }
+    order.amountIn = BIGDECIMAL_ZERO
+    order.amountOut = convertTokenToDecimal(amountFilledParam, tokenOut.decimals)
+    order.averagePrice = BIGDECIMAL_ZERO
+    order.usdValue = order.amountOut.times(tokenOut.usdPrice)
+    order.completed = false
 
     pool.txnCount = pool.txnCount.plus(ONE_BI)
     tokenIn.txnCount = tokenIn.txnCount.plus(ONE_BI)
@@ -82,7 +97,7 @@ export function handleMintLimit(event: MintLimit): void {
     pool.liquidityGlobal = pool.liquidityGlobal.plus(liquidityMintedParam)
     position.liquidity = position.liquidity.plus(liquidityMintedParam)
     position.amountIn = amountInParam
-    position.amountFilled = amountFilledParam
+    position.amountFilled = BIGINT_ZERO
 
     if (positionIdParam >= pool.positionIdNext) {
         pool.positionIdNext = positionIdParam.plus(BIGINT_ONE)
@@ -178,4 +193,5 @@ export function handleMintLimit(event: MintLimit): void {
     position.save() // 6
     tokenIn.save() // 7
     tokenOut.save() // 8
+    order.save() // 9
 }

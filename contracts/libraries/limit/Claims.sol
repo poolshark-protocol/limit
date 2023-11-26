@@ -169,7 +169,7 @@ library Claims {
             
             // claim amounts up to latest full tick crossed
             cache.amountIn += uint128(params.zeroForOne ? ConstantProduct.getDy(cache.position.liquidity, cache.priceLower, locals.pricePrevious, false)
-                                                                 : ConstantProduct.getDx(cache.position.liquidity, locals.pricePrevious, cache.priceUpper, false));
+                                                        : ConstantProduct.getDx(cache.position.liquidity, locals.pricePrevious, cache.priceUpper, false));
         }
         if (cache.liquidityBurned > 0) {
            // if tick hasn't been set back calculate amountIn

@@ -21,13 +21,6 @@ library RangeTicks {
     error InvalidPositionAmount();
     error InvalidPositionBounds();
 
-    event Initialize(
-        uint160 startPrice,
-        int24 tickAtPrice,
-        int24 minTick,
-        int24 maxTick
-    );
-
     event SyncRangeTick(
         uint200 feeGrowthOutside0,
         uint200 feeGrowthOutside1,

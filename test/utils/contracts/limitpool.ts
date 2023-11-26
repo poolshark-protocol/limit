@@ -79,6 +79,7 @@ export interface RangeTick {
 
 export interface RangeStake {
     pool: string
+    owner: string
     feeGrowthInside0Last: BigNumber
     feeGrowthInside1Last: BigNumber
     liquidity: BigNumber

@@ -84,6 +84,7 @@ type LimitPool @entity {
     tickSpacing: BigInt!
     factory: LimitPoolFactory!
     poolType: String!
+    poolToken: Bytes!
 
     liquidity: BigInt!
     liquidityGlobal: BigInt!
@@ -160,6 +161,7 @@ type RangePosition @entity {
     upper: BigInt!
     liquidity: BigInt!
     pool: LimitPool!
+    staked: Boolean!
 
     # creation stats
     createdAtTimestamp: BigInt!
@@ -316,5 +318,23 @@ type CompoundRangeLog @entity {
     pool: LimitPool!
     liquidityCompounded: BigInt!
     positionId: BigInt!
+}
+
+type HistoricalOrder @entity {
+    # poolAddress + zeroForOne + txnHash
+    id: ID!
+
+    pool: LimitPool!
+    zeroForOne: Boolean!
+    txnHash: Bytes!
+
+    amountIn: BigDecimal!
+    amountOut: BigDecimal!
+    averagePrice: BigDecimal!
+    createdAtTimestamp: BigInt!
+
+    usdValue: BigDecimal!
+
+    completed: Boolean!
 }
 

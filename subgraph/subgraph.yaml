@@ -8,9 +8,9 @@ dataSources:
     name: LimitPoolFactory
     network: arbitrum-goerli
     source:
-        address: '0xd0219266568eae5c1eea960e3eacf1a1e149aab0'
+        address: '0x1b215002e688135549cc0290d6cf1f94e3aa425c'
         abi: LimitPoolFactory
-        startBlock: 46812383
+        startBlock: 56821935
     mapping:
         kind: ethereum/events
         apiVersion: 0.0.6
@@ -37,9 +37,9 @@ dataSources:
     name: LimitPoolManager
     network: arbitrum-goerli
     source:
-        address: '0xcfe989b7d341ef9b766263a980adadd16d3d0ac9'
+        address: '0x6d3af137e75097b892683832a2c0132f99625d0e'
         abi: LimitPoolManager
-        startBlock: 46812376
+        startBlock: 56821935
     mapping:
         kind: ethereum/events
         apiVersion: 0.0.6
@@ -54,7 +54,7 @@ dataSources:
         eventHandlers:
             - event: FeeTierEnabled(uint16,int16)
               handler: handleFeeTierEnabled
-            - event: PoolTypeEnabled(bytes32,uint8,address,address)
+            - event: PoolTypeEnabled(uint8,bytes32,address,address)
               handler: handlePoolTypeEnabled
             - event: FactoryChanged(indexed address,indexed address)
               handler: handleFactoryChanged
@@ -64,22 +64,22 @@ dataSources:
               handler: handleOwnerTransfer
             - event: ProtocolFeesCollected(address[],uint128[],uint128[])
               handler: handleProtocolFeesCollected
-            - event: ProtocolFillFeesModified(address[],uint16[],uint16[])
+            - event: ProtocolFillFeesModified(address[],int16[],int16[])
               handler: handleProtocolFillFeesModified
-            - event: ProtocolSwapFeesModified(address[],uint16[],uint16[])
+            - event: ProtocolSwapFeesModified(address[],int16[],int16[])
               handler: ProtocolSwapFeesModified
   - kind: ethereum/contract
     name: PoolsharkRouter
     network: arbitrum-goerli
     source:
-        address: '0xa6fc46d68fc05f0b68d0f79d548391e6d6a576ef'
+        address: '0x4b5a159109bb997135e9b2bb6e486e2101466881'
         abi: PoolsharkRouter
-        startBlock: 48895864
+        startBlock: 56821935
     mapping:
         kind: ethereum/events
         apiVersion: 0.0.6
         language: wasm/assemblyscript
-        file: ./src/mappings/limitpoolrouter.ts
+        file: ./src/mappings/poolsharkrouter.ts
         entities:
             - PoolsharkRouter
         abis:
@@ -88,6 +88,36 @@ dataSources:
         eventHandlers:
             - event: RouterDeployed(address,address,address)
               handler: handleRouterDeployed
+  - kind: ethereum/contract
+    name: RangeStaker
+    network: arbitrum-goerli
+    source:
+        address: '0x40c86c77b0dccc962809a90352920c6a89d874cc'
+        abi: RangeStaker
+        startBlock: 56705668
+    mapping:
+        kind: ethereum/events
+        apiVersion: 0.0.6
+        language: wasm/assemblyscript
+        file: ./src/mappings/staking/rangestaker.ts
+        entities:
+            - RangeStake
+        abis:
+            - name: RangeStaker
+              file: ./abis/RangeStaker.json
+        eventHandlers:
+            - event: FeeToTransfer(indexed address,indexed address)
+              handler: handleFeeToTransfer
+            - event: OwnerTransfer(indexed address,indexed address)
+              handler: handleOwnerTransfer
+            - event: StakeRange(address,uint32,address,uint256,uint256,uint128)
+              handler: handleStakeRange
+            - event: StakeRangeAccrued(address,uint32,uint256,uint256)
+              handler: handleStakeRangeAccrued
+            - event: StakeRangeBurn(address,uint32,uint128)
+              handler: handleStakeRangeBurn
+            - event: UnstakeRange(address,uint32,address)
+              handler: handleUnstakeRange
 templates:
     - kind: ethereum/contract
       name: LimitPoolTemplate
@@ -129,8 +159,6 @@ templates:
                 handler: handleBurnRange
               - event: CompoundRange(indexed uint32,uint128)
                 handler: handleCompoundRange
-              # - event: CollectRange(uint128,uint128)
-              #   handler: handleCollectRange
               - event: SyncRangeTick(uint200,uint200,int24)
                 handler: handleSyncRangeTick
               - event: MintLimit(indexed address,int24,int24,bool,uint32,uint32,uint128,uint128,uint128)
@@ -143,6 +171,10 @@ templates:
                 handler: handleSyncLimitLiquidity
               - event: SyncLimitTick(uint32,int24,bool)
                 handler: handleSyncLimitTick
+              - event: CollectRange0(uint128)
+                handler: handleCollectRange0
+              - event: CollectRange1(uint128)
+                handler: handleCollectRange1
     # ERC-1155 events
     - kind: ethereum/contract
       name: PositionERC1155Template
@@ -153,7 +185,7 @@ templates:
           kind: ethereum/events
           apiVersion: 0.0.6
           language: wasm/assemblyscript
-          file: ./src/mappings/limitpool.ts
+          file: ./src/mappings/positionerc1155.ts
           entities:
               - Token
               - RangePool

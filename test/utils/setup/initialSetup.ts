@@ -28,10 +28,10 @@ export class InitialSetup {
     private constantProductString: string
 
     /// DEPLOY CONFIG
+    private deployTokens = false
+    private deployContracts = false
+    private deployPools = false
     private deployRouter = true
-    private deployTokens = true
-    private deployPools = true
-    private deployContracts = true
     private deployStaker = true
 
     constructor() {
@@ -134,15 +134,6 @@ export class InitialSetup {
                 // @ts-ignore
                 Ticks__factory,
                 'ticksLib',
-                [],
-            )
-
-            // range
-            await this.deployAssist.deployContractWithRetry(
-                network,
-                // @ts-ignore
-                RangePositions__factory,
-                'rangePositionsLib',
                 [],
             )
 
@@ -393,7 +384,7 @@ export class InitialSetup {
                     tokenIn: hre.props.token0.address,
                     tokenOut: hre.props.token1.address,
                     swapFee: '1000',
-                    startPrice: '3169126500570573503741758013440'
+                    startPrice: '1738267302024796147492397123192298'
                 });
                 await createPoolTxn.wait();
     
@@ -413,7 +404,7 @@ export class InitialSetup {
                     tokenIn: hre.props.token0.address,
                     tokenOut: hre.props.token1.address,
                     swapFee: '3000',
-                    startPrice: '3169126500570573503741758013440'
+                    startPrice: '1738267302024796147492397123192298'
                 });
                 await createPoolTxn.wait();
     
@@ -424,7 +415,7 @@ export class InitialSetup {
                     tokenIn: hre.props.token0.address,
                     tokenOut: hre.props.token1.address,
                     swapFee: '10000',
-                    startPrice: '3169126500570573503741758013440'
+                    startPrice: '1738267302024796147492397123192298'
                 });
                 await createPoolTxn.wait();
 

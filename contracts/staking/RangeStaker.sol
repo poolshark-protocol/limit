@@ -39,6 +39,7 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
 
     struct RangeStake {
         address pool;
+        address owner;
         uint256 feeGrowthInside0Last;
         uint256 feeGrowthInside1Last;
         uint128 feeGrowth0Accrued;
@@ -93,7 +94,7 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
         StakeRangeLocals memory locals;
         locals.constants = ILimitPoolView(params.pool).immutables();
         
-        // validate deterministic address
+        // Checks: validate deterministic address
         canonicalLimitPoolsOnly(params.pool, locals.constants);
 
         if (params.positionId != 0) {
@@ -107,9 +108,8 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
 
         // stake info
         locals.stake.pool = params.pool;
-        locals.poolToken = IPool(params.pool).poolToken();
+        locals.poolToken = locals.constants.poolToken;
         locals.stakeKey = keccak256(abi.encode(
-            params.to,
             locals.stake.pool,
             locals.stake.positionId
         ));
@@ -132,13 +132,17 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
                 locals.stake.liquidity,,
             ) = IRangePool(params.pool).positions(locals.stake.positionId);
         } else {
+            locals.stake.owner = rangeStakes[locals.stakeKey].owner;
             locals.stake.liquidity = rangeStakes[locals.stakeKey].liquidity;
+            if (locals.stake.owner != params.to) {
+                require(false, "RangeStake::PositionOwnerMisMatch()");
+            }
         }
 
         if (locals.stake.liquidity == 0) {
             require(false, "RangeStake::PositionNotFound()");
         }
-        
+
         // check if transfer needed
         locals.positionBalance = IPositionERC1155(locals.poolToken).balanceOf(address(this), locals.stake.positionId);
 
@@ -168,6 +172,7 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
 
             // mark position as staked
             locals.stake.isStaked = true;
+            locals.stake.owner = params.to;
         } else {
             // load previous fee growth
             (
@@ -195,11 +200,6 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
                 locals.stake.liquidity,
                 Q128
             );
-            // transfer fees earned to owner
-            if (locals.feeGrowth0Accrued > 0)
-                SafeTransfers.transferOut(params.to, locals.constants.token0, locals.feeGrowth0Accrued);
-            if (locals.feeGrowth1Accrued > 0)
-                SafeTransfers.transferOut(params.to, locals.constants.token1, locals.feeGrowth1Accrued);
 
             if (block.timestamp < startTimestamp || block.timestamp >= endTimestamp) {
                 // increase range stake accrual
@@ -227,6 +227,7 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
         emit StakeRange(
             locals.stake.pool,
             locals.stake.positionId,
+            params.to,
             locals.stake.feeGrowthInside0Last,
             locals.stake.feeGrowthInside1Last,
             locals.stake.liquidity
@@ -234,6 +235,12 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
 
         // store position stake in mapping
         rangeStakes[locals.stakeKey] = locals.stake;
+
+        // Interactions: transfer out fees accrued
+        if (locals.feeGrowth0Accrued > 0)
+            SafeTransfers.transferOut(locals.stake.owner, locals.constants.token0, locals.feeGrowth0Accrued);
+        if (locals.feeGrowth1Accrued > 0)
+            SafeTransfers.transferOut(locals.stake.owner, locals.constants.token1, locals.feeGrowth1Accrued);
     }
 
     function unstakeRange(UnstakeRangeParams memory params) external {
@@ -242,7 +249,6 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
 
         locals.poolToken = IPool(params.pool).poolToken();
         locals.stakeKey = keccak256(abi.encode(
-            msg.sender,
             params.pool,
             params.positionId
         ));
@@ -251,12 +257,10 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
         locals.stake = rangeStakes[locals.stakeKey];
 
         if (locals.stake.pool == address(0)) {
-            // range stake does not exist
             require(false, "RangeUnstake::StakeNotFound()");
-        }
-
-        // check position token is held by staking contract
-        if (!locals.stake.isStaked) {
+        } else if (locals.stake.owner != msg.sender) {
+            require(false, "RangeStake::PositionOwnerMisMatch()");
+        } else if (!locals.stake.isStaked) {
             require(false, "RangeUnstake::PositionAlreadyUnstaked()");
         }
 
@@ -324,7 +328,8 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
 
         emit UnstakeRange(
             locals.stake.pool,
-            locals.stake.positionId
+            locals.stake.positionId,
+            params.to
         );
 
         // store position stake in mapping
@@ -338,7 +343,6 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
         StakeRangeLocals memory locals;
 
         locals.stakeKey = keccak256(abi.encode(
-            msg.sender,
             pool,
             params.positionId
         ));
@@ -347,12 +351,10 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
         locals.stake = rangeStakes[locals.stakeKey];
 
         if (locals.stake.pool == address(0)) {
-            // range stake does not exist
             require(false, "RangeUnstake::StakeNotFound()");
-        }
-
-        // check position token is held by staking contract
-        if (!locals.stake.isStaked) {
+        } else if (locals.stake.owner != msg.sender) {
+            require(false, "RangeStake::PositionOwnerMisMatch()");
+        } else if (!locals.stake.isStaked) {
             require(false, "RangeUnstake::PositionAlreadyUnstaked()");
         }
 

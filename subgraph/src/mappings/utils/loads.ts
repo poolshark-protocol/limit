@@ -1,5 +1,5 @@
 import { Address, BigDecimal, BigInt, Bytes, ethereum, log } from '@graphprotocol/graph-ts'
-import { LimitPool, LimitPoolFactory, LimitPoolManager, LimitPosition, Token, FeeTier, BasePrice, RangePosition, RangeTick, Transaction, LimitTick, Swap, CompoundRangeLog, MintRangeLog, BurnRangeLog, PoolRouter, TvlUpdateLog } from '../../../generated/schema'
+import { LimitPool, LimitPoolFactory, LimitPoolManager, LimitPosition, Token, FeeTier, BasePrice, RangePosition, RangeTick, Transaction, LimitTick, Swap, CompoundRangeLog, MintRangeLog, BurnRangeLog, PoolRouter, TvlUpdateLog, HistoricalOrder } from '../../../generated/schema'
 import { ONE_BD } from '../../constants/constants'
 import {
     fetchTokenSymbol,
@@ -436,6 +436,35 @@ export function safeLoadCompoundRangeLog(txnHash: Bytes, pool: string, positionI
 
     return {
         entity: compoundLogEntity,
+        exists: exists,
+    }
+}
+
+class LoadHistoricalOrderRet {
+    entity: HistoricalOrder
+    exists: boolean
+}
+export function safeLoadHistoricalOrder(poolAddress: string, zeroForOne: boolean, txnHash: Bytes, txnCountOrPositionId: BigInt): LoadHistoricalOrderRet {
+    let exists = true
+
+    let historicalOrderId = poolAddress
+                            .concat(zeroForOne.toString())
+                            .concat(txnHash.toHex())
+                            .concat(txnCountOrPositionId.toString())
+
+    let historicalOrderEntity = HistoricalOrder.load(historicalOrderId)
+
+    if (!historicalOrderEntity) {
+        historicalOrderEntity = new HistoricalOrder(historicalOrderId)
+        historicalOrderEntity.pool = poolAddress
+        historicalOrderEntity.zeroForOne = zeroForOne
+        historicalOrderEntity.txnHash = txnHash
+
+        exists = false
+    }
+
+    return {
+        entity: historicalOrderEntity,
         exists: exists,
     }
 }

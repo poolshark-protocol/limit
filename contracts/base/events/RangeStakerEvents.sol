@@ -2,9 +2,10 @@
 pragma solidity 0.8.13;
 
 abstract contract RangeStakerEvents {
-    event StakeRange( 
+    event StakeRange(
         address pool,
         uint32 positionId,
+        address recipient,
         uint256 feeGrowthInside0Last,
         uint256 feeGrowthInside1Last,
         uint128 liquidity
@@ -12,7 +13,8 @@ abstract contract RangeStakerEvents {
 
     event UnstakeRange(
         address pool,
-        uint32 positionId
+        uint32 positionId,
+        address recipient
     );
 
     event StakeRangeAccrued(

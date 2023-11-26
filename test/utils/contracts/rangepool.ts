@@ -423,8 +423,8 @@ export async function validateMint(params: ValidateMintParams): Promise<number> 
   if (stake) {
     // check fg0/1 and liquidity match
     const stakeKey = ethers.utils.keccak256(ethers.utils.defaultAbiCoder.encode(
-      ["address", "address", "uint32"], // encode as address array
-      [ recipient, poolContract.address, expectedPositionId ]
+      ["address", "uint32"], // encode as address array
+      [ poolContract.address, expectedPositionId ]
     ))
     const rangeStake: RangeStake = await hre.props.rangeStaker.rangeStakes(stakeKey)
     expect(positionAfter.feeGrowthInside0Last).to.be.equal(rangeStake.feeGrowthInside0Last)
@@ -433,6 +433,7 @@ export async function validateMint(params: ValidateMintParams): Promise<number> 
     expect(rangeStake.positionId).to.be.equal(expectedPositionId)
     expect(rangeStake.pool).to.be.equal(poolContract.address)
     expect(rangeStake.isStaked).to.be.equal(true)
+    expect(rangeStake.owner).to.be.equal(params.recipient)
   }
   return expectedPositionId
 }

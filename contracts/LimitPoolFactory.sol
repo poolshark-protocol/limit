@@ -113,7 +113,7 @@ contract LimitPoolFactory is
 
         emit PoolCreated(
             pool,
-            poolToken,
+            constants.poolToken,
             constants.token0,
             constants.token1,
             constants.swapFee,

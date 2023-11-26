@@ -1,25 +1,27 @@
 /* eslint-disable */
 import { BigInt, BigDecimal, Address } from '@graphprotocol/graph-ts'
 import { LimitPoolFactory as FactoryContract } from '../../generated/templates/LimitPoolTemplate/LimitPoolFactory'
-export let FACTORY_ADDRESS = '0xd0219266568eae5c1eea960e3eacf1a1e149aab0'
-export let WETH_ADDRESS = '0x0bfaaafa6e8fb009cd4e2bd3693f2eec2d18b053'
+export let FACTORY_ADDRESS = '0x1b215002e688135549cc0290d6cf1f94e3aa425c'
+export let WETH_ADDRESS = '0xefb283ef3167ca2ee9d93b201af15e2af3f6e8c7'
 
 // tokens where USD value is safe to use for globals
 export let WHITELIST_TOKENS: string[] = [
-  '0x0bfaaafa6e8fb009cd4e2bd3693f2eec2d18b053', //WETH
+  '0xefb283ef3167ca2ee9d93b201af15e2af3f6e8c7', //WETH
   '0x19bee8e887a5db5cf20a841eb4daacbcacf14b1b', //DAI
+  '0xebff7a98149b4774c9743c5d1f382305fe5422c9' //USDC
 ]
 
 // used for safe eth pricing 
 export let STABLE_COINS: string[] = [
   '0x19bee8e887a5db5cf20a841eb4daacbcacf14b1b', //DAI
+  '0xebff7a98149b4774c9743c5d1f382305fe5422c9' //USDC
 ]
 
 // used for safe eth pricing 
-export const STABLE_POOL_ADDRESS = '0x0b77fb84d0f1485abc8d192bd6d8e1b68b957992'
+export const STABLE_POOL_ADDRESS = '0x4998545e13a668a884272aaebff14ab21c5b4e89'
 
 // determines which token to use for eth <-> usd rate, true means stable is token0 in pool above 
-export const STABLE_IS_TOKEN_0 = false
+export const STABLE_IS_TOKEN_0 = true
 
 // minimum eth required in pool to count usd values towards global prices 
 export let MINIMUM_ETH_LOCKED = BigDecimal.fromString('0')

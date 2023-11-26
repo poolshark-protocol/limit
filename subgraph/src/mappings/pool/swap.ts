@@ -1,5 +1,5 @@
 import { BigDecimal, BigInt, log } from "@graphprotocol/graph-ts"
-import { safeLoadBasePrice, safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadSwap, safeLoadToken, safeLoadTransaction, safeLoadTvlUpdateLog } from "../utils/loads"
+import { safeLoadBasePrice, safeLoadHistoricalOrder, safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadSwap, safeLoadToken, safeLoadTransaction, safeLoadTvlUpdateLog } from "../utils/loads"
 import { convertTokenToDecimal } from "../utils/helpers"
 import { ZERO_BD, TWO_BD, ONE_BI } from "../../constants/constants"
 import { AmountType, findEthPerToken, getAdjustedAmounts, getEthPriceInUSD, sqrtPriceX96ToTokenPrices } from "../utils/price"
@@ -27,9 +27,12 @@ export function handleSwap(event: Swap): void {
     let loadLimitPoolFactory = safeLoadLimitPoolFactory(pool.factory) // 3
     let loadToken0 = safeLoadToken(pool.token0) // 4
     let loadToken1 = safeLoadToken(pool.token1) // 5
+    
+    
     let factory = loadLimitPoolFactory.entity
     let token0 = loadToken0.entity
     let token1 = loadToken1.entity
+
 
     let amount0: BigDecimal; let amount1: BigDecimal;
     if (zeroForOneParam) {
@@ -119,23 +122,20 @@ export function handleSwap(event: Swap): void {
     token1.volumeUsd = token1.volumeUsd.plus(volumeUsd)
     token1.volumeEth = token1.volumeEth.plus(volumeEth)
 
-    // save swap transaction
-    let transaction = safeLoadTransaction(event).entity // 6
-    let loadSwap = safeLoadSwap(event, pool) // 7
-    let swap = loadSwap.entity
-    if (!loadSwap.exists) {
-        swap.transaction = transaction.id
-        swap.recipient = recipientParam
-        swap.timestamp = transaction.timestamp
-        swap.pool = pool.id
-        swap.zeroForOne = zeroForOneParam
-        swap.amount0 = amount0
-        swap.amount1 = amount1
-        swap.amountUsd = volumeUsd
-        swap.priceAfter = priceParam
-        swap.tickAfter = BigInt.fromI32(tickAtPriceParam)
-        swap.txnIndex = pool.txnCount
+    let loadOrder = safeLoadHistoricalOrder(pool.id, zeroForOneParam, event.transaction.hash, pool.txnCount) // 6
+    let order = loadOrder.entity
+    // historical order data
+    if (!loadOrder.exists) {
+        order.createdAtTimestamp = event.block.timestamp   
     }
+    order.amountIn = order.amountIn.plus(order.zeroForOne ? amount0Abs : amount1Abs)
+    order.amountOut = order.amountOut.plus(order.zeroForOne ? amount1Abs : amount0Abs)
+    if (order.zeroForOne)
+        order.usdValue = order.usdValue.plus(amount1Abs.times(token1.usdPrice))
+    else
+        order.usdValue = order.usdValue.plus(amount0Abs.times(token0.usdPrice))
+    order.averagePrice = order.amountOut.div(order.amountIn)
+    order.completed = true
 
     let loadTvlUpdateLog = safeLoadTvlUpdateLog(event.transaction.hash, poolAddress)
     let tvlUpdateLog = loadTvlUpdateLog.entity
@@ -167,6 +167,5 @@ export function handleSwap(event: Swap): void {
     factory.save()
     token0.save()
     token1.save()
-    transaction.save()
-    swap.save()
+    order.save()
 }

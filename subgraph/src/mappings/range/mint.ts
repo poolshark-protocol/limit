@@ -81,6 +81,7 @@ export function handleMintRange(event: MintRange): void {
 
     if (!loadPosition.exists) {
         position.owner = recipientParam
+        position.staked = false
         position.lower = lower
         position.upper = upper
         position.pool = pool.id

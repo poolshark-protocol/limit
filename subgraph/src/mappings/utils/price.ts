@@ -39,8 +39,7 @@ export function getEthPriceInUSD(): BigDecimal {
 }
 
 /**
- * Search through graph to find derived Eth per token.
- * @todo update to be derived ETH (add stablecoin estimates)
+ * Search through subgraph to find ETH per token.
  **/
 export function findEthPerToken(token: Token, otherToken: Token, basePrice: BasePrice): BigDecimal {
   if (token.id == WETH_ADDRESS) {
@@ -55,7 +54,6 @@ export function findEthPerToken(token: Token, otherToken: Token, basePrice: Base
   // if otherToken is ETH get price based on ETH
 
   // for now just take USD from pool with greatest TVL
-  // need to update this to actually detect best rate based on liquidity distribution
   let largestLiquidityETH = ZERO_BD
   let priceSoFar = ZERO_BD
 

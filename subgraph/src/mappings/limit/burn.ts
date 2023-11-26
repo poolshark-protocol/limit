@@ -2,7 +2,7 @@ import { store, BigInt } from "@graphprotocol/graph-ts"
 import { BurnLimit } from "../../../generated/LimitPoolFactory/LimitPool"
 import { ONE_BI } from "../../constants/constants"
 import { BIGINT_ZERO, convertTokenToDecimal } from "../utils/helpers"
-import { safeLoadBasePrice, safeLoadBurnLog, safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadLimitPosition, safeLoadLimitTick, safeLoadToken, safeLoadTvlUpdateLog } from "../utils/loads"
+import { safeLoadBasePrice, safeLoadBurnLog, safeLoadHistoricalOrder, safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadLimitPosition, safeLoadLimitTick, safeLoadToken, safeLoadTvlUpdateLog } from "../utils/loads"
 import { findEthPerToken } from "../utils/price"
 import { updateDerivedTVLAmounts } from "../utils/tvl"
 
@@ -50,16 +50,34 @@ export function handleBurnLimit(event: BurnLimit): void {
     tokenOut.txnCount = tokenOut.txnCount.plus(ONE_BI)
     factory.txnCount = factory.txnCount.plus(ONE_BI)
 
-    if (!loadPosition.exists) {
+    let amountIn = convertTokenToDecimal(tokenInClaimedParam, tokenIn.decimals)
+    let amountOut = convertTokenToDecimal(tokenOutBurnedParam, tokenOut.decimals)
+
+    let loadOrder = safeLoadHistoricalOrder(pool.id, zeroForOneParam, event.transaction.hash, position.positionId) // 9
+    let order = loadOrder.entity
+
+    if (!loadPosition.exists || !loadOrder.exists) {
         //throw an error
     }
+
+    order.usdValue = order.usdValue.plus(amountIn.times(tokenIn.usdPrice))
+    
+    // increment position amounts
+    position.amountFilled = position.amountFilled.plus(tokenInClaimedParam)
+    position.amountIn = position.amountIn.minus(tokenOutBurnedParam)
+
     if (position.liquidity == liquidityBurnedParam || 
             (zeroForOneParam ? newClaim.equals(upper) : newClaim.equals(lower))) {
+        if (!loadOrder.exists) {
+            // throw an error
+        }
+        order.amountIn = convertTokenToDecimal(position.amountIn, tokenOut.decimals)
+        order.amountOut = convertTokenToDecimal(position.amountFilled, tokenIn.decimals)
+        order.averagePrice = order.amountOut.div(order.amountIn)
+        order.completed = true
         store.remove('LimitPosition', position.id)
     } else {
         position.liquidity = position.liquidity.minus(liquidityBurnedParam)
-        position.amountFilled = position.amountFilled.minus(tokenInClaimedParam)
-        position.amountIn = position.amountIn.minus(tokenOutBurnedParam)
         // shrink position to new size
         if (zeroForOneParam) {
             position.lower = newClaim
@@ -114,8 +132,6 @@ export function handleBurnLimit(event: BurnLimit): void {
     upperTick.save() // 2
 
     // tvl adjustments
-    let amountIn = convertTokenToDecimal(tokenInClaimedParam, tokenIn.decimals)
-    let amountOut = convertTokenToDecimal(tokenOutBurnedParam, tokenOut.decimals)
     tokenIn.totalValueLocked = tokenIn.totalValueLocked.minus(amountIn)
     tokenOut.totalValueLocked = tokenOut.totalValueLocked.minus(amountOut)
     pool.totalValueLocked0 = pool.totalValueLocked0.minus(zeroForOneParam ? amountOut : amountIn)
@@ -172,4 +188,5 @@ export function handleBurnLimit(event: BurnLimit): void {
     factory.save() // 5
     tokenIn.save() // 7
     tokenOut.save() // 8
+    order.save()    // 9
 }

@@ -121,12 +121,6 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
 
         // check position exists
         if (!locals.stake.isStaked) {
-            // if old position and staking through mint revert
-            if (params.positionId != 0 && params.isMint) {
-                /// @dev - this avoids fees earned being lost since
-                /// we do not have the previous fee growth 
-                require(false, 'RangeStake::SecondMintAndStakeMustBeSeparate()');
-            }
             (
                 ,,
                 locals.stake.liquidity,,
@@ -179,8 +173,8 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
                 locals.feeGrowthInside0Start,
                 locals.feeGrowthInside1Start
             ) = (
-                locals.stake.feeGrowthInside0Last,
-                locals.stake.feeGrowthInside1Last
+                rangeStakes[locals.stakeKey].feeGrowthInside0Last,
+                rangeStakes[locals.stakeKey].feeGrowthInside1Last
             );
             // load new fee growth and liquidity
             (

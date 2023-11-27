@@ -264,8 +264,7 @@ contract PoolsharkRouter is
                 sender: msg.sender,
                 wrapped: msg.value > 0
             }));
-            try ILimitPool(pools[i]).mintLimit(params[i]) {
-            } catch {}
+            ILimitPool(pools[i]).mintLimit(params[i]);
             unchecked {
                 ++i;
             }
@@ -300,8 +299,7 @@ contract PoolsharkRouter is
                 IRangeStaker(staker).stakeRange(StakeRangeParams({
                     to: abi.decode(params[i].callbackData, (MintRangeCallbackData)).recipient,
                     pool: pools[i],
-                    positionId: params[i].positionId,
-                    isMint: true
+                    positionId: params[i].positionId
                 }));
             }
             // call to staking contract using positionId returned from mintRange
@@ -503,8 +501,7 @@ contract PoolsharkRouter is
                 IRangeStaker(staker).stakeRange(StakeRangeParams({
                     to: abi.decode(mintRangeParams[i].callbackData, (MintRangeCallbackData)).recipient,
                     pool: pool,
-                    positionId: 0,
-                    isMint: true
+                    positionId: 0
                 }));
             }
             unchecked {

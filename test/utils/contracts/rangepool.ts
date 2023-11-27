@@ -354,7 +354,7 @@ export async function validateMint(params: ValidateMintParams): Promise<number> 
   positionBefore = await poolContract.positions(positionId)
   positionTokens = await hre.ethers.getContractAt('PositionERC1155', poolTokenContract.address);
   positionTokenBalanceBefore = await positionTokens.balanceOf(stake ? hre.props.rangeStaker.address : signer.address, expectedPositionId);
-  if (params.positionId)
+  if (params.positionId && !stake)
     expect(positionTokenBalanceBefore).to.be.equal(1)
   if (revertMessage == '') {
     const txn = await hre.props.poolRouter
@@ -573,7 +573,6 @@ export async function validateStake(params: ValidateStakeParams) {
         to: params.recipient,
         pool: hre.props.limitPool.address,
         positionId: params.positionId,
-        isMint: false
     })
     await unstakeTxn.wait()
   } else {
@@ -583,7 +582,6 @@ export async function validateStake(params: ValidateStakeParams) {
         to: params.recipient,
         pool: hre.props.limitPool.address,
         positionId: params.positionId,
-        isMint: false
     })
     ).to.be.revertedWith(revertMessage)
     return

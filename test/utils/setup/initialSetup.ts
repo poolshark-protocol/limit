@@ -32,7 +32,7 @@ export class InitialSetup {
     private deployContracts = false
     private deployPools = false
     private deployRouter = true
-    private deployStaker = true
+    private deployStaker = false
 
     constructor() {
         this.deployAssist = new DeployAssist()

@@ -146,7 +146,6 @@ interface PoolsharkStructs {
         address to;
         address pool;
         uint32 positionId;
-        bool isMint;
     }
 
     struct UnstakeRangeParams {

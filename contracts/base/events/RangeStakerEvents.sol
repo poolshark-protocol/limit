@@ -24,12 +24,6 @@ abstract contract RangeStakerEvents {
         uint256 feeGrowth1Accrued
     );
 
-    event StakeRangeBurn(
-        address pool,
-        uint32 positionId,
-        uint128 newLiquidity
-    );
-
     event FeeToTransfer(
         address indexed previousFeeTo,
         address indexed newFeeTo

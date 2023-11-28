@@ -6,7 +6,7 @@ import {
     fetchTokenName,
     fetchTokenDecimals,
 } from './utils/helpers'
-import { safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadToken } from './utils/loads'
+import { safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadLimitPoolToken, safeLoadToken } from './utils/loads'
 import { BigInt } from '@graphprotocol/graph-ts'
 import { FACTORY_ADDRESS, ONE_BI, STABLE_COINS, WETH_ADDRESS } from '../constants/constants'
 
@@ -105,10 +105,15 @@ export function handlePoolCreated(event: PoolCreated): void {
         }
     }
 
+    let loadPoolToken = safeLoadLimitPoolToken(poolTokenParam.toString())
+    let poolToken = loadPoolToken.entity
+    poolToken.pool = pool.id
+
     pool.save()
     factory.save()
     token0.save()
     token1.save()
+    poolToken.save()
 
     // tracked events based on template
     LimitPoolTemplate.create(poolAddressParam)

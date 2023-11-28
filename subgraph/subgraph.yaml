@@ -92,9 +92,9 @@ dataSources:
     name: RangeStaker
     network: arbitrum-goerli
     source:
-        address: '0x40c86c77b0dccc962809a90352920c6a89d874cc'
+        address: '0xe5e2E95A986CE078606C403593593b18Ed98f4d6'
         abi: RangeStaker
-        startBlock: 56705668
+        startBlock: 57211628
     mapping:
         kind: ethereum/events
         apiVersion: 0.0.6
@@ -114,8 +114,6 @@ dataSources:
               handler: handleStakeRange
             - event: StakeRangeAccrued(address,uint32,uint256,uint256)
               handler: handleStakeRangeAccrued
-            - event: StakeRangeBurn(address,uint32,uint128)
-              handler: handleStakeRangeBurn
             - event: UnstakeRange(address,uint32,address)
               handler: handleUnstakeRange
 templates:

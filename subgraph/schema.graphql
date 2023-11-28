@@ -129,6 +129,13 @@ type LimitPool @entity {
     updatedAtBlockNumber: BigInt!
 }
 
+type LimitPoolToken @entity {
+    # poolTokenAddress
+    id: ID!
+
+    pool: LimitPool!
+}
+
 type LimitPosition @entity {
     # poolAddress + owner + lower + upper
     id: ID!
@@ -336,5 +343,25 @@ type HistoricalOrder @entity {
     usdValue: BigDecimal!
 
     completed: Boolean!
+}
+
+type TotalSeasonReward @entity {
+    # factoryAddress
+    id: ID!
+
+    whitelistedFeesUsd: BigDecimal!
+    nonWhitelistedFeesUsd: BigDecimal!
+    volumeTradedUsd: BigDecimal!
+    stakingPoints: BigInt!
+}
+
+type UserSeasonReward @entity {
+    # userAddress
+    id: ID!
+
+    whitelistedFeesUsd: BigDecimal!
+    nonWhitelistedFeesUsd: BigDecimal!
+    volumeTradedUsd: BigDecimal!
+    stakingPoints: BigInt!
 }
 

@@ -1,8 +1,8 @@
 import { store, BigInt } from "@graphprotocol/graph-ts"
 import { BurnLimit } from "../../../generated/LimitPoolFactory/LimitPool"
-import { ONE_BI } from "../../constants/constants"
+import { FACTORY_ADDRESS, ONE_BI, SEASON_1_END_TIME, SEASON_1_START_TIME } from "../../constants/constants"
 import { BIGINT_ZERO, convertTokenToDecimal } from "../utils/helpers"
-import { safeLoadBasePrice, safeLoadBurnLog, safeLoadHistoricalOrder, safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadLimitPosition, safeLoadLimitTick, safeLoadToken, safeLoadTvlUpdateLog } from "../utils/loads"
+import { safeLoadBasePrice, safeLoadBurnLog, safeLoadHistoricalOrder, safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadLimitPosition, safeLoadLimitTick, safeLoadToken, safeLoadTotalSeasonReward, safeLoadTvlUpdateLog, safeLoadUserSeasonReward } from "../utils/loads"
 import { findEthPerToken } from "../utils/price"
 import { updateDerivedTVLAmounts } from "../utils/tvl"
 
@@ -66,6 +66,16 @@ export function handleBurnLimit(event: BurnLimit): void {
     position.amountFilled = position.amountFilled.plus(tokenInClaimedParam)
     position.amountIn = position.amountIn.minus(tokenOutBurnedParam)
 
+    let loadTotalSeasonReward = safeLoadTotalSeasonReward(FACTORY_ADDRESS) // 10
+    let loadUserSeasonReward = safeLoadUserSeasonReward(event.transaction.from.toHex()) // 11
+    
+    let totalSeasonReward = loadTotalSeasonReward.entity
+    let userSeasonReward = loadUserSeasonReward.entity
+
+    // start and end time
+    totalSeasonReward.volumeTradedUsd = totalSeasonReward.volumeTradedUsd.plus(amountIn.times(tokenIn.usdPrice))
+    userSeasonReward.volumeTradedUsd = userSeasonReward.volumeTradedUsd.plus(amountIn.times(tokenIn.usdPrice))
+   
     if (position.liquidity == liquidityBurnedParam || 
             (zeroForOneParam ? newClaim.equals(upper) : newClaim.equals(lower))) {
         if (!loadOrder.exists) {
@@ -189,4 +199,8 @@ export function handleBurnLimit(event: BurnLimit): void {
     tokenIn.save() // 7
     tokenOut.save() // 8
     order.save()    // 9
+    if (event.block.timestamp.ge(SEASON_1_START_TIME) && event.block.timestamp.le(SEASON_1_END_TIME)) {
+        totalSeasonReward.save() // 10
+        userSeasonReward.save()  // 11
+    }
 }

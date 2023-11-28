@@ -24,36 +24,19 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
     address public feeTo;
     address public owner;
     mapping(bytes32 => RangeStake) public rangeStakes;
-    mapping(address => TotalStake) public totalStakes;
-    mapping(bytes32 => RewardDistribution) public rewardDistributions;
-    mapping(bytes32 => bool) public rewardsClaimed;
 
     using SafeCast for uint256;
 
     uint256 internal constant Q128 = 0x100000000000000000000000000000000;
-
-    struct TotalStake {
-        uint128 feeGrowth0AccruedTotal;
-        uint128 feeGrowth1AccruedTotal;
-    }
 
     struct RangeStake {
         address pool;
         address owner;
         uint256 feeGrowthInside0Last;
         uint256 feeGrowthInside1Last;
-        uint128 feeGrowth0Accrued;
-        uint128 feeGrowth1Accrued;
         uint128 liquidity;
         uint32 positionId;
         bool isStaked;
-    }
-
-    struct RewardDistribution {
-        address pool;
-        address token;
-        uint256 tokenAmount;
-        uint160 averageSqrtPrice;
     }
 
     struct RangeStakerParams {
@@ -116,8 +99,6 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
 
         // load previous fee growth and staked flag
         locals.stake.isStaked = rangeStakes[locals.stakeKey].isStaked;
-        locals.stake.feeGrowth0Accrued = rangeStakes[locals.stakeKey].feeGrowth0Accrued;
-        locals.stake.feeGrowth1Accrued = rangeStakes[locals.stakeKey].feeGrowth1Accrued;
 
         // check position exists
         if (!locals.stake.isStaked) {
@@ -195,23 +176,14 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
                 Q128
             );
 
-            if (block.timestamp < startTimestamp || block.timestamp >= endTimestamp) {
-                // increase range stake accrual
-                locals.stake.feeGrowth0Accrued += locals.feeGrowth0Accrued.toUint128();
-                locals.stake.feeGrowth1Accrued += locals.feeGrowth1Accrued.toUint128();
-                
-                // increase total stake accrual
-                TotalStake memory totalStake = totalStakes[locals.stake.pool];
-                totalStake.feeGrowth0AccruedTotal += locals.feeGrowth0Accrued.toUint128();
-                totalStake.feeGrowth1AccruedTotal += locals.feeGrowth1Accrued.toUint128();
-                totalStakes[locals.stake.pool] = totalStake;
-
-                emit StakeRangeAccrued(
-                    locals.stake.pool,
-                    locals.stake.positionId,
-                    locals.feeGrowth0Accrued,
-                    locals.feeGrowth1Accrued
-                );
+            if (block.timestamp > startTimestamp && block.timestamp <= endTimestamp) {
+                if (locals.feeGrowth0Accrued > 0 || locals.feeGrowth1Accrued > 0)
+                    emit StakeRangeAccrued(
+                        locals.stake.pool,
+                        locals.stake.positionId,
+                        locals.feeGrowth0Accrued,
+                        locals.feeGrowth1Accrued
+                    );
             }
 
             // update position liquidity
@@ -227,7 +199,7 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
             locals.stake.liquidity
         );
 
-        // store position stake in mapping
+        // Effects: store position stake in mapping
         rangeStakes[locals.stakeKey] = locals.stake;
 
         // Interactions: transfer out fees accrued
@@ -253,7 +225,7 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
         if (locals.stake.pool == address(0)) {
             require(false, "RangeUnstake::StakeNotFound()");
         } else if (locals.stake.owner != msg.sender) {
-            require(false, "RangeStake::PositionOwnerMisMatch()");
+            require(false, "RangeUnstake::PositionOwnerMisMatch()");
         } else if (!locals.stake.isStaked) {
             require(false, "RangeUnstake::PositionAlreadyUnstaked()");
         }
@@ -278,7 +250,7 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
             ,,
         ) = IRangePool(params.pool).positions(params.positionId);
 
-        if (block.timestamp < startTimestamp || block.timestamp >= endTimestamp) {
+        if (block.timestamp > startTimestamp && block.timestamp <= endTimestamp) {
             // increment fee growth accrued if inside reward period
             locals.feeGrowth0Accrued = OverflowMath.mulDiv(
                 locals.stake.feeGrowthInside0Last - locals.feeGrowthInside0Start,
@@ -290,17 +262,6 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
                 locals.stake.liquidity,
                 Q128
             );
-
-            // increase range stake accrual
-            locals.stake.feeGrowth0Accrued += locals.feeGrowth0Accrued.toUint128();
-            locals.stake.feeGrowth1Accrued += locals.feeGrowth1Accrued.toUint128();
-            
-            // increase total stake accrual
-            TotalStake memory totalStake = totalStakes[locals.stake.pool];
-            totalStake.feeGrowth0AccruedTotal += locals.feeGrowth0Accrued.toUint128();
-            totalStake.feeGrowth1AccruedTotal += locals.feeGrowth1Accrued.toUint128();
-            totalStakes[locals.stake.pool] = totalStake;
-
             emit StakeRangeAccrued(
                 locals.stake.pool,
                 locals.stake.positionId,
@@ -345,11 +306,11 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
         locals.stake = rangeStakes[locals.stakeKey];
 
         if (locals.stake.pool == address(0)) {
-            require(false, "RangeUnstake::StakeNotFound()");
+            require(false, "BurnRangeStake::StakeNotFound()");
         } else if (locals.stake.owner != msg.sender) {
-            require(false, "RangeStake::PositionOwnerMisMatch()");
+            require(false, "BurnRangeStake::PositionOwnerMisMatch()");
         } else if (!locals.stake.isStaked) {
-            require(false, "RangeUnstake::PositionAlreadyUnstaked()");
+            require(false, "BurnRangeStake::PositionAlreadyUnstaked()");
         }
 
         (
@@ -368,7 +329,7 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
             locals.stake.liquidity,,
         ) = IRangePool(pool).positions(params.positionId);
 
-        if (block.timestamp < startTimestamp || block.timestamp >= endTimestamp) {
+        if (block.timestamp > startTimestamp && block.timestamp <= endTimestamp) {
             // increment fee growth accrued if inside reward period
             locals.feeGrowth0Accrued = OverflowMath.mulDiv(
                 locals.stake.feeGrowthInside0Last - locals.feeGrowthInside0Start,
@@ -380,31 +341,11 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
                 locals.stake.liquidity,
                 Q128
             );
-
-            // increase range stake accrual
-            locals.stake.feeGrowth0Accrued += locals.feeGrowth0Accrued.toUint128();
-            locals.stake.feeGrowth1Accrued += locals.feeGrowth1Accrued.toUint128();
-            
-            // increase total stake accrual
-            TotalStake memory totalStake = totalStakes[locals.stake.pool];
-            totalStake.feeGrowth0AccruedTotal += locals.feeGrowth0Accrued.toUint128();
-            totalStake.feeGrowth1AccruedTotal += locals.feeGrowth1Accrued.toUint128();
-            totalStakes[locals.stake.pool] = totalStake;
-
             emit StakeRangeAccrued(
                 locals.stake.pool,
                 locals.stake.positionId,
                 locals.feeGrowth0Accrued,
                 locals.feeGrowth1Accrued
-            );
-        }
-
-        // update staked liquidity
-        if (params.burnPercent > 0) {
-            emit StakeRangeBurn(
-                locals.stake.pool,
-                locals.stake.positionId,
-                locals.stake.liquidity
             );
         }
 

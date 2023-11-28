@@ -11,6 +11,13 @@ export let WHITELIST_TOKENS: string[] = [
   '0xebff7a98149b4774c9743c5d1f382305fe5422c9' //USDC
 ]
 
+export let WHITELISTED_PAIRS: string[] = [
+  '0xebff7a98149b4774c9743c5d1f382305fe5422c9-0xefb283ef3167ca2ee9d93b201af15e2af3f6e8c7' // WETH - USDC
+]
+
+export let SEASON_1_START_TIME = BigInt.fromString('0')
+export let SEASON_1_END_TIME = BigInt.fromString('2000707154')
+
 // used for safe eth pricing 
 export let STABLE_COINS: string[] = [
   '0x19bee8e887a5db5cf20a841eb4daacbcacf14b1b', //DAI

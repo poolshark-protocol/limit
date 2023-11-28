@@ -87,7 +87,6 @@ library LimitPositions {
                     priceLimit: (params.zeroForOne ? cache.priceLower 
                                                    : cache.priceUpper).toUint160(),
                     amount: 0,
-                    //TODO: handle exactOut
                     exactIn: true,
                     zeroForOne: params.zeroForOne,
                     callbackData: abi.encodePacked(bytes1(0x0))
@@ -109,7 +108,6 @@ library LimitPositions {
                     to: params.to,
                     priceLimit: cache.priceLimit.toUint160(),
                     amount: params.amount,
-                    //TODO: handle exactOut
                     exactIn: true,
                     zeroForOne: params.zeroForOne,
                     callbackData: abi.encodePacked(bytes1(0x0))

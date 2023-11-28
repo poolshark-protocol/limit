@@ -1,5 +1,5 @@
 import { Address, BigDecimal, BigInt, Bytes, ethereum, log } from '@graphprotocol/graph-ts'
-import { LimitPool, LimitPoolFactory, LimitPoolManager, LimitPosition, Token, FeeTier, BasePrice, RangePosition, RangeTick, Transaction, LimitTick, Swap, CompoundRangeLog, MintRangeLog, BurnRangeLog, PoolRouter, TvlUpdateLog, HistoricalOrder } from '../../../generated/schema'
+import { LimitPool, LimitPoolFactory, LimitPoolManager, LimitPosition, Token, FeeTier, BasePrice, RangePosition, RangeTick, Transaction, LimitTick, Swap, CompoundRangeLog, MintRangeLog, BurnRangeLog, PoolRouter, TvlUpdateLog, HistoricalOrder, TotalSeasonReward, UserSeasonReward, LimitPoolToken } from '../../../generated/schema'
 import { ONE_BD } from '../../constants/constants'
 import {
     fetchTokenSymbol,
@@ -217,6 +217,25 @@ export function safeLoadLimitPool(poolAddress: string): LoadLimitPoolRet {
 
     return {
         entity: limitPoolEntity,
+        exists: exists,
+    }
+}
+
+class LoadLimitPoolTokenRet {
+    entity: LimitPoolToken
+    exists: boolean
+}
+export function safeLoadLimitPoolToken(poolTokenAddress: string): LoadLimitPoolTokenRet {
+    let exists = true
+    let limitPoolTokenEntity = LimitPoolToken.load(poolTokenAddress)
+
+    if (!limitPoolTokenEntity) {
+        limitPoolTokenEntity = new LimitPoolToken(poolTokenAddress)
+        exists = false
+    }
+
+    return {
+        entity: limitPoolTokenEntity,
         exists: exists,
     }
 }
@@ -465,6 +484,47 @@ export function safeLoadHistoricalOrder(poolAddress: string, zeroForOne: boolean
 
     return {
         entity: historicalOrderEntity,
+        exists: exists,
+    }
+}
+
+class LoadTotalSeasonRewardRet {
+    entity: TotalSeasonReward
+    exists: boolean
+}
+export function safeLoadTotalSeasonReward(factoryAddress: string): LoadTotalSeasonRewardRet {
+    let exists = true
+
+    let totalSeasonRewardEntity = TotalSeasonReward.load(factoryAddress)
+
+    if (!totalSeasonRewardEntity) {
+        totalSeasonRewardEntity = new TotalSeasonReward(factoryAddress)
+        exists = false
+    }
+
+    return {
+        entity: totalSeasonRewardEntity,
+        exists: exists,
+    }
+}
+
+class LoadUserSeasonRewardRet {
+    entity: UserSeasonReward
+    exists: boolean
+}
+export function safeLoadUserSeasonReward(userAddress: string): LoadUserSeasonRewardRet {
+    let exists = true
+
+    let userSeasonRewardEntity = UserSeasonReward.load(userAddress)
+
+    if (!userSeasonRewardEntity) {
+        userSeasonRewardEntity = new UserSeasonReward(userAddress)
+
+        exists = false
+    }
+
+    return {
+        entity: userSeasonRewardEntity,
         exists: exists,
     }
 }

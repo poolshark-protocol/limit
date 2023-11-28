@@ -154,6 +154,11 @@ interface PoolsharkStructs {
         uint32 positionId;
     }
 
+    struct StakeFinParams {
+        address to;
+        uint256 amount;
+    }
+
     /**
      * @custom:struct MintCoverParams
      */

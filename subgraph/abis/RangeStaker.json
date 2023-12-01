@@ -128,31 +128,6 @@
       },
       {
         "indexed": false,
-        "internalType": "uint128",
-        "name": "newLiquidity",
-        "type": "uint128"
-      }
-    ],
-    "name": "StakeRangeBurn",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "pool",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint32",
-        "name": "positionId",
-        "type": "uint32"
-      },
-      {
-        "indexed": false,
         "internalType": "address",
         "name": "recipient",
         "type": "address"

@@ -1,10 +1,11 @@
 import { store, BigInt } from "@graphprotocol/graph-ts"
 import { BurnLimit } from "../../../generated/LimitPoolFactory/LimitPool"
 import { FACTORY_ADDRESS, ONE_BI, SEASON_1_END_TIME, SEASON_1_START_TIME } from "../../constants/constants"
-import { BIGINT_ZERO, convertTokenToDecimal } from "../utils/helpers"
+import { BIGINT_ONE, BIGINT_ZERO, convertTokenToDecimal } from "../utils/helpers"
 import { safeLoadBasePrice, safeLoadBurnLog, safeLoadHistoricalOrder, safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadLimitPosition, safeLoadLimitTick, safeLoadToken, safeLoadTotalSeasonReward, safeLoadTvlUpdateLog, safeLoadUserSeasonReward } from "../utils/loads"
 import { findEthPerToken } from "../utils/price"
 import { updateDerivedTVLAmounts } from "../utils/tvl"
+import { safeDiv } from "../utils/math"
 
 export function handleBurnLimit(event: BurnLimit): void {
     let msgSender = event.transaction.from.toHex()
@@ -53,13 +54,15 @@ export function handleBurnLimit(event: BurnLimit): void {
     let amountIn = convertTokenToDecimal(tokenInClaimedParam, tokenIn.decimals)
     let amountOut = convertTokenToDecimal(tokenOutBurnedParam, tokenOut.decimals)
 
-    let loadOrder = safeLoadHistoricalOrder(pool.id, zeroForOneParam, event.transaction.hash, position.positionId) // 9
+    let loadOrder = safeLoadHistoricalOrder(tokenIn.id, tokenOut.id, poolAddress, position.positionId.toString()) // 9
     let order = loadOrder.entity
 
     if (!loadPosition.exists || !loadOrder.exists) {
         //throw an error
+        return;
     }
 
+    order.touches = order.touches.plus(BIGINT_ONE)
     order.usdValue = order.usdValue.plus(amountIn.times(tokenIn.usdPrice))
     
     // increment position amounts
@@ -81,9 +84,10 @@ export function handleBurnLimit(event: BurnLimit): void {
         if (!loadOrder.exists) {
             // throw an error
         }
+        order.completedAtTimestamp = event.block.timestamp
         order.amountIn = convertTokenToDecimal(position.amountIn, tokenOut.decimals)
         order.amountOut = convertTokenToDecimal(position.amountFilled, tokenIn.decimals)
-        order.averagePrice = order.amountOut.div(order.amountIn)
+        order.averagePrice = safeDiv(order.amountOut, order.amountIn)
         order.completed = true
         store.remove('LimitPosition', position.id)
     } else {
@@ -173,25 +177,25 @@ export function handleBurnLimit(event: BurnLimit): void {
     pool = updateTvlRet.pool
     factory = updateTvlRet.factory
 
-    let loadTvlUpdateLog = safeLoadTvlUpdateLog(event.transaction.hash, poolAddress)
-    let tvlUpdateLog = loadTvlUpdateLog.entity
+    // let loadTvlUpdateLog = safeLoadTvlUpdateLog(event.transaction.hash, poolAddress)
+    // let tvlUpdateLog = loadTvlUpdateLog.entity
 
-    tvlUpdateLog.pool = poolAddress
-    tvlUpdateLog.eventName = "BurnRange"
-    tvlUpdateLog.txnHash = event.transaction.hash
-    tvlUpdateLog.txnBlockNumber = event.block.number
-    tvlUpdateLog.amount0Change = zeroForOneParam ? amountOut.neg() : amountIn.neg()
-    tvlUpdateLog.amount1Change = zeroForOneParam ? amountIn.neg() : amountOut.neg()
-    tvlUpdateLog.amount0Total = pool.totalValueLocked0
-    tvlUpdateLog.amount1Total = pool.totalValueLocked1
-    tvlUpdateLog.token0UsdPrice = zeroForOneParam ? tokenOut.usdPrice : tokenIn.usdPrice
-    tvlUpdateLog.token1UsdPrice = zeroForOneParam ? tokenIn.usdPrice : tokenOut.usdPrice
-    tvlUpdateLog.amountUsdChange = amountIn
-    .times(tokenIn.ethPrice.times(basePrice.USD))
-    .plus(amountOut.times(tokenOut.ethPrice.times(basePrice.USD))).neg()
-    tvlUpdateLog.amountUsdTotal = pool.totalValueLockedUsd
+    // tvlUpdateLog.pool = poolAddress
+    // tvlUpdateLog.eventName = "BurnRange"
+    // tvlUpdateLog.txnHash = event.transaction.hash
+    // tvlUpdateLog.txnBlockNumber = event.block.number
+    // tvlUpdateLog.amount0Change = zeroForOneParam ? amountOut.neg() : amountIn.neg()
+    // tvlUpdateLog.amount1Change = zeroForOneParam ? amountIn.neg() : amountOut.neg()
+    // tvlUpdateLog.amount0Total = pool.totalValueLocked0
+    // tvlUpdateLog.amount1Total = pool.totalValueLocked1
+    // tvlUpdateLog.token0UsdPrice = zeroForOneParam ? tokenOut.usdPrice : tokenIn.usdPrice
+    // tvlUpdateLog.token1UsdPrice = zeroForOneParam ? tokenIn.usdPrice : tokenOut.usdPrice
+    // tvlUpdateLog.amountUsdChange = amountIn
+    // .times(tokenIn.ethPrice.times(basePrice.USD))
+    // .plus(amountOut.times(tokenOut.ethPrice.times(basePrice.USD))).neg()
+    // tvlUpdateLog.amountUsdTotal = pool.totalValueLockedUsd
 
-    tvlUpdateLog.save()
+    // tvlUpdateLog.save()
 
     basePrice.save() // 3
     pool.save() // 4

@@ -156,7 +156,7 @@ interface PoolsharkStructs {
 
     struct StakeFinParams {
         address to;
-        uint256 amount;
+        uint128 amount;
     }
 
     /**

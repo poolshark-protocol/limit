@@ -6,6 +6,7 @@ import {
     fetchTokenName,
     fetchTokenDecimals,
     BIGINT_ZERO,
+    BIGDECIMAL_ZERO,
 } from './helpers'
 import { bigDecimalExponated, safeDiv } from './math'
 import { getEthPriceInUSD } from './price'
@@ -463,21 +464,26 @@ class LoadHistoricalOrderRet {
     entity: HistoricalOrder
     exists: boolean
 }
-export function safeLoadHistoricalOrder(poolAddress: string, zeroForOne: boolean, txnHash: Bytes, txnCountOrPositionId: BigInt): LoadHistoricalOrderRet {
+export function safeLoadHistoricalOrder(tokenInAddress: string, tokenOutAddress: string, poolAddress: string, txnHashOrPositionId: string): LoadHistoricalOrderRet {
     let exists = true
 
-    let historicalOrderId = poolAddress
-                            .concat(zeroForOne.toString())
-                            .concat(txnHash.toHex())
-                            .concat(txnCountOrPositionId.toString())
+    let historicalOrderId = tokenInAddress
+                            .concat('-')
+                            .concat(tokenOutAddress)
+                            .concat('-')
+                            .concat(poolAddress)
+                            .concat('-')
+                            .concat(txnHashOrPositionId)
 
     let historicalOrderEntity = HistoricalOrder.load(historicalOrderId)
 
     if (!historicalOrderEntity) {
         historicalOrderEntity = new HistoricalOrder(historicalOrderId)
-        historicalOrderEntity.pool = poolAddress
-        historicalOrderEntity.zeroForOne = zeroForOne
-        historicalOrderEntity.txnHash = txnHash
+        historicalOrderEntity.tokenIn = tokenInAddress
+        historicalOrderEntity.tokenOut = tokenOutAddress
+        historicalOrderEntity.amountIn = BIGDECIMAL_ZERO
+        historicalOrderEntity.amountOut = BIGDECIMAL_ZERO
+        historicalOrderEntity.completed = true
 
         exists = false
     }

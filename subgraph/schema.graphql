@@ -328,19 +328,25 @@ type CompoundRangeLog @entity {
 }
 
 type HistoricalOrder @entity {
-    # poolAddress + zeroForOne + txnHash
+    # poolAddress + zeroForOne + txnHash + owner
     id: ID!
 
+    owner: Bytes!
+
     pool: LimitPool!
-    zeroForOne: Boolean!
+    tokenIn: Token!
+    tokenOut: Token!
     txnHash: Bytes!
 
     amountIn: BigDecimal!
     amountOut: BigDecimal!
     averagePrice: BigDecimal!
-    createdAtTimestamp: BigInt!
+    completedAtTimestamp: BigInt!
 
     usdValue: BigDecimal!
+
+    positionId: BigInt!
+    touches: BigInt!
 
     completed: Boolean!
 }

@@ -2,13 +2,14 @@
 import { BigInt, BigDecimal, Address } from '@graphprotocol/graph-ts'
 import { LimitPoolFactory as FactoryContract } from '../../generated/templates/LimitPoolTemplate/LimitPoolFactory'
 export let FACTORY_ADDRESS = '0x1b215002e688135549cc0290d6cf1f94e3aa425c'
+export let RANGE_STAKER_ADDRESS = '0xe5e2E95A986CE078606C403593593b18Ed98f4d6'
 export let WETH_ADDRESS = '0xefb283ef3167ca2ee9d93b201af15e2af3f6e8c7'
 
 // tokens where USD value is safe to use for globals
-export let WHITELIST_TOKENS: string[] = [
-  '0xefb283ef3167ca2ee9d93b201af15e2af3f6e8c7', //WETH
-  '0x19bee8e887a5db5cf20a841eb4daacbcacf14b1b', //DAI
-  '0xebff7a98149b4774c9743c5d1f382305fe5422c9' //USDC
+export let WHITELISTED_TOKENS: string[] = [
+  '0xefb283ef3167ca2ee9d93b201af15e2af3f6e8c7', // WETH
+  '0x19bee8e887a5db5cf20a841eb4daacbcacf14b1b', // DAI
+  '0xebff7a98149b4774c9743c5d1f382305fe5422c9' // USDC
 ]
 
 export let WHITELISTED_PAIRS: string[] = [

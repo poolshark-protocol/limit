@@ -1,6 +1,6 @@
 import { safeLoadLimitPool, safeLoadRangePosition, safeLoadToken, safeLoadTotalSeasonReward, safeLoadUserSeasonReward } from '../utils/loads'
-import { FeeToTransfer, OwnerTransfer, StakeRange, StakeRangeAccrued, StakeRangeBurn, UnstakeRange } from '../../../generated/RangeStaker/RangeStaker'
-import { FACTORY_ADDRESS, SEASON_1_END_TIME, SEASON_1_START_TIME, WHITELISTED_PAIRS, WHITELIST_TOKENS } from '../../constants/constants'
+import { FeeToTransfer, OwnerTransfer, StakeRange, StakeRangeAccrued, UnstakeRange } from '../../../generated/templates/RangeStakerTemplate/RangeStaker'
+import { FACTORY_ADDRESS, SEASON_1_END_TIME, SEASON_1_START_TIME, WHITELISTED_PAIRS, WHITELISTED_TOKENS } from '../../constants/constants'
 import { convertTokenToDecimal } from '../utils/helpers'
 
 export function handleFeeToTransfer(event: FeeToTransfer): void {
@@ -21,6 +21,13 @@ export function handleStakeRange(event: StakeRange): void {
         positionIdParam
     )
     let position = loadPosition.entity
+
+    if (!loadPosition.exists) {
+        position.pool = poolAddressParam
+        position.positionId = positionIdParam
+        position.createdAtBlockNumber = event.block.number
+        position.createdAtTimestamp = event.block.timestamp
+    }
 
     position.owner = recipientParam
     position.staked = true
@@ -60,7 +67,7 @@ export function handleStakeRangeAccrued(event: StakeRangeAccrued): void {
         // whitelisted pairs
         userSeasonReward.whitelistedFeesUsd = userSeasonReward.whitelistedFeesUsd.plus(feeGrowthAccruedUsd)
         totalSeasonReward.whitelistedFeesUsd = totalSeasonReward.whitelistedFeesUsd.plus(feeGrowthAccruedUsd)
-    } else if (WHITELIST_TOKENS.includes(pool.token0) || WHITELIST_TOKENS.includes(pool.token1)) {
+    } else if (WHITELISTED_TOKENS.includes(pool.token0) || WHITELISTED_TOKENS.includes(pool.token1)) {
         // non-whitelisted pair w/ whitelisted base asset
         userSeasonReward.nonWhitelistedFeesUsd = userSeasonReward.nonWhitelistedFeesUsd.plus(feeGrowthAccruedUsd)
         totalSeasonReward.nonWhitelistedFeesUsd = totalSeasonReward.nonWhitelistedFeesUsd.plus(feeGrowthAccruedUsd)

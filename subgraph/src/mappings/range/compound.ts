@@ -22,14 +22,14 @@ export function handleCompoundRange(event: CompoundRange): void {
     let upper = position.upper
 
     // log compound action
-    let loadCompoundRangeLog = safeLoadCompoundRangeLog(event.transaction.hash, poolAddress, positionIdParam)
-    let compoundLog = loadCompoundRangeLog.entity
-    if (!loadCompoundRangeLog.exists) {
-        compoundLog.sender = senderParam
-        compoundLog.pool = poolAddress
-        compoundLog.positionId = position.positionId
-    }
-    compoundLog.liquidityCompounded = compoundLog.liquidityCompounded.plus(liquidityCompoundedParam)
+    // let loadCompoundRangeLog = safeLoadCompoundRangeLog(event.transaction.hash, poolAddress, positionIdParam)
+    // let compoundLog = loadCompoundRangeLog.entity
+    // if (!loadCompoundRangeLog.exists) {
+    //     compoundLog.sender = senderParam
+    //     compoundLog.pool = poolAddress
+    //     compoundLog.positionId = position.positionId
+    // }
+    // compoundLog.liquidityCompounded = compoundLog.liquidityCompounded.plus(liquidityCompoundedParam)
 
     let loadLimitPool = safeLoadLimitPool(poolAddress)
     let pool = loadLimitPool.entity
@@ -78,5 +78,5 @@ export function handleCompoundRange(event: CompoundRange): void {
     position.save()
     lowerTick.save()
     upperTick.save()
-    compoundLog.save()
+    // compoundLog.save()
 }

@@ -10,7 +10,7 @@ import { findEthPerToken } from '../utils/price'
 import { updateDerivedTVLAmounts } from '../utils/tvl'
 
 export function handleMintLimit(event: MintLimit): void {
-    let ownerParam = event.params.to.toHex()
+    let ownerParam = event.params.to
     let lowerParam = event.params.lower
     let upperParam = event.params.upper
     let positionIdParam = event.params.positionId
@@ -44,17 +44,64 @@ export function handleMintLimit(event: MintLimit): void {
     let tokenIn = loadTokenIn.entity
     let tokenOut = loadTokenOut.entity
 
-    let loadOrder = safeLoadHistoricalOrder(pool.id, zeroForOneParam, event.transaction.hash, pool.txnCount) // 9
+    // increase liquidity count
+    if (!loadPosition.exists) {
+        if (zeroForOneParam) {
+            position.tokenIn = pool.token0
+            position.tokenOut = pool.token1
+        } else {
+            position.tokenIn = pool.token1
+            position.tokenOut = pool.token0
+        }
+        position.positionId = positionIdParam
+        position.lower = lower
+        position.upper = upper
+        position.zeroForOne = zeroForOneParam
+        position.owner = ownerParam
+        position.epochLast = epochLastParam
+        position.createdBy = msgSender
+        position.createdAtTimestamp = event.block.timestamp
+        position.txnHash = event.transaction.hash
+        position.pool = poolAddress
+    }
+    pool.liquidityGlobal = pool.liquidityGlobal.plus(liquidityMintedParam)
+    position.liquidity = position.liquidity.plus(liquidityMintedParam)
+    position.amountIn = position.amountIn.plus(amountInParam)
+    position.amountFilled = position.amountFilled.plus(amountFilledParam)
+
+    let addingLiquidity: boolean = false
+
+    // positionIdNext can be loaded
+    let loadOrder = safeLoadHistoricalOrder(tokenIn.id, tokenOut.id, poolAddress, position.positionId.toString()) // 9
+
+    if (!loadOrder.exists) {
+        loadOrder = safeLoadHistoricalOrder(tokenIn.id, tokenOut.id, poolAddress, event.transaction.hash.toHex()) // 9
+    } else {
+        addingLiquidity = true
+    }
+
     let order = loadOrder.entity
-    order.id = poolAddress
-                .concat(zeroForOneParam.toString())
-                .concat(event.transaction.hash.toHex())
+    order.id = tokenIn.id
+                .concat('-')
+                .concat(tokenOut.id)
+                .concat('-')
+                .concat(poolAddress)
+                .concat('-')
                 .concat(position.positionId.toString())
     if (!loadOrder.exists) {
-        order.createdAtTimestamp = event.block.timestamp
+        order.pool = poolAddress
+        order.owner = ownerParam
+        order.txnHash = event.transaction.hash
+        order.completedAtTimestamp = event.block.timestamp
     }
-    order.amountIn = BIGDECIMAL_ZERO
-    order.amountOut = convertTokenToDecimal(amountFilledParam, tokenOut.decimals)
+    order.positionId = position.positionId
+    order.touches = order.touches.plus(BIGINT_ONE)
+    if (!addingLiquidity) {
+        order.amountIn = BIGDECIMAL_ZERO
+        order.amountOut = BIGDECIMAL_ZERO
+    }
+    order.amountIn = order.amountIn.plus(convertTokenToDecimal(amountInParam, tokenIn.decimals))
+    order.amountOut = order.amountOut.plus(convertTokenToDecimal(amountFilledParam, tokenOut.decimals))
     order.averagePrice = BIGDECIMAL_ZERO
     order.usdValue = order.amountOut.times(tokenOut.usdPrice)
     order.completed = false
@@ -72,32 +119,7 @@ export function handleMintLimit(event: MintLimit): void {
         if (upperTick.index == pool.tickAtPrice) {
             upperTick.active = true
         }
-    }
-
-    // increase liquidity count
-    if (!loadPosition.exists) {
-        if (zeroForOneParam) {
-            position.tokenIn = pool.token0
-            position.tokenOut = pool.token1
-        } else {
-            position.tokenIn = pool.token1
-            position.tokenOut = pool.token0
-        }
-        position.positionId = positionIdParam
-        position.lower = lower
-        position.upper = upper
-        position.zeroForOne = zeroForOneParam
-        position.owner = Bytes.fromHexString(ownerParam) as Bytes
-        position.epochLast = epochLastParam
-        position.createdBy = msgSender
-        position.createdAtTimestamp = event.block.timestamp
-        position.txnHash = event.transaction.hash
-        position.pool = poolAddress
-    }
-    pool.liquidityGlobal = pool.liquidityGlobal.plus(liquidityMintedParam)
-    position.liquidity = position.liquidity.plus(liquidityMintedParam)
-    position.amountIn = amountInParam
-    position.amountFilled = BIGINT_ZERO
+    }    
 
     if (positionIdParam >= pool.positionIdNext) {
         pool.positionIdNext = positionIdParam.plus(BIGINT_ONE)
@@ -167,25 +189,25 @@ export function handleMintLimit(event: MintLimit): void {
     pool = updateTvlRet.pool
     factory = updateTvlRet.factory
 
-    let loadTvlUpdateLog = safeLoadTvlUpdateLog(event.transaction.hash, poolAddress)
-    let tvlUpdateLog = loadTvlUpdateLog.entity
+    // let loadTvlUpdateLog = safeLoadTvlUpdateLog(event.transaction.hash, poolAddress)
+    // let tvlUpdateLog = loadTvlUpdateLog.entity
 
-    tvlUpdateLog.pool = poolAddress
-    tvlUpdateLog.eventName = "MintLimit"
-    tvlUpdateLog.txnHash = event.transaction.hash
-    tvlUpdateLog.txnBlockNumber = event.block.number
-    tvlUpdateLog.amount0Change = zeroForOneParam ? amountIn : amountOut.neg()
-    tvlUpdateLog.amount1Change = zeroForOneParam ? amountOut.neg() : amountIn
-    tvlUpdateLog.amount0Total = pool.totalValueLocked0
-    tvlUpdateLog.amount1Total = pool.totalValueLocked1
-    tvlUpdateLog.token0UsdPrice = zeroForOneParam ? tokenIn.usdPrice : tokenOut.usdPrice
-    tvlUpdateLog.token1UsdPrice = zeroForOneParam ? tokenOut.usdPrice : tokenIn.usdPrice
-    tvlUpdateLog.amountUsdChange = amountIn
-    .times(tokenIn.ethPrice.times(basePrice.USD))
-    .minus(amountOut.times(tokenOut.ethPrice.times(basePrice.USD)))
-    tvlUpdateLog.amountUsdTotal = pool.totalValueLockedUsd
+    // tvlUpdateLog.pool = poolAddress
+    // tvlUpdateLog.eventName = "MintLimit"
+    // tvlUpdateLog.txnHash = event.transaction.hash
+    // tvlUpdateLog.txnBlockNumber = event.block.number
+    // tvlUpdateLog.amount0Change = zeroForOneParam ? amountIn : amountOut.neg()
+    // tvlUpdateLog.amount1Change = zeroForOneParam ? amountOut.neg() : amountIn
+    // tvlUpdateLog.amount0Total = pool.totalValueLocked0
+    // tvlUpdateLog.amount1Total = pool.totalValueLocked1
+    // tvlUpdateLog.token0UsdPrice = zeroForOneParam ? tokenIn.usdPrice : tokenOut.usdPrice
+    // tvlUpdateLog.token1UsdPrice = zeroForOneParam ? tokenOut.usdPrice : tokenIn.usdPrice
+    // tvlUpdateLog.amountUsdChange = amountIn
+    // .times(tokenIn.ethPrice.times(basePrice.USD))
+    // .minus(amountOut.times(tokenOut.ethPrice.times(basePrice.USD)))
+    // tvlUpdateLog.amountUsdTotal = pool.totalValueLockedUsd
 
-    tvlUpdateLog.save()
+    // tvlUpdateLog.save()
 
     basePrice.save() // 3
     pool.save() // 4

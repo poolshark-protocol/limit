@@ -485,15 +485,18 @@ contract PoolsharkRouter is
         // mint initial range positions
         for (uint i = 0; i < mintRangeParams.length;) {
             address staker;
-            mintRangeParams[i].positionId = 0;
-            mintRangeParams[i].callbackData = abi.encode(MintRangeCallbackData({
-                sender: msg.sender,
-                recipient: mintRangeParams[i].to,
-                wrapped: msg.value > 0
-            }));
-            staker = abi.decode(mintRangeParams[i].callbackData, (MintRangeInputData)).staker; 
-            if (staker != address(0)) {
-                mintRangeParams[i].to = staker;
+            {
+                mintRangeParams[i].positionId = 0;
+                MintRangeCallbackData memory callbackData = MintRangeCallbackData({
+                    sender: msg.sender,
+                    recipient: mintRangeParams[i].to,
+                    wrapped: msg.value > 0
+                });
+                staker = abi.decode(mintRangeParams[i].callbackData, (MintRangeInputData)).staker; 
+                if (staker != address(0)) {
+                    mintRangeParams[i].to = staker;
+                }
+                mintRangeParams[i].callbackData = abi.encode(callbackData);
             }
             try IRangePool(pool).mintRange(mintRangeParams[i]) {
             } catch {}
@@ -515,8 +518,7 @@ contract PoolsharkRouter is
                 sender: msg.sender,
                 wrapped: msg.value > 0
             }));
-            try ILimitPool(pool).mintLimit(mintLimitParams[i]) {
-            } catch {}
+            ILimitPool(pool).mintLimit(mintLimitParams[i]);
             unchecked {
                 ++i;
             }

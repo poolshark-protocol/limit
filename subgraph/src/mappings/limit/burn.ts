@@ -85,8 +85,8 @@ export function handleBurnLimit(event: BurnLimit): void {
             // throw an error
         }
         order.completedAtTimestamp = event.block.timestamp
-        order.amountIn = convertTokenToDecimal(position.amountIn, tokenOut.decimals)
-        order.amountOut = convertTokenToDecimal(position.amountFilled, tokenIn.decimals)
+        order.amountIn = order.amountIn.plus(convertTokenToDecimal(position.amountIn, tokenOut.decimals))
+        order.amountOut = order.amountOut.plus(convertTokenToDecimal(position.amountFilled, tokenIn.decimals))
         order.averagePrice = safeDiv(order.amountOut, order.amountIn)
         order.completed = true
         store.remove('LimitPosition', position.id)

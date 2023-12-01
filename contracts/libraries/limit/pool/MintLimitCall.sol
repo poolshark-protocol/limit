@@ -17,7 +17,6 @@ library MintLimitCall {
         uint32 positionId,
         uint32 epochLast,
         uint128 amountIn,
-        uint128 amountFilled,
         uint128 liquidityMinted
     );
 
@@ -142,8 +141,7 @@ library MintLimitCall {
                 params.zeroForOne,
                 params.positionId,
                 cache.position.epochLast,
-                uint128(params.amount + cache.swapCache.input),
-                uint128(cache.swapCache.output),
+                uint128(params.amount),
                 uint128(cache.liquidityMinted)
             );
         }

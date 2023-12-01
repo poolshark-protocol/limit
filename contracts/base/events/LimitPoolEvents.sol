@@ -77,7 +77,6 @@ abstract contract LimitPoolEvents {
         uint32 positionId,
         uint32 epochLast,
         uint128 amountIn,
-        uint128 amountFilled,
         uint128 liquidityMinted
     );
 

@@ -496,15 +496,25 @@ export async function validateBurn(params: ValidateBurnParams) {
         positionId: params.positionId,
         burnPercent: burnPercent
       }
-    )
+    , {gasLimit: 3_000_000})
     await burnTxn.wait()
   } else {
     await expect(
-      poolContract.connect(signer).burnRange({
+      !staked ? poolContract.connect(signer).burnRange({
         to: params.signer.address,
         positionId: params.positionId,
         burnPercent: burnPercent,
-    })
+      })
+    : hre.props.rangeStaker
+      .connect(signer)
+      .burnRangeStake(
+        poolContract.address,
+        {
+          to: params.signer.address,
+          positionId: params.positionId,
+          burnPercent: burnPercent
+        }
+      , {gasLimit: 3_000_000})
     ).to.be.revertedWith(revertMessage)
     return
   }

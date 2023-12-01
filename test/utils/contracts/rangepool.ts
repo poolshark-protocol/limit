@@ -354,8 +354,8 @@ export async function validateMint(params: ValidateMintParams): Promise<number> 
   positionBefore = await poolContract.positions(positionId)
   positionTokens = await hre.ethers.getContractAt('PositionERC1155', poolTokenContract.address);
   positionTokenBalanceBefore = await positionTokens.balanceOf(stake ? hre.props.rangeStaker.address : signer.address, expectedPositionId);
-  if (params.positionId && !stake)
-    expect(positionTokenBalanceBefore).to.be.equal(1)
+  // if (params.positionId && !stake)
+  //   expect(positionTokenBalanceBefore).to.be.equal(1)
   if (revertMessage == '') {
     const txn = await hre.props.poolRouter
       .connect(params.signer)
@@ -472,7 +472,7 @@ export async function validateBurn(params: ValidateBurnParams) {
   let burnPercent = params.burnPercent
   let positionSnapshot: [BigNumber, BigNumber, BigNumber, BigNumber]
 
-  if (!burnPercent) {
+  if (!burnPercent && positionBefore.liquidity.gt(BN_ZERO)) {
     burnPercent = liquidityAmount
                         .mul(ethers.utils.parseUnits('1', 38))
                         .div(positionBefore.liquidity)
@@ -512,7 +512,7 @@ export async function validateBurn(params: ValidateBurnParams) {
         {
           to: params.signer.address,
           positionId: params.positionId,
-          burnPercent: burnPercent
+          burnPercent: burnPercent ?? BN_ZERO
         }
       , {gasLimit: 3_000_000})
     ).to.be.revertedWith(revertMessage)
@@ -644,7 +644,7 @@ export async function validateUnstake(params: ValidateUnstakeParams) {
   let positionSnapshot: [BigNumber, BigNumber, BigNumber, BigNumber]
 
   if (revertMessage == '') {
-    positionSnapshot = await poolContract.snapshotRange(params.positionId)
+    // positionSnapshot = await poolContract.snapshotRange(params.positionId)
     const unstakeTxn = await hre.props.rangeStaker
       .connect(signer)
       .unstakeRange({

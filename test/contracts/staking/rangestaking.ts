@@ -81,6 +81,89 @@ describe('RangeStaker Tests', function () {
         if (debugMode) await getLiquidity(false, true)
     })
 
+    it('Should be able to change owner', async function () {    
+        // check admin contract owner
+        expect(await
+          hre.props.rangeStaker
+            .owner()
+        ).to.be.equal(hre.props.admin.address)
+    
+        // expect revert if non-owner calls admin function
+        await expect(
+            hre.props.rangeStaker
+              .connect(hre.props.bob)
+              .transferOwner(hre.props.bob.address)
+        ).to.be.revertedWith('OwnerOnly()')
+    
+        // transfer ownership to bob
+        await hre.props.rangeStaker.connect(hre.props.admin).transferOwner(hre.props.bob.address)
+        
+        // expect bob to be the new admin
+        expect(await
+            hre.props.rangeStaker
+              .owner()
+          ).to.be.equal(hre.props.bob.address)
+        
+        await expect(
+            hre.props.rangeStaker
+              .connect(hre.props.admin)
+              .transferOwner(hre.props.bob.address)
+        ).to.be.revertedWith('OwnerOnly()')
+    
+        // transfer ownership back to previous admin
+        await hre.props.rangeStaker.connect(hre.props.bob).transferOwner(hre.props.admin.address)
+        
+        // check admin is owner again
+        expect(await
+            hre.props.rangeStaker
+            .owner()
+        ).to.be.equal(hre.props.admin.address)
+      })
+    
+      it('Should be able to change feeTo', async function () {
+        // check admin contract feeTo
+        expect(await
+          hre.props.rangeStaker
+            .feeTo()
+        ).to.be.equal(hre.props.admin.address)
+    
+        // owner should not be able to claim fees
+        await hre.props.rangeStaker.connect(hre.props.admin).transferOwner(hre.props.bob.address)
+    
+        // expect revert if non-owner calls admin function
+        await expect(
+            hre.props.rangeStaker
+              .connect(hre.props.bob)
+              .transferFeeTo(hre.props.bob.address)
+        ).to.be.revertedWith('FeeToOnly()')
+    
+        await hre.props.rangeStaker.connect(hre.props.bob).transferOwner(hre.props.admin.address)
+    
+        // transfer ownership to bob
+        await hre.props.rangeStaker.connect(hre.props.admin).transferFeeTo(hre.props.bob.address)
+        
+        // expect bob to be the new admin
+        expect(await
+            hre.props.rangeStaker
+              .feeTo()
+          ).to.be.equal(hre.props.bob.address)
+        
+        await expect(
+            hre.props.rangeStaker
+              .connect(hre.props.admin)
+              .transferFeeTo(hre.props.bob.address)
+        ).to.be.revertedWith('FeeToOnly()')
+    
+        // transfer ownership back to previous admin
+        await hre.props.rangeStaker.connect(hre.props.bob).transferFeeTo(hre.props.admin.address)
+        
+        // check admin is owner again
+        expect(await
+            hre.props.rangeStaker
+            .feeTo()
+        ).to.be.equal(hre.props.admin.address)
+      })
+
     it('pool0 - Should mint, stake, and burn', async function () {
         const aliceLiquidity = BigNumber.from('419027207938949970576')
         await validateSwap({
@@ -285,6 +368,45 @@ describe('RangeStaker Tests', function () {
             stake: true
         })
 
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: '10000',
+            upper: '20000',
+            positionId: aliceId,
+            amount0: BigNumber.from(tokenAmount),
+            amount1: BigNumber.from(tokenAmount),
+            balance0Decrease: BigNumber.from('99995561882490566021'),
+            balance1Decrease: BigNumber.from('27435214079638242718'),
+            liquidityIncrease: aliceLiquidity2,
+            revertMessage: 'PositionOwnerMismatch()',
+            collectRevertMessage: '',
+            stake: false
+        })
+
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: '10000',
+            upper: '20000',
+            positionId: aliceId,
+            amount0: BigNumber.from(tokenAmount),
+            amount1: BigNumber.from(tokenAmount),
+            balance0Decrease: BigNumber.from('99995561882490566021'),
+            balance1Decrease: BigNumber.from('27435214079638242718'),
+            liquidityIncrease: aliceLiquidity2,
+            revertMessage: 'RangeStake::PositionOwnerMismatch()',
+            collectRevertMessage: '',
+            stake: true
+        })
+
+        await validateUnstake({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            positionId: aliceId,
+            revertMessage: 'RangeUnstake::PositionOwnerMisMatch()'
+        })
+
         await validateBurn({
             signer: hre.props.alice,
             lower: '10000',
@@ -295,6 +417,13 @@ describe('RangeStaker Tests', function () {
             balance1Increase: BigNumber.from('52435214079638242717'),
             revertMessage: '',
             staked: true
+        })
+
+        await validateUnstake({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            positionId: aliceId,
+            revertMessage: 'RangeUnstake::PositionAlreadyUnstaked()'
         })
         // burn half of staked position
         // advance past end time
@@ -325,6 +454,18 @@ describe('RangeStaker Tests', function () {
           revertMessage: '',
           collectRevertMessage: '',
           stake: true
+        })
+
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: '10000',
+            upper: '20000',
+            positionId: aliceId + 1,
+            liquidityAmount: aliceLiquidity,
+            balance0Increase: BigNumber.from('191123764981132040271'),
+            balance1Increase: BigNumber.from('52435214079638242717'),
+            revertMessage: 'BurnRangeStake::StakeNotFound()',
+            staked: true
         })
 
         await validateSwap({
@@ -615,6 +756,19 @@ describe('RangeStaker Tests', function () {
         })
 
         await validateBurn({
+            signer: hre.props.bob,
+            lower: '192930',
+            upper: '206930',
+            positionId: aliceId,
+            liquidityAmount: BigNumber.from('3071152467397011531208600'),
+            burnPercent: ethers.utils.parseUnits('1', 38),
+            balance0Increase: BigNumber.from('100000002563313114953'),
+            balance1Increase: BigNumber.from('0'),
+            revertMessage: 'BurnRangeStake::PositionOwnerMismatch()',
+            staked: true
+        });
+
+        await validateBurn({
             signer: hre.props.alice,
             lower: '192930',
             upper: '206930',
@@ -624,6 +778,19 @@ describe('RangeStaker Tests', function () {
             balance0Increase: BigNumber.from('100000002563313114953'),
             balance1Increase: BigNumber.from('0'),
             revertMessage: '',
+            staked: true
+        });
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '192930',
+            upper: '206930',
+            positionId: aliceId,
+            liquidityAmount: BigNumber.from('3071152467397011531208600'),
+            burnPercent: ethers.utils.parseUnits('1', 38),
+            balance0Increase: BigNumber.from('100000002563313114953'),
+            balance1Increase: BigNumber.from('0'),
+            revertMessage: 'BurnRangeStake::PositionAlreadyUnstaked()',
             staked: true
         });
 

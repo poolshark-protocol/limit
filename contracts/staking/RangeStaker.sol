@@ -110,7 +110,7 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
             locals.stake.owner = rangeStakes[locals.stakeKey].owner;
             locals.stake.liquidity = rangeStakes[locals.stakeKey].liquidity;
             if (locals.stake.owner != params.to) {
-                require(false, "RangeStake::PositionOwnerMisMatch()");
+                require(false, "RangeStake::PositionOwnerMismatch()");
             }
         }
 
@@ -308,7 +308,7 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
         if (locals.stake.pool == address(0)) {
             require(false, "BurnRangeStake::StakeNotFound()");
         } else if (locals.stake.owner != msg.sender) {
-            require(false, "BurnRangeStake::PositionOwnerMisMatch()");
+            require(false, "BurnRangeStake::PositionOwnerMismatch()");
         } else if (!locals.stake.isStaked) {
             require(false, "BurnRangeStake::PositionAlreadyUnstaked()");
         }
@@ -347,6 +347,10 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
                 locals.feeGrowth0Accrued,
                 locals.feeGrowth1Accrued
             );
+        }
+
+        if (locals.stake.liquidity == 0) {
+            locals.stake.isStaked = false;
         }
 
         // store position stake in mapping

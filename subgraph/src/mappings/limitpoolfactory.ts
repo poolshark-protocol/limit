@@ -1,14 +1,15 @@
-import { log } from '@graphprotocol/graph-ts'
+import { Address, log } from '@graphprotocol/graph-ts'
 import { PoolCreated } from '../../generated/LimitPoolFactory/LimitPoolFactory'
-import { LimitPoolTemplate, PositionERC1155Template } from '../../generated/templates'
+import { LimitPoolTemplate, PositionERC1155Template, RangeStakerTemplate } from '../../generated/templates'
 import {
     fetchTokenSymbol,
     fetchTokenName,
     fetchTokenDecimals,
+    BIGINT_ONE,
 } from './utils/helpers'
-import { safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadToken } from './utils/loads'
+import { safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadLimitPoolToken, safeLoadToken } from './utils/loads'
 import { BigInt } from '@graphprotocol/graph-ts'
-import { FACTORY_ADDRESS, ONE_BI, STABLE_COINS, WETH_ADDRESS } from '../constants/constants'
+import { FACTORY_ADDRESS, ONE_BI, RANGE_STAKER_ADDRESS, STABLE_COINS, WETH_ADDRESS } from '../constants/constants'
 
 export function handlePoolCreated(event: PoolCreated): void {
     // grab event parameters
@@ -73,6 +74,7 @@ export function handlePoolCreated(event: PoolCreated): void {
     pool.tickSpacing = tickSpacingParam
     pool.factory = factory.id
     pool.poolType = poolTypeParam
+    pool.poolToken = poolTokenParam
     pool.samplesLength = BigInt.fromString('5')
 
     // creation stats
@@ -104,12 +106,20 @@ export function handlePoolCreated(event: PoolCreated): void {
         }
     }
 
+    let loadPoolToken = safeLoadLimitPoolToken(poolTokenParam.toHex())
+    let poolToken = loadPoolToken.entity
+    poolToken.pool = poolAddressParam.toHex()
+
     pool.save()
     factory.save()
     token0.save()
     token1.save()
+    poolToken.save()
 
     // tracked events based on template
     LimitPoolTemplate.create(poolAddressParam)
     PositionERC1155Template.create(poolTokenParam)
+    if (factory.poolCount.equals(BIGINT_ONE)) {
+        RangeStakerTemplate.create(Address.fromString(RANGE_STAKER_ADDRESS))
+    }
 }

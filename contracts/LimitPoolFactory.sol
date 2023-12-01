@@ -3,6 +3,7 @@ pragma solidity 0.8.13;
 
 import './interfaces/range/IRangePool.sol';
 import './interfaces/limit/ILimitPool.sol';
+import './interfaces/limit/ILimitPoolView.sol';
 import './interfaces/structs/LimitPoolStructs.sol';
 import './interfaces/structs/RangePoolStructs.sol';
 import './interfaces/limit/ILimitPoolFactory.sol';
@@ -77,7 +78,7 @@ contract LimitPoolFactory is
         (
             constants.bounds.min,
             constants.bounds.max
-        ) = ILimitPool(poolImpl).priceBounds(constants.tickSpacing);
+        ) = ILimitPoolView(poolImpl).priceBounds(constants.tickSpacing);
 
         // take that ERC1155 contract address and pass that into pool
         // launch pool token
@@ -112,7 +113,7 @@ contract LimitPoolFactory is
 
         emit PoolCreated(
             pool,
-            poolToken,
+            constants.poolToken,
             constants.token0,
             constants.token1,
             constants.swapFee,

@@ -2,9 +2,11 @@
 pragma solidity 0.8.13;
 
 import '../interfaces/IPool.sol';
+import '../interfaces/staking/IRangeStaker.sol';
 import '../interfaces/IWETH9.sol';
 import '../interfaces/range/IRangePool.sol';
 import '../interfaces/limit/ILimitPool.sol';
+import '../interfaces/limit/ILimitPoolView.sol';
 import '../interfaces/cover/ICoverPool.sol';
 import '../interfaces/cover/ICoverPoolFactory.sol';
 import '../interfaces/limit/ILimitPoolFactory.sol';
@@ -17,7 +19,8 @@ import '../external/solady/LibClone.sol';
 
 contract PoolsharkRouter is
     PoolsharkStructs,
-    ILimitPoolMintCallback,
+    ILimitPoolMintRangeCallback,
+    ILimitPoolMintLimitCallback,
     ILimitPoolSwapCallback,
     ICoverPoolSwapCallback,
     ICoverPoolMintCallback
@@ -36,7 +39,22 @@ contract PoolsharkRouter is
         address coverPoolFactory
     );
 
-    struct MintCallbackData {
+    struct MintRangeInputData {
+        address staker;
+    }
+
+    struct MintRangeCallbackData {
+        address sender;
+        address recipient;
+        bool wrapped;
+    }
+
+    struct MintLimitCallbackData {
+        address sender;
+        bool wrapped;
+    }
+
+    struct MintCoverCallbackData {
         address sender;
         bool wrapped;
     }
@@ -70,7 +88,7 @@ contract PoolsharkRouter is
         int256 amount1Delta,
         bytes calldata data
     ) external override {
-        PoolsharkStructs.LimitImmutables memory constants = ILimitPool(msg.sender).immutables();
+        PoolsharkStructs.LimitImmutables memory constants = ILimitPoolView(msg.sender).immutables();
 
         // validate sender is a canonical limit pool
         canonicalLimitPoolsOnly(constants);
@@ -151,19 +169,42 @@ contract PoolsharkRouter is
         }
     }
 
-    /// @inheritdoc ILimitPoolMintCallback
-    function limitPoolMintCallback(
+    /// @inheritdoc ILimitPoolMintRangeCallback
+    function limitPoolMintRangeCallback(
         int256 amount0Delta,
         int256 amount1Delta,
         bytes calldata data
     ) external override {
-        PoolsharkStructs.LimitImmutables memory constants = ILimitPool(msg.sender).immutables();
+        PoolsharkStructs.LimitImmutables memory constants = ILimitPoolView(msg.sender).immutables();
 
         // validate sender is a canonical limit pool
         canonicalLimitPoolsOnly(constants);
 
         // decode original sender
-        MintCallbackData memory _data = abi.decode(data, (MintCallbackData));
+        MintRangeCallbackData memory _data = abi.decode(data, (MintRangeCallbackData));
+
+        // transfer from mint caller
+        if (amount0Delta < 0) {
+            SafeTransfers.transferInto(constants.token0, _data.sender, uint256(-amount0Delta));
+        }
+        if (amount1Delta < 0) {
+            SafeTransfers.transferInto(constants.token1, _data.sender, uint256(-amount1Delta));
+        }
+    }
+
+    /// @inheritdoc ILimitPoolMintLimitCallback
+    function limitPoolMintLimitCallback(
+        int256 amount0Delta,
+        int256 amount1Delta,
+        bytes calldata data
+    ) external override {
+        PoolsharkStructs.LimitImmutables memory constants = ILimitPoolView(msg.sender).immutables();
+
+        // validate sender is a canonical limit pool
+        canonicalLimitPoolsOnly(constants);
+
+        // decode original sender
+        MintLimitCallbackData memory _data = abi.decode(data, (MintLimitCallbackData));
         
         // transfer from swap caller
         if (amount0Delta < 0) {
@@ -194,7 +235,7 @@ contract PoolsharkRouter is
         canonicalCoverPoolsOnly(constants);
 
         // decode original sender
-        MintCallbackData memory _data = abi.decode(data, (MintCallbackData));
+        MintCoverCallbackData memory _data = abi.decode(data, (MintCoverCallbackData));
 
         // transfer from swap caller
         if (amount0Delta < 0) {
@@ -219,7 +260,7 @@ contract PoolsharkRouter is
     ) external payable {
         if (pools.length != params.length) require(false, 'InputArrayLengthsMismatch()');
         for (uint i = 0; i < pools.length;) {
-            params[i].callbackData = abi.encode(MintCallbackData({
+            params[i].callbackData = abi.encode(MintLimitCallbackData({
                 sender: msg.sender,
                 wrapped: msg.value > 0
             }));
@@ -240,11 +281,29 @@ contract PoolsharkRouter is
     ) external payable {
         if (pools.length != params.length) require(false, 'InputArrayLengthsMismatch()');
         for (uint i = 0; i < pools.length;) {
-            params[i].callbackData = abi.encode(MintCallbackData({
-                sender: msg.sender,
-                wrapped: msg.value > 0
-            }));
+            address staker;
+            {
+                MintRangeCallbackData memory callbackData = MintRangeCallbackData({
+                    sender: msg.sender,
+                    recipient: params[i].to,
+                    wrapped: msg.value > 0
+                });
+                staker = abi.decode(params[i].callbackData, (MintRangeInputData)).staker; 
+                if (staker != address(0)) {
+                    params[i].to = staker;
+                }
+                params[i].callbackData = abi.encode(callbackData);
+            }
             IRangePool(pools[i]).mintRange(params[i]);
+            if (staker != address(0)) {
+                IRangeStaker(staker).stakeRange(StakeRangeParams({
+                    to: abi.decode(params[i].callbackData, (MintRangeCallbackData)).recipient,
+                    pool: pools[i],
+                    positionId: params[i].positionId
+                }));
+            }
+            // call to staking contract using positionId returned from mintRange
+            // fees and staked position will go to params.to
             unchecked {
                 ++i;
             }
@@ -261,11 +320,12 @@ contract PoolsharkRouter is
     ) external payable {
         if (pools.length != params.length) require(false, 'InputArrayLengthsMismatch()');
         for (uint i = 0; i < pools.length;) {
-            params[i].callbackData = abi.encode(MintCallbackData({
+            params[i].callbackData = abi.encode(MintCoverCallbackData({
                 sender: msg.sender,
                 wrapped: msg.value > 0
             }));
-            ICoverPool(pools[i]).mint(params[i]);
+            try ICoverPool(pools[i]).mint(params[i]) {
+            } catch {}
             unchecked {
                 ++i;
             }
@@ -388,7 +448,7 @@ contract PoolsharkRouter is
         amountOuts = new uint128[](pools.length);
         for (uint i = 0; i < pools.length;) {
             if (pools[i] == address(0)) require(false, "InvalidPoolAddress()");
-            (amountIns[i], amountOuts[i]) = ILimitPool(pools[i]).snapshotLimit(params[i]);
+            (amountIns[i], amountOuts[i]) = ILimitPoolView(pools[i]).snapshotLimit(params[i]);
             unchecked {
                 ++i;
             }
@@ -424,13 +484,29 @@ contract PoolsharkRouter is
         }
         // mint initial range positions
         for (uint i = 0; i < mintRangeParams.length;) {
-            mintRangeParams[i].positionId = 0;
-            mintRangeParams[i].callbackData = abi.encode(MintCallbackData({
-                sender: msg.sender,
-                wrapped: msg.value > 0
-            }));
-            try IRangePool(pool).mintRange(mintRangeParams[i]){
+            address staker;
+            {
+                mintRangeParams[i].positionId = 0;
+                MintRangeCallbackData memory callbackData = MintRangeCallbackData({
+                    sender: msg.sender,
+                    recipient: mintRangeParams[i].to,
+                    wrapped: msg.value > 0
+                });
+                staker = abi.decode(mintRangeParams[i].callbackData, (MintRangeInputData)).staker; 
+                if (staker != address(0)) {
+                    mintRangeParams[i].to = staker;
+                }
+                mintRangeParams[i].callbackData = abi.encode(callbackData);
+            }
+            try IRangePool(pool).mintRange(mintRangeParams[i]) {
             } catch {}
+            if (staker != address(0)) {
+                IRangeStaker(staker).stakeRange(StakeRangeParams({
+                    to: abi.decode(mintRangeParams[i].callbackData, (MintRangeCallbackData)).recipient,
+                    pool: pool,
+                    positionId: 0
+                }));
+            }
             unchecked {
                 ++i;
             }
@@ -438,12 +514,11 @@ contract PoolsharkRouter is
         // mint initial limit positions
         for (uint i = 0; i < mintLimitParams.length;) {
             mintLimitParams[i].positionId = 0;
-            mintLimitParams[i].callbackData = abi.encode(MintCallbackData({
+            mintLimitParams[i].callbackData = abi.encode(MintLimitCallbackData({
                 sender: msg.sender,
                 wrapped: msg.value > 0
             }));
-            try ILimitPool(pool).mintLimit(mintLimitParams[i]) {
-            } catch {}
+            ILimitPool(pool).mintLimit(mintLimitParams[i]);
             unchecked {
                 ++i;
             }
@@ -480,11 +555,11 @@ contract PoolsharkRouter is
         // mint initial cover positions
         for (uint i = 0; i < mintCoverParams.length;) {
             mintCoverParams[i].positionId = 0;
-            mintCoverParams[i].callbackData = abi.encode(MintCallbackData({
+            mintCoverParams[i].callbackData = abi.encode(MintCoverCallbackData({
                 sender: msg.sender,
                 wrapped: msg.value > 0
             }));
-            try ICoverPool(pool).mint(mintCoverParams[i]){
+            try ICoverPool(pool).mint(mintCoverParams[i]) {
             } catch {}
             unchecked {
                 ++i;

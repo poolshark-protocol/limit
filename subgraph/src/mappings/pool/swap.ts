@@ -1,10 +1,11 @@
 import { BigDecimal, BigInt, log } from "@graphprotocol/graph-ts"
-import { safeLoadBasePrice, safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadSwap, safeLoadToken, safeLoadTransaction, safeLoadTvlUpdateLog } from "../utils/loads"
-import { convertTokenToDecimal } from "../utils/helpers"
-import { ZERO_BD, TWO_BD, ONE_BI } from "../../constants/constants"
+import { safeLoadBasePrice, safeLoadHistoricalOrder, safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadSwap, safeLoadToken, safeLoadTotalSeasonReward, safeLoadTransaction, safeLoadTvlUpdateLog, safeLoadUserSeasonReward } from "../utils/loads"
+import { BIGDECIMAL_ZERO, BIGINT_ONE, BIGINT_ZERO, convertTokenToDecimal } from "../utils/helpers"
+import { ZERO_BD, TWO_BD, ONE_BI, FACTORY_ADDRESS, SEASON_1_END_TIME, SEASON_1_START_TIME } from "../../constants/constants"
 import { AmountType, findEthPerToken, getAdjustedAmounts, getEthPriceInUSD, sqrtPriceX96ToTokenPrices } from "../utils/price"
 import { updateDerivedTVLAmounts } from "../utils/tvl"
 import { Swap } from "../../../generated/LimitPoolFactory/LimitPool"
+import { safeDiv } from "../utils/math"
 
 export function handleSwap(event: Swap): void {
     let recipientParam = event.params.recipient
@@ -27,9 +28,12 @@ export function handleSwap(event: Swap): void {
     let loadLimitPoolFactory = safeLoadLimitPoolFactory(pool.factory) // 3
     let loadToken0 = safeLoadToken(pool.token0) // 4
     let loadToken1 = safeLoadToken(pool.token1) // 5
+    
+    
     let factory = loadLimitPoolFactory.entity
     let token0 = loadToken0.entity
     let token1 = loadToken1.entity
+
 
     let amount0: BigDecimal; let amount1: BigDecimal;
     if (zeroForOneParam) {
@@ -119,43 +123,61 @@ export function handleSwap(event: Swap): void {
     token1.volumeUsd = token1.volumeUsd.plus(volumeUsd)
     token1.volumeEth = token1.volumeEth.plus(volumeEth)
 
-    // save swap transaction
-    let transaction = safeLoadTransaction(event).entity // 6
-    let loadSwap = safeLoadSwap(event, pool) // 7
-    let swap = loadSwap.entity
-    if (!loadSwap.exists) {
-        swap.transaction = transaction.id
-        swap.recipient = recipientParam
-        swap.timestamp = transaction.timestamp
-        swap.pool = pool.id
-        swap.zeroForOne = zeroForOneParam
-        swap.amount0 = amount0
-        swap.amount1 = amount1
-        swap.amountUsd = volumeUsd
-        swap.priceAfter = priceParam
-        swap.tickAfter = BigInt.fromI32(tickAtPriceParam)
-        swap.txnIndex = pool.txnCount
+    let loadOrder = safeLoadHistoricalOrder(
+        zeroForOneParam ? token0.id : token1.id,
+        zeroForOneParam ? token1.id : token0.id,
+        poolAddress,
+        event.transaction.hash.toHex()) // 6
+    let loadTotalSeasonReward = safeLoadTotalSeasonReward(FACTORY_ADDRESS)
+    let loadUserSeasonReward = safeLoadUserSeasonReward(event.transaction.from.toHex())
+    
+    let order = loadOrder.entity
+    let totalSeasonReward = loadTotalSeasonReward.entity
+    let userSeasonReward = loadUserSeasonReward.entity
+
+    // historical order data
+    if (!loadOrder.exists) {
+        order.pool = poolAddress
+        order.owner = recipientParam
+        order.txnHash = event.transaction.hash
+        order.completedAtTimestamp = event.block.timestamp   
     }
+    order.positionId = BIGINT_ZERO
+    order.touches = order.touches.plus(BIGINT_ONE)
+    order.amountIn = order.amountIn.plus(zeroForOneParam ? amount0Abs : amount1Abs)
+    order.amountOut = order.amountOut.plus(zeroForOneParam ? amount1Abs : amount0Abs)
+    if (zeroForOneParam) {
+        const amount1Usd = amount1Abs.times(token1.usdPrice)
+        order.usdValue = order.usdValue.plus(amount1Usd)
+        userSeasonReward.volumeTradedUsd = userSeasonReward.volumeTradedUsd.plus(amount1Usd)
+        totalSeasonReward.volumeTradedUsd = totalSeasonReward.volumeTradedUsd.plus(amount1Usd)
+    } else {
+        const amount0Usd = amount0Abs.times(token0.usdPrice)
+        order.usdValue = order.usdValue.plus(amount0Usd)
+        userSeasonReward.volumeTradedUsd = userSeasonReward.volumeTradedUsd.plus(amount0Usd)
+        totalSeasonReward.volumeTradedUsd = totalSeasonReward.volumeTradedUsd.plus(amount0Usd)
+    }
+    order.averagePrice = safeDiv(order.amountOut, order.amountIn)
 
-    let loadTvlUpdateLog = safeLoadTvlUpdateLog(event.transaction.hash, poolAddress)
-    let tvlUpdateLog = loadTvlUpdateLog.entity
+    // let loadTvlUpdateLog = safeLoadTvlUpdateLog(event.transaction.hash, poolAddress)
+    // let tvlUpdateLog = loadTvlUpdateLog.entity
 
-    tvlUpdateLog.pool = poolAddress
-    tvlUpdateLog.eventName = "Swap"
-    tvlUpdateLog.txnHash = event.transaction.hash
-    tvlUpdateLog.txnBlockNumber = event.block.number
-    tvlUpdateLog.amount0Change = amount0
-    tvlUpdateLog.amount1Change = amount1
-    tvlUpdateLog.amount0Total = pool.totalValueLocked0
-    tvlUpdateLog.amount1Total = pool.totalValueLocked1
-    tvlUpdateLog.token0UsdPrice = token0.usdPrice
-    tvlUpdateLog.token1UsdPrice = token1.usdPrice
-    tvlUpdateLog.amountUsdChange = amount0
-    .times(token0.ethPrice.times(basePrice.USD))
-    .plus(amount1.times(token1.ethPrice.times(basePrice.USD)))
-    tvlUpdateLog.amountUsdTotal = pool.totalValueLockedUsd
+    // tvlUpdateLog.pool = poolAddress
+    // tvlUpdateLog.eventName = "Swap"
+    // tvlUpdateLog.txnHash = event.transaction.hash
+    // tvlUpdateLog.txnBlockNumber = event.block.number
+    // tvlUpdateLog.amount0Change = amount0
+    // tvlUpdateLog.amount1Change = amount1
+    // tvlUpdateLog.amount0Total = pool.totalValueLocked0
+    // tvlUpdateLog.amount1Total = pool.totalValueLocked1
+    // tvlUpdateLog.token0UsdPrice = token0.usdPrice
+    // tvlUpdateLog.token1UsdPrice = token1.usdPrice
+    // tvlUpdateLog.amountUsdChange = amount0
+    // .times(token0.ethPrice.times(basePrice.USD))
+    // .plus(amount1.times(token1.ethPrice.times(basePrice.USD)))
+    // tvlUpdateLog.amountUsdTotal = pool.totalValueLockedUsd
 
-    tvlUpdateLog.save()
+    // tvlUpdateLog.save()
 
     if (token1.symbol == 'USDC') {
         log.info('USDC price at swap time: {}', [token1.usdPrice.toString()])
@@ -167,6 +189,11 @@ export function handleSwap(event: Swap): void {
     factory.save()
     token0.save()
     token1.save()
-    transaction.save()
-    swap.save()
+    if (order.amountIn.gt(BIGDECIMAL_ZERO)) {
+        order.save()
+    }
+    if (event.block.timestamp.ge(SEASON_1_START_TIME) && event.block.timestamp.le(SEASON_1_END_TIME)) {
+        totalSeasonReward.save()
+        userSeasonReward.save()
+    }
 }

@@ -5,7 +5,8 @@ module.exports = {
         'libraries/TickMap.sol', 
         'libraries/EpochMap.sol',
         'libraries/utils/String.sol',
-        'external'
+        'external',
+        'staking/FinStaker.sol',
     ],
     configureYulOptimizer: true,
 }

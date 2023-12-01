@@ -45,18 +45,18 @@ export function handleMintRange(event: MintRange): void {
     let token1 = loadToken1.entity
 
     // log mint action
-    let loadMintLog = safeLoadMintRangeLog(event.transaction.hash, poolAddress, positionIdParam)
-    let mintLog = loadMintLog.entity
-    if (!loadMintLog.exists) {
-        mintLog.sender = msgSender
-        mintLog.recipient = recipientParam
-        mintLog.lower = lower
-        mintLog.upper = upper
-        mintLog.positionId = positionIdParam
-        mintLog.pool = poolAddress
-    }
-    mintLog.liquidityMinted = mintLog.liquidityMinted.plus(liquidityMintedParam)
-    mintLog.save()
+    // let loadMintLog = safeLoadMintRangeLog(event.transaction.hash, poolAddress, positionIdParam)
+    // let mintLog = loadMintLog.entity
+    // if (!loadMintLog.exists) {
+    //     mintLog.sender = msgSender
+    //     mintLog.recipient = recipientParam
+    //     mintLog.lower = lower
+    //     mintLog.upper = upper
+    //     mintLog.positionId = positionIdParam
+    //     mintLog.pool = poolAddress
+    // }
+    // mintLog.liquidityMinted = mintLog.liquidityMinted.plus(liquidityMintedParam)
+    // mintLog.save()
 
     let loadLowerTick = safeLoadRangeTick(
         poolAddress,
@@ -79,10 +79,11 @@ export function handleMintRange(event: MintRange): void {
     lowerTick.liquidityAbsolute = lowerTick.liquidityAbsolute.plus(liquidityMintedParam)
     upperTick.liquidityAbsolute = upperTick.liquidityAbsolute.plus(liquidityMintedParam)
 
+    position.lower = lower
+    position.upper = upper
     if (!loadPosition.exists) {
         position.owner = recipientParam
-        position.lower = lower
-        position.upper = upper
+        position.staked = false
         position.pool = pool.id
         position.positionId = positionIdParam
         position.createdAtBlockNumber = event.block.number
@@ -123,23 +124,23 @@ export function handleMintRange(event: MintRange): void {
     pool = updateTvlRet.pool
     factory = updateTvlRet.factory
 
-    let loadTvlUpdateLog = safeLoadTvlUpdateLog(event.transaction.hash, poolAddress)
-    let tvlUpdateLog = loadTvlUpdateLog.entity
+    // let loadTvlUpdateLog = safeLoadTvlUpdateLog(event.transaction.hash, poolAddress)
+    // let tvlUpdateLog = loadTvlUpdateLog.entity
 
-    tvlUpdateLog.pool = poolAddress
-    tvlUpdateLog.eventName = "MintRange"
-    tvlUpdateLog.txnHash = event.transaction.hash
-    tvlUpdateLog.txnBlockNumber = event.block.number
-    tvlUpdateLog.amount0Change = amount0
-    tvlUpdateLog.amount1Change = amount1
-    tvlUpdateLog.amount0Total = pool.totalValueLocked0
-    tvlUpdateLog.amount1Total = pool.totalValueLocked1
-    tvlUpdateLog.token0UsdPrice = token0.usdPrice
-    tvlUpdateLog.token1UsdPrice = token1.usdPrice
-    tvlUpdateLog.amountUsdChange = amountUsd
-    tvlUpdateLog.amountUsdTotal = pool.totalValueLockedUsd
+    // tvlUpdateLog.pool = poolAddress
+    // tvlUpdateLog.eventName = "MintRange"
+    // tvlUpdateLog.txnHash = event.transaction.hash
+    // tvlUpdateLog.txnBlockNumber = event.block.number
+    // tvlUpdateLog.amount0Change = amount0
+    // tvlUpdateLog.amount1Change = amount1
+    // tvlUpdateLog.amount0Total = pool.totalValueLocked0
+    // tvlUpdateLog.amount1Total = pool.totalValueLocked1
+    // tvlUpdateLog.token0UsdPrice = token0.usdPrice
+    // tvlUpdateLog.token1UsdPrice = token1.usdPrice
+    // tvlUpdateLog.amountUsdChange = amountUsd
+    // tvlUpdateLog.amountUsdTotal = pool.totalValueLockedUsd
 
-    tvlUpdateLog.save()
+    // tvlUpdateLog.save()
 
     if (
         pool.tickAtPrice !== null &&

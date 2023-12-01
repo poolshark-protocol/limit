@@ -84,6 +84,7 @@ type LimitPool @entity {
     tickSpacing: BigInt!
     factory: LimitPoolFactory!
     poolType: String!
+    poolToken: Bytes!
 
     liquidity: BigInt!
     liquidityGlobal: BigInt!
@@ -128,6 +129,13 @@ type LimitPool @entity {
     updatedAtBlockNumber: BigInt!
 }
 
+type LimitPoolToken @entity {
+    # poolTokenAddress
+    id: ID!
+
+    pool: LimitPool!
+}
+
 type LimitPosition @entity {
     # poolAddress + owner + lower + upper
     id: ID!
@@ -160,6 +168,7 @@ type RangePosition @entity {
     upper: BigInt!
     liquidity: BigInt!
     pool: LimitPool!
+    staked: Boolean!
 
     # creation stats
     createdAtTimestamp: BigInt!
@@ -316,5 +325,49 @@ type CompoundRangeLog @entity {
     pool: LimitPool!
     liquidityCompounded: BigInt!
     positionId: BigInt!
+}
+
+type HistoricalOrder @entity {
+    # poolAddress + zeroForOne + txnHash + owner
+    id: ID!
+
+    owner: Bytes!
+
+    pool: LimitPool!
+    tokenIn: Token!
+    tokenOut: Token!
+    txnHash: Bytes!
+
+    amountIn: BigDecimal!
+    amountOut: BigDecimal!
+    averagePrice: BigDecimal!
+    completedAtTimestamp: BigInt!
+
+    usdValue: BigDecimal!
+
+    positionId: BigInt!
+    touches: BigInt!
+
+    completed: Boolean!
+}
+
+type TotalSeasonReward @entity {
+    # factoryAddress
+    id: ID!
+
+    whitelistedFeesUsd: BigDecimal!
+    nonWhitelistedFeesUsd: BigDecimal!
+    volumeTradedUsd: BigDecimal!
+    stakingPoints: BigInt!
+}
+
+type UserSeasonReward @entity {
+    # userAddress
+    id: ID!
+
+    whitelistedFeesUsd: BigDecimal!
+    nonWhitelistedFeesUsd: BigDecimal!
+    volumeTradedUsd: BigDecimal!
+    stakingPoints: BigInt!
 }
 

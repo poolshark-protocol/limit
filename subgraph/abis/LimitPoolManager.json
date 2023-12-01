@@ -80,15 +80,15 @@
     "inputs": [
       {
         "indexed": false,
-        "internalType": "bytes32",
-        "name": "poolType",
-        "type": "bytes32"
-      },
-      {
-        "indexed": false,
         "internalType": "uint8",
         "name": "poolTypeId",
         "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "poolTypeName",
+        "type": "bytes32"
       },
       {
         "indexed": false,
@@ -142,15 +142,15 @@
       },
       {
         "indexed": false,
-        "internalType": "uint16[]",
+        "internalType": "int16[]",
         "name": "protocolFillFees0",
-        "type": "uint16[]"
+        "type": "int16[]"
       },
       {
         "indexed": false,
-        "internalType": "uint16[]",
+        "internalType": "int16[]",
         "name": "protocolFillFees1",
-        "type": "uint16[]"
+        "type": "int16[]"
       }
     ],
     "name": "ProtocolFillFeesModified",
@@ -167,15 +167,15 @@
       },
       {
         "indexed": false,
-        "internalType": "uint16[]",
+        "internalType": "int16[]",
         "name": "protocolSwapFees0",
-        "type": "uint16[]"
+        "type": "int16[]"
       },
       {
         "indexed": false,
-        "internalType": "uint16[]",
+        "internalType": "int16[]",
         "name": "protocolSwapFees1",
-        "type": "uint16[]"
+        "type": "int16[]"
       }
     ],
     "name": "ProtocolSwapFeesModified",

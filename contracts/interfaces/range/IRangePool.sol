@@ -47,7 +47,26 @@ interface IRangePool is RangePoolStructs {
         int24 averageTick
     );
 
+    function positions(uint256 positionId) external view returns (
+        uint256 feeGrowthInside0Last,
+        uint256 feeGrowthInside1Last,
+        uint128 liquidity,
+        int24 lower,
+        int24 upper
+    );
+
     function increaseSampleCount(
         uint16 newSampleCountMax
     ) external;
+
+    function ticks(int24) external view returns (
+        RangeTick memory,
+        LimitTick memory
+    );
+
+    function samples(uint256) external view returns (
+        uint32,
+        int56,
+        uint160
+    );
 }

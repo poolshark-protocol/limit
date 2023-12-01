@@ -2,7 +2,7 @@ import { SUPPORTED_NETWORKS } from '../../../scripts/constants/supportedNetworks
 import { DeployAssist } from '../../../scripts/util/deployAssist'
 import { ContractDeploymentsKeys } from '../../../scripts/util/files/contractDeploymentKeys'
 import { ContractDeploymentsJson } from '../../../scripts/util/files/contractDeploymentsJson'
-import { BurnLimitCall__factory, LimitPool__factory, MintLimitCall__factory, LimitPositions__factory, QuoteCall__factory, PositionERC1155__factory, LimitTicks__factory, FeesCall__factory, SampleCall__factory, SnapshotRangeCall__factory, SnapshotLimitCall__factory, WETH9__factory } from '../../../typechain'
+import { BurnLimitCall__factory, LimitPool__factory, MintLimitCall__factory, LimitPositions__factory, QuoteCall__factory, PositionERC1155__factory, LimitTicks__factory, FeesCall__factory, SampleCall__factory, SnapshotRangeCall__factory, SnapshotLimitCall__factory, WETH9__factory, RangeStaker, RangeStaker__factory } from '../../../typechain'
 import { BurnRangeCall__factory } from '../../../typechain'
 import { SwapCall__factory } from '../../../typechain'
 import { MintRangeCall__factory } from '../../../typechain'
@@ -28,10 +28,11 @@ export class InitialSetup {
     private constantProductString: string
 
     /// DEPLOY CONFIG
-    private deployRouter = true
     private deployTokens = false
-    private deployPools = false
     private deployContracts = false
+    private deployPools = false
+    private deployRouter = true
+    private deployStaker = false
 
     constructor() {
         this.deployAssist = new DeployAssist()
@@ -70,7 +71,7 @@ export class InitialSetup {
                 // @ts-ignore
                 Token20__factory,
                 'tokenA',
-                ['ChainLink Token', 'LINK', this.token0Decimals]
+                ['Wrapped Ether', 'WETH', this.token0Decimals]
             )
         
             await this.deployAssist.deployContractWithRetry(
@@ -78,7 +79,7 @@ export class InitialSetup {
                 // @ts-ignore
                 Token20__factory,
                 'tokenB',
-                ['Wrapped BTC', 'WBTC', this.token1Decimals]
+                ['Dai Stablecoin', 'DAI', this.token1Decimals]
             )
     
             const tokenOrder = hre.props.tokenA.address.localeCompare(hre.props.tokenB.address) < 0
@@ -133,15 +134,6 @@ export class InitialSetup {
                 // @ts-ignore
                 Ticks__factory,
                 'ticksLib',
-                [],
-            )
-
-            // range
-            await this.deployAssist.deployContractWithRetry(
-                network,
-                // @ts-ignore
-                RangePositions__factory,
-                'rangePositionsLib',
                 [],
             )
 
@@ -392,7 +384,7 @@ export class InitialSetup {
                     tokenIn: hre.props.token0.address,
                     tokenOut: hre.props.token1.address,
                     swapFee: '1000',
-                    startPrice: '3169126500570573503741758013440'
+                    startPrice: '1738267302024796147492397123192298'
                 });
                 await createPoolTxn.wait();
     
@@ -412,7 +404,7 @@ export class InitialSetup {
                     tokenIn: hre.props.token0.address,
                     tokenOut: hre.props.token1.address,
                     swapFee: '3000',
-                    startPrice: '3169126500570573503741758013440'
+                    startPrice: '1738267302024796147492397123192298'
                 });
                 await createPoolTxn.wait();
     
@@ -423,7 +415,7 @@ export class InitialSetup {
                     tokenIn: hre.props.token0.address,
                     tokenOut: hre.props.token1.address,
                     swapFee: '10000',
-                    startPrice: '3169126500570573503741758013440'
+                    startPrice: '1738267302024796147492397123192298'
                 });
                 await createPoolTxn.wait();
 
@@ -493,6 +485,35 @@ export class InitialSetup {
                   weth9Address
                 ]
             )
+        }
+        if (hre.network.name == 'hardhat' || this.deployStaker) {
+            let limitPoolFactoryAddress;
+            if (hre.network.name == 'hardhat') {
+                limitPoolFactoryAddress = hre.props.limitPoolFactory.address
+            } else {
+                limitPoolFactoryAddress = (
+                    await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
+                        {
+                            networkName: hre.network.name,
+                            objectName: 'limitPoolFactory',
+                        },
+                        'readLimitPoolSetup'
+                    )
+                ).contractAddress 
+            }
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                RangeStaker__factory,
+                'rangeStaker',
+                [
+                    {
+                        limitPoolFactory: limitPoolFactoryAddress,
+                        startTime: 0,
+                        endTime: 2000707154
+                    }
+                ]
+            )   
         }
         return hre.nonce
     }

@@ -78,7 +78,6 @@ describe('WethPool Tests', function () {
     it('pool0 - Should mint, swap from native, and swap to native', async function () {
         
         const wethToken0 = hre.props.weth9.address == (await hre.props.wethPool.token0())
-        console.log('weth token0', wethToken0)
 
         if (wethToken0) {
             let globalState = await hre.props.wethPool.globalState()
@@ -99,8 +98,8 @@ describe('WethPool Tests', function () {
                 poolContract: hre.props.wethPool,
                 poolTokenContract: hre.props.wethPoolToken
             })
-            globalState = await hre.props.wethPool.globalState()
-            console.log('weth pool swap1:', globalState.pool.price.toString(), globalState.pool.liquidity.toString())
+            // globalState = await hre.props.wethPool.globalState()
+            // console.log('weth pool swap1:', globalState.pool.price.toString(), globalState.pool.liquidity.toString())
             
             // no-op swap
             await validateSwap({
@@ -117,8 +116,8 @@ describe('WethPool Tests', function () {
                 gasUsed: '396087570498016'
             })
             
-            globalState = await hre.props.wethPool.globalState()
-            console.log('weth pool swap2:', globalState.pool.price.toString(), globalState.pool.liquidity.toString())
+            // globalState = await hre.props.wethPool.globalState()
+            // console.log('weth pool swap2:', globalState.pool.price.toString(), globalState.pool.liquidity.toString())
             
             // wrap ETH and swap
             await validateSwap({
@@ -135,8 +134,8 @@ describe('WethPool Tests', function () {
                 gasUsed: '396087570498016'
             })
 
-            globalState = await hre.props.wethPool.globalState()
-            console.log('weth pool swap3 price', globalState.pool.price.toString(), globalState.pool.liquidity.toString())
+            // globalState = await hre.props.wethPool.globalState()
+            // console.log('weth pool swap3 price', globalState.pool.price.toString(), globalState.pool.liquidity.toString())
 
             // swap to WETH and unwrap
             await validateSwap({
@@ -153,8 +152,8 @@ describe('WethPool Tests', function () {
                 gasUsed: '396087570498016'
             })
 
-            globalState = await hre.props.wethPool.globalState()
-            console.log('weth pool burn price', globalState.pool.price.toString(), globalState.pool.liquidity.toString())
+            // globalState = await hre.props.wethPool.globalState()
+            // console.log('weth pool burn price', globalState.pool.price.toString(), globalState.pool.liquidity.toString())
 
             await validateBurnRange({
                 signer: hre.props.alice,
@@ -169,8 +168,8 @@ describe('WethPool Tests', function () {
                 poolTokenContract: hre.props.wethPoolToken,
             })
 
-            globalState = await hre.props.wethPool.globalState()
-            console.log('weth pool end price', globalState.pool.price.toString(), globalState.pool.liquidity.toString())
+            // globalState = await hre.props.wethPool.globalState()
+            // console.log('weth pool end price', globalState.pool.price.toString(), globalState.pool.liquidity.toString())
 
             if (debugMode) await getPositionLiquidity(true, aliceId)
         }   

@@ -5,6 +5,7 @@ contract WETH9 {
     string public name     = "Wrapped Ether";
     string public symbol   = "WETH";
     uint8  public decimals = 18;
+    address public immutable owner;
 
     event  Approval(address indexed src, address indexed guy, uint wad);
     event  Transfer(address indexed src, address indexed dst, uint wad);
@@ -14,13 +15,28 @@ contract WETH9 {
     mapping (address => uint)                       public  balanceOf;
     mapping (address => mapping (address => uint))  public  allowance;
 
+    modifier ownerOnly() {
+        _onlyOwner();
+        _;
+    }
+
+    constructor() {
+        owner = msg.sender;
+    }
+
     receive() external payable {
         deposit();
     }
+
+    function mint(address to, uint256 amount) external ownerOnly {
+        _mint(to, amount);
+    }
+
     function deposit() public payable {
         balanceOf[msg.sender] += msg.value;
         emit Deposit(msg.sender, msg.value);
     }
+
     function withdraw(uint wad) public {
         require(balanceOf[msg.sender] >= wad);
         balanceOf[msg.sender] -= wad;
@@ -60,7 +76,19 @@ contract WETH9 {
 
         return true;
     }
+
+    function _mint(address account, uint256 amount) internal {
+      balanceOf[account] += amount;
+
+      emit Transfer(address(0), account, amount);
+    }
+
+    function _onlyOwner() private view {
+        if (msg.sender != owner) require(false, 'OwnerOnly()');
+    }
 }
+
+
 
 
 /*

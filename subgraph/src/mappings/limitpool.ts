@@ -11,7 +11,8 @@ import { handleMintRange as handleMintRangeHelper } from './range/mint'
 import { handleBurnRange as handleBurnRangeHelper } from './range/burn'
 import { handleCompoundRange as handleCompoundRangeHelper } from './range/compound'
 import { handleSyncRangeTick as handleSyncRangeTickHelper } from './range/synctick'
-import { BurnLimit, BurnRange, CompoundRange, Initialize, MintLimit, MintRange, SampleCountIncreased, SampleRecorded, Swap, SyncLimitLiquidity, SyncLimitPool, SyncLimitTick, SyncRangeTick } from '../../generated/LimitPoolFactory/LimitPool'
+import { BurnLimit, BurnRange, CollectRange0, CollectRange1, CompoundRange, Initialize, MintLimit, MintRange, SampleCountIncreased, SampleRecorded, Swap, SyncLimitLiquidity, SyncLimitPool, SyncLimitTick, SyncRangeTick } from '../../generated/LimitPoolFactory/LimitPool'
+import { handleCollectRange0 as handleCollectRange0Helper, handleCollectRange1 as handleCollectRange1Helper } from './range/collect'
 
 // pool
 export function handleInitialize(event: Initialize): void {
@@ -46,6 +47,14 @@ export function handleCompoundRange(event: CompoundRange): void {
 
 export function handleSyncRangeTick(event: SyncRangeTick): void {
     handleSyncRangeTickHelper(event)
+}
+
+export function handleCollectRange0(event: CollectRange0): void {
+    handleCollectRange0Helper(event)
+}
+
+export function handleCollectRange1(event: CollectRange1): void {
+    handleCollectRange1Helper(event)
 }
 
 // limit positions

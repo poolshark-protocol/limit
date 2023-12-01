@@ -39,6 +39,7 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
         owner = msg.sender;
         feeTo = msg.sender;
         emit OwnerTransfer(address(0), msg.sender);
+        emit FeeToTransfer(address(0), msg.sender);
 
         // create initial fee tiers
         _feeTiers[1000] = 10;
@@ -93,7 +94,7 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
     function _transferFeeTo(address newFeeTo) internal virtual {
         address oldFeeTo = feeTo;
         feeTo = newFeeTo;
-        emit OwnerTransfer(oldFeeTo, newFeeTo);
+        emit FeeToTransfer(oldFeeTo, newFeeTo);
     }
 
     function enableFeeTier(

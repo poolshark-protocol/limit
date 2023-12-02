@@ -142,8 +142,8 @@ export function handleBurnLimit(event: BurnLimit): void {
     pool.totalValueLocked1 = pool.totalValueLocked1.minus(zeroForOneParam ? amountIn : amountOut)
 
     // eth price updates
-    tokenIn.ethPrice = findEthPerToken(tokenIn, tokenOut, basePrice)
-    tokenOut.ethPrice = findEthPerToken(tokenOut, tokenIn, basePrice)
+    tokenIn.ethPrice = findEthPerToken(tokenIn, tokenOut, pool, basePrice)
+    tokenOut.ethPrice = findEthPerToken(tokenOut, tokenIn, pool, basePrice)
     tokenIn.usdPrice = tokenIn.ethPrice.times(basePrice.USD)
     tokenOut.usdPrice = tokenOut.ethPrice.times(basePrice.USD)
 

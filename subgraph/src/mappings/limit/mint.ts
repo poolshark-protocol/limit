@@ -150,8 +150,8 @@ export function handleMintLimit(event: MintLimit): void {
     }
 
     // eth price updates
-    tokenIn.ethPrice = findEthPerToken(tokenIn, tokenOut, basePrice)
-    tokenOut.ethPrice = findEthPerToken(tokenOut, tokenIn, basePrice)
+    tokenIn.ethPrice = findEthPerToken(tokenIn, tokenOut, pool, basePrice)
+    tokenOut.ethPrice = findEthPerToken(tokenOut, tokenIn, pool, basePrice)
     tokenIn.usdPrice = tokenIn.ethPrice.times(basePrice.USD)
     tokenOut.usdPrice = tokenOut.ethPrice.times(basePrice.USD)
 

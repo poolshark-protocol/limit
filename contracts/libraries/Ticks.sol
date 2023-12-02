@@ -468,7 +468,7 @@ library Ticks {
         PoolsharkStructs.SwapCache memory
     ) {
         if ((cache.crossStatus & RANGE_TICK) > 0) {
-            if (!params.zeroForOne || cache.amountLeft > 0) {
+            if (!params.zeroForOne || (cache.amountLeft > 0 && params.priceLimit < cache.crossPrice)) {
                 int128 liquidityDelta = ticks[cache.crossTick].range.liquidityDelta;
                 if (params.zeroForOne) {
                     unchecked {

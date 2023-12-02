@@ -161,7 +161,7 @@ library LimitPositions {
                 }
                 cache.priceLower = ConstantProduct.getPriceAtTick(params.lower, cache.constants);
             }
-            if (params.amount > 0 && params.lower < params.upper)
+            if (params.amount > 0 && params.lower < params.upper) {
                 cache.liquidityMinted = ConstantProduct.getLiquidityForAmounts(
                     cache.priceLower,
                     cache.priceUpper,
@@ -169,9 +169,15 @@ library LimitPositions {
                     params.zeroForOne ? 0 : uint256(params.amount),
                     params.zeroForOne ? uint256(params.amount) : 0
                 );
-            else
-                /// @auditor unnecessary since params.amount is 0
+                 if (cache.liquidityMinted == 0) {
+                    // skip minting
+                    params.amount = 0;
+                 }
+            } else {
+                // skip minting
+                params.amount = 0;
                 cache.liquidityMinted = 0;
+            }
             cache.state.epoch += 1;
         }
 

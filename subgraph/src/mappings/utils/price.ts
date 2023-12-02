@@ -4,7 +4,7 @@ import { BasePrice, LimitPool, Token } from '../../../generated/schema'
 import { BigDecimal, BigInt, log } from '@graphprotocol/graph-ts'
 import { exponentToBigDecimal, safeDiv } from './math'
 import { BIGDECIMAL_ZERO, BIGINT_ZERO } from './helpers'
-import { safeLoadBasePrice, safeLoadToken } from './loads'
+import { safeLoadBasePrice, safeLoadLimitPool, safeLoadToken } from './loads'
 
 export function sqrtPriceX96ToTokenPrices(sqrtPriceX96: BigInt, token0: Token, token1: Token): BigDecimal[] {
   let num = sqrtPriceX96.times(sqrtPriceX96).toBigDecimal()
@@ -45,12 +45,12 @@ export function getEthPriceInUSD(): BigDecimal {
 /**
  * Search through subgraph to find ETH per token.
  **/
-export function findEthPerToken(token: Token, otherToken: Token, basePrice: BasePrice): BigDecimal {
+export function findEthPerToken(token: Token, otherToken: Token, currentPool: LimitPool, basePrice: BasePrice): BigDecimal {
   if (token.id == WETH_ADDRESS) {
-    log.info('weth address match',[])
+    // log.info('weth address match',[])
     return ONE_BD
   } else {
-    log.info('weth address mismatch {} {}',[WETH_ADDRESS, token.id])
+    // log.info('weth address mismatch {} {}',[WETH_ADDRESS, token.id])
   }
   let whiteList = token.whitelistPools
 
@@ -65,6 +65,9 @@ export function findEthPerToken(token: Token, otherToken: Token, basePrice: Base
     return ZERO_BD
   }
 
+  //TODO: we need a fill fee on Limit LPs just 
+  // to keep people from wash trading
+
   // hardcoded fix for incorrect rates
   // if whitelist includes token - get the safe price
   if (STABLE_COINS.includes(token.id)) {
@@ -72,12 +75,17 @@ export function findEthPerToken(token: Token, otherToken: Token, basePrice: Base
   } else {
     for (let i = 0; i < whiteList.length; ++i) {
       let poolAddress = whiteList[i]
-      let pool = LimitPool.load(poolAddress)
-
-      if (pool === null) {
-        continue
+      let pool: LimitPool;
+      if (poolAddress == currentPool.id) {
+        pool = currentPool
+      } else {
+        let loadPool = safeLoadLimitPool(poolAddress)
+        if (!loadPool.exists) {
+          continue
+        }
+        pool = loadPool.entity
       }
-
+      //TODO: only update ETH/USD price every 2 seconds per token
       if (pool.liquidity.gt(ZERO_BI)) {
         if (pool.token0 == token.id) {
           // whitelist token is token1

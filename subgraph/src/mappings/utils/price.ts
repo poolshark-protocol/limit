@@ -65,6 +65,9 @@ export function findEthPerToken(token: Token, otherToken: Token, currentPool: Li
     return ZERO_BD
   }
 
+  //TODO: we need a fill fee on Limit LPs just 
+  // to keep people from wash trading
+
   // hardcoded fix for incorrect rates
   // if whitelist includes token - get the safe price
   if (STABLE_COINS.includes(token.id)) {
@@ -82,7 +85,7 @@ export function findEthPerToken(token: Token, otherToken: Token, currentPool: Li
         }
         pool = loadPool.entity
       }
-
+      //TODO: only update ETH/USD price every 2 seconds per token
       if (pool.liquidity.gt(ZERO_BI)) {
         if (pool.token0 == token.id) {
           // whitelist token is token1

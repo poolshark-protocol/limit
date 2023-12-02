@@ -202,5 +202,4 @@ export function handleSwap(event: Swap): void {
     factory.save()
     token0.save()
     token1.save()
-
 }

@@ -123,6 +123,7 @@ export function handleBurnRange(event: BurnRange): void {
         pool.liquidity = pool.liquidity.minus(liquidityBurnedParam)
         pool.poolLiquidity = pool.poolLiquidity.minus(liquidityBurnedParam)
     }
+    pool.liquidityGlobal = pool.liquidityGlobal.minus(liquidityBurnedParam)
 
     // let loadTvlUpdateLog = safeLoadTvlUpdateLog(event.transaction.hash, poolAddress)
     // let tvlUpdateLog = loadTvlUpdateLog.entity

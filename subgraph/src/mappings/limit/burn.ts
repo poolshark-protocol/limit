@@ -209,5 +209,4 @@ export function handleBurnLimit(event: BurnLimit): void {
     tokenIn.save() // 7
     tokenOut.save() // 8
     order.save()    // 9
-
 }

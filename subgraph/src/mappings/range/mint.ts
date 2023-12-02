@@ -151,6 +151,7 @@ export function handleMintRange(event: MintRange): void {
         pool.poolLiquidity = pool.poolLiquidity.plus(liquidityMintedParam)
     }
     position.liquidity = position.liquidity.plus(liquidityMintedParam)
+    pool.liquidityGlobal = pool.liquidityGlobal.plus(liquidityMintedParam)
 
     if (token1.symbol == 'USDC') {
         log.info('USDC price at mint time: {}', [token1.usdPrice.toString()])

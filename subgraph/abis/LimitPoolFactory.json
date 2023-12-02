@@ -40,9 +40,9 @@
       },
       {
         "indexed": false,
-        "internalType": "uint8",
+        "internalType": "uint16",
         "name": "poolTypeId",
-        "type": "uint8"
+        "type": "uint16"
       }
     ],
     "name": "PoolCreated",

@@ -479,6 +479,7 @@ export function safeLoadHistoricalOrder(tokenInAddress: string, tokenOutAddress:
 
     if (!historicalOrderEntity) {
         historicalOrderEntity = new HistoricalOrder(historicalOrderId)
+        historicalOrderEntity.positionId = BIGINT_ZERO
         historicalOrderEntity.tokenIn = tokenInAddress
         historicalOrderEntity.tokenOut = tokenOutAddress
         historicalOrderEntity.amountIn = BIGDECIMAL_ZERO

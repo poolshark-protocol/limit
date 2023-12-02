@@ -80,12 +80,6 @@
     "inputs": [
       {
         "indexed": false,
-        "internalType": "uint8",
-        "name": "poolTypeId",
-        "type": "uint8"
-      },
-      {
-        "indexed": false,
         "internalType": "bytes32",
         "name": "poolTypeName",
         "type": "bytes32"
@@ -101,6 +95,12 @@
         "internalType": "address",
         "name": "tokenImpl",
         "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint16",
+        "name": "poolTypeId",
+        "type": "uint16"
       }
     ],
     "name": "PoolTypeEnabled",

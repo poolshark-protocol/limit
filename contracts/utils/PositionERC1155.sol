@@ -7,6 +7,7 @@ import '../base/storage/PositionERC1155Immutables.sol';
 import "../interfaces/IPositionERC1155.sol";
 import '../external/solady/LibClone.sol';
 import '../libraries/utils/String.sol';
+import '../libraries/utils/PositionTokens.sol';
 
 // needs to be deployed as a separate clone
 // poolImpls; tokenImpls
@@ -38,9 +39,6 @@ contract PositionERC1155 is
 
     /// @dev token id => total supply
     mapping(uint256 => uint256) private _totalSupplyById;
-
-    string private constant _NAME = "Poolshark LP";
-    string private constant _SYMBOL = "PSHARK-LP";
 
     modifier onlyCanonicalClones(
         PoolsharkStructs.LimitImmutables memory constants
@@ -144,11 +142,11 @@ contract PositionERC1155 is
     }
 
     function name() public pure virtual override returns (string memory) {
-        return _NAME;
+        return Bytes.bytes32ToString(tokenName());
     }
 
     function symbol() public pure virtual override returns (string memory) {
-        return _SYMBOL;
+        return Bytes.bytes32ToString(tokenSymbol());
     }
 
     function totalSupply(uint256 _id) public view virtual override returns (uint256) {
@@ -250,7 +248,7 @@ contract PositionERC1155 is
     ) private view returns (bool) {
         // generate key for pool
         bytes32 key = keccak256(abi.encode(
-            poolImpl(),
+            constants.poolImpl,
             constants.token0,
             constants.token1,
             constants.swapFee
@@ -260,7 +258,8 @@ contract PositionERC1155 is
         address predictedAddress = LibClone.predictDeterministicAddress(
             original,
             abi.encodePacked(
-                poolImpl()
+                tokenName(),
+                tokenSymbol()
             ),
             key,
             factory
@@ -276,7 +275,7 @@ contract PositionERC1155 is
     ) private view returns (bool) {
         // generate key for pool
         bytes32 key = keccak256(abi.encode(
-            poolImpl(),
+            constants.poolImpl,
             constants.token0,
             constants.token1,
             constants.swapFee
@@ -284,7 +283,7 @@ contract PositionERC1155 is
 
         // compute address
         address predictedAddress = LibClone.predictDeterministicAddress(
-            poolImpl(),
+            constants.poolImpl,
             abi.encodePacked(
                 constants.owner,
                 constants.token0,

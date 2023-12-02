@@ -67,14 +67,16 @@ export function handleMintLimit(event: MintLimit): void {
     position.liquidity = position.liquidity.plus(liquidityMintedParam)
     position.amountIn = position.amountIn.plus(amountInParam)
 
-    // positionIdNext can be loaded
+    // check if order exists for position
     let loadOrder = safeLoadHistoricalOrder(tokenIn.id, tokenOut.id, poolAddress, position.positionId.toString()) // 9
 
     if (!loadOrder.exists) {
+        // if not check the txn hash in case of split swap + mint
         loadOrder = safeLoadHistoricalOrder(tokenIn.id, tokenOut.id, poolAddress, event.transaction.hash.toHex()) // 9
     }
 
     let order = loadOrder.entity
+    // set id for adding/removing liquidity
     order.id = tokenIn.id
                 .concat('-')
                 .concat(tokenOut.id)

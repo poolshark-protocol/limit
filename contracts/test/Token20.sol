@@ -22,8 +22,4 @@ contract Token20 is ERC20, ERC20Burnable {
     function decimals() public view override returns (uint8) {
         return _decimals;
     }
-
-    function setDecimals(uint8 decimals_) public {
-        _decimals = decimals_;
-    }
 }

@@ -123,42 +123,6 @@ export function handleSwap(event: Swap): void {
     token1.volumeUsd = token1.volumeUsd.plus(volumeUsd)
     token1.volumeEth = token1.volumeEth.plus(volumeEth)
 
-    let loadOrder = safeLoadHistoricalOrder(
-        zeroForOneParam ? token0.id : token1.id,
-        zeroForOneParam ? token1.id : token0.id,
-        poolAddress,
-        event.transaction.hash.toHex()) // 6
-    let loadTotalSeasonReward = safeLoadTotalSeasonReward(FACTORY_ADDRESS)
-    let loadUserSeasonReward = safeLoadUserSeasonReward(event.transaction.from.toHex())
-    
-    let order = loadOrder.entity
-    let totalSeasonReward = loadTotalSeasonReward.entity
-    let userSeasonReward = loadUserSeasonReward.entity
-
-    // historical order data
-    if (!loadOrder.exists) {
-        order.pool = poolAddress
-        order.owner = recipientParam
-        order.txnHash = event.transaction.hash
-        order.completedAtTimestamp = event.block.timestamp   
-    }
-    order.positionId = BIGINT_ZERO
-    order.touches = order.touches.plus(BIGINT_ONE)
-    order.amountIn = order.amountIn.plus(zeroForOneParam ? amount0Abs : amount1Abs)
-    order.amountOut = order.amountOut.plus(zeroForOneParam ? amount1Abs : amount0Abs)
-    if (zeroForOneParam) {
-        const amount1Usd = amount1Abs.times(token1.usdPrice)
-        order.usdValue = order.usdValue.plus(amount1Usd)
-        userSeasonReward.volumeTradedUsd = userSeasonReward.volumeTradedUsd.plus(amount1Usd)
-        totalSeasonReward.volumeTradedUsd = totalSeasonReward.volumeTradedUsd.plus(amount1Usd)
-    } else {
-        const amount0Usd = amount0Abs.times(token0.usdPrice)
-        order.usdValue = order.usdValue.plus(amount0Usd)
-        userSeasonReward.volumeTradedUsd = userSeasonReward.volumeTradedUsd.plus(amount0Usd)
-        totalSeasonReward.volumeTradedUsd = totalSeasonReward.volumeTradedUsd.plus(amount0Usd)
-    }
-    order.averagePrice = safeDiv(order.amountOut, order.amountIn)
-
     // let loadTvlUpdateLog = safeLoadTvlUpdateLog(event.transaction.hash, poolAddress)
     // let tvlUpdateLog = loadTvlUpdateLog.entity
 
@@ -183,17 +147,60 @@ export function handleSwap(event: Swap): void {
         log.info('USDC price at swap time: {}', [token1.usdPrice.toString()])
     }
 
+    // update historical order data
+    if ((zeroForOneParam ? amount0Abs : amount1Abs).gt(BIGDECIMAL_ZERO)) {
+        let loadOrder = safeLoadHistoricalOrder(
+            zeroForOneParam ? token0.id : token1.id,
+            zeroForOneParam ? token1.id : token0.id,
+            poolAddress,
+            event.transaction.hash.toHex()) // 6
+        let order = loadOrder.entity
+        if (!loadOrder.exists) {
+            order.pool = poolAddress
+            order.owner = recipientParam
+            order.txnHash = event.transaction.hash
+            order.completedAtTimestamp = event.block.timestamp   
+        }
+        order.touches = order.touches.plus(BIGINT_ONE)
+        order.amountIn = order.amountIn.plus(zeroForOneParam ? amount0Abs : amount1Abs)
+        order.amountOut = order.amountOut.plus(zeroForOneParam ? amount1Abs : amount0Abs)
+        order.averagePrice = safeDiv(order.amountOut, order.amountIn)
+        if (zeroForOneParam) {
+            const amount1Usd = amount1Abs.times(token1.usdPrice)
+            order.usdValue = order.usdValue.plus(amount1Usd)
+        } else {
+            const amount0Usd = amount0Abs.times(token0.usdPrice)
+            order.usdValue = order.usdValue.plus(amount0Usd)
+        }
+        order.save()
+    }
+
+    // update season 1 rewards
+    if (event.block.timestamp.ge(SEASON_1_START_TIME) && event.block.timestamp.le(SEASON_1_END_TIME)) {
+        let loadTotalSeasonReward = safeLoadTotalSeasonReward(FACTORY_ADDRESS)
+        let loadUserSeasonReward = safeLoadUserSeasonReward(event.transaction.from.toHex())
+
+        let totalSeasonReward = loadTotalSeasonReward.entity
+        let userSeasonReward = loadUserSeasonReward.entity
+
+        if (zeroForOneParam) {
+            const amount1Usd = amount1Abs.times(token1.usdPrice)
+            userSeasonReward.volumeTradedUsd = userSeasonReward.volumeTradedUsd.plus(amount1Usd)
+            totalSeasonReward.volumeTradedUsd = totalSeasonReward.volumeTradedUsd.plus(amount1Usd)
+        } else {
+            const amount0Usd = amount0Abs.times(token0.usdPrice)
+            userSeasonReward.volumeTradedUsd = userSeasonReward.volumeTradedUsd.plus(amount0Usd)
+            totalSeasonReward.volumeTradedUsd = totalSeasonReward.volumeTradedUsd.plus(amount0Usd)
+        }
+        totalSeasonReward.save()
+        userSeasonReward.save()
+    }
+
     //TODO: add hour and daily data
     basePrice.save()
     pool.save()
     factory.save()
     token0.save()
     token1.save()
-    if (order.amountIn.gt(BIGDECIMAL_ZERO)) {
-        order.save()
-    }
-    if (event.block.timestamp.ge(SEASON_1_START_TIME) && event.block.timestamp.le(SEASON_1_END_TIME)) {
-        totalSeasonReward.save()
-        userSeasonReward.save()
-    }
+
 }

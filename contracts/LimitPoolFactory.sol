@@ -11,6 +11,7 @@ import './interfaces/limit/ILimitPoolManager.sol';
 import './base/events/LimitPoolFactoryEvents.sol';
 import './external/solady/LibClone.sol';
 import './libraries/utils/SafeCast.sol';
+import './libraries/utils/PositionTokens.sol';
 import './libraries/math/ConstantProduct.sol';
 
 contract LimitPoolFactory is 
@@ -85,7 +86,8 @@ contract LimitPoolFactory is
         constants.poolToken = tokenImpl.cloneDeterministic({
             salt: key,
             data: abi.encodePacked(
-                poolImpl
+                PositionTokens.name(constants.token0, constants.token1),
+                PositionTokens.symbol(constants.token0, constants.token1)
             )
         });
 
@@ -128,7 +130,7 @@ contract LimitPoolFactory is
         address tokenIn,
         address tokenOut,
         uint16 swapFee,
-        uint8 poolTypeId
+        uint16 poolTypeId
     ) public view override returns (
         address pool,
         address poolToken
@@ -161,7 +163,8 @@ contract LimitPoolFactory is
         poolToken = LibClone.predictDeterministicAddress(
             tokenImpl,
             abi.encodePacked(
-                poolImpl
+                PositionTokens.name(token0, token1),
+                PositionTokens.symbol(token0, token1)
             ),
             key,
             address(this)

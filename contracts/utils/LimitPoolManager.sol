@@ -115,7 +115,7 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
         address tokenImpl_,
         bytes32 poolTypeName_
     ) external onlyOwner {
-        uint8 poolTypeId_ = _poolTypeNames.length.toUint8();
+        uint16 poolTypeId_ = _poolTypeNames.length.toUint16();
         if (poolTypeId_ > type(uint8).max) revert MaxPoolTypesCountExceeded();
         if (poolImpl_ == address(0)) revert InvalidPoolImplAddress();
         if (tokenImpl_ == address(0)) revert InvalidTokenImplAddress();
@@ -124,7 +124,7 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
         _poolImpls[poolTypeId_] = poolImpl_;
         _tokenImpls[poolTypeId_] = tokenImpl_;
         _poolTypeNames.push(poolTypeName_);
-        emit PoolTypeEnabled(poolTypeId_, poolTypeName_, poolImpl_, tokenImpl_);
+        emit PoolTypeEnabled(poolTypeName_, poolImpl_, tokenImpl_, poolTypeId_);
     }
 
     function setFactory(
@@ -229,7 +229,7 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
     }
 
     function poolTypes(
-        uint8 poolTypeId
+        uint16 poolTypeId
     ) external view returns (
         address,
         address

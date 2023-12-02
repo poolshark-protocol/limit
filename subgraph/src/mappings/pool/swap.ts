@@ -59,8 +59,8 @@ export function handleSwap(event: Swap): void {
     let basePrice = loadBasePrice.entity
 
     // price updates
-    token0.ethPrice = findEthPerToken(token0, token1, basePrice)
-    token1.ethPrice = findEthPerToken(token1, token0, basePrice)
+    token0.ethPrice = findEthPerToken(token0, token1, pool, basePrice)
+    token1.ethPrice = findEthPerToken(token1, token0, pool, basePrice)
     token0.usdPrice = token0.ethPrice.times(basePrice.USD)
     token1.usdPrice = token1.ethPrice.times(basePrice.USD)
 

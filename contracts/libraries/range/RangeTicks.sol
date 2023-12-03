@@ -233,6 +233,6 @@ library RangeTicks {
     ) internal pure returns (
         bool
     ) {
-        return tick.limit.liquidityAbsolute == 0;
+        return tick.range.liquidityAbsolute == 0;
     }
 }

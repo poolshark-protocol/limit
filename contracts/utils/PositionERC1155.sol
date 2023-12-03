@@ -7,15 +7,8 @@ import '../base/storage/PositionERC1155Immutables.sol';
 import "../interfaces/IPositionERC1155.sol";
 import '../external/solady/LibClone.sol';
 import '../libraries/utils/String.sol';
+import '../libraries/utils/SafeTransfers.sol';
 import '../libraries/utils/PositionTokens.sol';
-
-// needs to be deployed as a separate clone
-// poolImpls; tokenImpls
-// store address in Immutables struct
-// emit token address on created pool
-// launch an ERC1155 template to track events on Subgraph
-// emitting msg.sender will give the pool address
-// can verify the owner is the pool address designated based on immutables
 
 contract PositionERC1155 is
     IPositionERC1155,
@@ -39,6 +32,9 @@ contract PositionERC1155 is
 
     /// @dev token id => total supply
     mapping(uint256 => uint256) private _totalSupplyById;
+
+    // eth address for safe withdrawal
+    address public constant ethAddress = address(0);
 
     modifier onlyCanonicalClones(
         PoolsharkStructs.LimitImmutables memory constants
@@ -130,6 +126,15 @@ contract PositionERC1155 is
             }
         }
         emit TransferBatch(msg.sender, _from, _to, _ids, _amounts);
+    }
+
+    function withdrawEth(
+        address recipient,
+        PoolsharkStructs.LimitImmutables memory constants
+    ) external
+        onlyCanonicalClones(constants)
+    {
+        SafeTransfers.transferOut(recipient, ethAddress, address(this).balance);
     }
 
     function isApprovedForAll(address _owner, address _spender) public view virtual override returns (bool) {

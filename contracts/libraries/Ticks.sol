@@ -309,9 +309,9 @@ library Ticks {
                 );
                 if (cache.exactIn) {
                     amountIn = cache.amountLeft;
-                    amountOut = ConstantProduct.getDy(cache.liquidity, newPrice, uint256(cache.price), false);
+                    amountOut = ConstantProduct.getDy(cache.liquidity, newPrice, cache.price, false);
                 } else {
-                    amountIn = ConstantProduct.getDx(cache.liquidity, newPrice, uint256(cache.price), true);
+                    amountIn = ConstantProduct.getDx(cache.liquidity, newPrice, cache.price, true);
                     amountOut = cache.amountLeft;
                 }
                 cache.amountLeft = 0;
@@ -336,8 +336,8 @@ library Ticks {
             if (nextPrice > priceLimit) {
                 nextPrice = priceLimit;
             }
-            uint256 amountMax = cache.exactIn ? ConstantProduct.getDy(cache.liquidity, uint256(cache.price), nextPrice, true)
-                                              : ConstantProduct.getDx(cache.liquidity, uint256(cache.price), nextPrice, false);
+            uint256 amountMax = cache.exactIn ? ConstantProduct.getDy(cache.liquidity, cache.price, nextPrice, true)
+                                              : ConstantProduct.getDx(cache.liquidity, cache.price, nextPrice, false);
             if (cache.amountLeft < amountMax) {
                 uint256 newPrice = ConstantProduct.getNewPrice(
                     cache.price,

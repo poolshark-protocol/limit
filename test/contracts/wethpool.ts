@@ -81,7 +81,7 @@ describe('WethPool Tests', function () {
 
         if (wethToken0) {
             let globalState = await hre.props.wethPool.globalState()
-            console.log('weth pool start:', globalState.pool.price.toString(), globalState.pool.liquidity.toString())
+            if (debugMode) console.log('weth pool start:', globalState.pool.price.toString(), globalState.pool.liquidity.toString())
             const aliceLiquidity = '10405966812730338361'
             // mint should revert
             const aliceId = await validateMintRange({
@@ -173,5 +173,38 @@ describe('WethPool Tests', function () {
 
             if (debugMode) await getPositionLiquidity(true, aliceId)
         }   
+    })
+
+    it('pool - errantly send ETH to pool and retrieve with fees call', async function () {
+
+        if (debugMode) console.log('pool eth balance before send:', (await ethers.provider.getBalance(hre.props.limitPool.address)).toString())
+        if (debugMode) console.log('alice eth balance before send:', (await ethers.provider.getBalance(hre.props.alice.address)).toString())
+
+        const sendTxn = await hre.props.alice.sendTransaction({
+            to: hre.props.limitPool.address,
+            value: ethers.utils.parseEther("50.0")
+        });
+        await sendTxn.wait();
+
+        const sendTxn2 = await hre.props.alice.sendTransaction({
+            to: hre.props.limitPoolToken.address,
+            value: ethers.utils.parseEther("50.0")
+        });
+        await sendTxn2.wait();
+
+        if (debugMode) console.log('pool eth balance after:', (await ethers.provider.getBalance(hre.props.limitPool.address)).toString())
+        if (debugMode) console.log('pool token eth balance after:', (await ethers.provider.getBalance(hre.props.limitPoolToken.address)).toString())
+
+        expect(await ethers.provider.getBalance(hre.props.limitPool.address)).to.be.equal(ethers.utils.parseEther("50.0"))
+        expect(await ethers.provider.getBalance(hre.props.limitPoolToken.address)).to.be.equal(ethers.utils.parseEther("50.0"))
+
+        const collectTxn = await hre.props.limitPoolManager.connect(hre.props.admin).collectProtocolFees([hre.props.limitPool.address])
+        await collectTxn.wait()
+
+        expect(await ethers.provider.getBalance(hre.props.limitPool.address)).to.be.equal(ethers.utils.parseEther("0.0"))
+        expect(await ethers.provider.getBalance(hre.props.limitPoolToken.address)).to.be.equal(ethers.utils.parseEther("0.0"))
+
+        if (debugMode) console.log('pool eth balance after collect:', (await ethers.provider.getBalance(hre.props.limitPool.address)).toString())
+        if (debugMode) console.log('pool token eth balance after:', (await ethers.provider.getBalance(hre.props.limitPoolToken.address)).toString())
     })
 })

@@ -180,11 +180,9 @@ library LimitPositions {
             cache.state.epoch += 1;
         }
 
-        // safety check for position bounds
         if (params.lower >= params.upper) {
-
+            // zero out amount transferred in
             params.amount = 0;
-            cache.liquidityMinted = 0;
         }
 
         // liquidity overflow check

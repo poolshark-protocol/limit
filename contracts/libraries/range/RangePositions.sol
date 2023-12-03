@@ -18,18 +18,6 @@ library RangePositions {
     using SafeCast for int256;
     using SafeCast for int128;
 
-    error NotEnoughPositionLiquidity();
-    error InvalidClaimTick();
-    error LiquidityOverflow();
-    error WrongTickClaimedAt();
-    error NoLiquidityBeingAdded();
-    error PositionNotUpdated();
-    error InvalidLowerTick();
-    error InvalidUpperTick();
-    error InvalidPositionAmount();
-    error InvalidPositionBoundsOrder();
-    error NotImplementedYet();
-
     uint256 internal constant Q96 = 0x1000000000000000000000000;
     uint256 internal constant Q128 = 0x100000000000000000000000000000000;
 

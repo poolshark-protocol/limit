@@ -14,12 +14,6 @@ import '../Samples.sol';
 
 /// @notice Tick management library for range pools
 library RangeTicks {
-    error LiquidityOverflow();
-    error LiquidityUnderflow();
-    error InvalidLowerTick();
-    error InvalidUpperTick();
-    error InvalidPositionAmount();
-    error InvalidPositionBounds();
 
     event SyncRangeTick(
         uint200 feeGrowthOutside0,

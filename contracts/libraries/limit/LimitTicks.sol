@@ -14,12 +14,6 @@ import '../utils/SafeCast.sol';
 
 /// @notice Tick management library for limit pools
 library LimitTicks {
-    error LiquidityOverflow();
-    error LiquidityUnderflow();
-    error InvalidLowerTick();
-    error InvalidUpperTick();
-    error InvalidPositionAmount();
-    error InvalidPositionBounds();
 
     using SafeCast for uint256;
 
@@ -49,12 +43,6 @@ library LimitTicks {
         LimitPoolStructs.MintLimitCache memory cache,
         PoolsharkStructs.MintLimitParams memory params
     ) internal {
-        /// @dev - validation of ticks is in Positions.validate
-        if (cache.liquidityMinted == 0)
-            require(false, 'NoLiquidityBeingAdded()');
-        if (cache.state.liquidityGlobal + cache.liquidityMinted > uint128(type(int128).max))
-            require(false, 'LiquidityOverflow()');
-
         int256 liquidityMinted = int256(cache.liquidityMinted);
 
         // check if adding liquidity necessary

@@ -42,8 +42,10 @@ library MintRangeCall {
         // check for invalid receiver
         if (params.to == address(0))
             require(false, "CollectToZeroAddress()");
-        
-        // initialize cache
+
+        // validate position ticks
+        ConstantProduct.checkTicks(params.lower, params.upper, cache.constants.tickSpacing);
+
         cache.state = globalState;
 
         // id of 0 passed to create new position

@@ -42,8 +42,6 @@ library LimitPositions {
         LimitPoolStructs.MintLimitCache memory
     )
     {
-        ConstantProduct.checkTicks(params.lower, params.upper, cache.constants.tickSpacing);
-
         cache.priceLower = ConstantProduct.getPriceAtTick(params.lower, cache.constants);
         cache.priceUpper = ConstantProduct.getPriceAtTick(params.upper, cache.constants);
         cache.mintSize = uint256(params.mintPercent) * uint256(params.amount) / 1e28;
@@ -182,11 +180,14 @@ library LimitPositions {
             cache.state.epoch += 1;
         }
 
-        /// @dev - for safety
         if (params.lower >= params.upper) {
             // zero out amount transferred in
             params.amount = 0;
         }
+
+        // liquidity overflow check
+        if (cache.state.liquidityGlobal + cache.liquidityMinted > uint128(type(int128).max))
+            require(false, 'LiquidityOverflow()');
 
         return (
             params,

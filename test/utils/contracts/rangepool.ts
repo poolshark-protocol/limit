@@ -88,6 +88,7 @@ export interface ValidateBurnParams {
   poolContract?: LimitPool
   poolTokenContract?: PositionERC1155
   staked?: boolean
+  recipient?: string
 }
 
 export interface ValidateStakeParams {
@@ -442,6 +443,7 @@ export async function validateMint(params: ValidateMintParams): Promise<number> 
 
 export async function validateBurn(params: ValidateBurnParams) {
   const signer = params.signer
+  const recipient = params.recipient ?? params.signer.address
   const lower = BigNumber.from(params.lower)
   const upper = BigNumber.from(params.upper)
   let liquidityAmount = params.liquidityAmount
@@ -473,28 +475,26 @@ export async function validateBurn(params: ValidateBurnParams) {
   positionBefore = await poolContract.positions(params.positionId)
   let burnPercent = params.burnPercent
   let positionSnapshot: [BigNumber, BigNumber, BigNumber, BigNumber]
-
   if (!burnPercent && positionBefore.liquidity.gt(BN_ZERO)) {
     burnPercent = liquidityAmount
                         .mul(ethers.utils.parseUnits('1', 38))
                         .div(positionBefore.liquidity)
   }
-
   if (revertMessage == '') {
     positionSnapshot = await poolContract.snapshotRange(params.positionId)
     const burnTxn = !staked ? await poolContract
       .connect(signer)
       .burnRange({
-        to: params.signer.address,
+        to: recipient,
         positionId: params.positionId,
-        burnPercent: burnPercent
+        burnPercent: burnPercent ?? BN_ZERO
     })
     : await hre.props.rangeStaker
     .connect(signer)
     .burnRangeStake(
       poolContract.address,
       {
-        to: params.signer.address,
+        to: recipient,
         positionId: params.positionId,
         burnPercent: burnPercent
       }
@@ -503,16 +503,16 @@ export async function validateBurn(params: ValidateBurnParams) {
   } else {
     await expect(
       !staked ? poolContract.connect(signer).burnRange({
-        to: params.signer.address,
+        to: recipient,
         positionId: params.positionId,
-        burnPercent: burnPercent,
+        burnPercent: burnPercent ?? BN_ZERO,
       })
     : hre.props.rangeStaker
       .connect(signer)
       .burnRangeStake(
         poolContract.address,
         {
-          to: params.signer.address,
+          to: recipient,
           positionId: params.positionId,
           burnPercent: burnPercent ?? BN_ZERO
         }

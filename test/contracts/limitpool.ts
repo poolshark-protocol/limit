@@ -7,6 +7,7 @@ import { mintSigners20 } from '../utils/token'
 import {
     BN_ZERO,
     LimitPoolState,
+    ZERO_ADDRESS,
     getLiquidity,
     getPositionLiquidity,
     getPrice,
@@ -7955,6 +7956,145 @@ describe('LimitPool Tests', function () {
             lowerTickCleared: false,
             upperTickCleared: true,
             revertMessage: "PositionNotFound()",
+        });
+    });
+
+    it("pool0 - Should revert mint, burn, and swap when recipient is zero address", async function () {
+        
+        const bobId = await validateMint({
+          signer: hre.props.bob,
+          recipient: ZERO_ADDRESS,
+          lower: "-50000",
+          upper: "0",
+          amount: "20",
+          zeroForOne: false,
+          balanceInDecrease: "20",
+          liquidityIncrease: "21",
+          balanceOutIncrease: "0",
+          lowerTickCleared: false,
+          upperTickCleared: true,
+          revertMessage: "CollectToZeroAddress()",
+        });
+
+        await validateBurn({
+            signer: hre.props.bob,
+            positionId: bobId,
+            recipient: ZERO_ADDRESS,
+            lower: "-50000",
+            upper: "0",
+            claim: "-50000",
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: true,
+            balanceInIncrease: "0",
+            balanceOutIncrease: "19",
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: "CollectToZeroAddress()",
+        });
+
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: ZERO_ADDRESS,
+            zeroForOne: true,
+            amountIn: BigNumber.from("20"),
+            priceLimit: minPrice,
+            balanceInDecrease: '20',
+            balanceOutIncrease: '18',
+            revertMessage: 'CollectToZeroAddress()',
+        })
+    });
+
+    it("pool0 - Should revert on no position found or owner mismatch", async function () {
+        
+        const bobId = await validateMint({
+          signer: hre.props.bob,
+          lower: "-50000",
+          upper: "0",
+          amount: "20",
+          zeroForOne: false,
+          balanceInDecrease: "20",
+          liquidityIncrease: "21",
+          balanceOutIncrease: "0",
+          lowerTickCleared: false,
+          upperTickCleared: true,
+          revertMessage: "",
+        });
+
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.alice.address,
+            lower: "-50000",
+            upper: "0",
+            amount: "20",
+            zeroForOne: false,
+            positionId: bobId,
+            balanceInDecrease: "20",
+            liquidityIncrease: "21",
+            balanceOutIncrease: "0",
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: "PositionOwnerMismatch()",
+        });
+
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.alice.address,
+            lower: "-50000",
+            upper: "0",
+            amount: "20",
+            zeroForOne: false,
+            positionId: bobId + 1,
+            balanceInDecrease: "20",
+            liquidityIncrease: "21",
+            balanceOutIncrease: "0",
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: "PositionNotFound()",
+        });
+
+        await validateBurn({
+            signer: hre.props.alice,
+            positionId: bobId,
+            lower: "-50000",
+            upper: "0",
+            claim: "-50000",
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: false,
+            balanceInIncrease: "0",
+            balanceOutIncrease: "19",
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: "PositionOwnerMismatch()",
+        });
+
+        await validateBurn({
+            signer: hre.props.bob,
+            positionId: bobId,
+            lower: "-50000",
+            upper: "0",
+            claim: "0",
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: true,
+            balanceInIncrease: "0",
+            balanceOutIncrease: "19",
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: "PositionNotFound()",
+        });
+
+        await validateBurn({
+            signer: hre.props.bob,
+            positionId: bobId,
+            lower: "-50000",
+            upper: "0",
+            claim: "0",
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: false,
+            balanceInIncrease: "0",
+            balanceOutIncrease: "19",
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: "",
         });
     });
 })

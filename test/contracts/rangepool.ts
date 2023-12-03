@@ -17,7 +17,7 @@ import {
   getRangeLiquidity,
   getTickLiquidity,
 } from '../utils/contracts/rangepool'
-import { RangePoolState } from '../utils/contracts/limitpool'
+import { RangePoolState, ZERO_ADDRESS } from '../utils/contracts/limitpool'
 
 alice: SignerWithAddress
 describe('RangePool Exact In Tests', function () {
@@ -153,7 +153,6 @@ describe('RangePool Exact In Tests', function () {
   // });
 
   it('pool - Should not overflow global liquidity', async function () {
-
     const aliceId = await validateMint({
       signer: hre.props.alice,
       recipient: hre.props.alice.address,
@@ -172,6 +171,109 @@ describe('RangePool Exact In Tests', function () {
       console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
     }
   })
+
+  it("pool0 - Should revert mint, burn, and swap when recipient is zero address", async function () {  
+    const aliceId = await validateMint({
+      signer: hre.props.alice,
+      recipient: ZERO_ADDRESS,
+      lower: '20',
+      upper: '60',
+      amount0: ethers.utils.parseUnits('1', 38),
+      amount1: ethers.utils.parseUnits('1', 38),
+      balance0Decrease: BN_ZERO,
+      balance1Decrease: BN_ZERO,
+      liquidityIncrease: BigNumber.from('4990259157044168702067523170470752302'),
+      revertMessage: 'CollectToZeroAddress()',
+    })
+
+    await validateBurn({
+      signer: hre.props.alice,
+      recipient: ZERO_ADDRESS,
+      lower: '20',
+      upper: '60',
+      positionId: aliceId ?? 0,
+      liquidityAmount: liquidityAmount,
+      balance0Increase: tokenAmount.div(10).sub(1),
+      balance1Increase: BigNumber.from('89946873348418057510'),
+      revertMessage: 'CollectToZeroAddress()',
+    })
+  });
+
+  it("pool0 - Should revert on no position found or owner mismatch", async function () {  
+    const aliceId = await validateMint({
+      signer: hre.props.alice,
+      recipient: hre.props.alice.address,
+      lower: '20',
+      upper: '60',
+      amount0: tokenAmount,
+      amount1: tokenAmount,
+      balance0Decrease: BN_ZERO,
+      balance1Decrease: tokenAmount,
+      liquidityIncrease: liquidityAmount,
+      revertMessage: '',
+    })
+
+    await validateMint({
+      signer: hre.props.bob,
+      recipient: hre.props.bob.address,
+      lower: '20',
+      upper: '60',
+      positionId: aliceId,
+      amount0: tokenAmount,
+      amount1: tokenAmount,
+      balance0Decrease: BN_ZERO,
+      balance1Decrease: tokenAmount,
+      liquidityIncrease: liquidityAmount,
+      revertMessage: 'PositionOwnerMismatch()',
+    })
+
+    await validateMint({
+      signer: hre.props.bob,
+      recipient: hre.props.bob.address,
+      lower: '20',
+      upper: '60',
+      positionId: aliceId + 1,
+      amount0: tokenAmount,
+      amount1: tokenAmount,
+      balance0Decrease: BN_ZERO,
+      balance1Decrease: tokenAmount,
+      liquidityIncrease: liquidityAmount,
+      revertMessage: 'PositionNotFound()',
+    })
+
+    await validateBurn({
+      signer: hre.props.bob,
+      lower: '20',
+      upper: '60',
+      positionId: aliceId,
+      liquidityAmount: liquidityAmount,
+      balance0Increase: tokenAmount.div(10).sub(1),
+      balance1Increase: BigNumber.from('89946873348418057510'),
+      revertMessage: 'PositionOwnerMismatch()',
+    })
+
+    await validateBurn({
+      signer: hre.props.alice,
+      lower: '20',
+      upper: '60',
+      positionId: aliceId + 1,
+      liquidityAmount: liquidityAmount,
+      balance0Increase: BN_ZERO,
+      balance1Increase: BigNumber.from(tokenAmount).sub(1),
+      revertMessage: 'PositionNotFound()',
+    })
+
+    await validateBurn({
+      signer: hre.props.alice,
+      lower: '20',
+      upper: '60',
+      positionId: aliceId,
+      liquidityAmount: liquidityAmount,
+      balance0Increase: BN_ZERO,
+      balance1Increase: BigNumber.from(tokenAmount).sub(1),
+      revertMessage: '',
+    })
+  });
 
   it('token1 - Should mint, swap, and burn 14', async function () {
 

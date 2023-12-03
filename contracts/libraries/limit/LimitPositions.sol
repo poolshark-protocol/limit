@@ -309,21 +309,14 @@ library LimitPositions {
             // update global liquidity
             cache.state.liquidityGlobal -= cache.liquidityBurned;
         }
+
+        // clear filled position
         if (params.zeroForOne ? params.claim == cache.position.upper
                               : params.claim == cache.position.lower) {
             cache.state.liquidityGlobal -= cache.position.liquidity;
             cache.position.liquidity = 0;
         }
-        // clear out old position
-        if (params.zeroForOne ? params.claim != cache.position.lower 
-                              : params.claim != cache.position.upper) {
-            /// @dev - this also clears out position end claims
-            if (params.zeroForOne ? params.claim == cache.position.lower 
-                                  : params.claim == cache.position.upper) {
-                // subtract remaining position liquidity out from global
-                cache.state.liquidityGlobal -= cache.position.liquidity;
-            }
-        }
+
         // clear position if empty
         if (cache.position.liquidity == 0) {
             cache.position.epochLast = 0;

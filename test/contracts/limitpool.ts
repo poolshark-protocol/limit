@@ -8209,6 +8209,8 @@ describe('LimitPool Tests', function () {
             revertMessage: "",
         });
 
+        await getTickAtPrice(false, true)
+
 
         await validateMint({
             signer: hre.props.bob,
@@ -8224,6 +8226,8 @@ describe('LimitPool Tests', function () {
             revertMessage: "",
         });
 
+        await getTickAtPrice(false, true)
+
         await validateMint({
             signer: hre.props.bob,
             lower: "-80",
@@ -8237,6 +8241,8 @@ describe('LimitPool Tests', function () {
             upperTickCleared: false,
             revertMessage: "",
         });
+
+        await getTickAtPrice(false, true)
 
         return
 

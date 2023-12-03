@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.13;
 
+import '../../interfaces/IPositionERC1155.sol';
 import '../../interfaces/structs/PoolsharkStructs.sol';
 import '../../interfaces/limit/ILimitPoolManager.sol';
 import '../utils/SafeTransfers.sol';
@@ -16,6 +17,9 @@ library FeesCall {
     uint8 internal constant PROTOCOL_SWAP_FEE_1 = 2**1;
     uint8 internal constant PROTOCOL_FILL_FEE_0 = 2**2;
     uint8 internal constant PROTOCOL_FILL_FEE_1 = 2**3;
+
+    // eth address for safe withdrawal
+    address public constant ethAddress = address(0);
 
     /// @dev - LimitPoolManager (i.e. constants.owner) emits events in aggregate
 
@@ -64,6 +68,18 @@ library FeesCall {
             SafeTransfers.transferOut(feeTo, constants.token0, token0Fees);
         if (token1Fees > 0)
             SafeTransfers.transferOut(feeTo, constants.token1, token1Fees);
+
+        // withdraw errantly received ETH from pool
+        if (address(this).balance > 0) {
+            // send eth balance to feeTo
+            SafeTransfers.transferOut(feeTo, ethAddress, address(this).balance);
+        }
+
+        // withdraw errantly received ETH from pool token
+        if (address(constants.poolToken).balance > 0) {
+            // send eth balance to feeTo
+            IPositionERC1155(constants.poolToken).withdrawEth(feeTo, constants);
+        }
 
         return (token0Fees, token1Fees);
     }

@@ -178,6 +178,8 @@ export async function getSample(print = false) {
   const sample = await hre.props.limitPool.sample([0])
   if(print) {
     console.log('sample for [0]:')
+    console.log('seconds per liquidity accum:', sample.secondsPerLiquidityAccum[0].toString())
+    console.log('tick seconds accum:', sample.tickSecondsAccum[0].toString())
     console.log('average liquidity:', sample.averageLiquidity.toString())
     console.log('average price:', sample.averagePrice.toString())
     console.log('average tick:', sample.averageTick.toString())

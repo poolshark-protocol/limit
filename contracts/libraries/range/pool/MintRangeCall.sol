@@ -8,7 +8,6 @@ import '../../utils/SafeTransfers.sol';
 import '../../utils/Collect.sol';
 import '../../utils/PositionTokens.sol';
 import '../RangePositions.sol';
-import 'hardhat/console.sol';
 
 library MintRangeCall {
     using SafeCast for uint256;

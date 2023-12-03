@@ -52,13 +52,6 @@ library RangeTicks {
         int24 upper,
         uint128 amount
     ) internal returns (PoolsharkStructs.GlobalState memory) {
-        validate(lower, upper, constants.tickSpacing);
-
-        // check for amount to overflow liquidity delta & global
-        if (amount == 0)
-            require(false, 'NoLiquidityBeingAdded()');
-        if (state.liquidityGlobal + amount > uint128(type(int128).max))
-            require(false, 'LiquidityOverflow()');
 
         // get tick at price
         int24 tickAtPrice = state.pool.tickAtPrice;

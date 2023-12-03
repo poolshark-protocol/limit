@@ -53,8 +53,6 @@ library RangePositions {
         RangePoolStructs.MintRangeParams memory,
         RangePoolStructs.MintRangeCache memory
     ) {
-        RangeTicks.validate(cache.position.lower, cache.position.upper, cache.constants.tickSpacing);
-
         cache.liquidityMinted = ConstantProduct.getLiquidityForAmounts(
             cache.priceLower,
             cache.priceUpper,
@@ -70,7 +68,8 @@ library RangePositions {
             cache.liquidityMinted,
             true
         );
-        if (cache.liquidityMinted > uint128(type(int128).max)) require(false, 'LiquidityOverflow()');
+        if (cache.state.liquidityGlobal + cache.liquidityMinted > uint128(type(int128).max))
+            require(false, 'LiquidityOverflow()');
 
         return (params, cache);
     }

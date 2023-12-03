@@ -34,6 +34,7 @@ library SnapshotRangeCall {
     {
         if (state.unlocked == _ENTERED)
             require(false, 'ReentrancyGuardReadOnlyReentrantCall()');
+
         return RangePositions.snapshot(
             positions,
             ticks,

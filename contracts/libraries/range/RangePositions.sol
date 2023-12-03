@@ -53,8 +53,6 @@ library RangePositions {
         RangePoolStructs.MintRangeParams memory,
         RangePoolStructs.MintRangeCache memory
     ) {
-        RangeTicks.validate(cache.position.lower, cache.position.upper, cache.constants.tickSpacing);
-
         cache.liquidityMinted = ConstantProduct.getLiquidityForAmounts(
             cache.priceLower,
             cache.priceUpper,
@@ -321,6 +319,9 @@ library RangePositions {
         // early return if position empty
         if (cache.position.liquidity == 0)
             return (0,0,0,0);
+
+        // validate position ticks
+        ConstantProduct.checkTicks(cache.position.lower, cache.position.upper, constants.tickSpacing);
 
         cache.price = state.pool.price;
         cache.liquidity = state.pool.liquidity;

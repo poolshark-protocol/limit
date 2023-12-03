@@ -39,12 +39,18 @@ library MintLimitCall {
         PoolsharkStructs.MintLimitParams memory params,
         LimitPoolStructs.MintLimitCache memory cache
     ) external {
+        // check for invalid receiver
+        if (params.to == address(0))
+            require(false, "CollectToZeroAddress()");
+
         if (params.positionId > 0) {
             cache.position = positions[params.positionId];
             if (cache.position.liquidity == 0) {
                 // position doesn't exist
                 require(false, 'PositionNotFound()');
             }
+            if (PositionTokens.balanceOf(cache.constants, params.to, params.positionId) == 0)
+                require(false, 'PositionOwnerMismatch()');
         }
 
         cache.state = globalState;

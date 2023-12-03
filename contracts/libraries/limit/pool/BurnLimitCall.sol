@@ -38,9 +38,10 @@ library BurnLimitCall {
         cache.state = globalState;
         cache.position = positions[params.positionId];
 
-        // check positionId owner
-        if (PositionTokens.balanceOf(cache.constants, msg.sender, params.positionId) == 0)
+        if (cache.position.liquidity == 0) 
             require(false, 'PositionNotFound()');
+        if (PositionTokens.balanceOf(cache.constants, msg.sender, params.positionId) == 0)
+            require(false, 'PositionOwnerMismatch()');
         
         // update position
         (

@@ -186,12 +186,6 @@ contract EchidnaPool {
         poolValues.price1Before = poolStructs.pool1.price;
         poolValues.liquidity1Before = poolStructs.pool1.liquidity;
 
-        (, poolStructs.lower) = pool.ticks(lower);
-        (, poolStructs.upper) = pool.ticks(upper);
-
-        poolValues.liquidityAbsoluteLowerBefore = poolStructs.lower.liquidityAbsolute;
-        poolValues.liquidityAbsoluteUpperBefore = poolStructs.upper.liquidityAbsolute;
-
         LimitPoolStructs.MintLimitParams memory params;
         params.to = msg.sender;
         params.amount = amount;
@@ -206,6 +200,12 @@ contract EchidnaPool {
         (lower, upper, posCreated) = pool.getResizedTicksForMint(params);
         emit PositionTicks(lower, upper);
         emit PositionCreated(posCreated);
+
+        (, poolStructs.lower) = pool.ticks(lower);
+        (, poolStructs.upper) = pool.ticks(upper);
+
+        poolValues.liquidityAbsoluteLowerBefore = poolStructs.lower.liquidityAbsolute;
+        poolValues.liquidityAbsoluteUpperBefore = poolStructs.upper.liquidityAbsolute;
 
         // ACTION 
         pool.mintLimit(params);
@@ -323,12 +323,6 @@ contract EchidnaPool {
         poolValues.price1Before = poolStructs.pool1.price;
         poolValues.liquidity1Before = poolStructs.pool1.liquidity;
 
-        (, poolStructs.lower) = pool.ticks(lower);
-        (, poolStructs.upper) = pool.ticks(upper);
-
-        poolValues.liquidityAbsoluteLowerBefore = poolStructs.lower.liquidityAbsolute;
-        poolValues.liquidityAbsoluteUpperBefore = poolStructs.upper.liquidityAbsolute;
-
         LimitPoolStructs.MintLimitParams memory params;
         params.to = msg.sender;
         params.amount = amount;
@@ -343,6 +337,12 @@ contract EchidnaPool {
         (lower, upper, posCreated) = pool.getResizedTicksForMint(params);
         emit PositionTicks(lower, upper);
         emit PositionCreated(posCreated);
+
+        (, poolStructs.lower) = pool.ticks(lower);
+        (, poolStructs.upper) = pool.ticks(upper);
+
+        poolValues.liquidityAbsoluteLowerBefore = poolStructs.lower.liquidityAbsolute;
+        poolValues.liquidityAbsoluteUpperBefore = poolStructs.upper.liquidityAbsolute;
 
         // ACTION 
         pool.mintLimit(params);

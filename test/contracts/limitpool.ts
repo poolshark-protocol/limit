@@ -97,6 +97,27 @@ describe('LimitPool Tests', function () {
     // then swap against pool uisng ETH as input
     // then swap against pool using ETH as output
 
+    it('pool0 - Should not overflow global liquidity', async function () {
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '0',
+            upper: '100',
+            amount: ethers.utils.parseUnits('1', 38),
+            zeroForOne: true,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: '0',
+            upperTickCleared: false,
+            lowerTickCleared: true,
+            revertMessage: 'LiquidityOverflow()',
+        })
+    
+        if (balanceCheck) {
+          console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
+          console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
+        }
+    })
+
     it('pool0 - Should mint, fill, and burn 29', async function () {
         const aliceLiquidity = '20051041647900280328782'
         // mint should revert
@@ -8095,6 +8116,79 @@ describe('LimitPool Tests', function () {
             lowerTickCleared: false,
             upperTickCleared: true,
             revertMessage: "",
+        });
+    });
+
+    it("pool0 - Should revert on invalid tick range", async function () {
+        
+        await validateMint({
+            signer: hre.props.bob,
+            lower: "-1000000",
+            upper: "0",
+            amount: "20",
+            zeroForOne: false,
+            balanceInDecrease: "20",
+            liquidityIncrease: "21",
+            balanceOutIncrease: "0",
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: "LowerTickOutOfBounds()",
+        });
+
+        await validateMint({
+            signer: hre.props.bob,
+            lower: "1000000",
+            upper: "1000000",
+            amount: "20",
+            zeroForOne: false,
+            balanceInDecrease: "20",
+            liquidityIncrease: "21",
+            balanceOutIncrease: "0",
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: "UpperTickOutOfBounds()",
+        });
+
+        await validateMint({
+            signer: hre.props.bob,
+            lower: "54",
+            upper: "1000",
+            amount: "20",
+            zeroForOne: false,
+            balanceInDecrease: "20",
+            liquidityIncrease: "21",
+            balanceOutIncrease: "0",
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: "LowerTickOutsideTickSpacing()",
+        });
+
+        await validateMint({
+            signer: hre.props.bob,
+            lower: "50",
+            upper: "1005",
+            amount: "20",
+            zeroForOne: false,
+            balanceInDecrease: "20",
+            liquidityIncrease: "21",
+            balanceOutIncrease: "0",
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: "UpperTickOutsideTickSpacing()",
+        });
+
+        await validateMint({
+          signer: hre.props.bob,
+          lower: "0",
+          upper: "0",
+          amount: "20",
+          zeroForOne: false,
+          balanceInDecrease: "20",
+          liquidityIncrease: "21",
+          balanceOutIncrease: "0",
+          lowerTickCleared: false,
+          upperTickCleared: true,
+          revertMessage: "LowerUpperTickOrderInvalid()",
         });
     });
 })

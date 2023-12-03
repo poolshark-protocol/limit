@@ -6,11 +6,6 @@ import '../interfaces/structs/PoolsharkStructs.sol';
 
 library TickMap {
 
-    error TickIndexOverflow();
-    error TickIndexUnderflow();
-    error TickIndexBadSpacing();
-    error BlockIndexOverflow();
-
     function get(
         PoolsharkStructs.TickMap storage tickMap,
         int24 tick,

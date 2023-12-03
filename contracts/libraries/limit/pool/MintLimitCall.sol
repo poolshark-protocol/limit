@@ -43,6 +43,11 @@ library MintLimitCall {
         if (params.to == address(0))
             require(false, "CollectToZeroAddress()");
 
+        cache.state = globalState;
+
+        // validate position ticks
+        ConstantProduct.checkTicks(params.lower, params.upper, cache.constants.tickSpacing);
+
         if (params.positionId > 0) {
             cache.position = positions[params.positionId];
             if (cache.position.liquidity == 0) {
@@ -52,8 +57,6 @@ library MintLimitCall {
             if (PositionTokens.balanceOf(cache.constants, params.to, params.positionId) == 0)
                 require(false, 'PositionOwnerMismatch()');
         }
-
-        cache.state = globalState;
 
         // resize position if necessary
         (params, cache) = LimitPositions.resize(

@@ -383,9 +383,9 @@ library Ticks {
     ) internal returns (
         PoolsharkStructs.SwapCache memory
     ) {
-
         // crossing range ticks
         if ((cache.crossStatus & RANGE_TICK) > 0) {
+            // skip if crossing down and stopping at crossPrice
             if (!params.zeroForOne || (cache.amountLeft > 0 && params.priceLimit < cache.crossPrice)) {
                 PoolsharkStructs.RangeTick memory crossTick = ticks[cache.crossTick].range;
                 crossTick.feeGrowthOutside0       = cache.state.pool.feeGrowthGlobal0 - crossTick.feeGrowthOutside0;
@@ -402,26 +402,28 @@ library Ticks {
                 if (params.zeroForOne) {
                     unchecked {
                         if (liquidityDelta >= 0){
+                            cache.liquidity -= uint128(liquidityDelta);
                             cache.state.pool.liquidity -= uint128(liquidityDelta);
                         } else {
+                            cache.liquidity += uint128(-liquidityDelta);
                             cache.state.pool.liquidity += uint128(-liquidityDelta); 
                         }
                     }
                 } else {
                     unchecked {
                         if (liquidityDelta >= 0) {
+                            cache.liquidity += uint128(liquidityDelta);
                             cache.state.pool.liquidity += uint128(liquidityDelta);
                         } else {
+                            cache.liquidity -= uint128(-liquidityDelta);
                             cache.state.pool.liquidity -= uint128(-liquidityDelta);
                         }
                     }
                 }
             } else {
-                // if zeroForOne && amountLeft == 0 skip crossing the tick
-                /// @dev - this is so users can safely add liquidity with lower or upper at the pool price 
+                // skip crossing the tick
                 cache.cross = false;
             }
-            /// @dev - price and tickAtPrice updated at end of loop
         }
         // crossing limit tick
         if ((cache.crossStatus & LIMIT_TICK) > 0) {
@@ -445,10 +447,9 @@ library Ticks {
             /// @dev - price and tickAtPrice updated at end of loop
         }
         if ((cache.crossStatus & LIMIT_POOL) > 0) {
-            // add limit pool
+            // add one-way liquidity
             uint128 liquidityDelta = params.zeroForOne ? cache.state.pool1.liquidity
-                                                    : cache.state.pool0.liquidity;
-
+                                                       : cache.state.pool0.liquidity;
             if (liquidityDelta > 0) cache.liquidity += liquidityDelta;
         }
         if (cache.cross)
@@ -467,7 +468,7 @@ library Ticks {
         PoolsharkStructs.SwapCache memory
     ) {
         if ((cache.crossStatus & RANGE_TICK) > 0) {
-            if (!params.zeroForOne || cache.amountLeft > 0) {
+            if (!params.zeroForOne || (cache.amountLeft > 0 && params.priceLimit < cache.crossPrice)) {
                 int128 liquidityDelta = ticks[cache.crossTick].range.liquidityDelta;
                 if (params.zeroForOne) {
                     unchecked {

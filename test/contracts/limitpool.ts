@@ -7804,8 +7804,6 @@ describe('LimitPool Tests', function () {
             revertMessage: "",
         });
 
-        return
-
         await validateBurn({
             signer: hre.props.bob,
             positionId: bobId2,
@@ -7894,6 +7892,69 @@ describe('LimitPool Tests', function () {
             lowerTickCleared: false,
             upperTickCleared: true,
             revertMessage: "",
+        });
+    });
+
+    it("pool0 - Should skip mint after swap when liquidityMinted is zero", async function () {
+        
+        const bobId = await validateMint({
+          signer: hre.props.bob,
+          recipient: hre.props.bob.address,
+          lower: "-50000",
+          upper: "0",
+          amount: "20",
+          zeroForOne: false,
+          balanceInDecrease: "20",
+          liquidityIncrease: "21",
+          balanceOutIncrease: "0",
+          lowerTickCleared: false,
+          upperTickCleared: true,
+          revertMessage: "",
+        });
+
+        const bobId2 = await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: "-50000",
+            upper: "0",
+            amount: "130",
+            zeroForOne: true,
+            balanceInDecrease: "125",
+            liquidityIncrease: "0",
+            balanceOutIncrease: "17",
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: "",
+        });
+
+        await validateBurn({
+            signer: hre.props.bob,
+            positionId: bobId,
+            lower: "-50000",
+            upper: "0",
+            claim: "0",
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: false,
+            balanceInIncrease: "124",
+            balanceOutIncrease: "1",
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: "",
+        });
+
+        await validateBurn({
+            signer: hre.props.bob,
+            positionId: bobId2,
+            lower: "-50000",
+            upper: "0",
+            claim: "-50000",
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: true,
+            balanceInIncrease: "0",
+            balanceOutIncrease: "19",
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: "PositionNotFound()",
         });
     });
 })

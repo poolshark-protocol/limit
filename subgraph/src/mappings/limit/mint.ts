@@ -18,7 +18,6 @@ export function handleMintLimit(event: MintLimit): void {
     let epochLastParam = event.params.epochLast
     let amountInParam = event.params.amountIn
     let liquidityMintedParam = event.params.liquidityMinted
-    let amountFilledParam = event.params.amountFilled
     let poolAddress = event.address.toHex()
     let msgSender = event.transaction.from
 
@@ -67,20 +66,17 @@ export function handleMintLimit(event: MintLimit): void {
     pool.liquidityGlobal = pool.liquidityGlobal.plus(liquidityMintedParam)
     position.liquidity = position.liquidity.plus(liquidityMintedParam)
     position.amountIn = position.amountIn.plus(amountInParam)
-    position.amountFilled = position.amountFilled.plus(amountFilledParam)
 
-    let addingLiquidity: boolean = false
-
-    // positionIdNext can be loaded
+    // check if order exists for position
     let loadOrder = safeLoadHistoricalOrder(tokenIn.id, tokenOut.id, poolAddress, position.positionId.toString()) // 9
 
     if (!loadOrder.exists) {
+        // if not check the txn hash in case of split swap + mint
         loadOrder = safeLoadHistoricalOrder(tokenIn.id, tokenOut.id, poolAddress, event.transaction.hash.toHex()) // 9
-    } else {
-        addingLiquidity = true
     }
 
     let order = loadOrder.entity
+    // set id for adding/removing liquidity
     order.id = tokenIn.id
                 .concat('-')
                 .concat(tokenOut.id)
@@ -96,14 +92,7 @@ export function handleMintLimit(event: MintLimit): void {
     }
     order.positionId = position.positionId
     order.touches = order.touches.plus(BIGINT_ONE)
-    if (!addingLiquidity) {
-        order.amountIn = BIGDECIMAL_ZERO
-        order.amountOut = BIGDECIMAL_ZERO
-    }
-    order.amountIn = order.amountIn.plus(convertTokenToDecimal(amountInParam, tokenIn.decimals))
-    order.amountOut = order.amountOut.plus(convertTokenToDecimal(amountFilledParam, tokenOut.decimals))
     order.averagePrice = BIGDECIMAL_ZERO
-    order.usdValue = order.amountOut.times(tokenOut.usdPrice)
     order.completed = false
 
     pool.txnCount = pool.txnCount.plus(ONE_BI)
@@ -126,11 +115,9 @@ export function handleMintLimit(event: MintLimit): void {
     }
 
     let amountIn = convertTokenToDecimal(amountInParam, tokenIn.decimals)
-    let amountOut = convertTokenToDecimal(amountFilledParam, tokenOut.decimals)
     tokenIn.totalValueLocked = tokenIn.totalValueLocked.plus(amountIn)
-    tokenOut.totalValueLocked = tokenOut.totalValueLocked.minus(amountOut)
-    pool.totalValueLocked0 = pool.totalValueLocked0.plus(zeroForOneParam ? amountIn : amountOut.neg())
-    pool.totalValueLocked1 = pool.totalValueLocked1.plus(zeroForOneParam ? amountOut.neg() : amountIn)
+    pool.totalValueLocked0 = pool.totalValueLocked0.plus(zeroForOneParam ? amountIn : BIGDECIMAL_ZERO)
+    pool.totalValueLocked1 = pool.totalValueLocked1.plus(zeroForOneParam ? BIGDECIMAL_ZERO : amountIn)
 
     // grab tick epochs
     let lowerTickEpoch = zeroForOneParam ? lowerTick.epochLast0 : lowerTick.epochLast1

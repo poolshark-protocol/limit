@@ -14,12 +14,6 @@ import '../utils/SafeCast.sol';
 
 /// @notice Tick management library for limit pools
 library LimitTicks {
-    error LiquidityOverflow();
-    error LiquidityUnderflow();
-    error InvalidLowerTick();
-    error InvalidUpperTick();
-    error InvalidPositionAmount();
-    error InvalidPositionBounds();
 
     using SafeCast for uint256;
 
@@ -49,12 +43,6 @@ library LimitTicks {
         LimitPoolStructs.MintLimitCache memory cache,
         PoolsharkStructs.MintLimitParams memory params
     ) internal {
-        /// @dev - validation of ticks is in Positions.validate
-        if (cache.liquidityMinted == 0)
-            require(false, 'NoLiquidityBeingAdded()');
-        if (cache.state.liquidityGlobal + cache.liquidityMinted > uint128(type(int128).max))
-            require(false, 'LiquidityOverflow()');
-
         int256 liquidityMinted = int256(cache.liquidityMinted);
 
         // check if adding liquidity necessary
@@ -147,7 +135,7 @@ library LimitTicks {
                 // we need to blend the two partial fills into a single tick
                 LimitPoolStructs.InsertSingleLocals memory locals;
                 if (params.zeroForOne) {
-                    // 0 -> 1 positions price moves up so nextFullTick is greater
+                    // price moves up so previousFullTick is lesser
                     locals.previousFullTick = tickToSave - constants.tickSpacing / 2;
                     locals.pricePrevious = ConstantProduct.getPriceAtTick(locals.previousFullTick, constants);
                     // calculate amountOut filled across both partial fills
@@ -160,7 +148,7 @@ library LimitTicks {
                     // dx to the next tick is less than before the tick blend
                     EpochMap.set(tickToSave, params.zeroForOne, cache.state.epoch, tickMap, constants);
                 } else {
-                    // 0 -> 1 positions price moves up so nextFullTick is lesser
+                    // price moves down so previousFullTick is greater
                     locals.previousFullTick = tickToSave + constants.tickSpacing / 2;
                     locals.pricePrevious = ConstantProduct.getPriceAtTick(locals.previousFullTick, constants);
                     // calculate amountOut filled across both partial fills
@@ -294,9 +282,6 @@ library LimitTicks {
     ) internal pure returns (
         bool
     ) {
-        if (tick.limit.liquidityAbsolute != 0) {
-            return false;
-        }
-        return true;
+        return tick.limit.liquidityAbsolute == 0;
     }
 }

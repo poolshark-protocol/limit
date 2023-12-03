@@ -11,10 +11,6 @@ library Samples {
 
     uint8 internal constant TIME_DELTA_MAX = 6;
 
-    error InvalidSampleLength();
-    error SampleArrayUninitialized();
-    error SampleLengthNotAvailable();
-
     event SampleRecorded(
         int56 tickSecondsAccum,
         uint160 secondsPerLiquidityAccum

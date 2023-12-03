@@ -424,6 +424,9 @@ export class InitialSetup {
     
             hre.props.limitPool = await hre.ethers.getContractAt('LimitPool', limitPoolAddress)
             hre.props.limitPoolToken = await hre.ethers.getContractAt('PositionERC1155', limitPoolTokenAddress)
+
+            await hre.props.limitPoolToken.name()
+            await hre.props.limitPoolToken.symbol()
     
             await this.deployAssist.saveContractDeployment(
                 network,

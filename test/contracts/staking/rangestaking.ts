@@ -206,7 +206,7 @@ describe('RangeStaker Tests', function () {
             liquidityAmount: aliceLiquidity,
             balance0Increase: BigNumber.from(tokenAmount).sub(1),
             balance1Increase: BN_ZERO,
-            revertMessage: 'PositionNotFound()',
+            revertMessage: 'PositionOwnerMismatch()',
         })
 
         await validateUnstake({
@@ -289,7 +289,7 @@ describe('RangeStaker Tests', function () {
             liquidityAmount: aliceLiquidity,
             balance0Increase: BigNumber.from(tokenAmount).sub(1),
             balance1Increase: BN_ZERO,
-            revertMessage: 'PositionNotFound()',
+            revertMessage: 'PositionOwnerMismatch()',
         })
 
         await validateUnstake({

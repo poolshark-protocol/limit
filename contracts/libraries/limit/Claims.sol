@@ -37,7 +37,6 @@ library Claims {
                 if (cache.pool.price <= cache.priceUpper) {
                     cache.priceClaim = cache.pool.price;
                     params.claim = TickMap.roundBack(cache.pool.tickAtPrice, cache.constants, params.zeroForOne, cache.priceClaim);
-                    claimTickEpoch = cache.state.epoch;
                 } else {
                     cache.priceClaim = cache.priceUpper;
                     params.claim = cache.position.upper;
@@ -46,7 +45,6 @@ library Claims {
                 claimTickEpoch = cache.state.epoch;
             } else if (params.claim % cache.constants.tickSpacing != 0) {
                 if (cache.claimTick.priceAt == 0) {
-                    // require (false, 'ClaimTick::HalfTickAlreadyCrossed()');
                     // if tick untouched since position creation revert
                     if (claimTickEpoch <= cache.position.epochLast)
                         require (false, 'ClaimTick::HalfTickClaimInvalid()'); 
@@ -61,7 +59,6 @@ library Claims {
                 if (cache.pool.price >= cache.priceLower) {
                     cache.priceClaim = cache.pool.price;
                     params.claim = TickMap.roundBack(cache.pool.tickAtPrice, cache.constants, params.zeroForOne, cache.priceClaim);
-                    claimTickEpoch = cache.state.epoch;
                 } else {
                     cache.priceClaim = cache.priceLower;
                     params.claim = cache.position.lower;
@@ -70,7 +67,6 @@ library Claims {
                 claimTickEpoch = cache.state.epoch;
             } else if (params.claim % cache.constants.tickSpacing != 0) {
                 if (cache.claimTick.priceAt == 0) {
-                    // require (false, 'ClaimTick::HalfTickAlreadyCrossed()');
                     if (claimTickEpoch <= cache.position.epochLast)
                         require (false, 'ClaimTick::HalfTickClaimInvalid()'); 
                     else

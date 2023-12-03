@@ -18,18 +18,6 @@ library RangePositions {
     using SafeCast for int256;
     using SafeCast for int128;
 
-    error NotEnoughPositionLiquidity();
-    error InvalidClaimTick();
-    error LiquidityOverflow();
-    error WrongTickClaimedAt();
-    error NoLiquidityBeingAdded();
-    error PositionNotUpdated();
-    error InvalidLowerTick();
-    error InvalidUpperTick();
-    error InvalidPositionAmount();
-    error InvalidPositionBoundsOrder();
-    error NotImplementedYet();
-
     uint256 internal constant Q96 = 0x1000000000000000000000000;
     uint256 internal constant Q128 = 0x100000000000000000000000000000000;
 
@@ -53,8 +41,6 @@ library RangePositions {
         RangePoolStructs.MintRangeParams memory,
         RangePoolStructs.MintRangeCache memory
     ) {
-        RangeTicks.validate(cache.position.lower, cache.position.upper, cache.constants.tickSpacing);
-
         cache.liquidityMinted = ConstantProduct.getLiquidityForAmounts(
             cache.priceLower,
             cache.priceUpper,
@@ -70,7 +56,8 @@ library RangePositions {
             cache.liquidityMinted,
             true
         );
-        if (cache.liquidityMinted > uint128(type(int128).max)) require(false, 'LiquidityOverflow()');
+        if (cache.state.liquidityGlobal + cache.liquidityMinted > uint128(type(int128).max))
+            require(false, 'LiquidityOverflow()');
 
         return (params, cache);
     }

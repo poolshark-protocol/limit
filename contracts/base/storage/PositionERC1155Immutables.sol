@@ -4,7 +4,11 @@ pragma solidity 0.8.13;
 import { Clone } from "../../external/solady/Clone.sol";
 
 contract PositionERC1155Immutables is Clone {
-    function poolImpl() public pure returns (address) {
-        return _getArgAddress(0);
+    function tokenName() public pure returns (bytes32) {
+        return _getArgBytes32(0);
+    }
+
+    function tokenSymbol() public pure returns (bytes32) {
+        return _getArgBytes32(32);
     }
 }

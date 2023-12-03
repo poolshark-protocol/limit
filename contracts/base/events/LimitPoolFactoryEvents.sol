@@ -9,6 +9,6 @@ abstract contract LimitPoolFactoryEvents {
         address indexed token1,
         uint16 indexed swapFee,
         int16 tickSpacing,
-        uint8 poolTypeId
+        uint16 poolTypeId
     );
 }

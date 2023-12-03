@@ -17,7 +17,6 @@ library MintLimitCall {
         uint32 positionId,
         uint32 epochLast,
         uint128 amountIn,
-        uint128 amountFilled,
         uint128 liquidityMinted
     );
 
@@ -40,15 +39,24 @@ library MintLimitCall {
         PoolsharkStructs.MintLimitParams memory params,
         LimitPoolStructs.MintLimitCache memory cache
     ) external {
+        // check for invalid receiver
+        if (params.to == address(0))
+            require(false, "CollectToZeroAddress()");
+
+        cache.state = globalState;
+
+        // validate position ticks
+        ConstantProduct.checkTicks(params.lower, params.upper, cache.constants.tickSpacing);
+
         if (params.positionId > 0) {
             cache.position = positions[params.positionId];
             if (cache.position.liquidity == 0) {
                 // position doesn't exist
                 require(false, 'PositionNotFound()');
             }
+            if (PositionTokens.balanceOf(cache.constants, params.to, params.positionId) == 0)
+                require(false, 'PositionOwnerMismatch()');
         }
-
-        cache.state = globalState;
 
         // resize position if necessary
         (params, cache) = LimitPositions.resize(
@@ -142,8 +150,7 @@ library MintLimitCall {
                 params.zeroForOne,
                 params.positionId,
                 cache.position.epochLast,
-                uint128(params.amount + cache.swapCache.input),
-                uint128(cache.swapCache.output),
+                uint128(params.amount),
                 uint128(cache.liquidityMinted)
             );
         }

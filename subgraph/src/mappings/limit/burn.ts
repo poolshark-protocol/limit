@@ -68,16 +68,6 @@ export function handleBurnLimit(event: BurnLimit): void {
     // increment position amounts
     position.amountFilled = position.amountFilled.plus(tokenInClaimedParam)
     position.amountIn = position.amountIn.minus(tokenOutBurnedParam)
-
-    let loadTotalSeasonReward = safeLoadTotalSeasonReward(FACTORY_ADDRESS) // 10
-    let loadUserSeasonReward = safeLoadUserSeasonReward(event.transaction.from.toHex()) // 11
-    
-    let totalSeasonReward = loadTotalSeasonReward.entity
-    let userSeasonReward = loadUserSeasonReward.entity
-
-    // start and end time
-    totalSeasonReward.volumeTradedUsd = totalSeasonReward.volumeTradedUsd.plus(amountIn.times(tokenIn.usdPrice))
-    userSeasonReward.volumeTradedUsd = userSeasonReward.volumeTradedUsd.plus(amountIn.times(tokenIn.usdPrice))
    
     if (position.liquidity == liquidityBurnedParam || 
             (zeroForOneParam ? newClaim.equals(upper) : newClaim.equals(lower))) {
@@ -85,8 +75,8 @@ export function handleBurnLimit(event: BurnLimit): void {
             // throw an error
         }
         order.completedAtTimestamp = event.block.timestamp
-        order.amountIn = convertTokenToDecimal(position.amountIn, tokenOut.decimals)
-        order.amountOut = convertTokenToDecimal(position.amountFilled, tokenIn.decimals)
+        order.amountIn = order.amountIn.plus(convertTokenToDecimal(position.amountIn, tokenOut.decimals))
+        order.amountOut = order.amountOut.plus(convertTokenToDecimal(position.amountFilled, tokenIn.decimals))
         order.averagePrice = safeDiv(order.amountOut, order.amountIn)
         order.completed = true
         store.remove('LimitPosition', position.id)
@@ -197,14 +187,26 @@ export function handleBurnLimit(event: BurnLimit): void {
 
     // tvlUpdateLog.save()
 
+    // update season 1 rewards
+    if (event.block.timestamp.ge(SEASON_1_START_TIME) && event.block.timestamp.le(SEASON_1_END_TIME)) {
+        // update season rewards if between start and end time
+        let loadTotalSeasonReward = safeLoadTotalSeasonReward(FACTORY_ADDRESS) // 10
+        let loadUserSeasonReward = safeLoadUserSeasonReward(event.transaction.from.toHex()) // 11
+        
+        let totalSeasonReward = loadTotalSeasonReward.entity
+        let userSeasonReward = loadUserSeasonReward.entity
+
+        totalSeasonReward.volumeTradedUsd = totalSeasonReward.volumeTradedUsd.plus(amountIn.times(tokenIn.usdPrice))
+        userSeasonReward.volumeTradedUsd = userSeasonReward.volumeTradedUsd.plus(amountIn.times(tokenIn.usdPrice))
+
+        totalSeasonReward.save() // 10
+        userSeasonReward.save()  // 11
+    }
+
     basePrice.save() // 3
     pool.save() // 4
     factory.save() // 5
     tokenIn.save() // 7
     tokenOut.save() // 8
     order.save()    // 9
-    if (event.block.timestamp.ge(SEASON_1_START_TIME) && event.block.timestamp.le(SEASON_1_END_TIME)) {
-        totalSeasonReward.save() // 10
-        userSeasonReward.save()  // 11
-    }
 }

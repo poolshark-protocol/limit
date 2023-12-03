@@ -10,6 +10,7 @@ import './Claims.sol';
 import './EpochMap.sol';
 import '../utils/SafeCast.sol';
 import '../Ticks.sol';
+import 'hardhat/console.sol';
 
 /// @notice Position management library for ranged liquidity.
 /// @notice Position management library for ranged liquidity.
@@ -41,8 +42,6 @@ library LimitPositions {
         LimitPoolStructs.MintLimitCache memory
     )
     {
-        ConstantProduct.checkTicks(params.lower, params.upper, cache.constants.tickSpacing);
-
         cache.priceLower = ConstantProduct.getPriceAtTick(params.lower, cache.constants);
         cache.priceUpper = ConstantProduct.getPriceAtTick(params.upper, cache.constants);
         cache.mintSize = uint256(params.mintPercent) * uint256(params.amount) / 1e28;
@@ -161,7 +160,7 @@ library LimitPositions {
                 }
                 cache.priceLower = ConstantProduct.getPriceAtTick(params.lower, cache.constants);
             }
-            if (params.amount > 0 && params.lower < params.upper)
+            if (params.amount > 0 && params.lower < params.upper) {
                 cache.liquidityMinted = ConstantProduct.getLiquidityForAmounts(
                     cache.priceLower,
                     cache.priceUpper,
@@ -169,17 +168,26 @@ library LimitPositions {
                     params.zeroForOne ? 0 : uint256(params.amount),
                     params.zeroForOne ? uint256(params.amount) : 0
                 );
-            else
-                /// @auditor unnecessary since params.amount is 0
+                 if (cache.liquidityMinted == 0) {
+                    // skip minting
+                    params.amount = 0;
+                 }
+            } else {
+                // skip minting
+                params.amount = 0;
                 cache.liquidityMinted = 0;
+            }
             cache.state.epoch += 1;
         }
 
-        /// @dev - for safety
         if (params.lower >= params.upper) {
             // zero out amount transferred in
             params.amount = 0;
         }
+
+        // liquidity overflow check
+        if (cache.state.liquidityGlobal + cache.liquidityMinted > uint128(type(int128).max))
+            require(false, 'LiquidityOverflow()');
 
         return (
             params,
@@ -309,31 +317,24 @@ library LimitPositions {
             // update global liquidity
             cache.state.liquidityGlobal -= cache.liquidityBurned;
         }
-        if (params.zeroForOne ? params.claim == cache.position.upper
-                              : params.claim == cache.position.lower) {
-            cache.state.liquidityGlobal -= cache.position.liquidity;
-            cache.position.liquidity = 0;
-        }
-        // clear out old position
-        if (params.zeroForOne ? params.claim != cache.position.lower 
-                              : params.claim != cache.position.upper) {
-            /// @dev - this also clears out position end claims
-            if (params.zeroForOne ? params.claim == cache.position.lower 
-                                  : params.claim == cache.position.upper) {
-                // subtract remaining position liquidity out from global
-                cache.state.liquidityGlobal -= cache.position.liquidity;
-            }
-        }
-        // clear position if empty
-        if (cache.position.liquidity == 0) {
-            cache.position.epochLast = 0;
-            cache.position.crossedInto = false;
-        }
 
         // round back claim tick for storage
         if (params.claim % cache.constants.tickSpacing != 0) {
             cache.claim = params.claim;
             params.claim = TickMap.roundBack(params.claim, cache.constants, params.zeroForOne, cache.priceClaim);
+        }
+
+        // clear filled position
+        if (params.zeroForOne ? params.claim == cache.position.upper
+                              : params.claim == cache.position.lower) {
+            cache.state.liquidityGlobal -= cache.position.liquidity;
+            cache.position.liquidity = 0;
+        }
+
+        // clear position if empty
+        if (cache.position.liquidity == 0) {
+            cache.position.epochLast = 0;
+            cache.position.crossedInto = false;
         }
         
         emit BurnLimit(

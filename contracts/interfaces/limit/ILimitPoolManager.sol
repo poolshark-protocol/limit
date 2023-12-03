@@ -7,7 +7,7 @@ interface ILimitPoolManager {
     function owner() external view returns (address);
     function feeTo() external view returns (address);
     function poolTypes(
-        uint8 poolType
+        uint16 poolType
     ) external view returns (
         address poolImpl,
         address tokenImpl

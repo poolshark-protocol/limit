@@ -7,6 +7,7 @@ import { mintSigners20 } from '../utils/token'
 import {
     BN_ZERO,
     LimitPoolState,
+    ZERO_ADDRESS,
     getLiquidity,
     getPositionLiquidity,
     getPrice,
@@ -95,6 +96,27 @@ describe('LimitPool Tests', function () {
     // then mint position using ETH
     // then swap against pool uisng ETH as input
     // then swap against pool using ETH as output
+
+    it('pool0 - Should not overflow global liquidity', async function () {
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '0',
+            upper: '100',
+            amount: ethers.utils.parseUnits('1', 38),
+            zeroForOne: true,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: '0',
+            upperTickCleared: false,
+            lowerTickCleared: true,
+            revertMessage: 'LiquidityOverflow()',
+        })
+    
+        if (balanceCheck) {
+          console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
+          console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
+        }
+    })
 
     it('pool0 - Should mint, fill, and burn 29', async function () {
         const aliceLiquidity = '20051041647900280328782'
@@ -7804,8 +7826,6 @@ describe('LimitPool Tests', function () {
             revertMessage: "",
         });
 
-        return
-
         await validateBurn({
             signer: hre.props.bob,
             positionId: bobId2,
@@ -7894,6 +7914,281 @@ describe('LimitPool Tests', function () {
             lowerTickCleared: false,
             upperTickCleared: true,
             revertMessage: "",
+        });
+    });
+
+    it("pool0 - Should skip mint after swap when liquidityMinted is zero", async function () {
+        
+        const bobId = await validateMint({
+          signer: hre.props.bob,
+          recipient: hre.props.bob.address,
+          lower: "-50000",
+          upper: "0",
+          amount: "20",
+          zeroForOne: false,
+          balanceInDecrease: "20",
+          liquidityIncrease: "21",
+          balanceOutIncrease: "0",
+          lowerTickCleared: false,
+          upperTickCleared: true,
+          revertMessage: "",
+        });
+
+        const bobId2 = await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: "-50000",
+            upper: "0",
+            amount: "130",
+            zeroForOne: true,
+            balanceInDecrease: "125",
+            liquidityIncrease: "0",
+            balanceOutIncrease: "17",
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: "",
+        });
+
+        await validateBurn({
+            signer: hre.props.bob,
+            positionId: bobId,
+            lower: "-50000",
+            upper: "0",
+            claim: "0",
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: false,
+            balanceInIncrease: "124",
+            balanceOutIncrease: "1",
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: "",
+        });
+
+        await validateBurn({
+            signer: hre.props.bob,
+            positionId: bobId2,
+            lower: "-50000",
+            upper: "0",
+            claim: "-50000",
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: true,
+            balanceInIncrease: "0",
+            balanceOutIncrease: "19",
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: "PositionNotFound()",
+        });
+    });
+
+    it("pool0 - Should revert mint, burn, and swap when recipient is zero address", async function () {
+        
+        const bobId = await validateMint({
+          signer: hre.props.bob,
+          recipient: ZERO_ADDRESS,
+          lower: "-50000",
+          upper: "0",
+          amount: "20",
+          zeroForOne: false,
+          balanceInDecrease: "20",
+          liquidityIncrease: "21",
+          balanceOutIncrease: "0",
+          lowerTickCleared: false,
+          upperTickCleared: true,
+          revertMessage: "CollectToZeroAddress()",
+        });
+
+        await validateBurn({
+            signer: hre.props.bob,
+            positionId: bobId,
+            recipient: ZERO_ADDRESS,
+            lower: "-50000",
+            upper: "0",
+            claim: "-50000",
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: true,
+            balanceInIncrease: "0",
+            balanceOutIncrease: "19",
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: "CollectToZeroAddress()",
+        });
+
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: ZERO_ADDRESS,
+            zeroForOne: true,
+            amountIn: BigNumber.from("20"),
+            priceLimit: minPrice,
+            balanceInDecrease: '20',
+            balanceOutIncrease: '18',
+            revertMessage: 'CollectToZeroAddress()',
+        })
+    });
+
+    it("pool0 - Should revert on no position found or owner mismatch", async function () {
+        
+        const bobId = await validateMint({
+          signer: hre.props.bob,
+          lower: "-50000",
+          upper: "0",
+          amount: "20",
+          zeroForOne: false,
+          balanceInDecrease: "20",
+          liquidityIncrease: "21",
+          balanceOutIncrease: "0",
+          lowerTickCleared: false,
+          upperTickCleared: true,
+          revertMessage: "",
+        });
+
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.alice.address,
+            lower: "-50000",
+            upper: "0",
+            amount: "20",
+            zeroForOne: false,
+            positionId: bobId,
+            balanceInDecrease: "20",
+            liquidityIncrease: "21",
+            balanceOutIncrease: "0",
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: "PositionOwnerMismatch()",
+        });
+
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.alice.address,
+            lower: "-50000",
+            upper: "0",
+            amount: "20",
+            zeroForOne: false,
+            positionId: bobId + 1,
+            balanceInDecrease: "20",
+            liquidityIncrease: "21",
+            balanceOutIncrease: "0",
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: "PositionNotFound()",
+        });
+
+        await validateBurn({
+            signer: hre.props.alice,
+            positionId: bobId,
+            lower: "-50000",
+            upper: "0",
+            claim: "-50000",
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: false,
+            balanceInIncrease: "0",
+            balanceOutIncrease: "19",
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: "PositionOwnerMismatch()",
+        });
+
+        await validateBurn({
+            signer: hre.props.bob,
+            positionId: bobId,
+            lower: "-50000",
+            upper: "0",
+            claim: "0",
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: true,
+            balanceInIncrease: "0",
+            balanceOutIncrease: "19",
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: "PositionNotFound()",
+        });
+
+        await validateBurn({
+            signer: hre.props.bob,
+            positionId: bobId,
+            lower: "-50000",
+            upper: "0",
+            claim: "0",
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
+            zeroForOne: false,
+            balanceInIncrease: "0",
+            balanceOutIncrease: "19",
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: "",
+        });
+    });
+
+    it("pool0 - Should revert on invalid tick range", async function () {
+        
+        await validateMint({
+            signer: hre.props.bob,
+            lower: "-1000000",
+            upper: "0",
+            amount: "20",
+            zeroForOne: false,
+            balanceInDecrease: "20",
+            liquidityIncrease: "21",
+            balanceOutIncrease: "0",
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: "LowerTickOutOfBounds()",
+        });
+
+        await validateMint({
+            signer: hre.props.bob,
+            lower: "1000000",
+            upper: "1000000",
+            amount: "20",
+            zeroForOne: false,
+            balanceInDecrease: "20",
+            liquidityIncrease: "21",
+            balanceOutIncrease: "0",
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: "UpperTickOutOfBounds()",
+        });
+
+        await validateMint({
+            signer: hre.props.bob,
+            lower: "54",
+            upper: "1000",
+            amount: "20",
+            zeroForOne: false,
+            balanceInDecrease: "20",
+            liquidityIncrease: "21",
+            balanceOutIncrease: "0",
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: "LowerTickOutsideTickSpacing()",
+        });
+
+        await validateMint({
+            signer: hre.props.bob,
+            lower: "50",
+            upper: "1005",
+            amount: "20",
+            zeroForOne: false,
+            balanceInDecrease: "20",
+            liquidityIncrease: "21",
+            balanceOutIncrease: "0",
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: "UpperTickOutsideTickSpacing()",
+        });
+
+        await validateMint({
+          signer: hre.props.bob,
+          lower: "0",
+          upper: "0",
+          amount: "20",
+          zeroForOne: false,
+          balanceInDecrease: "20",
+          liquidityIncrease: "21",
+          balanceOutIncrease: "0",
+          lowerTickCleared: false,
+          upperTickCleared: true,
+          revertMessage: "LowerUpperTickOrderInvalid()",
         });
     });
 })

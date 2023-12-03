@@ -50,7 +50,7 @@ export function handleInitialize(event: Initialize): void {
     token0.usdPrice = token0.ethPrice.times(basePrice.USD)
     token1.usdPrice = token1.ethPrice.times(basePrice.USD)
 
-    if (token1.symbol == 'USDC') {
+    if (token1.symbol == 'WBTC') {
         log.info('USDC price at pool creation time: {}', [token1.usdPrice.toString()])
     }
 

@@ -58,8 +58,8 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
         _;
     }
 
-    modifier onlyFeeTo() {
-        _checkFeeTo();
+    modifier onlyOwnerOrFeeTo() {
+        _checkFeeToAndOwner();
         _;
     }
 
@@ -72,7 +72,7 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
         _transferOwner(newOwner);
     }
 
-    function transferFeeTo(address newFeeTo) public virtual onlyFeeTo {
+    function transferFeeTo(address newFeeTo) public virtual onlyOwner {
         if(newFeeTo == address(0)) require (false, 'TransferredToZeroAddress()');
         _transferFeeTo(newFeeTo);
     }
@@ -115,7 +115,7 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
         address tokenImpl_,
         bytes32 poolTypeName_
     ) external onlyOwner {
-        uint8 poolTypeId_ = _poolTypeNames.length.toUint8();
+        uint16 poolTypeId_ = _poolTypeNames.length.toUint16();
         if (poolTypeId_ > type(uint8).max) revert MaxPoolTypesCountExceeded();
         if (poolImpl_ == address(0)) revert InvalidPoolImplAddress();
         if (tokenImpl_ == address(0)) revert InvalidTokenImplAddress();
@@ -124,7 +124,7 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
         _poolImpls[poolTypeId_] = poolImpl_;
         _tokenImpls[poolTypeId_] = tokenImpl_;
         _poolTypeNames.push(poolTypeName_);
-        emit PoolTypeEnabled(poolTypeId_, poolTypeName_, poolImpl_, tokenImpl_);
+        emit PoolTypeEnabled(poolTypeName_, poolImpl_, tokenImpl_, poolTypeId_);
     }
 
     function setFactory(
@@ -137,7 +137,7 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
 
     function collectProtocolFees(
         address[] calldata pools
-    ) external {
+    ) external onlyOwnerOrFeeTo {
         if (pools.length == 0) require (false, 'EmptyPoolsArray()');
         uint128[] memory token0FeesCollected = new uint128[](pools.length);
         uint128[] memory token1FeesCollected = new uint128[](pools.length);
@@ -229,7 +229,7 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
     }
 
     function poolTypes(
-        uint8 poolTypeId
+        uint16 poolTypeId
     ) external view returns (
         address,
         address
@@ -249,13 +249,15 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
      * @dev Throws if the sender is not the owner.
      */
     function _checkOwner() internal view {
-        if (owner != msg.sender) require (false, 'OwnerOnly()');
+        if (owner != msg.sender)
+            require (false, 'OwnerOnly()');
     }
 
     /**
      * @dev Throws if the sender is not the feeTo.
      */
-    function _checkFeeTo() internal view {
-        if (feeTo != msg.sender) require (false, 'FeeToOnly()');
+    function _checkFeeToAndOwner() internal view {
+        if (feeTo != msg.sender && owner != msg.sender)
+            require (false, 'OwnerOrFeeToOnly()');
     }
 }

@@ -39,17 +39,25 @@ library MintRangeCall {
         RangePoolStructs.MintRangeCache memory cache,
         RangePoolStructs.MintRangeParams memory params
     ) external {
-        // initialize cache
+        // check for invalid receiver
+        if (params.to == address(0))
+            require(false, "CollectToZeroAddress()");
+
+        // validate position ticks
+        ConstantProduct.checkTicks(params.lower, params.upper, cache.constants.tickSpacing);
+
         cache.state = globalState;
 
-        // id of 0 can be passed to create new position
+        // id of 0 passed to create new position
         if (params.positionId > 0) {
+            // require balance held
             cache.position = positions[params.positionId];
+            if (cache.position.liquidity == 0)
+                require(false, 'PositionNotFound()');
+            if (PositionTokens.balanceOf(cache.constants, params.to, params.positionId) == 0)
+                require(false, 'PositionOwnerMismatch()');
             // existing position
             cache.owner = params.to;
-            // require balance held for existing position
-            if (PositionTokens.balanceOf(cache.constants, cache.owner, params.positionId) == 0)
-                require(false, 'PositionOwnerMismatch()');
             // set bounds as defined by position
             params.lower = cache.position.lower;
             params.upper = cache.position.upper;

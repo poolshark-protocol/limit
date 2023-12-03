@@ -14,12 +14,6 @@ import '../Samples.sol';
 
 /// @notice Tick management library for range pools
 library RangeTicks {
-    error LiquidityOverflow();
-    error LiquidityUnderflow();
-    error InvalidLowerTick();
-    error InvalidUpperTick();
-    error InvalidPositionAmount();
-    error InvalidPositionBounds();
 
     event SyncRangeTick(
         uint200 feeGrowthOutside0,
@@ -52,13 +46,6 @@ library RangeTicks {
         int24 upper,
         uint128 amount
     ) internal returns (PoolsharkStructs.GlobalState memory) {
-        validate(lower, upper, constants.tickSpacing);
-
-        // check for amount to overflow liquidity delta & global
-        if (amount == 0)
-            require(false, 'NoLiquidityBeingAdded()');
-        if (state.liquidityGlobal + amount > uint128(type(int128).max))
-            require(false, 'LiquidityOverflow()');
 
         // get tick at price
         int24 tickAtPrice = state.pool.tickAtPrice;
@@ -233,9 +220,6 @@ library RangeTicks {
     ) internal pure returns (
         bool
     ) {
-        if (tick.range.liquidityAbsolute != 0) {
-            return false;
-        }
-        return true;
+        return tick.range.liquidityAbsolute == 0;
     }
 }

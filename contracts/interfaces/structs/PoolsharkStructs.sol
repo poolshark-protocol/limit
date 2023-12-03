@@ -72,7 +72,7 @@ interface PoolsharkStructs {
         address tokenOut;
         uint160 startPrice;
         uint16  swapFee;
-        uint8   poolTypeId;
+        uint16  poolTypeId;
     }
 
     struct SwapParams {

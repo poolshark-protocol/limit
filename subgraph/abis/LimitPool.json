@@ -227,12 +227,6 @@
       {
         "indexed": false,
         "internalType": "uint128",
-        "name": "amountFilled",
-        "type": "uint128"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint128",
         "name": "liquidityMinted",
         "type": "uint128"
       }

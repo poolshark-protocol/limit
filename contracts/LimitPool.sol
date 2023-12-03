@@ -42,7 +42,7 @@ contract LimitPool is
         _;
     }
 
-    modifier canoncialOnly() {
+    modifier canonicalOnly() {
         _onlyCanoncialClones();
         _;
     }
@@ -62,7 +62,7 @@ contract LimitPool is
     ) external  
         nonReentrant(globalState)
         factoryOnly
-        canoncialOnly
+        canonicalOnly
     {
         // initialize state
         globalState = Ticks.initialize(
@@ -79,7 +79,7 @@ contract LimitPool is
         MintRangeParams memory params
     ) external 
         nonReentrant(globalState)
-        canoncialOnly
+        canonicalOnly
     {
         MintRangeCache memory cache;
         cache.constants = immutables();
@@ -98,7 +98,7 @@ contract LimitPool is
         BurnRangeParams memory params
     ) external 
         nonReentrant(globalState)
-        canoncialOnly
+        canonicalOnly
     {
         BurnRangeCache memory cache;
         cache.constants = immutables();
@@ -118,7 +118,7 @@ contract LimitPool is
         MintLimitParams memory params
     ) external 
         nonReentrant(globalState)
-        canoncialOnly
+        canonicalOnly
     {
         MintLimitCache memory cache;
         cache.constants = immutables();
@@ -138,7 +138,7 @@ contract LimitPool is
         BurnLimitParams memory params
     ) external 
         nonReentrant(globalState)
-        canoncialOnly
+        canonicalOnly
     {
         BurnLimitCache memory cache;
         cache.constants = immutables();
@@ -156,7 +156,7 @@ contract LimitPool is
         SwapParams memory params
     ) external 
         nonReentrant(globalState)
-        canoncialOnly
+        canonicalOnly
     returns (
         int256,
         int256
@@ -179,7 +179,7 @@ contract LimitPool is
         uint16 newSampleCountMax
     ) external 
         nonReentrant(globalState)
-        canoncialOnly 
+        canonicalOnly 
     {
         Samples.expand(
             samples,
@@ -193,7 +193,7 @@ contract LimitPool is
     ) external 
         ownerOnly
         nonReentrant(globalState)
-        canoncialOnly 
+        canonicalOnly 
     returns (
         uint128 token0Fees,
         uint128 token1Fees

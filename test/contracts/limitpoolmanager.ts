@@ -89,9 +89,9 @@ describe('LimitPoolManager Tests', function () {
     // expect revert if non-owner calls admin function
     await expect(
         hre.props.limitPoolManager
-          .connect(hre.props.bob)
+          .connect(hre.props.alice)
           .transferFeeTo(hre.props.bob.address)
-    ).to.be.revertedWith('FeeToOnly()')
+    ).to.be.revertedWith('OwnerOnly()')
 
     await hre.props.limitPoolManager.connect(hre.props.bob).transferOwner(hre.props.admin.address)
 
@@ -103,15 +103,15 @@ describe('LimitPoolManager Tests', function () {
         hre.props.limitPoolManager
           .feeTo()
       ).to.be.equal(hre.props.bob.address)
-    
+
     await expect(
         hre.props.limitPoolManager
-          .connect(hre.props.admin)
-          .transferFeeTo(hre.props.bob.address)
-    ).to.be.revertedWith('FeeToOnly()')
+          .connect(hre.props.bob)
+          .transferFeeTo(hre.props.alice.address)
+    ).to.be.revertedWith('OwnerOnly()')
 
     // transfer ownership back to previous admin
-    await hre.props.limitPoolManager.connect(hre.props.bob).transferFeeTo(hre.props.admin.address)
+    await hre.props.limitPoolManager.connect(hre.props.admin).transferFeeTo(hre.props.admin.address)
     
     // check admin is owner again
     expect(await
@@ -128,10 +128,15 @@ describe('LimitPoolManager Tests', function () {
     
     // without protocol fees balances should not change
 
-    // anyone can send fees to the feeTo address
-    hre.props.limitPoolManager
-          .connect(hre.props.bob)
-          .collectProtocolFees([hre.props.limitPool.address])
+  })
+
+  it('Should not collect fees from limit pools if not admin', async function () {
+    // check initial protocol fees
+    await expect(
+      hre.props.limitPoolManager
+        .connect(hre.props.bob)
+        .collectProtocolFees([hre.props.limitPool.address])
+    ).to.be.revertedWith('OwnerOrFeeToOnly()')
   })
 
   it('Should not set factory', async function () {

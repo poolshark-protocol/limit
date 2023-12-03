@@ -17,7 +17,7 @@ import {
   getRangeLiquidity,
   getTickLiquidity,
 } from '../utils/contracts/rangepool'
-import { RangePoolState } from '../utils/contracts/limitpool'
+import { RangePoolState, ZERO_ADDRESS } from '../utils/contracts/limitpool'
 
 alice: SignerWithAddress
 describe('RangePool Exact In Tests', function () {
@@ -69,87 +69,211 @@ describe('RangePool Exact In Tests', function () {
     await mintSigners20(hre.props.token1, tokenAmount.mul(10), [hre.props.alice, hre.props.bob])
   })
 
-//   it.skip('token1 - test dynamic fee', async function () {
-//     const aliceLiquidity = BigNumber.from('44721359549995793929')
+  // it.skip('token1 - test dynamic fee', async function () {
+  //   const aliceLiquidity = BigNumber.from('44721359549995793929')
 
-//     await validateMint({
-//       signer: hre.props.alice,
-//       recipient: hre.props.alice.address,
-//       lower: '-887260',
-//       upper: '887260',
-//       amount0: tokenAmount,
-//       amount1: tokenAmount,
-//       balance0Decrease: BigNumber.from('19999999999999999998'),
-//       balance1Decrease: tokenAmount,
-//       liquidityIncrease: aliceLiquidity,
-//       revertMessage: '',
-//     })
+  //   const aliceId = await validateMintRange({
+  //       signer: hre.props.alice,
+  //       recipient: hre.props.alice.address,
+  //       lower: '-887260',
+  //       upper: '887260',
+  //       amount0: BigNumber.from(tokenAmount),
+  //       amount1: BigNumber.from(tokenAmount),
+  //       balance0Decrease: BigNumber.from('19999999999999999998'),
+  //       balance1Decrease: BigNumber.from(tokenAmount),
+  //       liquidityIncrease: aliceLiquidity,
+  //       revertMessage: '',
+  //   })
 
-//     // console.log('before swap')
-//     if (debugMode) await getPrice()
-//     await validateSwap({
-//       signer: hre.props.alice,
-//       recipient: hre.props.alice.address,
-//       zeroForOne: true,
-//       amount: tokenAmount,
-//       sqrtPriceLimitX96: BigNumber.from('79386769463160146968577785965'), 
-//       balanceInDecrease: BigNumber.from('24632010676919545389'),
-//       balanceOutIncrease: BigNumber.from('55051139927543752558'),
-//       revertMessage: '',
-//     })
-//     if (debugMode) await getPrice()
+  //   // console.log('before swap')
+  //   if (debugMode) await getPrice()
+  //   await validateSwap({
+  //       signer: hre.props.alice,
+  //       recipient: hre.props.alice.address,
+  //       zeroForOne: true,
+  //       amountIn: BigNumber.from(tokenAmount),
+  //       priceLimit: BigNumber.from('79386769463160146968577785965'), 
+  //       balanceInDecrease: '24632010676919545389',
+  //       balanceOutIncrease: '55051139927543752558',
+  //       revertMessage: '',
+  //   })
+  //   if (debugMode) await getPrice()
 
-//     await validateSwap({
-//         signer: hre.props.alice,
-//         recipient: hre.props.alice.address,
-//         zeroForOne: false,
-//         amount: tokenAmount,
-//         sqrtPriceLimitX96: BigNumber.from('79545693927487839655804034729'), 
-//         balanceInDecrease: BigNumber.from('89706966373347543'),
-//         balanceOutIncrease: BigNumber.from('89170362825211319'),
-//         revertMessage: '',
-//     })
+  //   await validateSwap({
+  //       signer: hre.props.alice,
+  //       recipient: hre.props.alice.address,
+  //       zeroForOne: false,
+  //       amountIn: BigNumber.from(tokenAmount),
+  //       priceLimit: BigNumber.from('79545693927487839655804034729'), 
+  //       balanceInDecrease: '89706966373347543',
+  //       balanceOutIncrease: '89170362825211319',
+  //       revertMessage: '',
+  //   })
 
-//     await validateSwap({
-//         signer: hre.props.alice,
-//         recipient: hre.props.alice.address,
-//         zeroForOne: true,
-//         amount: tokenAmount,
-//         sqrtPriceLimitX96: BigNumber.from('79386769463160146968577785965'), 
-//         balanceInDecrease: BigNumber.from('89170362825211320'),
-//         balanceOutIncrease: BigNumber.from('89482698957414173'),
-//         revertMessage: '',
-//       })
+  //   await validateSwap({
+  //       signer: hre.props.alice,
+  //       recipient: hre.props.alice.address,
+  //       zeroForOne: true,
+  //       amountIn: BigNumber.from(tokenAmount),
+  //       priceLimit: BigNumber.from('79386769463160146968577785965'), 
+  //       balanceInDecrease: '89170362825211320',
+  //       balanceOutIncrease: '89482698957414173',
+  //       revertMessage: '',
+  //   })
 
-//     // console.log('after swap')
-//     if (debugMode) await getPrice()
-//     if (debugMode) await getSnapshot(hre.props.alice.address, 20, 60)
+  //   // console.log('after swap')
+  //   if (debugMode) await getPrice()
+  //   if (debugMode) await getSnapshot(aliceId)
 
-//     // if (debugMode) await getSample()
+  //   // if (debugMode) await getSample()
 
-//     if (debugMode) await getRangeBalanceOf(hre.props.alice.address, 20, 60)
-//     if (debugMode) await getSnapshot(hre.props.alice.address, 20, 60)
-//     await validateBurn({
-//       signer: hre.props.alice,
-//       lower: '-887260',
-//       upper: '887260',
-//       liquidityAmount: aliceLiquidity,
-//       balance0Increase: BigNumber.from('44632010676919545386'),
-//       balance1Increase: BigNumber.from('44949084339872180808'),
-//       revertMessage: '',
-//     })
-//     // if (debugMode) await getSample()
-//     if (debugMode) await getSnapshot(hre.props.alice.address, 20, 60)
-//     if (debugMode){
-//       console.log('after burn')
-//       await getRangeBalanceOf(hre.props.alice.address, 20, 60)
-//     }
+  //   if (debugMode) await getRangeBalanceOf(hre.props.alice.address, aliceId)
+  //   if (debugMode) await getSnapshot(aliceId)
+  //   await validateBurnRange({
+  //       signer: hre.props.alice,
+  //       lower: '-887260',
+  //       upper: '887260',
+  //       positionId: aliceId,
+  //       liquidityAmount: aliceLiquidity,
+  //       balance0Increase: BigNumber.from('44632010676919545386'),
+  //       balance1Increase: BigNumber.from('44949084339872180808'),
+  //       revertMessage: '',
+  //   })
+  //   // if (debugMode) await getSample()
+  //   if (debugMode) await getSnapshot(aliceId)
+  //   if (debugMode){
+  //       console.log('after burn')
+  //       await getRangeBalanceOf(hre.props.alice.address, aliceId)
+  //   }
 
-//     if (balanceCheck) {
-//       console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
-//       console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
-//     }
-//   })
+  //   if (balanceCheck) {
+  //       console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
+  //       console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
+  //   }
+  // });
+
+  it('pool - Should not overflow global liquidity', async function () {
+    const aliceId = await validateMint({
+      signer: hre.props.alice,
+      recipient: hre.props.alice.address,
+      lower: '20',
+      upper: '60',
+      amount0: ethers.utils.parseUnits('1', 38),
+      amount1: ethers.utils.parseUnits('1', 38),
+      balance0Decrease: BN_ZERO,
+      balance1Decrease: BN_ZERO,
+      liquidityIncrease: BigNumber.from('4990259157044168702067523170470752302'),
+      revertMessage: 'LiquidityOverflow()',
+    })
+
+    if (balanceCheck) {
+      console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
+      console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
+    }
+  })
+
+  it("pool0 - Should revert mint, burn, and swap when recipient is zero address", async function () {  
+    const aliceId = await validateMint({
+      signer: hre.props.alice,
+      recipient: ZERO_ADDRESS,
+      lower: '20',
+      upper: '60',
+      amount0: ethers.utils.parseUnits('1', 38),
+      amount1: ethers.utils.parseUnits('1', 38),
+      balance0Decrease: BN_ZERO,
+      balance1Decrease: BN_ZERO,
+      liquidityIncrease: BigNumber.from('4990259157044168702067523170470752302'),
+      revertMessage: 'CollectToZeroAddress()',
+    })
+
+    await validateBurn({
+      signer: hre.props.alice,
+      recipient: ZERO_ADDRESS,
+      lower: '20',
+      upper: '60',
+      positionId: aliceId ?? 0,
+      liquidityAmount: liquidityAmount,
+      balance0Increase: tokenAmount.div(10).sub(1),
+      balance1Increase: BigNumber.from('89946873348418057510'),
+      revertMessage: 'CollectToZeroAddress()',
+    })
+  });
+
+  it("pool0 - Should revert on no position found or owner mismatch", async function () {  
+    const aliceId = await validateMint({
+      signer: hre.props.alice,
+      recipient: hre.props.alice.address,
+      lower: '20',
+      upper: '60',
+      amount0: tokenAmount,
+      amount1: tokenAmount,
+      balance0Decrease: BN_ZERO,
+      balance1Decrease: tokenAmount,
+      liquidityIncrease: liquidityAmount,
+      revertMessage: '',
+    })
+
+    await validateMint({
+      signer: hre.props.bob,
+      recipient: hre.props.bob.address,
+      lower: '20',
+      upper: '60',
+      positionId: aliceId,
+      amount0: tokenAmount,
+      amount1: tokenAmount,
+      balance0Decrease: BN_ZERO,
+      balance1Decrease: tokenAmount,
+      liquidityIncrease: liquidityAmount,
+      revertMessage: 'PositionOwnerMismatch()',
+    })
+
+    await validateMint({
+      signer: hre.props.bob,
+      recipient: hre.props.bob.address,
+      lower: '20',
+      upper: '60',
+      positionId: aliceId + 1,
+      amount0: tokenAmount,
+      amount1: tokenAmount,
+      balance0Decrease: BN_ZERO,
+      balance1Decrease: tokenAmount,
+      liquidityIncrease: liquidityAmount,
+      revertMessage: 'PositionNotFound()',
+    })
+
+    await validateBurn({
+      signer: hre.props.bob,
+      lower: '20',
+      upper: '60',
+      positionId: aliceId,
+      liquidityAmount: liquidityAmount,
+      balance0Increase: tokenAmount.div(10).sub(1),
+      balance1Increase: BigNumber.from('89946873348418057510'),
+      revertMessage: 'PositionOwnerMismatch()',
+    })
+
+    await validateBurn({
+      signer: hre.props.alice,
+      lower: '20',
+      upper: '60',
+      positionId: aliceId + 1,
+      liquidityAmount: liquidityAmount,
+      balance0Increase: BN_ZERO,
+      balance1Increase: BigNumber.from(tokenAmount).sub(1),
+      revertMessage: 'PositionNotFound()',
+    })
+
+    await validateBurn({
+      signer: hre.props.alice,
+      lower: '20',
+      upper: '60',
+      positionId: aliceId,
+      liquidityAmount: liquidityAmount,
+      balance0Increase: BN_ZERO,
+      balance1Increase: BigNumber.from(tokenAmount).sub(1),
+      revertMessage: '',
+    })
+  });
 
   it('token1 - Should mint, swap, and burn 14', async function () {
 

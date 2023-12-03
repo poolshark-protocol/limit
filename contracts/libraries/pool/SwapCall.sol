@@ -32,7 +32,14 @@ library SwapCall {
         int256,
         int256
     ) {
+        // check for invalid receiver
+        if (params.to == address(0))
+            require(false, "CollectToZeroAddress()");
+        
+        // initialize state
         cache.state = globalState;
+        
+        // execute swap
         cache = Ticks.swap(
             ticks,
             samples,
@@ -41,6 +48,7 @@ library SwapCall {
             params,
             cache
         );
+
         // save state for reentrancy protection
         save(cache, globalState, params.zeroForOne);
 

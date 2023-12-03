@@ -94,7 +94,7 @@ export interface LimitTick {
 
 export interface ValidateMintParams {
     signer: SignerWithAddress
-    recipient: string
+    recipient?: string
     lower: string
     upper: string
     amount: string
@@ -117,7 +117,7 @@ export interface ValidateMintParams {
 
 export interface ValidateSwapParams {
     signer: SignerWithAddress
-    recipient: string
+    recipient?: string
     zeroForOne: boolean
     amountIn: BigNumber
     priceLimit: BigNumber
@@ -151,6 +151,7 @@ export interface ValidateBurnParams {
     expectedPositionUpper?: string
     positionLiquidityChange?: string
     compareSnapshot?: boolean
+    recipient?: string
     revertMessage: string
 }
 
@@ -212,7 +213,7 @@ export async function getPositionLiquidity(isPool0: boolean, positionId: number,
 
 export async function validateSwap(params: ValidateSwapParams) {
     const signer = params.signer
-    const recipient = params.recipient
+    const recipient = params.recipient ?? params.signer.address
     const zeroForOne = params.zeroForOne
     const amountIn = params.amountIn
     const priceLimit = params.priceLimit
@@ -335,7 +336,7 @@ export async function validateSwap(params: ValidateSwapParams) {
             .multiSwapSplit(
             [poolContract.address, poolContract.address],
                 [{
-                    to: signer.address,
+                    to: recipient,
                     priceLimit: zeroForOne ? (await (poolContract.globalState())).pool0.price
                                            : (await (poolContract.globalState())).pool1.price,
                     amount: amountIn,
@@ -344,7 +345,7 @@ export async function validateSwap(params: ValidateSwapParams) {
                     callbackData: ethers.utils.formatBytes32String('')
                 },
                 {
-                    to: signer.address,
+                    to: recipient,
                     priceLimit: priceLimit,
                     amount: amountIn,
                     zeroForOne: zeroForOne,
@@ -367,7 +368,7 @@ export async function validateSwap(params: ValidateSwapParams) {
             .multiSwapSplit(
             [poolContract.address],  
             [{
-              to: signer.address,
+              to: recipient,
               zeroForOne: zeroForOne,
               amount: amountIn,
               priceLimit: priceLimit,
@@ -410,7 +411,7 @@ export async function validateSwap(params: ValidateSwapParams) {
 
 export async function validateMint(params: ValidateMintParams): Promise<number> {
     const signer = params.signer
-    const recipient = params.recipient
+    const recipient = params.recipient ?? params.signer.address
     const lower = BigNumber.from(params.lower)
     const upper = BigNumber.from(params.upper)
     const amountDesired = params.amount
@@ -492,7 +493,7 @@ export async function validateMint(params: ValidateMintParams): Promise<number> 
             hre.props.limitPool
                 .connect(params.signer)
                 .mintLimit({
-                    to: params.signer.address,
+                    to: recipient,
                     positionId: positionId,
                     lower: lower,
                     upper: upper,
@@ -585,6 +586,7 @@ export async function validateMint(params: ValidateMintParams): Promise<number> 
 
 export async function validateBurn(params: ValidateBurnParams) {
     const signer = params.signer
+    const recipient = params.recipient ?? params.signer.address
     const lower = BigNumber.from(params.lower)
     const upper = BigNumber.from(params.upper)
     const claim = BigNumber.from(params.claim)
@@ -657,7 +659,7 @@ export async function validateBurn(params: ValidateBurnParams) {
         const burnTxn = await hre.props.limitPool
             .connect(signer)
             .burnLimit({
-                to: signer.address,
+                to: recipient,
                 positionId: params.positionId,
                 claim: claim,
                 zeroForOne: zeroForOne,
@@ -669,7 +671,7 @@ export async function validateBurn(params: ValidateBurnParams) {
             hre.props.limitPool
                 .connect(signer)
                 .burnLimit({
-                    to: signer.address,
+                    to: recipient,
                     positionId: params.positionId,
                     claim: claim,
                     zeroForOne: zeroForOne,
@@ -785,7 +787,6 @@ export async function validateBurn(params: ValidateBurnParams) {
 
 export function getSwapMsgValue(nativeIn: boolean, nativeOut: boolean, amountIn: BigNumber): BigNumber {
     if (nativeIn) {
-        console.log('msg value set: ', amountIn.toString())
         return amountIn
     } else if (nativeOut) {
         return BN_ONE

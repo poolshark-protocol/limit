@@ -151,6 +151,27 @@ describe('RangePool Exact In Tests', function () {
 //     }
 //   })
 
+  it('pool - Should not overflow global liquidity', async function () {
+
+    const aliceId = await validateMint({
+      signer: hre.props.alice,
+      recipient: hre.props.alice.address,
+      lower: '20',
+      upper: '60',
+      amount0: ethers.utils.parseUnits('1', 38),
+      amount1: ethers.utils.parseUnits('1', 38),
+      balance0Decrease: BN_ZERO,
+      balance1Decrease: BN_ZERO,
+      liquidityIncrease: BigNumber.from('4990259157044168702067523170470752302'),
+      revertMessage: 'LiquidityOverflow()',
+    })
+
+    if (balanceCheck) {
+      console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
+      console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
+    }
+  })
+
   it('token1 - Should mint, swap, and burn 14', async function () {
 
     const aliceId = await validateMint({

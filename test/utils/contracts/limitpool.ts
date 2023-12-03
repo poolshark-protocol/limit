@@ -546,6 +546,7 @@ export async function validateMint(params: ValidateMintParams): Promise<number> 
     if (zeroForOne) {
         //liquidity change for lower should be -liquidityAmount
         if (!upperTickCleared) {
+            console.log('upper tick before and after', upperTickBefore.liquidityAbsolute.toString(), upperTickAfter.liquidityAbsolute.toString())
             expect(upperTickAfter.liquidityDelta.sub(upperTickBefore.liquidityDelta)).to.be.equal(
                 BN_ZERO.sub(liquidityIncrease)
             )
@@ -580,6 +581,7 @@ export async function validateMint(params: ValidateMintParams): Promise<number> 
             expect(lowerTickAfter.liquidityAbsolute).to.be.equal(liquidityIncrease)
         }
         if (!upperTickCleared) {
+            console.log('upper tick before and after', upperTickBefore.liquidityAbsolute.toString(), upperTickAfter.liquidityAbsolute.toString())
             expect(upperTickAfter.liquidityDelta.sub(upperTickBefore.liquidityDelta)).to.be.equal(
                 liquidityIncrease
             )

@@ -317,6 +317,12 @@ library LimitPositions {
             cache.state.liquidityGlobal -= cache.liquidityBurned;
         }
 
+        // round back claim tick for storage
+        if (params.claim % cache.constants.tickSpacing != 0) {
+            cache.claim = params.claim;
+            params.claim = TickMap.roundBack(params.claim, cache.constants, params.zeroForOne, cache.priceClaim);
+        }
+
         // clear filled position
         if (params.zeroForOne ? params.claim == cache.position.upper
                               : params.claim == cache.position.lower) {
@@ -328,12 +334,6 @@ library LimitPositions {
         if (cache.position.liquidity == 0) {
             cache.position.epochLast = 0;
             cache.position.crossedInto = false;
-        }
-
-        // round back claim tick for storage
-        if (params.claim % cache.constants.tickSpacing != 0) {
-            cache.claim = params.claim;
-            params.claim = TickMap.roundBack(params.claim, cache.constants, params.zeroForOne, cache.priceClaim);
         }
         
         emit BurnLimit(

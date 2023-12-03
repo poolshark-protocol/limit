@@ -147,7 +147,7 @@ library LimitTicks {
                 // we need to blend the two partial fills into a single tick
                 LimitPoolStructs.InsertSingleLocals memory locals;
                 if (params.zeroForOne) {
-                    // 0 -> 1 positions price moves up so nextFullTick is greater
+                    // 0 -> 1 positions price moves up so previousFullTick is lesser
                     locals.previousFullTick = tickToSave - constants.tickSpacing / 2;
                     locals.pricePrevious = ConstantProduct.getPriceAtTick(locals.previousFullTick, constants);
                     // calculate amountOut filled across both partial fills
@@ -160,7 +160,7 @@ library LimitTicks {
                     // dx to the next tick is less than before the tick blend
                     EpochMap.set(tickToSave, params.zeroForOne, cache.state.epoch, tickMap, constants);
                 } else {
-                    // 0 -> 1 positions price moves up so nextFullTick is lesser
+                    // 1 -> 0 positions price down up so previousFullTick is greater
                     locals.previousFullTick = tickToSave + constants.tickSpacing / 2;
                     locals.pricePrevious = ConstantProduct.getPriceAtTick(locals.previousFullTick, constants);
                     // calculate amountOut filled across both partial fills

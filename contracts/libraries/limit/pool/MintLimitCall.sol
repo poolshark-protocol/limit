@@ -79,8 +79,8 @@ library MintLimitCall {
                                   : cache.constants.token0,
                 cache.swapCache.output
             );
-        // mint position if amount is left
-        if (params.amount > 0 && params.lower < params.upper) {
+        // mint position if liquidity nonzero
+        if (params.amount > 0 && cache.liquidityMinted > 0 && params.lower < params.upper) {
             // check if new position created
             if (params.positionId == 0 ||                       // new position
                     params.lower != cache.position.lower ||     // lower mismatch

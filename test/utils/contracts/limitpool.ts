@@ -90,6 +90,7 @@ export interface RangeStake {
 export interface LimitTick {
     priceAt: BigNumber
     liquidityDelta: BigNumber
+    liquidityAbsolute: BigNumber
 }
 
 export interface ValidateMintParams {
@@ -427,7 +428,7 @@ export async function validateMint(params: ValidateMintParams): Promise<number> 
     const balanceOutIncrease = params.balanceOutIncrease ? BigNumber.from(params.balanceOutIncrease) : BN_ZERO
     const lowerTickCrossed = params.lowerTickCrossed ? params.lowerTickCrossed : false
     const upperTickCrossed = params.upperTickCrossed ? params.upperTickCrossed : false
-    const mintPercent = params.mintPercent ? params.mintPercent : BN_ZERO
+    const mintPercent = params.mintPercent ?? BN_ZERO
     const positionId = params.positionId ? params.positionId : 0
     const expectedPositionId = params.positionId ? params.positionId
                                                  : (await hre.props.limitPool.globalState()).positionIdNext
@@ -548,12 +549,19 @@ export async function validateMint(params: ValidateMintParams): Promise<number> 
             expect(upperTickAfter.liquidityDelta.sub(upperTickBefore.liquidityDelta)).to.be.equal(
                 BN_ZERO.sub(liquidityIncrease)
             )
+            expect(upperTickAfter.liquidityAbsolute.sub(upperTickBefore.liquidityAbsolute)).to.be.equal(
+                liquidityIncrease
+            )
         } else {
             expect(upperTickAfter.liquidityDelta).to.be.equal(BN_ZERO.sub(liquidityIncrease))
+            expect(upperTickAfter.liquidityAbsolute).to.be.equal(liquidityIncrease)
         }
         if (!lowerTickCleared) {
             expect(lowerTickAfter.liquidityDelta.sub(lowerTickBefore.liquidityDelta)).to.be.equal(
                liquidityIncrease
+            )
+            expect(lowerTickAfter.liquidityAbsolute.sub(lowerTickBefore.liquidityAbsolute)).to.be.equal(
+                liquidityIncrease
             )
         } else {
             if (lowerTickCrossed) expect(lowerTickAfter.liquidityDelta).to.be.equal(BN_ZERO)
@@ -564,11 +572,18 @@ export async function validateMint(params: ValidateMintParams): Promise<number> 
             expect(lowerTickAfter.liquidityDelta.sub(lowerTickBefore.liquidityDelta)).to.be.equal(
                 BN_ZERO.sub(liquidityIncrease)
             )
+            expect(lowerTickAfter.liquidityAbsolute.sub(lowerTickBefore.liquidityAbsolute)).to.be.equal(
+                liquidityIncrease
+            )
         } else {
             expect(lowerTickAfter.liquidityDelta).to.be.equal(BN_ZERO.sub(liquidityIncrease))
+            expect(lowerTickAfter.liquidityAbsolute).to.be.equal(liquidityIncrease)
         }
         if (!upperTickCleared) {
             expect(upperTickAfter.liquidityDelta.sub(upperTickBefore.liquidityDelta)).to.be.equal(
+                liquidityIncrease
+            )
+            expect(upperTickAfter.liquidityAbsolute.sub(upperTickBefore.liquidityAbsolute)).to.be.equal(
                 liquidityIncrease
             )
         } else {

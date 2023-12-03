@@ -78,7 +78,7 @@ describe('Samples Tests', function () {
         if (debugMode) await getLiquidity(false, true)
     })
 
-    it('test sampling after mint, swap, and burn', async function () {
+    it('Should test sampling after mint, swap, and burn', async function () {
         const aliceLiquidity = BigNumber.from('44721359549995793929')
 
         if (debugMode) await getSample(debugMode)

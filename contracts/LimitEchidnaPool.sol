@@ -25,7 +25,8 @@ contract EchidnaPool {
     event BurnTicks(int24 lower, int24 upper, bool positionExists);
     event LiquidityMinted(uint256 amount, uint256 tokenAmount, bool zeroForOne);
     event PositionCreated(bool isCreated);
-    event LiquidityAbsolute(uint128 beforeAbs, uint128 afterAbs);
+    event LiquidityAbsoluteNoPosCreated(uint128 beforeAbs, uint128 afterAbs);
+    event LiquidityAbsolutePosCreated(uint128 beforeAbs, uint128 afterAbs);
     event LiquidityAbsoluteLower(uint128 beforeAbs, uint128 afterAbs);
     event LiquidityAbsoluteUpper(uint128 beforeAbs, uint128 afterAbs);
     event LiquidityDeltaAndAbsolute(int128 delta, uint128 abs);
@@ -247,12 +248,12 @@ contract EchidnaPool {
             assert(poolValues.positionIdNextAfter == poolValues.positionIdNextBefore + 1);
             if(zeroForOne){
                 if(poolValues.price0After >= poolValues.price0Before){
-                    emit LiquidityAbsolute(poolValues.liquidityAbsoluteUpperBefore, poolValues.liquidityAbsoluteUpperAfter);
+                    emit LiquidityAbsolutePosCreated(poolValues.liquidityAbsoluteUpperBefore, poolValues.liquidityAbsoluteUpperAfter);
                     assert(poolValues.liquidityAbsoluteUpperAfter > poolValues.liquidityAbsoluteUpperBefore);
                 }
             } else {
                 if(poolValues.price1Before >= poolValues.price1After){
-                    emit LiquidityAbsolute(poolValues.liquidityAbsoluteLowerBefore, poolValues.liquidityAbsoluteLowerAfter);
+                    emit LiquidityAbsolutePosCreated(poolValues.liquidityAbsoluteLowerBefore, poolValues.liquidityAbsoluteLowerAfter);
                     assert(poolValues.liquidityAbsoluteLowerAfter > poolValues.liquidityAbsoluteLowerBefore);
                 }
             }
@@ -262,12 +263,12 @@ contract EchidnaPool {
             assert(poolValues.positionIdNextAfter == poolValues.positionIdNextBefore);
             if(zeroForOne){
                 if(poolValues.price0After >= poolValues.price0Before){
-                    emit LiquidityAbsolute(poolValues.liquidityAbsoluteUpperBefore, poolValues.liquidityAbsoluteUpperAfter);
+                    emit LiquidityAbsoluteNoPosCreated(poolValues.liquidityAbsoluteUpperBefore, poolValues.liquidityAbsoluteUpperAfter);
                     assert(poolValues.liquidityAbsoluteUpperAfter == poolValues.liquidityAbsoluteUpperBefore);
                 }
             } else {
                 if(poolValues.price1Before >= poolValues.price1After){
-                    emit LiquidityAbsolute(poolValues.liquidityAbsoluteLowerBefore, poolValues.liquidityAbsoluteLowerAfter);
+                    emit LiquidityAbsoluteNoPosCreated(poolValues.liquidityAbsoluteLowerBefore, poolValues.liquidityAbsoluteLowerAfter);
                     assert(poolValues.liquidityAbsoluteLowerAfter == poolValues.liquidityAbsoluteLowerBefore);
                 }
             }
@@ -384,12 +385,12 @@ contract EchidnaPool {
             assert(poolValues.positionIdNextAfter == poolValues.positionIdNextBefore + 1);
             if(zeroForOne){
                 if(poolValues.price0After >= poolValues.price0Before){
-                    emit LiquidityAbsolute(poolValues.liquidityAbsoluteUpperBefore, poolValues.liquidityAbsoluteUpperAfter);
+                    emit LiquidityAbsolutePosCreated(poolValues.liquidityAbsoluteUpperBefore, poolValues.liquidityAbsoluteUpperAfter);
                     assert(poolValues.liquidityAbsoluteUpperAfter > poolValues.liquidityAbsoluteUpperBefore);
                 }
             } else {
                 if(poolValues.price1Before >= poolValues.price1After){
-                    emit LiquidityAbsolute(poolValues.liquidityAbsoluteLowerBefore, poolValues.liquidityAbsoluteLowerAfter);
+                    emit LiquidityAbsolutePosCreated(poolValues.liquidityAbsoluteLowerBefore, poolValues.liquidityAbsoluteLowerAfter);
                     assert(poolValues.liquidityAbsoluteLowerAfter > poolValues.liquidityAbsoluteLowerBefore);
                 }
             }
@@ -399,12 +400,12 @@ contract EchidnaPool {
             assert(poolValues.positionIdNextAfter == poolValues.positionIdNextBefore);
             if(zeroForOne){
                 if(poolValues.price0After >= poolValues.price0Before){
-                    emit LiquidityAbsolute(poolValues.liquidityAbsoluteUpperBefore, poolValues.liquidityAbsoluteUpperAfter);
+                    emit LiquidityAbsoluteNoPosCreated(poolValues.liquidityAbsoluteUpperBefore, poolValues.liquidityAbsoluteUpperAfter);
                     assert(poolValues.liquidityAbsoluteUpperAfter == poolValues.liquidityAbsoluteUpperBefore);
                 }
             } else {
                 if(poolValues.price1Before >= poolValues.price1After){
-                    emit LiquidityAbsolute(poolValues.liquidityAbsoluteLowerBefore, poolValues.liquidityAbsoluteLowerAfter);
+                    emit LiquidityAbsoluteNoPosCreated(poolValues.liquidityAbsoluteLowerBefore, poolValues.liquidityAbsoluteLowerAfter);
                     assert(poolValues.liquidityAbsoluteLowerAfter == poolValues.liquidityAbsoluteLowerBefore);
                 }
             }

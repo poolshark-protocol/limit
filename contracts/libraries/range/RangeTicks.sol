@@ -226,9 +226,6 @@ library RangeTicks {
     ) internal pure returns (
         bool
     ) {
-        if (tick.range.liquidityAbsolute != 0) {
-            return false;
-        }
-        return true;
+        return tick.range.liquidityAbsolute == 0;
     }
 }

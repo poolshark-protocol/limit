@@ -294,9 +294,6 @@ library LimitTicks {
     ) internal pure returns (
         bool
     ) {
-        if (tick.limit.liquidityAbsolute != 0) {
-            return false;
-        }
-        return true;
+        return tick.limit.liquidityAbsolute == 0;
     }
 }

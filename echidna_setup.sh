@@ -14,3 +14,8 @@ solc-select use 0.8.13
 nohup ./echidna contracts/EchidnaPool.sol --config contracts/test/echidna/config.yaml --corpus-dir corpus --workers 12 &
 top -o %MEM -c
 tail -f nohup.out -n 100
+
+# running a single reproducer file
+# 1. mkdir -p corpus-new/reproducers
+# 2. cp corpus/reproducers/xxx.txt
+# 3. nohup ./echidna contracts/EchidnaPool.sol --config contracts/test/echidna/config.yaml --corpus-dir corpus-new --workers 128 &

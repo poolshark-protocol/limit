@@ -81,7 +81,7 @@ library MintLimitCall {
         }
 
         // mint position if amount is left
-        if (params.amount > 0 && params.lower < params.upper) {
+        if (params.amount > 0 && cache.liquidityMinted > 0 && params.lower < params.upper) {
             // check if new position created
             if (params.positionId == 0 ||                       // new position
                     params.lower != cache.position.lower ||     // lower mismatch

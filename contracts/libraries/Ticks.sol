@@ -32,6 +32,16 @@ library Ticks {
         int24 startTick
     );
 
+    event BuildNewSample(
+        uint32 blockTimestamp,
+        uint160 secondsPerLiquidityAccum
+    );
+
+    event UseOldSample(
+        uint32 blockTimestamp,
+        uint160 secondsPerLiquidityAccum
+    );
+
     event Swap(
         address indexed recipient,
         uint256 amountIn,
@@ -151,6 +161,24 @@ library Ticks {
             averagePrice: 0
         });
         // grab latest price and sample
+        RangePoolStructs.Sample memory latest = Samples._poolSample(IPool(address(this)), cache.state.pool.samples.index);
+        if (latest.blockTimestamp + 2 <= uint32(block.timestamp)) {
+                latest = Samples._build(
+                    latest,
+                    uint32(block.timestamp),
+                    cache.state.pool.tickAtPrice,
+                    cache.liquidity.toUint128()
+                );
+                emit BuildNewSample(
+                    latest.blockTimestamp,
+                    latest.secondsPerLiquidityAccum
+                );
+            } else {
+                emit UseOldSample(
+                    latest.blockTimestamp,
+                    latest.secondsPerLiquidityAccum
+                );
+            }
         (
             cache.averagePrice,
             cache.secondsPerLiquidityAccum,

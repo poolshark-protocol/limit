@@ -17,7 +17,7 @@ library EchidnaAssertions {
     event FeeGrowthInsideUnderflow(uint256 rangeFeeGrowth, uint256 positionFeeGrowthInsideLast);
     event FeeGrowthOutsideUnderflow(uint256 feeGrowthGlobal, uint256 tickFeeGrowthOutside);
     event TickSecondsAccumWithinBounds(int56 tickSecondsAccum, int56 tickTickSecondsAccum);
-    event SecondsPerLiquidityAccumUnderflow(uint160 secondsPerLiquidityAccum, uint160 tickSecondsPerLiquidityAccum);
+    event SecondsPerLiquidityAccumUnderflow(uint160 secondsPerLiquidityAccum, uint160 tickSecondsPerLiquidityAccum, int24 tick);
 
     function assertLiquidityGlobalUnderflows(uint128 liquidityGlobal, uint128 amount, string memory location) internal {
         emit LiquidityGlobalUnderflow(liquidityGlobal, amount, location);
@@ -45,8 +45,8 @@ library EchidnaAssertions {
         assert(int256(tickSecondsAccum) - int256(tickTickSecondsAccum) >= type(int56).min);
     }
 
-    function assertSecondsPerLiquidityAccumUnderflows(uint160 secondsPerLiquidityAccum, uint160 tickSecondsPerLiquidityAccum) internal {
-        emit SecondsPerLiquidityAccumUnderflow(secondsPerLiquidityAccum, tickSecondsPerLiquidityAccum);
+    function assertSecondsPerLiquidityAccumUnderflows(uint160 secondsPerLiquidityAccum, uint160 tickSecondsPerLiquidityAccum, int24 tick) internal {
+        emit SecondsPerLiquidityAccumUnderflow(secondsPerLiquidityAccum, tickSecondsPerLiquidityAccum, tick);
         assert(secondsPerLiquidityAccum >= tickSecondsPerLiquidityAccum);
     }
 

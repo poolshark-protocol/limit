@@ -121,7 +121,7 @@ library Ticks {
         // set initial cross state
         cache = _iterate(ticks, rangeTickMap, limitTickMap, cache, params.zeroForOne, true);
 
-        uint128 startLiquidity = cache.liquidity.toUint128();
+        uint128 startLiquidity = cache.state.pool.liquidity;
 
         // grab sample for accumulators
         cache = PoolsharkStructs.SwapCache({

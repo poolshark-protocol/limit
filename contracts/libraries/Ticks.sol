@@ -252,7 +252,7 @@ library Ticks {
             cache.averagePrice,
             cache.secondsPerLiquidityAccum,
             cache.tickSecondsAccum
-         ) = Samples.getLatest(cache.state, cache.constants, cache.liquidity);
+         ) = Samples.getLatest(cache.state, cache.constants, cache.state.pool.liquidity);
         while (cache.cross) {
             cache = _quoteSingle(cache, params.priceLimit, params.zeroForOne);
             if (cache.cross) {

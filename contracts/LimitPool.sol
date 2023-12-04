@@ -404,6 +404,12 @@ contract LimitPool is
         if (address(this) != predictedAddress) require(false, 'NoDelegateCall()');
     }
 
+    function getGlobalState() public view returns(
+        GlobalState memory
+    ) {
+        return globalState;
+    }
+
     function _onlyFactory() private view {
         if (msg.sender != factory) revert FactoryOnly();
     }

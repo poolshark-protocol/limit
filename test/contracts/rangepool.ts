@@ -17,7 +17,9 @@ import {
   getRangeLiquidity,
   getTickLiquidity,
 } from '../utils/contracts/rangepool'
-import { RangePoolState, ZERO_ADDRESS } from '../utils/contracts/limitpool'
+import { RangePoolState, ZERO_ADDRESS, validateMint as validateMintLimit } from '../utils/contracts/limitpool'
+const { mine } = require("@nomicfoundation/hardhat-network-helpers");
+import { time } from "@nomicfoundation/hardhat-network-helpers";
 
 alice: SignerWithAddress
 describe('RangePool Exact In Tests', function () {
@@ -164,6 +166,57 @@ describe('RangePool Exact In Tests', function () {
       balance1Decrease: BN_ZERO,
       liquidityIncrease: BigNumber.from('4990259157044168702067523170470752302'),
       revertMessage: 'LiquidityOverflow()',
+    })
+
+    if (balanceCheck) {
+      console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
+      console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
+    }
+  })
+
+  it.only('pool - Should not underflow secondsPerLiquidityAccum', async function () {
+
+    const bobId = await validateMintLimit({
+      signer: hre.props.bob,
+      lower: "-500",
+      upper: "770",
+      amount: "109",
+      zeroForOne: false,
+      mintPercent: BigNumber.from('3999999'),
+      balanceInDecrease: "109",
+      liquidityIncrease: "1704",
+      balanceOutIncrease: "0",
+      lowerTickCleared: false,
+      upperTickCleared: true,
+      revertMessage: "",
+    });
+    await mine(3)
+    await time.increase(150-5);
+
+    const aliceId = await validateMint({
+      signer: hre.props.alice,
+      recipient: hre.props.alice.address,
+      lower: '-20',
+      upper: '140',
+      amount0: BigNumber.from('35031292009550505868075130797225176693'),
+      amount1: BigNumber.from('18429822923338442687'),
+      balance0Decrease: BN_ZERO,
+      balance1Decrease: BigNumber.from('18429822923338442687'),
+      liquidityIncrease: BigNumber.from('2296936097638401612215'),
+      revertMessage: '',
+    })
+    await mine(128)
+    await time.increase(6673-130);
+    await validateSwap({
+      signer: hre.props.alice,
+      recipient: hre.props.alice.address,
+      zeroForOne: true,
+      amount: BigNumber.from('69884070882719497640422598944140336837'),
+      sqrtPriceLimitX96: BigNumber.from('65534'),
+      balanceInDecrease: BigNumber.from('18319580555638402657'),
+      balanceOutIncrease: BigNumber.from('18420608011876773572'),
+      revertMessage: '',
+      exactIn: true,
     })
 
     if (balanceCheck) {

@@ -428,7 +428,7 @@ library Ticks {
                 crossTick.feeGrowthOutside1       = cache.state.pool.feeGrowthGlobal1 - crossTick.feeGrowthOutside1;
                 EchidnaAssertions.assertTickSecondsAccumWithinBounds(cache.tickSecondsAccum, crossTick.tickSecondsAccumOutside);
                 crossTick.tickSecondsAccumOutside = cache.tickSecondsAccum - crossTick.tickSecondsAccumOutside;
-                EchidnaAssertions.assertSecondsPerLiquidityAccumUnderflows(cache.secondsPerLiquidityAccum, crossTick.secondsPerLiquidityAccumOutside);
+                EchidnaAssertions.assertSecondsPerLiquidityAccumUnderflows(cache.secondsPerLiquidityAccum, crossTick.secondsPerLiquidityAccumOutside, cache.crossTick);
                 crossTick.secondsPerLiquidityAccumOutside = cache.secondsPerLiquidityAccum - crossTick.secondsPerLiquidityAccumOutside;
                 ticks[cache.crossTick].range = crossTick;
                 int128 liquidityDelta = crossTick.liquidityDelta;

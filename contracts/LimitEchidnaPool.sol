@@ -26,6 +26,7 @@ contract EchidnaPool {
     event LiquidityMinted(uint256 amount, uint256 tokenAmount, bool zeroForOne);
     event PositionCreated(bool isCreated);
     event LiquidityAbsoluteNoPosCreated(uint128 beforeAbs, uint128 afterAbs);
+    event LiquidityAbsoluteNoPosCreatedPriceCheck(uint256 priceBefore, uint256 priceTick, uint256 priceAfter);
     event LiquidityAbsolutePosCreated(uint128 beforeAbs, uint128 afterAbs);
     event LiquidityAbsoluteLower(uint128 beforeAbs, uint128 afterAbs);
     event LiquidityAbsoluteUpper(uint128 beforeAbs, uint128 afterAbs);
@@ -378,6 +379,7 @@ contract EchidnaPool {
                     emit LiquidityAbsoluteNoPosCreated(values.upperTickBefore.liquidityAbsolute, values.upperTickAfter.liquidityAbsolute);
                     values.constants = pool.immutables();
                     uint256 upperPrice = ConstantProduct.getPriceAtTick(upper, values.constants);
+                    emit LiquidityAbsoluteNoPosCreatedPriceCheck(values.pool1Before.price, upperPrice, values.pool1After.price);
                     if (values.pool1Before.price >= upperPrice && values.pool1After.price <= upperPrice) {
                         assert(values.upperTickAfter.liquidityAbsolute == 0);
                     } else {
@@ -391,7 +393,8 @@ contract EchidnaPool {
                     emit LiquidityAbsoluteNoPosCreated(values.lowerTickBefore.liquidityAbsolute, values.lowerTickAfter.liquidityAbsolute);
                     values.constants = pool.immutables();
                     uint256 lowerPrice = ConstantProduct.getPriceAtTick(lower, values.constants);
-                    if (values.pool0Before.price <= lowerPrice && values.pool1After.price >= lowerPrice) {
+                    emit LiquidityAbsoluteNoPosCreatedPriceCheck(values.pool0Before.price, lowerPrice, values.pool0After.price);
+                    if (values.pool0Before.price <= lowerPrice && values.pool0After.price >= lowerPrice) {
                         assert(values.lowerTickAfter.liquidityAbsolute == 0);
                     } else {
                         assert(values.lowerTickAfter.liquidityAbsolute == values.lowerTickBefore.liquidityAbsolute);

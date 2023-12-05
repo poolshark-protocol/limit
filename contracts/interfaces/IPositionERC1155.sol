@@ -74,4 +74,9 @@ interface IPositionERC1155 is IERC165, PoolsharkStructs {
         uint256[] calldata id,
         uint256[] calldata amount
     ) external;
+
+    function withdrawEth(
+        address recipient,
+        PoolsharkStructs.LimitImmutables memory constants
+    ) external;
 }

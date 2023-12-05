@@ -50,35 +50,15 @@ interface IPool is PoolsharkStructs {
     function snapshotLimit(
         SnapshotLimitParams memory params
     ) external view returns(
-        uint128,
-        uint128
+        uint128 amountIn,
+        uint128 amountOut
     );
 
-    function globalState() external view returns (
-        RangePoolState memory pool,
-        LimitPoolState memory pool0,
-        LimitPoolState memory pool1,
-        uint128 liquidityGlobal,
-        uint32 epoch,
-        uint8 unlocked
+    function poolToken() external view returns(
+        address poolToken
     );
 
-    function samples(uint256) external view returns (
-        uint32,
-        int56,
-        uint160
-    );
+    function token0() external view returns (address token0);
 
-    function ticks(int24) external view returns (
-        RangeTick memory,
-        LimitTick memory
-    );
-
-    function positions(uint32) external view returns (
-        uint256 feeGrowthInside0Last,
-        uint256 feeGrowthInside1Last,
-        uint128 liquidity,
-        int24 lower,
-        int24 upper
-    );
+    function token1() external view returns (address token1);
 }

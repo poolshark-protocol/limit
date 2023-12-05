@@ -15,19 +15,6 @@ import '../../test/echidna/EchidnaAssertions.sol';
 
 /// @notice Tick management library for range pools
 library RangeTicks {
-    error LiquidityOverflow();
-    error LiquidityUnderflow();
-    error InvalidLowerTick();
-    error InvalidUpperTick();
-    error InvalidPositionAmount();
-    error InvalidPositionBounds();
-
-    event Initialize(
-        uint160 startPrice,
-        int24 tickAtPrice,
-        int24 minTick,
-        int24 maxTick
-    );
 
     event SyncRangeTick(
         uint200 feeGrowthOutside0,
@@ -60,13 +47,6 @@ library RangeTicks {
         int24 upper,
         uint128 amount
     ) internal returns (PoolsharkStructs.GlobalState memory) {
-        validate(lower, upper, constants.tickSpacing);
-
-        // check for amount to overflow liquidity delta & global
-        if (amount == 0)
-            require(false, 'NoLiquidityBeingAdded()');
-        if (state.liquidityGlobal + amount > uint128(type(int128).max))
-            require(false, 'LiquidityOverflow()');
 
         // get tick at price
         int24 tickAtPrice = state.pool.tickAtPrice;
@@ -80,10 +60,10 @@ library RangeTicks {
                     int56 tickSecondsAccum,
                     uint160 secondsPerLiquidityAccum
                 ) = Samples.getSingle(
-                        IPool(address(this)), 
+                        IRangePool(address(this)), 
                         RangePoolStructs.SampleParams(
                             state.pool.samples.index,
-                            state.pool.samples.length,
+                            state.pool.samples.count,
                             uint32(block.timestamp),
                             new uint32[](2),
                             state.pool.tickAtPrice,
@@ -120,10 +100,10 @@ library RangeTicks {
                     int56 tickSecondsAccum,
                     uint160 secondsPerLiquidityAccum
                 ) = Samples.getSingle(
-                        IPool(address(this)), 
+                        IRangePool(address(this)), 
                         RangePoolStructs.SampleParams(
                             state.pool.samples.index,
-                            state.pool.samples.length,
+                            state.pool.samples.count,
                             uint32(block.timestamp),
                             new uint32[](2),
                             state.pool.tickAtPrice,
@@ -152,7 +132,7 @@ library RangeTicks {
         }
         if (tickAtPrice >= lower && tickAtPrice < upper) {
             // write an oracle entry
-            (state.pool.samples.index, state.pool.samples.length) = Samples.save(
+            (state.pool.samples.index, state.pool.samples.count) = Samples.save(
                 samples,
                 state.pool.samples,
                 state.pool.liquidity,
@@ -210,7 +190,7 @@ library RangeTicks {
 
         if (tickAtPrice >= lower && tickAtPrice < upper) {
             // write an oracle entry
-            (state.pool.samples.index, state.pool.samples.length) = Samples.save(
+            (state.pool.samples.index, state.pool.samples.count) = Samples.save(
                 samples,
                 state.pool.samples,
                 state.pool.liquidity,
@@ -245,9 +225,6 @@ library RangeTicks {
     ) internal pure returns (
         bool
     ) {
-        if (tick.range.liquidityAbsolute != 0) {
-            return false;
-        }
-        return true;
+        return tick.range.liquidityAbsolute == 0;
     }
 }

@@ -9,8 +9,11 @@ import '../utils/SafeTransfers.sol';
 library Collect {
     using SafeCast for int128;
 
-    event CollectRange(
-        uint128 amount0,
+    event CollectRange0(
+        uint128 amount0
+    );
+
+    event CollectRange1(
         uint128 amount1
     );
 
@@ -28,6 +31,7 @@ library Collect {
             );
             /// @dev - cast to ensure user doesn't owe the pool balance
             SafeTransfers.transferOut(recipient, constants.token0, amount0.toUint128());
+            emit CollectRange0(amount0.toUint128());
         }
         if (amount1 > 0) {
             EchidnaAssertions.assertPoolBalanceExceededRange(
@@ -36,13 +40,13 @@ library Collect {
             );
             /// @dev - cast to ensure user doesn't owe the pool balance
             SafeTransfers.transferOut(recipient, constants.token1, amount1.toUint128());
+            emit CollectRange1(amount1.toUint128());
         }
-        emit CollectRange(amount0.toUint128(), amount1.toUint128());
     }
 
     function burnLimit(
         LimitPoolStructs.BurnLimitCache memory cache,
-        LimitPoolStructs.BurnLimitParams memory params
+        PoolsharkStructs.BurnLimitParams memory params
     ) internal returns (
         LimitPoolStructs.BurnLimitCache memory
     )    

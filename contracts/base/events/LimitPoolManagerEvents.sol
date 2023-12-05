@@ -5,10 +5,11 @@ import '../../interfaces/structs/PoolsharkStructs.sol';
 
 abstract contract LimitPoolManagerEvents is PoolsharkStructs {
     event FactoryChanged(address indexed previousFactory, address indexed newFactory);
-    event ImplementationEnabled(
-        bytes32 key,
+    event PoolTypeEnabled(
+        bytes32 poolTypeName,
         address poolImpl,
-        address tokenImpl
+        address tokenImpl,
+        uint16  poolTypeId
     );
     event FeeTierEnabled(
         uint16 swapFee,
@@ -18,13 +19,13 @@ abstract contract LimitPoolManagerEvents is PoolsharkStructs {
     event OwnerTransfer(address indexed previousOwner, address indexed newOwner);
     event ProtocolSwapFeesModified(
         address[] pools,
-        uint16[] protocolSwapFees0,
-        uint16[] protocolSwapFees1
+        int16[] protocolSwapFees0,
+        int16[] protocolSwapFees1
     );
     event ProtocolFillFeesModified(
         address[] pools,
-        uint16[] protocolFillFees0,
-        uint16[] protocolFillFees1
+        int16[] protocolFillFees0,
+        int16[] protocolFillFees1
     );
     event ProtocolFeesCollected(
         address[] pools,

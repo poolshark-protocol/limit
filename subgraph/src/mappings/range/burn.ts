@@ -1,5 +1,5 @@
 import { Address, store } from "@graphprotocol/graph-ts"
-import { safeLoadBasePrice, safeLoadBurnLog, safeLoadRangePositionById, safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadRangeTick, safeLoadToken, safeLoadRangePosition } from "../utils/loads"
+import { safeLoadBasePrice, safeLoadBurnLog, safeLoadRangePositionById, safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadRangeTick, safeLoadToken, safeLoadRangePosition, safeLoadTvlUpdateLog } from "../utils/loads"
 import {
     BigInt,
 } from '@graphprotocol/graph-ts'
@@ -71,12 +71,13 @@ export function handleBurnRange(event: BurnRange): void {
         .plus(amount1.times(token1.ethPrice.times(basePrice.USD)))
 
     if (liquidityBurnedParam.equals(position.liquidity)) {
-        position.liquidity = BIGINT_ZERO
+        store.remove('RangePosition', position.id)
     } else {
         position.liquidity = position.liquidity.minus(liquidityBurnedParam)
+        position.updatedAtBlockNumber = event.block.number
+        position.updatedAtTimestamp = event.block.timestamp
+        position.save()
     }
-    position.updatedAtBlockNumber = event.block.number
-    position.updatedAtTimestamp = event.block.timestamp
 
     if (lowerTick.liquidityAbsolute.equals(liquidityBurnedParam)) {
         store.remove('RangeTick', lowerTick.id)
@@ -97,8 +98,8 @@ export function handleBurnRange(event: BurnRange): void {
     factory.txnCount = factory.txnCount.plus(ONE_BI)
 
     // eth price updates
-    token0.ethPrice = findEthPerToken(token0, token1, basePrice)
-    token1.ethPrice = findEthPerToken(token1, token0, basePrice)
+    token0.ethPrice = findEthPerToken(token0, token1, pool, basePrice)
+    token1.ethPrice = findEthPerToken(token1, token0, pool, basePrice)
     token0.usdPrice = token0.ethPrice.times(basePrice.USD)
     token1.usdPrice = token1.ethPrice.times(basePrice.USD)
 
@@ -108,7 +109,7 @@ export function handleBurnRange(event: BurnRange): void {
     token1.totalValueLocked = token1.totalValueLocked.minus(amount1)
     pool.totalValueLocked0 = pool.totalValueLocked0.minus(amount0)
     pool.totalValueLocked1 = pool.totalValueLocked1.minus(amount1)
-    let updateTvlRet = updateDerivedTVLAmounts(token0, token1, pool, factory, oldPoolTotalValueLockedEth)
+    let updateTvlRet = updateDerivedTVLAmounts(token0, token1, pool, factory, basePrice, oldPoolTotalValueLockedEth)
     token0 = updateTvlRet.token0
     token1 = updateTvlRet.token1
     pool = updateTvlRet.pool
@@ -122,8 +123,28 @@ export function handleBurnRange(event: BurnRange): void {
         pool.liquidity = pool.liquidity.minus(liquidityBurnedParam)
         pool.poolLiquidity = pool.poolLiquidity.minus(liquidityBurnedParam)
     }
+    pool.liquidityGlobal = pool.liquidityGlobal.minus(liquidityBurnedParam)
 
-    position.save()
+    // let loadTvlUpdateLog = safeLoadTvlUpdateLog(event.transaction.hash, poolAddress)
+    // let tvlUpdateLog = loadTvlUpdateLog.entity
+
+    // tvlUpdateLog.pool = poolAddress
+    // tvlUpdateLog.eventName = "BurnRange"
+    // tvlUpdateLog.txnHash = event.transaction.hash
+    // tvlUpdateLog.txnBlockNumber = event.block.number
+    // tvlUpdateLog.amount0Change = amount0.neg()
+    // tvlUpdateLog.amount1Change = amount1.neg()
+    // tvlUpdateLog.amount0Total = pool.totalValueLocked0
+    // tvlUpdateLog.amount1Total = pool.totalValueLocked1
+    // tvlUpdateLog.token0UsdPrice = token0.usdPrice
+    // tvlUpdateLog.token1UsdPrice = token1.usdPrice
+    // tvlUpdateLog.amountUsdChange = amount0
+    // .times(token0.ethPrice.times(basePrice.USD))
+    // .plus(amount1.times(token1.ethPrice.times(basePrice.USD))).neg()
+    // tvlUpdateLog.amountUsdTotal = pool.totalValueLockedUsd
+
+    // tvlUpdateLog.save()
+
     burnLog.save()
     basePrice.save()
     pool.save()

@@ -13,24 +13,6 @@ interface LimitPoolStructs is PoolsharkStructs {
         bool crossedInto;  // whether the position was crossed into already
     }
 
-    struct MintLimitParams {
-        address to;
-        uint128 amount;
-        uint96 mintPercent;
-        uint32 positionId;
-        int24 lower;
-        int24 upper;
-        bool zeroForOne;
-    }
-
-    struct BurnLimitParams {
-        address to;
-        uint128 burnPercent;
-        uint32 positionId;
-        int24 claim;
-        bool zeroForOne;
-    }
-
     struct MintLimitCache {
         GlobalState state;
         LimitPosition position;
@@ -62,6 +44,7 @@ interface LimitPoolStructs is PoolsharkStructs {
         int24 claim;
         bool removeLower;
         bool removeUpper;
+        bool search;
     }
 
     struct InsertSingleLocals {
@@ -78,5 +61,24 @@ interface LimitPoolStructs is PoolsharkStructs {
         int24 previousFullTick;
         uint256 pricePrevious;
         uint256 priceNext;
+    }
+
+    struct SearchLocals {
+        int24[] ticksFound;
+        int24 searchTick;
+        int24 searchTickAhead;
+        uint16 searchIdx;
+        uint16 startIdx;
+        uint16 endIdx;
+        uint16 ticksIncluded;
+        uint32 claimTickEpoch;
+        uint32 claimTickAheadEpoch;
+    }
+
+    struct TickMapLocals {
+        uint256 word;
+        uint256 tickIndex;
+        uint256 wordIndex;
+        uint256 blockIndex;
     }
 }

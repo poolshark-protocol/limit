@@ -2,6 +2,8 @@
 pragma solidity 0.8.13;
 
 import '../../../interfaces/structs/LimitPoolStructs.sol';
+import '../../../interfaces/callbacks/ILimitPoolCallback.sol';
+import '../../../interfaces/IERC20Minimal.sol';
 import '../LimitPositions.sol';
 import '../../utils/Collect.sol';
 import '../../utils/PositionTokens.sol';
@@ -15,7 +17,6 @@ library MintLimitCall {
         uint32 positionId,
         uint32 epochLast,
         uint128 amountIn,
-        uint128 amountFilled,
         uint128 liquidityMinted
     );
 
@@ -35,17 +36,27 @@ library MintLimitCall {
         PoolsharkStructs.TickMap storage rangeTickMap,
         PoolsharkStructs.TickMap storage limitTickMap,
         PoolsharkStructs.GlobalState storage globalState,
-        LimitPoolStructs.MintLimitParams memory params,
+        PoolsharkStructs.MintLimitParams memory params,
         LimitPoolStructs.MintLimitCache memory cache
     ) internal {
-        if (params.positionId > 0) {
-            if (PositionTokens.balanceOf(cache.constants, msg.sender, params.positionId) == 0)
-                // check for balance held
-                require(false, 'PositionNotFound()');
-            cache.position = positions[params.positionId];
-        }
+        // check for invalid receiver
+        if (params.to == address(0))
+            require(false, "CollectToZeroAddress()");
 
         cache.state = globalState;
+
+        // validate position ticks
+        ConstantProduct.checkTicks(params.lower, params.upper, cache.constants.tickSpacing);
+
+        if (params.positionId > 0) {
+            cache.position = positions[params.positionId];
+            if (cache.position.liquidity == 0) {
+                // position doesn't exist
+                require(false, 'PositionNotFound()');
+            }
+            if (PositionTokens.balanceOf(cache.constants, params.to, params.positionId) == 0)
+                require(false, 'PositionOwnerMismatch()');
+        }
 
         // resize position if necessary
         (params, cache) = LimitPositions.resize(
@@ -60,12 +71,6 @@ library MintLimitCall {
         // save state for reentrancy safety
         save(cache, globalState, !params.zeroForOne);
 
-        // transfer in token amount
-        SafeTransfers.transferIn(
-                                 params.zeroForOne ? cache.constants.token0 
-                                                   : cache.constants.token1,
-                                 params.amount + cache.swapCache.input
-                                );
         // transfer out if swap output 
         if (cache.swapCache.output > 0) {
             EchidnaAssertions.assertPoolBalanceExceeded(
@@ -151,14 +156,24 @@ library MintLimitCall {
                 params.zeroForOne,
                 params.positionId,
                 cache.position.epochLast,
-                uint128(params.amount + cache.swapCache.input),
-                uint128(cache.swapCache.output),
+                uint128(params.amount),
                 uint128(cache.liquidityMinted)
             );
         }
-
         // save lp side for safe reentrancy
         save(cache, globalState, params.zeroForOne);
+
+        // check balance and execute callback
+        uint256 balanceStart = balance(params, cache);
+        ILimitPoolMintLimitCallback(msg.sender).limitPoolMintLimitCallback(
+            params.zeroForOne ? -int256(params.amount + cache.swapCache.input) : int256(cache.swapCache.output),
+            params.zeroForOne ? int256(cache.swapCache.output) : -int256(params.amount + cache.swapCache.input),
+            params.callbackData
+        );
+
+        // check balance requirements after callback
+        if (balance(params, cache) < balanceStart + params.amount + cache.swapCache.input)
+            require(false, 'MintInputAmountTooLow()');
     }
 
     function balance(
@@ -192,5 +207,25 @@ library MintLimitCall {
             globalState.pool = cache.state.pool;
             globalState.pool1 = cache.state.pool1;
         }
+    }
+
+    
+    function balance(
+        PoolsharkStructs.MintLimitParams memory params,
+        LimitPoolStructs.MintLimitCache memory cache
+    ) private view returns (uint256) {
+        (
+            bool success,
+            bytes memory data
+        ) = (params.zeroForOne ? cache.constants.token0
+                               : cache.constants.token1)
+                               .staticcall(
+                                    abi.encodeWithSelector(
+                                        IERC20Minimal.balanceOf.selector,
+                                        address(this)
+                                    )
+                                );
+        require(success && data.length >= 32);
+        return abi.decode(data, (uint256));
     }
 }

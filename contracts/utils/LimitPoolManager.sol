@@ -6,6 +6,7 @@ import '../interfaces/limit/ILimitPool.sol';
 import '../interfaces/limit/ILimitPoolFactory.sol';
 import '../interfaces/limit/ILimitPoolManager.sol';
 import '../base/events/LimitPoolManagerEvents.sol';
+import '../libraries/utils/SafeCast.sol';
 
 /**
  * @dev Defines the actions which can be executed by the factory admin.
@@ -17,26 +18,35 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
     uint16  public constant MAX_PROTOCOL_SWAP_FEE = 1e4; /// @dev - max protocol swap fee of 100%
     uint16  public constant MAX_PROTOCOL_FILL_FEE = 1e2; /// @dev - max protocol fill fee of 1%
     // impl name => impl address
-    mapping(bytes32 => address) internal _poolImpls;
-    mapping(bytes32 => address) internal _tokenImpls;
+    bytes32[] _poolTypeNames;
+    mapping(uint256 => address) internal _poolImpls;
+    mapping(uint256 => address) internal _tokenImpls;
     // swap fee => tick spacing
     mapping(uint16 => int16) internal _feeTiers;
 
+    using SafeCast for uint256;
+
     error InvalidSwapFee();
     error InvalidTickSpacing();
-    error InvalidImplAddress();
-    error TickSpacingAlreadyEnabled();
-    error ImplementationAlreadyExists();
+    error InvalidPoolImplAddress();
+    error InvalidTokenImplAddress();
+    error InvalidImplAddresses();
+    error FeeTierAlreadyEnabled();
+    error PoolTypeAlreadyExists();
+    error MaxPoolTypesCountExceeded();
 
     constructor() {
         owner = msg.sender;
         feeTo = msg.sender;
         emit OwnerTransfer(address(0), msg.sender);
+        emit FeeToTransfer(address(0), msg.sender);
 
         // create initial fee tiers
-        _feeTiers[500] = 10;
+        _feeTiers[1000] = 10;
+        _feeTiers[3000] = 30;
         _feeTiers[10000] = 100;
-        emit FeeTierEnabled(500, 10);
+        emit FeeTierEnabled(1000, 10);
+        emit FeeTierEnabled(3000, 30);
         emit FeeTierEnabled(10000, 100);
     }
 
@@ -48,8 +58,8 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
         _;
     }
 
-    modifier onlyFeeTo() {
-        _checkFeeTo();
+    modifier onlyOwnerOrFeeTo() {
+        _checkFeeToAndOwner();
         _;
     }
 
@@ -62,7 +72,7 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
         _transferOwner(newOwner);
     }
 
-    function transferFeeTo(address newFeeTo) public virtual onlyFeeTo {
+    function transferFeeTo(address newFeeTo) public virtual onlyOwner {
         if(newFeeTo == address(0)) require (false, 'TransferredToZeroAddress()');
         _transferFeeTo(newFeeTo);
     }
@@ -84,14 +94,14 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
     function _transferFeeTo(address newFeeTo) internal virtual {
         address oldFeeTo = feeTo;
         feeTo = newFeeTo;
-        emit OwnerTransfer(oldFeeTo, newFeeTo);
+        emit FeeToTransfer(oldFeeTo, newFeeTo);
     }
 
-    function enableTickSpacing(
-        int16 tickSpacing,
-        uint16 swapFee
+    function enableFeeTier(
+        uint16 swapFee,
+        int16 tickSpacing
     ) external onlyOwner {
-        if (_feeTiers[swapFee] != 0) revert TickSpacingAlreadyEnabled();
+        if (_feeTiers[swapFee] != 0) revert FeeTierAlreadyEnabled();
         if (tickSpacing <= 0) revert InvalidTickSpacing();
         if (tickSpacing % 2 != 0) revert InvalidTickSpacing();
         if (swapFee == 0) revert InvalidSwapFee();
@@ -100,18 +110,21 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
         emit FeeTierEnabled(swapFee, tickSpacing);
     }
 
-    function enableImplementation(
-        bytes32 poolType_,
+    function enablePoolType(
         address poolImpl_,
-        address tokenImpl_
+        address tokenImpl_,
+        bytes32 poolTypeName_
     ) external onlyOwner {
-        if (_poolImpls[poolType_] != address(0)) revert ImplementationAlreadyExists();
-        if (poolImpl_ == address(0) || tokenImpl_ == address(0)) revert InvalidImplAddress();
+        uint16 poolTypeId_ = _poolTypeNames.length.toUint16();
+        if (poolTypeId_ > type(uint8).max) revert MaxPoolTypesCountExceeded();
+        if (poolImpl_ == address(0)) revert InvalidPoolImplAddress();
+        if (tokenImpl_ == address(0)) revert InvalidTokenImplAddress();
         /// @dev - prevent same addresses since factory does not support this
-        if (poolImpl_ == tokenImpl_) revert InvalidImplAddress();
-        _poolImpls[poolType_] = poolImpl_;
-        _tokenImpls[poolType_] = tokenImpl_;
-        emit ImplementationEnabled(poolType_, poolImpl_, tokenImpl_);
+        if (poolImpl_ == tokenImpl_) revert InvalidImplAddresses();
+        _poolImpls[poolTypeId_] = poolImpl_;
+        _tokenImpls[poolTypeId_] = tokenImpl_;
+        _poolTypeNames.push(poolTypeName_);
+        emit PoolTypeEnabled(poolTypeName_, poolImpl_, tokenImpl_, poolTypeId_);
     }
 
     function setFactory(
@@ -124,7 +137,7 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
 
     function collectProtocolFees(
         address[] calldata pools
-    ) external {
+    ) external onlyOwnerOrFeeTo {
         if (pools.length == 0) require (false, 'EmptyPoolsArray()');
         uint128[] memory token0FeesCollected = new uint128[](pools.length);
         uint128[] memory token1FeesCollected = new uint128[](pools.length);
@@ -158,10 +171,10 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
         }
         uint128[] memory token0FeesCollected = new uint128[](pools.length);
         uint128[] memory token1FeesCollected = new uint128[](pools.length);
-        uint16[] memory protocolSwapFees0 = new uint16[](pools.length);
-        uint16[] memory protocolSwapFees1 = new uint16[](pools.length);
-        uint16[] memory protocolFillFees0 = new uint16[](pools.length);
-        uint16[] memory protocolFillFees1 = new uint16[](pools.length);
+        int16[] memory protocolSwapFees0 = new int16[](pools.length);
+        int16[] memory protocolSwapFees1 = new int16[](pools.length);
+        int16[] memory protocolFillFees0 = new int16[](pools.length);
+        int16[] memory protocolFillFees1 = new int16[](pools.length);
         for (uint i; i < pools.length;) {
             (
                 token0FeesCollected[i],
@@ -170,16 +183,28 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
                 feesParams[i]
             );
             if ((feesParams[i].setFeesFlags & PROTOCOL_SWAP_FEE_0) > 0) {
-                protocolSwapFees0[i] = feesParams[i].protocolSwapFee0;
+                protocolSwapFees0[i] = int16(feesParams[i].protocolSwapFee0);
+            } else {
+                // no protocol fee change
+                protocolSwapFees0[i] = -1;
             }
             if ((feesParams[i].setFeesFlags & PROTOCOL_SWAP_FEE_1) > 0) {
-                protocolSwapFees1[i] = feesParams[i].protocolSwapFee1;
+                protocolSwapFees1[i] = int16(feesParams[i].protocolSwapFee1);
+            } else {
+                // no protocol fee change
+                protocolSwapFees1[i] = -1;
             }
             if ((feesParams[i].setFeesFlags & PROTOCOL_FILL_FEE_0) > 0) {
-                protocolFillFees0[i] = feesParams[i].protocolFillFee0;
+                protocolFillFees0[i] = int16(feesParams[i].protocolFillFee0);
+            } else {
+                // no protocol fee change
+                protocolFillFees0[i] = -1;
             }
             if ((feesParams[i].setFeesFlags & PROTOCOL_FILL_FEE_1) > 0) {
-                protocolFillFees1[i] = feesParams[i].protocolFillFee1;
+                protocolFillFees1[i] = int16(feesParams[i].protocolFillFee1);
+            } else {
+                // no protocol fee change
+                protocolFillFees1[i] = -1;
             }
             // else values will remain zero
             unchecked {
@@ -203,13 +228,13 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
         );
     }
 
-    function implementations(
-        bytes32 key
+    function poolTypes(
+        uint16 poolTypeId
     ) external view returns (
         address,
         address
     ) {
-        return (_poolImpls[key], _tokenImpls[key]);
+        return (_poolImpls[poolTypeId], _tokenImpls[poolTypeId]);
     }
 
     function feeTiers(
@@ -224,13 +249,15 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
      * @dev Throws if the sender is not the owner.
      */
     function _checkOwner() internal view {
-        if (owner != msg.sender) require (false, 'OwnerOnly()');
+        if (owner != msg.sender)
+            require (false, 'OwnerOnly()');
     }
 
     /**
      * @dev Throws if the sender is not the feeTo.
      */
-    function _checkFeeTo() internal view {
-        if (feeTo != msg.sender) require (false, 'FeeToOnly()');
+    function _checkFeeToAndOwner() internal view {
+        if (feeTo != msg.sender && owner != msg.sender)
+            require (false, 'OwnerOrFeeToOnly()');
     }
 }

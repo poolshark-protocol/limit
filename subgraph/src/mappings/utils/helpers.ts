@@ -2,6 +2,7 @@ import { BigInt, BigDecimal, Address } from '@graphprotocol/graph-ts'
 import { ERC20 } from '../../../generated/LimitPoolFactory/ERC20'
 import { ERC20SymbolBytes } from '../../../generated/LimitPoolFactory/ERC20SymbolBytes'
 import { ERC20NameBytes } from '../../../generated/LimitPoolFactory/ERC20NameBytes'
+import { safeDiv } from './math'
 
 export const ADDRESS_ZERO = '0x0000000000000000000000000000000000000000'
 export let BIGINT_ZERO = BigInt.fromI32(0)
@@ -38,9 +39,10 @@ export function convertTokenToDecimal(
     if (exchangeDecimals == BIGINT_ZERO) {
         return tokenAmount.toBigDecimal()
     }
-    return tokenAmount
-        .toBigDecimal()
-        .div(exponentToBigDecimal(exchangeDecimals))
+    return safeDiv(
+        tokenAmount.toBigDecimal(),
+        exponentToBigDecimal(exchangeDecimals)
+    )
 }
 
 export function equalToZero(value: BigDecimal): boolean {

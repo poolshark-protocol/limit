@@ -1,6 +1,20 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.13;
 
+/// @title Callback for mints
+/// @notice Any contract that calls the `mint` function must implement this interface.
+interface ICoverPoolMintCallback {
+    /// @notice Called to `msg.sender` after executing a mint.
+    /// @param amount0Delta The amount of token0 either received by (positive) or sent from (negative) the user.
+    /// @param amount1Delta The amount of token1 either received by (positive) or sent from (negative) the user.
+    function coverPoolMintCallback(
+        int256 amount0Delta,
+        int256 amount1Delta,
+        bytes calldata data
+    ) external;
+}
+
+
 /// @title Callback for swaps
 /// @notice Any contract that calls the `swap` function must implement this interface.
 interface ICoverPoolSwapCallback {

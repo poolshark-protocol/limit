@@ -3,91 +3,6 @@ description: Poolshark is a Directional Liquidity AMM allowing LPs to capture di
 repository: https://github.com/poolshark-protocol/limit
 schema:
     file: ./schema.graphql
-dataSources:
-  - kind: ethereum/contract
-    name: LimitPoolFactory
-    network: arbitrum-goerli
-    source:
-        address: '0xbd6d010bcecc7440a72889546411e0edbb333ea2'
-        abi: LimitPoolFactory
-        startBlock: 41515300
-    mapping:
-        kind: ethereum/events
-        apiVersion: 0.0.6
-        language: wasm/assemblyscript
-        file: ./src/mappings/limitpoolfactory.ts
-        entities:
-            - Token
-            - LimitPool
-        abis:
-            - name: LimitPool
-              file: ./abis/LimitPool.json
-            - name: LimitPoolFactory
-              file: ./abis/LimitPoolFactory.json
-            - name: ERC20
-              file: ./abis/ERC20.json
-            - name: ERC20SymbolBytes
-              file: ./abis/ERC20SymbolBytes.json
-            - name: ERC20NameBytes
-              file: ./abis/ERC20NameBytes.json
-        eventHandlers:
-            - event: PoolCreated(address,address,address,address,indexed address,indexed address,indexed uint16,int16)
-              handler: handlePoolCreated
-  - kind: ethereum/contract
-    name: LimitPoolManager
-    network: arbitrum-goerli
-    source:
-        address: '0x04405dbefdbf50c88f6e77b2d6cf0409c9596b12'
-        abi: LimitPoolManager
-        startBlock: 41515300
-    mapping:
-        kind: ethereum/events
-        apiVersion: 0.0.6
-        language: wasm/assemblyscript
-        file: ./src/mappings/limitpoolmanager.ts
-        entities:
-            - LimitPool
-            - LimitPoolFactory
-        abis:
-            - name: LimitPoolManager
-              file: ./abis/LimitPoolManager.json
-        eventHandlers:
-            - event: FeeTierEnabled(uint16,int16)
-              handler: handleFeeTierEnabled
-            - event: ImplementationEnabled(bytes32,address,address)
-              handler: handleImplementationEnabled
-            - event: FactoryChanged(indexed address,indexed address)
-              handler: handleFactoryChanged
-            - event: FeeToTransfer(indexed address,indexed address)
-              handler: handleFeeToTransfer
-            - event: OwnerTransfer(indexed address,indexed address)
-              handler: handleOwnerTransfer
-            - event: ProtocolFeesCollected(address[],uint128[],uint128[])
-              handler: handleProtocolFeesCollected
-            - event: ProtocolFillFeesModified(address[],uint16[],uint16[])
-              handler: handleProtocolFillFeesModified
-            - event: ProtocolSwapFeesModified(address[],uint16[],uint16[])
-              handler: ProtocolSwapFeesModified
-  - kind: ethereum/contract
-    name: PoolsharkRouter
-    network: arbitrum-goerli
-    source:
-        address: '0x1759c96aAD9A7E52F6d9c06573e0E0b418Bbdf74'
-        abi: PoolsharkRouter
-        startBlock: 41515300
-    mapping:
-        kind: ethereum/events
-        apiVersion: 0.0.6
-        language: wasm/assemblyscript
-        file: ./src/mappings/limitpoolrouter.ts
-        entities:
-            - PoolsharkRouter
-        abis:
-            - name: PoolsharkRouter
-              file: ./abis/PoolsharkRouter.json
-        eventHandlers:
-            - event: RouterDeployed(address,address,address)
-              handler: handleRouterDeployed
 templates:
     - kind: ethereum/contract
       name: LimitPoolTemplate
@@ -119,8 +34,10 @@ templates:
                 handler: handleInitialize
               - event: Swap(indexed address,uint256,uint256,uint200,uint200,uint160,uint128,uint128,int24,indexed bool,indexed bool)
                 handler: handleSwap
-              - event: SampleLengthIncreased(uint16)
-                handler: handleSampleLengthIncreased
+              - event: MintLimit(indexed address,int24,int24,bool,uint32,uint32,uint128,uint128)
+                handler: handleMintLimit
+              - event: SampleCountIncreased(uint16)
+                handler: handleSampleCountIncreased
               - event: SampleRecorded(int56,uint160)
                 handler: handleSampleRecorded
               - event: MintRange(indexed address,int24,int24,indexed uint32,uint128,int128,int128)
@@ -129,12 +46,8 @@ templates:
                 handler: handleBurnRange
               - event: CompoundRange(indexed uint32,uint128)
                 handler: handleCompoundRange
-              - event: CollectRange(uint128,uint128)
-                handler: handleCollectRange
               - event: SyncRangeTick(uint200,uint200,int24)
                 handler: handleSyncRangeTick
-              - event: MintLimit(indexed address,int24,int24,bool,uint32,uint32,uint128,uint128,uint128)
-                handler: handleMintLimit
               - event: BurnLimit(indexed address,uint32,int24,int24,int24,int24,bool,uint128,uint128,uint128)
                 handler: handleBurnLimit
               - event: SyncLimitPool(uint160,uint128,uint32,int24,bool)
@@ -143,6 +56,10 @@ templates:
                 handler: handleSyncLimitLiquidity
               - event: SyncLimitTick(uint32,int24,bool)
                 handler: handleSyncLimitTick
+              - event: CollectRange0(uint128)
+                handler: handleCollectRange0
+              - event: CollectRange1(uint128)
+                handler: handleCollectRange1
     # ERC-1155 events
     - kind: ethereum/contract
       name: PositionERC1155Template
@@ -153,7 +70,7 @@ templates:
           kind: ethereum/events
           apiVersion: 0.0.6
           language: wasm/assemblyscript
-          file: ./src/mappings/limitpool.ts
+          file: ./src/mappings/positionerc1155.ts
           entities:
               - Token
               - RangePool
@@ -166,4 +83,118 @@ templates:
                 handler: handleTransferSingle
               - event: TransferBatch(indexed address,indexed address,indexed address,uint256[],uint256[])
                 handler: handleTransferBatch
+    # RangeStaker events
+    - kind: ethereum/contract
+      name: RangeStakerTemplate
+      network: arbitrum-goerli
+      source:
+          # address: '0xe5e2E95A986CE078606C403593593b18Ed98f4d6'
+          abi: RangeStaker
+      mapping:
+          kind: ethereum/events
+          apiVersion: 0.0.6
+          language: wasm/assemblyscript
+          file: ./src/mappings/staking/rangestaker.ts
+          entities:
+              - RangeStake
+          abis:
+              - name: RangeStaker
+                file: ./abis/RangeStaker.json
+          eventHandlers:
+              - event: FeeToTransfer(indexed address,indexed address)
+                handler: handleFeeToTransfer
+              - event: OwnerTransfer(indexed address,indexed address)
+                handler: handleOwnerTransfer
+              - event: StakeRange(address,uint32,address,uint256,uint256,uint128)
+                handler: handleStakeRange
+              - event: StakeRangeAccrued(address,uint32,uint256,uint256)
+                handler: handleStakeRangeAccrued
+              - event: UnstakeRange(address,uint32,address)
+                handler: handleUnstakeRange
+dataSources:
+  - kind: ethereum/contract
+    name: LimitPoolFactory
+    network: arbitrum-goerli
+    source:
+        address: '0x1b215002e688135549cc0290d6cf1f94e3aa425c'
+        abi: LimitPoolFactory
+        startBlock: 56821935
+    mapping:
+        kind: ethereum/events
+        apiVersion: 0.0.6
+        language: wasm/assemblyscript
+        file: ./src/mappings/limitpoolfactory.ts
+        entities:
+            - Token
+            - LimitPool
+        abis:
+            - name: LimitPool
+              file: ./abis/LimitPool.json
+            - name: LimitPoolFactory
+              file: ./abis/LimitPoolFactory.json
+            - name: ERC20
+              file: ./abis/ERC20.json
+            - name: ERC20SymbolBytes
+              file: ./abis/ERC20SymbolBytes.json
+            - name: ERC20NameBytes
+              file: ./abis/ERC20NameBytes.json
+        eventHandlers:
+            - event: PoolCreated(address,address,indexed address,indexed address,indexed uint16,int16,uint16)
+              handler: handlePoolCreated
+  - kind: ethereum/contract
+    name: LimitPoolManager
+    network: arbitrum-goerli
+    source:
+        address: '0x6d3af137e75097b892683832a2c0132f99625d0e'
+        abi: LimitPoolManager
+        startBlock: 56821935
+    mapping:
+        kind: ethereum/events
+        apiVersion: 0.0.6
+        language: wasm/assemblyscript
+        file: ./src/mappings/limitpoolmanager.ts
+        entities:
+            - LimitPool
+            - LimitPoolFactory
+        abis:
+            - name: LimitPoolManager
+              file: ./abis/LimitPoolManager.json
+        eventHandlers:
+            - event: FeeTierEnabled(uint16,int16)
+              handler: handleFeeTierEnabled
+            - event: PoolTypeEnabled(bytes32,address,address,uint16)
+              handler: handlePoolTypeEnabled
+            - event: FactoryChanged(indexed address,indexed address)
+              handler: handleFactoryChanged
+            - event: FeeToTransfer(indexed address,indexed address)
+              handler: handleFeeToTransfer
+            - event: OwnerTransfer(indexed address,indexed address)
+              handler: handleOwnerTransfer
+            - event: ProtocolFeesCollected(address[],uint128[],uint128[])
+              handler: handleProtocolFeesCollected
+            - event: ProtocolFillFeesModified(address[],int16[],int16[])
+              handler: handleProtocolFillFeesModified
+            - event: ProtocolSwapFeesModified(address[],int16[],int16[])
+              handler: ProtocolSwapFeesModified
+  - kind: ethereum/contract
+    name: PoolsharkRouter
+    network: arbitrum-goerli
+    source:
+        address: '0x4b5a159109bb997135e9b2bb6e486e2101466881'
+        abi: PoolsharkRouter
+        startBlock: 56821935
+    mapping:
+        kind: ethereum/events
+        apiVersion: 0.0.6
+        language: wasm/assemblyscript
+        file: ./src/mappings/poolsharkrouter.ts
+        entities:
+            - PoolsharkRouter
+        abis:
+            - name: PoolsharkRouter
+              file: ./abis/PoolsharkRouter.json
+        eventHandlers:
+            - event: RouterDeployed(address,address,address)
+              handler: handleRouterDeployed
+
 

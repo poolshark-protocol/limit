@@ -35,15 +35,13 @@ library LimitPositions {
         RangePoolStructs.Sample[65535] storage samples,
         PoolsharkStructs.TickMap storage rangeTickMap,
         PoolsharkStructs.TickMap storage limitTickMap,
-        LimitPoolStructs.MintLimitParams memory params,
+        PoolsharkStructs.MintLimitParams memory params,
         LimitPoolStructs.MintLimitCache memory cache
     ) internal returns (
-        LimitPoolStructs.MintLimitParams memory,
+        PoolsharkStructs.MintLimitParams memory,
         LimitPoolStructs.MintLimitCache memory
     )
     {
-        ConstantProduct.checkTicks(params.lower, params.upper, cache.constants.tickSpacing);
-
         cache.priceLower = ConstantProduct.getPriceAtTick(params.lower, cache.constants);
         cache.priceUpper = ConstantProduct.getPriceAtTick(params.upper, cache.constants);
         cache.mintSize = uint256(params.mintPercent) * uint256(params.amount) / 1e28;
@@ -88,7 +86,6 @@ library LimitPositions {
                     priceLimit: (params.zeroForOne ? cache.priceLower 
                                                    : cache.priceUpper).toUint160(),
                     amount: 0,
-                    //TODO: handle exactOut
                     exactIn: true,
                     zeroForOne: params.zeroForOne,
                     callbackData: abi.encodePacked(bytes1(0x0))
@@ -110,7 +107,6 @@ library LimitPositions {
                     to: params.to,
                     priceLimit: cache.priceLimit.toUint160(),
                     amount: params.amount,
-                    //TODO: handle exactOut
                     exactIn: true,
                     zeroForOne: params.zeroForOne,
                     callbackData: abi.encodePacked(bytes1(0x0))
@@ -184,11 +180,14 @@ library LimitPositions {
             cache.state.epoch += 1;
         }
 
-        /// @dev - for safety
         if (params.lower >= params.upper) {
             // zero out amount transferred in
             params.amount = 0;
         }
+
+        // liquidity overflow check
+        if (cache.state.liquidityGlobal + cache.liquidityMinted > uint128(type(int128).max))
+            require(false, 'LiquidityOverflow()');
 
         return (
             params,
@@ -200,7 +199,7 @@ library LimitPositions {
         LimitPoolStructs.MintLimitCache memory cache,
         mapping(int24 => LimitPoolStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
-        LimitPoolStructs.MintLimitParams memory params
+        PoolsharkStructs.MintLimitParams memory params
     ) internal returns (
         PoolsharkStructs.LimitPoolState memory,
         LimitPoolStructs.LimitPosition memory
@@ -250,9 +249,9 @@ library LimitPositions {
         mapping(int24 => PoolsharkStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
         LimitPoolStructs.BurnLimitCache memory cache,
-        LimitPoolStructs.BurnLimitParams memory params
+        PoolsharkStructs.BurnLimitParams memory params
     ) internal returns (
-        LimitPoolStructs.BurnLimitParams memory,
+        PoolsharkStructs.BurnLimitParams memory,
         LimitPoolStructs.BurnLimitCache memory
     )
     {
@@ -320,33 +319,25 @@ library LimitPositions {
             EchidnaAssertions.assertLiquidityGlobalUnderflows(cache.state.liquidityGlobal, cache.liquidityBurned, "LGU-2");
             cache.state.liquidityGlobal -= cache.liquidityBurned;
         }
+
+        // round back claim tick for storage
+        if (params.claim % cache.constants.tickSpacing != 0) {
+            cache.claim = params.claim;
+            params.claim = TickMap.roundBack(params.claim, cache.constants, params.zeroForOne, cache.priceClaim);
+        }
+
+        // clear filled position
         if (params.zeroForOne ? params.claim == cache.position.upper
                               : params.claim == cache.position.lower) {
             EchidnaAssertions.assertLiquidityGlobalUnderflows(cache.state.liquidityGlobal, cache.position.liquidity, "LGU-3");
             cache.state.liquidityGlobal -= cache.position.liquidity;
             cache.position.liquidity = 0;
         }
-        // clear out old position
-        if (params.zeroForOne ? params.claim != cache.position.lower 
-                              : params.claim != cache.position.upper) {
-            /// @dev - this also clears out position end claims
-            if (params.zeroForOne ? params.claim == cache.position.lower 
-                                  : params.claim == cache.position.upper) {
-                // subtract remaining position liquidity out from global
-                EchidnaAssertions.assertLiquidityGlobalUnderflows(cache.state.liquidityGlobal, cache.position.liquidity, "LGU-4");
-                cache.state.liquidityGlobal -= cache.position.liquidity;
-            }
-        }
+
         // clear position if empty
         if (cache.position.liquidity == 0) {
             cache.position.epochLast = 0;
             cache.position.crossedInto = false;
-        }
-
-        // round back claim tick for storage
-        if (params.claim % cache.constants.tickSpacing != 0) {
-            cache.claim = params.claim;
-            params.claim = TickMap.roundBack(params.claim, cache.constants, params.zeroForOne, cache.priceClaim);
         }
         
         emit BurnLimit(
@@ -373,7 +364,7 @@ library LimitPositions {
         mapping(int24 => PoolsharkStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
         LimitPoolStructs.BurnLimitCache memory cache,
-        LimitPoolStructs.BurnLimitParams memory params
+        PoolsharkStructs.BurnLimitParams memory params
     ) internal view returns (
         uint128 amountIn,
         uint128 amountOut
@@ -394,10 +385,10 @@ library LimitPositions {
     function _deltas(
         mapping(int24 => LimitPoolStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
-        LimitPoolStructs.BurnLimitParams memory params,
+        PoolsharkStructs.BurnLimitParams memory params,
         LimitPoolStructs.BurnLimitCache memory cache
     ) internal view returns (
-        LimitPoolStructs.BurnLimitParams memory,
+        PoolsharkStructs.BurnLimitParams memory,
         LimitPoolStructs.BurnLimitCache memory
     ) {
         cache = LimitPoolStructs.BurnLimitCache({
@@ -415,7 +406,8 @@ library LimitPositions {
             amountOut: 0,
             claim: params.claim,
             removeLower: false,
-            removeUpper: false
+            removeUpper: false,
+            search: false
         });
 
         // check claim is valid

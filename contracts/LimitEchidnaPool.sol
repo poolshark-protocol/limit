@@ -3,12 +3,12 @@ pragma solidity 0.8.13;
 
 import './LimitPool.sol';
 import './LimitPoolFactory.sol';
-import './utils/LimitPoolManager.sol';
 import './test/Token20.sol';
 import './libraries/utils/SafeTransfers.sol';
 import './utils/PositionERC1155.sol';
+import './utils/LimitPoolManager.sol';
+import './utils/PoolsharkRouter.sol';
 import './interfaces/structs/PoolsharkStructs.sol';
-
 
 // Fuzz LimitPool functionality
 contract EchidnaPool {
@@ -40,12 +40,28 @@ contract EchidnaPool {
     address private immutable tokenImpl;
     LimitPoolFactory private immutable factory;
     LimitPoolManager private immutable manager;
+    PoolsharkRouter private immutable router;
     LimitPool private pool;
     PositionERC1155 private immutable token;
     Token20 private tokenIn;
     Token20 private tokenOut;
     LimitPosition[] private limitPositions;
     RangePosition[] private rangePositions;
+
+    struct MintLimitArgs {
+        address[] pools;
+        PoolsharkStructs.MintLimitParams[] params;
+    }
+
+    struct MintRangeArgs {
+        address[] pools;
+        PoolsharkStructs.MintRangeParams[] params;
+    }
+
+    struct SwapArgs {
+        address[] pools;
+        PoolsharkStructs.SwapParams[] params;
+    }
 
     struct LimitPoolValues {
 
@@ -125,16 +141,18 @@ contract EchidnaPool {
     constructor() {
         manager = new LimitPoolManager();
         factory = new LimitPoolFactory(address(manager));
+        router = new PoolsharkRouter(address(factory), address(0), address(0));
         poolImpl = address(new LimitPool(address(factory)));
         tokenImpl = address(new PositionERC1155(address(factory)));
         
-        manager.enableImplementation(bytes32(uint256(0x1)), address(poolImpl), address(tokenImpl));
+        manager.enablePoolType(address(poolImpl), address(tokenImpl), bytes32(uint256(0x1)));
+        manager.enableFeeTier(500, 10);
         tickSpacing = 10;
         tokenIn = new Token20("IN", "IN", 18);
         tokenOut = new Token20("OUT", "OUT", 18);
 
         PoolsharkStructs.LimitPoolParams memory params;
-        params.poolType = bytes32(uint256(0x1));
+        params.poolTypeId = 0;
         params.tokenIn = address(tokenIn);
         params.tokenOut = address(tokenOut);
         params.swapFee = 500;
@@ -184,8 +202,13 @@ contract EchidnaPool {
         (, values.lowerTickBefore) = pool.ticks(lower);
         (, values.upperTickBefore) = pool.ticks(upper);
 
-        // ACTION 
-        pool.mintLimit(params);
+        // ACTION
+        MintLimitArgs memory args;
+        args.pools = new address[](1);
+        args.pools[0] = address(pool);
+        args.params = new PoolsharkStructs.MintLimitParams[](1);
+        args.params[0] = params;
+        router.multiMintLimit(args.pools, args.params);
         if (posCreated) limitPositions.push(LimitPosition(msg.sender, values.globalStateBefore.positionIdNext, lower, upper, zeroForOne));
 
         (, values.lowerTickAfter) = pool.ticks(lower);
@@ -326,7 +349,12 @@ contract EchidnaPool {
         (, values.upperTickBefore) = pool.ticks(upper);
 
         // ACTION 
-        pool.mintLimit(params);
+        MintLimitArgs memory args;
+        args.pools = new address[](1);
+        args.pools[0] = address(pool);
+        args.params = new PoolsharkStructs.MintLimitParams[](1);
+        args.params[0] = params;
+        router.multiMintLimit(args.pools, args.params);
         if (posCreated) limitPositions.push(LimitPosition(msg.sender, values.globalStateBefore.positionIdNext, lower, upper, zeroForOne));
 
         (, values.lowerTickAfter) = pool.ticks(lower);
@@ -440,7 +468,12 @@ contract EchidnaPool {
         params.callbackData = abi.encodePacked(address(this));
         
         // ACTION
-        pool.swap(params);
+        SwapArgs memory args;
+        args.pools = new address[](1);
+        args.pools[0] = address(pool);
+        args.params = new PoolsharkStructs.SwapParams[](1);
+        args.params[0] = params;
+        router.multiSwapSplit(args.pools, args.params);
 
         // POST CONDITIONS
         LimitPoolValues memory values;
@@ -760,8 +793,13 @@ contract EchidnaPool {
         emit PositionTicks(lower, upper);
         emit PositionCreated(posCreated);
 
-        // ACTION 
-        pool.mintRange(params);
+        // ACTION
+        MintRangeArgs memory args;
+        args.pools = new address[](1);
+        args.pools[0] = address(pool);
+        args.params = new PoolsharkStructs.MintRangeParams[](1);
+        args.params[0] = params;
+        router.multiMintRange(args.pools, args.params);
         if (posCreated) rangePositions.push(RangePosition(msg.sender, values.globalStateBefore.positionIdNext, lower, upper));
 
         (values.lowerTickAfter,) = pool.ticks(lower);
@@ -1011,27 +1049,13 @@ contract EchidnaPool {
         assert(values.globalStateBefore.liquidityGlobal == values.globalStateAfter.liquidityGlobal);
     }
 
-    function limitPoolSwapCallback(
-        int256 amount0Delta,
-        int256 amount1Delta,
-        bytes calldata data
-    ) external {
-        address token0 = LimitPool(pool).token0();
-        address token1 = LimitPool(pool).token1();
-        if (amount0Delta < 0) {
-            SafeTransfers.transferInto(token0, address(pool), uint256(-amount0Delta));
-        } else {
-            SafeTransfers.transferInto(token1, address(pool), uint256(-amount1Delta));
-        }
-    }
-
     function mintAndApprove() internal {
         tokenIn.mint(msg.sender, 100000000000 ether);
         tokenOut.mint(msg.sender, 100000000000 ether);
         tokenIn.mint(address(this), 100000000000 ether);
         tokenOut.mint(address(this), 100000000000 ether);
-        tokenIn.approve(address(pool), type(uint256).max);
-        tokenOut.approve(address(pool), type(uint256).max);
+        tokenIn.approve(address(router), type(uint256).max);
+        tokenOut.approve(address(router), type(uint256).max);
     }
 
     function _between(uint128 val, uint low, uint high) internal pure returns(uint128) {

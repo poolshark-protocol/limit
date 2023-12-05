@@ -60,31 +60,6 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
-        "internalType": "bytes32",
-        "name": "key",
-        "type": "bytes32"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "poolImpl",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "tokenImpl",
-        "type": "address"
-      }
-    ],
-    "name": "ImplementationEnabled",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
         "indexed": true,
         "internalType": "address",
         "name": "previousOwner",
@@ -98,6 +73,37 @@
       }
     ],
     "name": "OwnerTransfer",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "poolTypeName",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "poolImpl",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "tokenImpl",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint16",
+        "name": "poolTypeId",
+        "type": "uint16"
+      }
+    ],
+    "name": "PoolTypeEnabled",
     "type": "event"
   },
   {
@@ -136,15 +142,15 @@
       },
       {
         "indexed": false,
-        "internalType": "uint16[]",
+        "internalType": "int16[]",
         "name": "protocolFillFees0",
-        "type": "uint16[]"
+        "type": "int16[]"
       },
       {
         "indexed": false,
-        "internalType": "uint16[]",
+        "internalType": "int16[]",
         "name": "protocolFillFees1",
-        "type": "uint16[]"
+        "type": "int16[]"
       }
     ],
     "name": "ProtocolFillFeesModified",
@@ -161,15 +167,15 @@
       },
       {
         "indexed": false,
-        "internalType": "uint16[]",
+        "internalType": "int16[]",
         "name": "protocolSwapFees0",
-        "type": "uint16[]"
+        "type": "int16[]"
       },
       {
         "indexed": false,
-        "internalType": "uint16[]",
+        "internalType": "int16[]",
         "name": "protocolSwapFees1",
-        "type": "uint16[]"
+        "type": "int16[]"
       }
     ],
     "name": "ProtocolSwapFeesModified",

@@ -1,21 +1,21 @@
-import { log } from '@graphprotocol/graph-ts'
+import { Address, log } from '@graphprotocol/graph-ts'
 import { PoolCreated } from '../../generated/LimitPoolFactory/LimitPoolFactory'
-import { LimitPoolTemplate, PositionERC1155Template } from '../../generated/templates'
+import { LimitPoolTemplate, PositionERC1155Template, RangeStakerTemplate } from '../../generated/templates'
 import {
     fetchTokenSymbol,
     fetchTokenName,
     fetchTokenDecimals,
+    BIGINT_ONE,
 } from './utils/helpers'
-import { safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadToken } from './utils/loads'
+import { safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadLimitPoolToken, safeLoadToken } from './utils/loads'
 import { BigInt } from '@graphprotocol/graph-ts'
-import { FACTORY_ADDRESS, ONE_BI } from '../constants/constants'
+import { FACTORY_ADDRESS, ONE_BI, RANGE_STAKER_ADDRESS, STABLE_COINS, WETH_ADDRESS } from '../constants/constants'
 
 export function handlePoolCreated(event: PoolCreated): void {
     // grab event parameters
     let poolAddressParam = event.params.pool
     let poolTokenParam = event.params.token
-    let poolImplParam = event.params.poolImpl.toHex()
-    let tokenImplParam = event.params.tokenImpl.toHex()
+    let poolTypeParam = event.params.poolTypeId.toString()
     let token0Param = event.params.token0.toHex()
     let token1Param = event.params.token1.toHex()
     let swapFeeParam = BigInt.fromI32(event.params.swapFee)
@@ -31,6 +31,14 @@ export function handlePoolCreated(event: PoolCreated): void {
     let token1 = loadToken1.entity
     let pool = loadLimitPool.entity
     let factory = loadLimitPoolFactory.entity
+
+    let token0Pools = token0.pools
+    token0Pools.push(poolAddressParam.toHex())
+    token0.pools = token0Pools
+    
+    let token1Pools = token1.pools
+    token1Pools.push(poolAddressParam.toHex())
+    token1.pools = token1Pools
 
     if (!loadToken0.exists) {
         token0.symbol = fetchTokenSymbol(event.params.token0)
@@ -65,7 +73,8 @@ export function handlePoolCreated(event: PoolCreated): void {
     pool.swapFee = swapFeeParam
     pool.tickSpacing = tickSpacingParam
     pool.factory = factory.id
-    pool.implementation = poolImplParam.concat(tokenImplParam)
+    pool.poolType = poolTypeParam
+    pool.poolToken = poolTokenParam
     pool.samplesLength = BigInt.fromString('5')
 
     // creation stats
@@ -79,12 +88,38 @@ export function handlePoolCreated(event: PoolCreated): void {
     factory.poolCount = factory.poolCount.plus(ONE_BI)
     factory.txnCount  = factory.txnCount.plus(ONE_BI)
 
+    // update token0 whitelisted pools for usd price
+    if (STABLE_COINS.includes(token1.id) || token1.id == WETH_ADDRESS) {
+        if (!STABLE_COINS.includes(token0.id) && token0.id != WETH_ADDRESS) {
+            let whitelistPools = token0.whitelistPools
+            whitelistPools.push(poolAddressParam.toHex())
+            token0.whitelistPools = whitelistPools
+        }
+    }
+
+    // update token1 whitelisted pools for usd price
+    if (STABLE_COINS.includes(token0.id) || token0.id == WETH_ADDRESS) {
+        if (!STABLE_COINS.includes(token1.id) && token1.id != WETH_ADDRESS) {
+            let whitelistPools = token1.whitelistPools
+            whitelistPools.push(poolAddressParam.toHex())
+            token1.whitelistPools = whitelistPools
+        }
+    }
+
+    let loadPoolToken = safeLoadLimitPoolToken(poolTokenParam.toHex())
+    let poolToken = loadPoolToken.entity
+    poolToken.pool = poolAddressParam.toHex()
+
     pool.save()
     factory.save()
     token0.save()
     token1.save()
+    poolToken.save()
 
     // tracked events based on template
     LimitPoolTemplate.create(poolAddressParam)
     PositionERC1155Template.create(poolTokenParam)
+    if (factory.poolCount.equals(BIGINT_ONE)) {
+        RangeStakerTemplate.create(Address.fromString(RANGE_STAKER_ADDRESS))
+    }
 }

@@ -1,5 +1,5 @@
 import {
-    BigInt,
+    BigInt, log,
 } from '@graphprotocol/graph-ts'
 import {
     safeLoadLimitPool,
@@ -9,6 +9,7 @@ import {
     safeLoadBasePrice,
     safeLoadLimitPoolFactory,
     safeLoadMintRangeLog,
+    safeLoadTvlUpdateLog,
 } from '../utils/loads'
 import { BIGINT_ONE, convertTokenToDecimal } from '../utils/helpers'
 import { ONE_BI } from '../../constants/constants'
@@ -44,18 +45,18 @@ export function handleMintRange(event: MintRange): void {
     let token1 = loadToken1.entity
 
     // log mint action
-    let loadMintLog = safeLoadMintRangeLog(event.transaction.hash, poolAddress, positionIdParam)
-    let mintLog = loadMintLog.entity
-    if (!loadMintLog.exists) {
-        mintLog.sender = msgSender
-        mintLog.recipient = recipientParam
-        mintLog.lower = lower
-        mintLog.upper = upper
-        mintLog.positionId = positionIdParam
-        mintLog.pool = poolAddress
-    }
-    mintLog.liquidityMinted = mintLog.liquidityMinted.plus(liquidityMintedParam)
-    mintLog.save()
+    // let loadMintLog = safeLoadMintRangeLog(event.transaction.hash, poolAddress, positionIdParam)
+    // let mintLog = loadMintLog.entity
+    // if (!loadMintLog.exists) {
+    //     mintLog.sender = msgSender
+    //     mintLog.recipient = recipientParam
+    //     mintLog.lower = lower
+    //     mintLog.upper = upper
+    //     mintLog.positionId = positionIdParam
+    //     mintLog.pool = poolAddress
+    // }
+    // mintLog.liquidityMinted = mintLog.liquidityMinted.plus(liquidityMintedParam)
+    // mintLog.save()
 
     let loadLowerTick = safeLoadRangeTick(
         poolAddress,
@@ -78,10 +79,11 @@ export function handleMintRange(event: MintRange): void {
     lowerTick.liquidityAbsolute = lowerTick.liquidityAbsolute.plus(liquidityMintedParam)
     upperTick.liquidityAbsolute = upperTick.liquidityAbsolute.plus(liquidityMintedParam)
 
+    position.lower = lower
+    position.upper = upper
     if (!loadPosition.exists) {
         position.owner = recipientParam
-        position.lower = lower
-        position.upper = upper
+        position.staked = false
         position.pool = pool.id
         position.positionId = positionIdParam
         position.createdAtBlockNumber = event.block.number
@@ -94,8 +96,8 @@ export function handleMintRange(event: MintRange): void {
         pool.positionIdNext = positionIdParam.plus(BIGINT_ONE)
     }
 
-    let amount0 = convertTokenToDecimal(event.params.amount0Delta, token0.decimals)
-    let amount1 = convertTokenToDecimal(event.params.amount1Delta, token1.decimals)
+    let amount0 = convertTokenToDecimal(amount0DeltaParam, token0.decimals)
+    let amount1 = convertTokenToDecimal(amount1DeltaParam, token1.decimals)
     let amountUsd = amount0
     .times(token0.ethPrice.times(basePrice.USD))
     .plus(amount1.times(token1.ethPrice.times(basePrice.USD)))
@@ -106,8 +108,8 @@ export function handleMintRange(event: MintRange): void {
     factory.txnCount = factory.txnCount.plus(ONE_BI)
 
     // eth price updates
-    token0.ethPrice = findEthPerToken(token0, token1, basePrice)
-    token1.ethPrice = findEthPerToken(token1, token0, basePrice)
+    token0.ethPrice = findEthPerToken(token0, token1, pool, basePrice)
+    token1.ethPrice = findEthPerToken(token1, token0, pool, basePrice)
     token0.usdPrice = token0.ethPrice.times(basePrice.USD)
     token1.usdPrice = token1.ethPrice.times(basePrice.USD)
 
@@ -116,11 +118,29 @@ export function handleMintRange(event: MintRange): void {
     token1.totalValueLocked = token1.totalValueLocked.plus(amount1)
     pool.totalValueLocked0 = pool.totalValueLocked0.plus(amount0)
     pool.totalValueLocked1 = pool.totalValueLocked1.plus(amount1)
-    let updateTvlRet = updateDerivedTVLAmounts(token0, token1, pool, factory, oldPoolTVLETH)
+    let updateTvlRet = updateDerivedTVLAmounts(token0, token1, pool, factory, basePrice, oldPoolTVLETH)
     token0 = updateTvlRet.token0
     token1 = updateTvlRet.token1
     pool = updateTvlRet.pool
     factory = updateTvlRet.factory
+
+    // let loadTvlUpdateLog = safeLoadTvlUpdateLog(event.transaction.hash, poolAddress)
+    // let tvlUpdateLog = loadTvlUpdateLog.entity
+
+    // tvlUpdateLog.pool = poolAddress
+    // tvlUpdateLog.eventName = "MintRange"
+    // tvlUpdateLog.txnHash = event.transaction.hash
+    // tvlUpdateLog.txnBlockNumber = event.block.number
+    // tvlUpdateLog.amount0Change = amount0
+    // tvlUpdateLog.amount1Change = amount1
+    // tvlUpdateLog.amount0Total = pool.totalValueLocked0
+    // tvlUpdateLog.amount1Total = pool.totalValueLocked1
+    // tvlUpdateLog.token0UsdPrice = token0.usdPrice
+    // tvlUpdateLog.token1UsdPrice = token1.usdPrice
+    // tvlUpdateLog.amountUsdChange = amountUsd
+    // tvlUpdateLog.amountUsdTotal = pool.totalValueLockedUsd
+
+    // tvlUpdateLog.save()
 
     if (
         pool.tickAtPrice !== null &&
@@ -131,6 +151,11 @@ export function handleMintRange(event: MintRange): void {
         pool.poolLiquidity = pool.poolLiquidity.plus(liquidityMintedParam)
     }
     position.liquidity = position.liquidity.plus(liquidityMintedParam)
+    pool.liquidityGlobal = pool.liquidityGlobal.plus(liquidityMintedParam)
+
+    if (token1.symbol == 'USDC') {
+        log.info('USDC price at mint time: {}', [token1.usdPrice.toString()])
+    }
     
     basePrice.save()
     pool.save()

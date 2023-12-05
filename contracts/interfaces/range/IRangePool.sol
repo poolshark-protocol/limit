@@ -22,7 +22,7 @@ interface IRangePool is RangePoolStructs {
 
     function quote(
         QuoteParams memory params
-    ) external returns (
+    ) external view returns (
         uint256 inAmount,
         uint256 outAmount,
         uint160 priceAfter
@@ -37,7 +37,36 @@ interface IRangePool is RangePoolStructs {
         uint128 feesOwed1
     );
 
-    function increaseSampleLength(
-        uint16 sampleLengthNext
+    function sample(
+        uint32[] memory secondsAgo
+    ) external view returns(
+        int56[]   memory tickSecondsAccum,
+        uint160[] memory secondsPerLiquidityAccum,
+        uint160 averagePrice,
+        uint128 averageLiquidity,
+        int24 averageTick
+    );
+
+    function positions(uint256 positionId) external view returns (
+        uint256 feeGrowthInside0Last,
+        uint256 feeGrowthInside1Last,
+        uint128 liquidity,
+        int24 lower,
+        int24 upper
+    );
+
+    function increaseSampleCount(
+        uint16 newSampleCountMax
     ) external;
+
+    function ticks(int24) external view returns (
+        RangeTick memory,
+        LimitTick memory
+    );
+
+    function samples(uint256) external view returns (
+        uint32,
+        int56,
+        uint160
+    );
 }

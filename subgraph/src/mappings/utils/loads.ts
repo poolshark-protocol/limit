@@ -1,11 +1,12 @@
 import { Address, BigDecimal, BigInt, Bytes, ethereum, log } from '@graphprotocol/graph-ts'
-import { LimitPool, LimitPoolFactory, LimitPoolManager, LimitPosition, Token, FeeTier, BasePrice, RangePosition, RangeTick, Transaction, LimitTick, Swap, CompoundRangeLog, MintRangeLog, BurnRangeLog, PoolRouter } from '../../../generated/schema'
+import { LimitPool, LimitPoolFactory, LimitPoolManager, LimitPosition, Token, FeeTier, BasePrice, RangePosition, RangeTick, Transaction, LimitTick, Swap, CompoundRangeLog, MintRangeLog, BurnRangeLog, PoolRouter, TvlUpdateLog, HistoricalOrder, TotalSeasonReward, UserSeasonReward, LimitPoolToken } from '../../../generated/schema'
 import { ONE_BD } from '../../constants/constants'
 import {
     fetchTokenSymbol,
     fetchTokenName,
     fetchTokenDecimals,
     BIGINT_ZERO,
+    BIGDECIMAL_ZERO,
 } from './helpers'
 import { bigDecimalExponated, safeDiv } from './math'
 import { getEthPriceInUSD } from './price'
@@ -208,15 +209,34 @@ class LoadLimitPoolRet {
 }
 export function safeLoadLimitPool(poolAddress: string): LoadLimitPoolRet {
     let exists = true
-    let coverPoolEntity = LimitPool.load(poolAddress)
+    let limitPoolEntity = LimitPool.load(poolAddress)
 
-    if (!coverPoolEntity) {
-        coverPoolEntity = new LimitPool(poolAddress)
+    if (!limitPoolEntity) {
+        limitPoolEntity = new LimitPool(poolAddress)
         exists = false
     }
 
     return {
-        entity: coverPoolEntity,
+        entity: limitPoolEntity,
+        exists: exists,
+    }
+}
+
+class LoadLimitPoolTokenRet {
+    entity: LimitPoolToken
+    exists: boolean
+}
+export function safeLoadLimitPoolToken(poolTokenAddress: string): LoadLimitPoolTokenRet {
+    let exists = true
+    let limitPoolTokenEntity = LimitPoolToken.load(poolTokenAddress)
+
+    if (!limitPoolTokenEntity) {
+        limitPoolTokenEntity = new LimitPoolToken(poolTokenAddress)
+        exists = false
+    }
+
+    return {
+        entity: limitPoolTokenEntity,
         exists: exists,
     }
 }
@@ -338,6 +358,30 @@ export function safeLoadRangePositionById(
     }
 }
 
+class LoadTvlUpdateLog {
+    entity: TvlUpdateLog
+    exists: boolean
+}
+export function safeLoadTvlUpdateLog(txnHash: Bytes, pool: string): LoadTvlUpdateLog {
+    let exists = true
+
+    let tvlUpdateLogId = txnHash.toString()
+                    .concat('-')
+                    .concat(pool)
+
+    let tvlUpdateLogEntity = TvlUpdateLog.load(tvlUpdateLogId)
+
+    if (!tvlUpdateLogEntity) {
+        tvlUpdateLogEntity = new TvlUpdateLog(tvlUpdateLogId)
+        exists = false
+    }
+
+    return {
+        entity: tvlUpdateLogEntity,
+        exists: exists,
+    }
+}
+
 class LoadMintRangeLogRet {
     entity: MintRangeLog
     exists: boolean
@@ -412,6 +456,85 @@ export function safeLoadCompoundRangeLog(txnHash: Bytes, pool: string, positionI
 
     return {
         entity: compoundLogEntity,
+        exists: exists,
+    }
+}
+
+class LoadHistoricalOrderRet {
+    entity: HistoricalOrder
+    exists: boolean
+}
+export function safeLoadHistoricalOrder(tokenInAddress: string, tokenOutAddress: string, poolAddress: string, txnHashOrPositionId: string): LoadHistoricalOrderRet {
+    let exists = true
+
+    let historicalOrderId = tokenInAddress
+                            .concat('-')
+                            .concat(tokenOutAddress)
+                            .concat('-')
+                            .concat(poolAddress)
+                            .concat('-')
+                            .concat(txnHashOrPositionId)
+
+    let historicalOrderEntity = HistoricalOrder.load(historicalOrderId)
+
+    if (!historicalOrderEntity) {
+        historicalOrderEntity = new HistoricalOrder(historicalOrderId)
+<<<<<<< HEAD
+        historicalOrderEntity.positionId = BIGINT_ZERO
+=======
+>>>>>>> master
+        historicalOrderEntity.tokenIn = tokenInAddress
+        historicalOrderEntity.tokenOut = tokenOutAddress
+        historicalOrderEntity.amountIn = BIGDECIMAL_ZERO
+        historicalOrderEntity.amountOut = BIGDECIMAL_ZERO
+        historicalOrderEntity.completed = true
+
+        exists = false
+    }
+
+    return {
+        entity: historicalOrderEntity,
+        exists: exists,
+    }
+}
+
+class LoadTotalSeasonRewardRet {
+    entity: TotalSeasonReward
+    exists: boolean
+}
+export function safeLoadTotalSeasonReward(factoryAddress: string): LoadTotalSeasonRewardRet {
+    let exists = true
+
+    let totalSeasonRewardEntity = TotalSeasonReward.load(factoryAddress)
+
+    if (!totalSeasonRewardEntity) {
+        totalSeasonRewardEntity = new TotalSeasonReward(factoryAddress)
+        exists = false
+    }
+
+    return {
+        entity: totalSeasonRewardEntity,
+        exists: exists,
+    }
+}
+
+class LoadUserSeasonRewardRet {
+    entity: UserSeasonReward
+    exists: boolean
+}
+export function safeLoadUserSeasonReward(userAddress: string): LoadUserSeasonRewardRet {
+    let exists = true
+
+    let userSeasonRewardEntity = UserSeasonReward.load(userAddress)
+
+    if (!userSeasonRewardEntity) {
+        userSeasonRewardEntity = new UserSeasonReward(userAddress)
+
+        exists = false
+    }
+
+    return {
+        entity: userSeasonRewardEntity,
         exists: exists,
     }
 }

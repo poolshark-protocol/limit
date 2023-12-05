@@ -41,7 +41,10 @@ export function tokenAmountToDecimal(tokenAmount: BigInt, exchangeDecimals: BigI
   if (exchangeDecimals == ZERO_BI) {
     return tokenAmount.toBigDecimal()
   }
-  return tokenAmount.toBigDecimal().div(exponentToBigDecimal(exchangeDecimals))
+  return safeDiv(
+    tokenAmount.toBigDecimal(),
+    exponentToBigDecimal(exchangeDecimals)
+  )
 }
 
 export function priceToDecimal(amount: BigDecimal, exchangeDecimals: BigInt): BigDecimal {
@@ -72,7 +75,10 @@ export function convertTokenToDecimal(tokenAmount: BigInt, exchangeDecimals: Big
   if (exchangeDecimals == ZERO_BI) {
     return tokenAmount.toBigDecimal()
   }
-  return tokenAmount.toBigDecimal().div(exponentToBigDecimal(exchangeDecimals))
+  return safeDiv(
+    tokenAmount.toBigDecimal(),
+    exponentToBigDecimal(exchangeDecimals)
+  )
 }
 
 export function bigInt1e38(): BigInt {

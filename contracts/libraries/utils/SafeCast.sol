@@ -63,4 +63,11 @@ library SafeCast {
         if(y < 0) require(false, 'Int256ToUint256:Underflow()');
         z = uint256(y);
     }
+
+    /// @notice Cast a uint256 to a uint16, revert on overflow
+    /// @param y The uint256 to be downcasted
+    /// @return z The downcasted integer, now type uint128
+    function toUint16(uint256 y) internal pure returns (uint16 z) {
+        if((z = uint16(y)) != y) require(false, 'Uint256ToUint16:Overflow()');
+    }
 }

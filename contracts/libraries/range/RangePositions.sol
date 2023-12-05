@@ -18,18 +18,6 @@ library RangePositions {
     using SafeCast for int256;
     using SafeCast for int128;
 
-    error NotEnoughPositionLiquidity();
-    error InvalidClaimTick();
-    error LiquidityOverflow();
-    error WrongTickClaimedAt();
-    error NoLiquidityBeingAdded();
-    error PositionNotUpdated();
-    error InvalidLowerTick();
-    error InvalidUpperTick();
-    error InvalidPositionAmount();
-    error InvalidPositionBoundsOrder();
-    error NotImplementedYet();
-
     uint256 internal constant Q96 = 0x1000000000000000000000000;
     uint256 internal constant Q128 = 0x100000000000000000000000000000000;
 
@@ -53,8 +41,6 @@ library RangePositions {
         RangePoolStructs.MintRangeParams memory,
         RangePoolStructs.MintRangeCache memory
     ) {
-        RangeTicks.validate(cache.position.lower, cache.position.upper, cache.constants.tickSpacing);
-
         cache.liquidityMinted = ConstantProduct.getLiquidityForAmounts(
             cache.priceLower,
             cache.priceUpper,
@@ -70,7 +56,8 @@ library RangePositions {
             cache.liquidityMinted,
             true
         );
-        if (cache.liquidityMinted > uint128(type(int128).max)) require(false, 'LiquidityOverflow()');
+        if (cache.state.liquidityGlobal + cache.liquidityMinted > uint128(type(int128).max))
+            require(false, 'LiquidityOverflow()');
 
         return (params, cache);
     }
@@ -129,7 +116,7 @@ library RangePositions {
     ) {
         cache.priceLower = ConstantProduct.getPriceAtTick(cache.position.lower, cache.constants);
         cache.priceUpper = ConstantProduct.getPriceAtTick(cache.position.upper, cache.constants);
-        cache.liquidityBurned = uint256(params.burnPercent) * cache.position.liquidity / 1e38;
+        cache.liquidityBurned = _convert(cache.position.liquidity, params.burnPercent);
         if (cache.liquidityBurned  == 0) {
             return cache;
         }
@@ -165,8 +152,6 @@ library RangePositions {
             cache.amount1
         );
         if (cache.position.liquidity == 0) {
-            cache.position.feeGrowthInside0Last = 0;
-            cache.position.feeGrowthInside1Last = 0;
             cache.position.lower = 0;
             cache.position.upper = 0;
         }
@@ -239,7 +224,7 @@ library RangePositions {
         RangePoolStructs.RangePositionCache memory cache;
         /// @dev - only true if burn call
         if (params.burnPercent > 0) {
-            cache.liquidityAmount = uint256(params.burnPercent) * position.liquidity / 1e38;
+            cache.liquidityAmount = _convert(position.liquidity, params.burnPercent);
             if (position.liquidity == cache.liquidityAmount)
                 IPositionERC1155(constants.poolToken).burn(msg.sender, params.positionId, 1, constants);
         }
@@ -371,7 +356,9 @@ library RangePositions {
         );
 
         cache.tick = state.pool.tickAtPrice;
-        if (cache.position.lower >= cache.tick) {
+
+        if (cache.tick < cache.position.lower) {
+            // lower accum values are greater
             return (
                 cache.tickSecondsAccumLower - cache.tickSecondsAccumUpper,
                 cache.secondsPerLiquidityAccumLower - cache.secondsPerLiquidityAccumUpper,
@@ -379,15 +366,16 @@ library RangePositions {
                 cache.amount1
             );
         } else if (cache.position.upper >= cache.tick) {
+            // grab current sample
             cache.blockTimestamp = uint32(block.timestamp);
             (
                 cache.tickSecondsAccum,
                 cache.secondsPerLiquidityAccum
             ) = Samples.getSingle(
-                IPool(address(this)), 
+                IRangePool(address(this)), 
                 RangePoolStructs.SampleParams(
                     cache.samples.index,
-                    cache.samples.length,
+                    cache.samples.count,
                     uint32(block.timestamp),
                     new uint32[](2),
                     cache.tick,
@@ -406,6 +394,26 @@ library RangePositions {
                 cache.amount0,
                 cache.amount1
             );
+        } else {
+            // upper accum values are greater
+            return (
+                cache.tickSecondsAccumUpper - cache.tickSecondsAccumLower,
+                cache.secondsPerLiquidityAccumUpper - cache.secondsPerLiquidityAccumLower,
+                cache.amount0,
+                cache.amount1
+            );
         }
+    }
+
+    function _convert(
+        uint128 liquidity,
+        uint128 percent
+    ) internal pure returns (
+        uint128
+    ) {
+        // convert percentage to liquidity amount
+        if (percent > 1e38) percent = 1e38;
+        if (liquidity == 0 && percent > 0) require (false, 'PositionNotFound()');
+        return uint128(uint256(liquidity) * uint256(percent) / 1e38);
     }
 }

@@ -111,7 +111,14 @@
         "internalType": "uint128",
         "name": "amount0",
         "type": "uint128"
-      },
+      }
+    ],
+    "name": "CollectRange0",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
       {
         "indexed": false,
         "internalType": "uint128",
@@ -119,7 +126,7 @@
         "type": "uint128"
       }
     ],
-    "name": "CollectRange",
+    "name": "CollectRange1",
     "type": "event"
   },
   {
@@ -220,12 +227,6 @@
       {
         "indexed": false,
         "internalType": "uint128",
-        "name": "amountFilled",
-        "type": "uint128"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint128",
         "name": "liquidityMinted",
         "type": "uint128"
       }
@@ -288,11 +289,11 @@
       {
         "indexed": false,
         "internalType": "uint16",
-        "name": "sampleLengthNext",
+        "name": "newSampleCountMax",
         "type": "uint16"
       }
     ],
-    "name": "SampleLengthIncreased",
+    "name": "SampleCountIncreased",
     "type": "event"
   },
   {

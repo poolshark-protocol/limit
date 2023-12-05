@@ -1,4 +1,4 @@
-import { BigInt } from "@graphprotocol/graph-ts"
+import { BigInt, log } from "@graphprotocol/graph-ts"
 import { Initialize } from "../../../generated/LimitPoolFactory/LimitPool"
 import { safeLoadBasePrice, safeLoadLimitPool, safeLoadLimitTick, safeLoadRangeTick, safeLoadToken } from "../utils/loads"
 import { sqrtPriceX96ToTokenPrices, findEthPerToken } from "../utils/price"
@@ -45,10 +45,14 @@ export function handleInitialize(event: Initialize): void {
     let basePrice = loadBasePrice.entity
 
     // price updates
-    token0.ethPrice = findEthPerToken(token0, token1, basePrice)
-    token1.ethPrice = findEthPerToken(token1, token0, basePrice)
+    token0.ethPrice = findEthPerToken(token0, token1, pool, basePrice)
+    token1.ethPrice = findEthPerToken(token1, token0, pool, basePrice)
     token0.usdPrice = token0.ethPrice.times(basePrice.USD)
     token1.usdPrice = token1.ethPrice.times(basePrice.USD)
+
+    if (token1.symbol == 'WBTC') {
+        log.info('USDC price at pool creation time: {}', [token1.usdPrice.toString()])
+    }
 
     pool.save()
     token0.save()

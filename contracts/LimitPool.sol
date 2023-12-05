@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.13;
 
+import './interfaces/IPool.sol';
 import './interfaces/range/IRangePool.sol';
 import './interfaces/limit/ILimitPool.sol';
-import './interfaces/IPool.sol';
+import './interfaces/limit/ILimitPoolView.sol';
 import './interfaces/limit/ILimitPoolManager.sol';
 import './base/storage/LimitPoolStorage.sol';
 import './base/storage/LimitPoolImmutables.sol';
-import './utils/LimitPoolErrors.sol';
 import './libraries/pool/SwapCall.sol';
 import './libraries/pool/QuoteCall.sol';
 import './libraries/pool/FeesCall.sol';
@@ -28,7 +28,7 @@ import './external/openzeppelin/security/ReentrancyGuard.sol';
 /// @notice Poolshark Limit Pool Implementation
 contract LimitPool is
     ILimitPool,
-    IRangePool,
+    ILimitPoolView,
     LimitPoolStorage,
     LimitPoolImmutables,
     ReentrancyGuard
@@ -48,7 +48,7 @@ contract LimitPool is
         _;
     }
 
-    modifier canoncialOnly() {
+    modifier canonicalOnly() {
         _onlyCanoncialClones();
         _;
     }
@@ -65,10 +65,10 @@ contract LimitPool is
 
     function initialize(
         uint160 startPrice
-    ) external override 
+    ) external  
         nonReentrant(globalState)
         factoryOnly
-        canoncialOnly
+        canonicalOnly
     {
         // initialize state
         globalState = Ticks.initialize(
@@ -83,9 +83,9 @@ contract LimitPool is
 
     function mintRange(
         MintRangeParams memory params
-    ) external override
+    ) external 
         nonReentrant(globalState)
-        canoncialOnly
+        canonicalOnly
     {
         MintRangeCache memory cache;
         cache.constants = immutables();
@@ -102,9 +102,9 @@ contract LimitPool is
 
     function burnRange(
         BurnRangeParams memory params
-    ) external override
+    ) external 
         nonReentrant(globalState)
-        canoncialOnly
+        canonicalOnly
     {
         BurnRangeCache memory cache;
         cache.constants = immutables();
@@ -122,9 +122,9 @@ contract LimitPool is
     //limitSwap
     function mintLimit(
         MintLimitParams memory params
-    ) external override
+    ) external 
         nonReentrant(globalState)
-        canoncialOnly
+        canonicalOnly
     {
         MintLimitCache memory cache;
         cache.constants = immutables();
@@ -142,9 +142,9 @@ contract LimitPool is
 
     function burnLimit(
         BurnLimitParams memory params
-    ) external override
+    ) external 
         nonReentrant(globalState)
-        canoncialOnly
+        canonicalOnly
     {
         BurnLimitCache memory cache;
         cache.constants = immutables();
@@ -160,9 +160,9 @@ contract LimitPool is
 
     function swap(
         SwapParams memory params
-    ) external override
+    ) external 
         nonReentrant(globalState)
-        canoncialOnly
+        canonicalOnly
     returns (
         int256,
         int256
@@ -181,25 +181,25 @@ contract LimitPool is
         );
     }
 
-    function increaseSampleLength(
-        uint16 sampleLengthNext
-    ) external override
+    function increaseSampleCount(
+        uint16 newSampleCountMax
+    ) external 
         nonReentrant(globalState)
-        canoncialOnly 
+        canonicalOnly 
     {
         Samples.expand(
             samples,
             globalState.pool,
-            sampleLengthNext
+            newSampleCountMax
         );
     }
 
     function fees(
         FeesParams memory params
-    ) external override
+    ) external 
         ownerOnly
         nonReentrant(globalState)
-        canoncialOnly 
+        canonicalOnly 
     returns (
         uint128 token0Fees,
         uint128 token1Fees
@@ -213,7 +213,7 @@ contract LimitPool is
 
     function quote(
         QuoteParams memory params
-    ) external override
+    ) external
     returns (
         uint256,
         uint256,
@@ -233,7 +233,7 @@ contract LimitPool is
 
     function sample(
         uint32[] memory secondsAgo
-    ) external view
+    ) external view override
     returns(
         int56[]   memory tickSecondsAccum,
         uint160[] memory secondsPerLiquidityAccum,
@@ -251,7 +251,7 @@ contract LimitPool is
 
     function snapshotRange(
         uint32 positionId 
-    ) external view override returns (
+    ) external view  returns (
         int56   tickSecondsAccum,
         uint160 secondsPerLiquidityAccum,
         uint128 feesOwed0,
@@ -268,7 +268,7 @@ contract LimitPool is
 
     function snapshotLimit(
         SnapshotLimitParams memory params
-    ) external view override returns(
+    ) external view  returns(
         uint128,
         uint128
     ) {
@@ -340,7 +340,7 @@ contract LimitPool is
     function getResizedTicksForBurn(
         BurnLimitParams memory params
     ) external returns (int24 lower, int24 upper, bool positionExists){
-        if (params.to == address(0)) revert CollectToZeroAddress();
+        if (params.to == address(0)) require(false, 'CollectToZeroAddress()');
         BurnLimitCache memory cache;
         cache.constants = immutables();
 
@@ -376,7 +376,7 @@ contract LimitPool is
     }
 
     function _onlyOwner() private view {
-        if (msg.sender != owner()) revert OwnerOnly();
+        if (msg.sender != owner()) require(false, 'OwnerOnly()');
     }
 
     function _onlyCanoncialClones() private view {
@@ -411,6 +411,6 @@ contract LimitPool is
     }
 
     function _onlyFactory() private view {
-        if (msg.sender != factory) revert FactoryOnly();
+        if (msg.sender != factory) require(false, 'FactoryOnly()');
     }
 }

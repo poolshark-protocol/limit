@@ -15,18 +15,6 @@
         "type": "address"
       },
       {
-        "indexed": false,
-        "internalType": "address",
-        "name": "poolImpl",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "tokenImpl",
-        "type": "address"
-      },
-      {
         "indexed": true,
         "internalType": "address",
         "name": "token0",
@@ -49,6 +37,12 @@
         "internalType": "int16",
         "name": "tickSpacing",
         "type": "int16"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint16",
+        "name": "poolTypeId",
+        "type": "uint16"
       }
     ],
     "name": "PoolCreated",

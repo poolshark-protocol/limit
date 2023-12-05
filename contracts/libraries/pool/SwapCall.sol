@@ -2,7 +2,7 @@
 pragma solidity 0.8.13;
 
 import '../../interfaces/structs/LimitPoolStructs.sol';
-import '../../interfaces/callbacks/ILimitPoolSwapCallback.sol';
+import '../../interfaces/callbacks/ILimitPoolCallback.sol';
 import '../../interfaces/IERC20Minimal.sol';
 import '../Ticks.sol';
 import '../utils/Collect.sol';
@@ -32,7 +32,14 @@ library SwapCall {
         int256,
         int256
     ) {
+        // check for invalid receiver
+        if (params.to == address(0))
+            require(false, "CollectToZeroAddress()");
+        
+        // initialize state
         cache.state = globalState;
+        
+        // execute swap
         cache = Ticks.swap(
             ticks,
             samples,
@@ -41,6 +48,8 @@ library SwapCall {
             params,
             cache
         );
+
+        // save state for reentrancy protection
         save(cache, globalState, params.zeroForOne);
         EchidnaAssertions.assertPoolBalanceExceeded(
             (params.zeroForOne ? balance(cache.constants.token1) : balance(cache.constants.token0)),
@@ -63,8 +72,9 @@ library SwapCall {
         );
 
         // check balance requirements after callback
-        if (balance(params, cache) < balanceStart + cache.input)
-            require(false, 'SwapInputAmountTooLow()');
+        if (balance(params, cache) < balanceStart + cache.input) {
+           require(false, 'SwapInputAmountTooLow()');
+        }
 
         return (
             params.zeroForOne ? 

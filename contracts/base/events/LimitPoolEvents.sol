@@ -2,7 +2,7 @@
 pragma solidity 0.8.13;
 
 abstract contract LimitPoolEvents {
-    event Initialize( 
+    event Initialize(
         int24 minTick,
         int24 maxTick,
         uint160 startPrice,
@@ -23,15 +23,13 @@ abstract contract LimitPoolEvents {
         bool indexed exactIn
     );
 
-
     event SampleRecorded(
         int56 tickSecondsAccum,
         uint160 secondsPerLiquidityAccum
     );
 
-
-    event SampleLengthIncreased(
-        uint16 sampleLengthNext
+    event SampleCountIncreased(
+        uint16 newSampleCountMax
     );
 
     event MintRange(
@@ -57,8 +55,11 @@ abstract contract LimitPoolEvents {
         uint128 liquidityCompounded
     );
 
-    event CollectRange(
-        uint128 amount0,
+    event CollectRange0(
+        uint128 amount0
+    );
+
+    event CollectRange1(
         uint128 amount1
     );
 
@@ -76,7 +77,6 @@ abstract contract LimitPoolEvents {
         uint32 positionId,
         uint32 epochLast,
         uint128 amountIn,
-        uint128 amountFilled,
         uint128 liquidityMinted
     );
 

@@ -3,22 +3,22 @@ pragma solidity 0.8.13;
 
 import './interfaces/range/IRangePool.sol';
 import './interfaces/limit/ILimitPool.sol';
+import './interfaces/limit/ILimitPoolView.sol';
 import './interfaces/structs/LimitPoolStructs.sol';
 import './interfaces/structs/RangePoolStructs.sol';
 import './interfaces/limit/ILimitPoolFactory.sol';
 import './interfaces/limit/ILimitPoolManager.sol';
 import './base/events/LimitPoolFactoryEvents.sol';
-import './utils/LimitPoolErrors.sol';
 import './external/solady/LibClone.sol';
 import './libraries/utils/SafeCast.sol';
+import './libraries/utils/PositionTokens.sol';
 import './libraries/math/ConstantProduct.sol';
 
 contract LimitPoolFactory is 
     ILimitPoolFactory,
     LimitPoolStructs,
     RangePoolStructs,
-    LimitPoolFactoryEvents,
-    LimitPoolFactoryErrors
+    LimitPoolFactoryEvents
 {
     using LibClone for address;
     using SafeCast for uint256;
@@ -39,10 +39,9 @@ contract LimitPoolFactory is
         address pool,
         address poolToken
     ) {
-
         // validate token pair
         if (params.tokenIn == params.tokenOut || params.tokenIn == address(0) || params.tokenOut == address(0)) {
-            revert InvalidTokenAddress();
+            require(false, 'InvalidTokenAddress()');
         }
 
         // sort tokens by address
@@ -53,14 +52,14 @@ contract LimitPoolFactory is
         // check if tick spacing supported
         constants.swapFee = params.swapFee;
         constants.tickSpacing = ILimitPoolManager(owner).feeTiers(params.swapFee);
-        if (constants.tickSpacing == 0) revert FeeTierNotSupported();
+        if (constants.tickSpacing == 0) require(false, 'FeeTierNotSupported()');
 
         // check if pool type supported
         (
             address poolImpl,
             address tokenImpl
-         ) = ILimitPoolManager(owner).implementations(params.poolType);
-        if (poolImpl == address(0) || tokenImpl == address(0)) revert PoolTypeNotSupported();
+         ) = ILimitPoolManager(owner).poolTypes(params.poolTypeId);
+        if (poolImpl == address(0) || tokenImpl == address(0)) require(false, 'PoolTypeNotSupported()');
 
         // generate key for pool
         bytes32 key = keccak256(abi.encode(
@@ -71,7 +70,7 @@ contract LimitPoolFactory is
         ));
 
         // check if pool already exists
-        if (pools[key] != address(0)) revert PoolAlreadyExists();
+        if (pools[key] != address(0)) require(false, 'PoolAlreadyExists()');
 
         // set immutables
         constants.owner = owner;
@@ -80,14 +79,15 @@ contract LimitPoolFactory is
         (
             constants.bounds.min,
             constants.bounds.max
-        ) = ILimitPool(poolImpl).priceBounds(constants.tickSpacing);
+        ) = ILimitPoolView(poolImpl).priceBounds(constants.tickSpacing);
 
         // take that ERC1155 contract address and pass that into pool
         // launch pool token
         constants.poolToken = tokenImpl.cloneDeterministic({
             salt: key,
             data: abi.encodePacked(
-                poolImpl
+                PositionTokens.name(constants.token0, constants.token1),
+                PositionTokens.symbol(constants.token0, constants.token1)
             )
         });
 
@@ -115,66 +115,22 @@ contract LimitPoolFactory is
 
         emit PoolCreated(
             pool,
-            poolToken,
-            poolImpl,
-            tokenImpl,
+            constants.poolToken,
             constants.token0,
             constants.token1,
             constants.swapFee,
-            constants.tickSpacing
+            constants.tickSpacing,
+            params.poolTypeId
         );
 
         return (pool, constants.poolToken);
     }
 
-    function createLimitPoolAndMint(
-        LimitPoolParams memory params,
-        MintRangeParams[] memory mintRangeParams,
-        MintLimitParams[] memory mintLimitParams
-    ) external returns (
-        address pool,
-        address poolToken
-    ) {
-        // check if pool exists
-        (
-            pool,
-            poolToken
-        ) = getLimitPool(
-            params.poolType,
-            params.tokenIn,
-            params.tokenOut,
-            params.swapFee
-        );
-        // create if pool doesn't exist
-        if (pool == address(0)) {
-            (
-                pool,
-                poolToken
-            ) = createLimitPool(
-                params
-            );
-        }
-        // mint initial range positions
-        for (uint i = 0; i < mintRangeParams.length;) {
-            IRangePool(pool).mintRange(mintRangeParams[i]);
-            unchecked {
-                ++i;
-            }
-        }
-        // mint initial limit positions
-        for (uint i = 0; i < mintLimitParams.length;) {
-            ILimitPool(pool).mintLimit(mintLimitParams[i]);
-            unchecked {
-                ++i;
-            }
-        }
-    } 
-
     function getLimitPool(
-        bytes32 poolType,
         address tokenIn,
         address tokenOut,
-        uint16 swapFee
+        uint16 swapFee,
+        uint16 poolTypeId
     ) public view override returns (
         address pool,
         address poolToken
@@ -185,14 +141,14 @@ contract LimitPoolFactory is
 
         // check if tick spacing supported
         int16 tickSpacing = ILimitPoolManager(owner).feeTiers(swapFee);
-        if (tickSpacing == 0) revert FeeTierNotSupported();
+        if (tickSpacing == 0) require(false, 'FeeTierNotSupported()');
 
         // check if pool type supported
         (
             address poolImpl,
             address tokenImpl
-         ) = ILimitPoolManager(owner).implementations(poolType);
-        if (poolImpl == address(0) || tokenImpl == address(0)) revert PoolTypeNotSupported();
+         ) = ILimitPoolManager(owner).poolTypes(poolTypeId);
+        if (poolImpl == address(0) || tokenImpl == address(0)) require(false, 'PoolTypeNotSupported()');
 
         // generate key for pool
         bytes32 key = keccak256(abi.encode(
@@ -207,7 +163,8 @@ contract LimitPoolFactory is
         poolToken = LibClone.predictDeterministicAddress(
             tokenImpl,
             abi.encodePacked(
-                poolImpl
+                PositionTokens.name(token0, token1),
+                PositionTokens.symbol(token0, token1)
             ),
             key,
             address(this)

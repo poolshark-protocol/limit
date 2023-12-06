@@ -20,7 +20,7 @@ import './libraries/limit/pool/BurnLimitCall.sol';
 import './libraries/limit/pool/SnapshotLimitCall.sol';
 import './libraries/math/ConstantProduct.sol';
 import './external/solady/LibClone.sol';
-import './external/openzeppelin/security/ReentrancyGuard.sol';
+import './external/openzeppelin/security/LimitReentrancyGuard.sol';
 
 
 /// @notice Poolshark Limit Pool Implementation
@@ -29,7 +29,7 @@ contract LimitPool is
     ILimitPoolView,
     LimitPoolStorage,
     LimitPoolImmutables,
-    ReentrancyGuard
+    LimitReentrancyGuard
 {
 
     modifier ownerOnly() {
@@ -262,7 +262,7 @@ contract LimitPool is
 
     function snapshotLimit(
         SnapshotLimitParams memory params
-    ) external view  returns(
+    ) external view returns(
         uint128,
         uint128
     ) {

@@ -1068,9 +1068,9 @@ contract EchidnaPool {
         address token0 = LimitPool(pool).token0();
         address token1 = LimitPool(pool).token1();
         if (amount0Delta < 0) {
-            SafeTransfers.transferInto(token0, address(pool), uint256(-amount0Delta));
+            SafeTransfers.transferInto(token0, address(this), uint256(-amount0Delta));
         } else {
-            SafeTransfers.transferInto(token1, address(pool), uint256(-amount1Delta));
+            SafeTransfers.transferInto(token1, address(this), uint256(-amount1Delta));
         }
     }
 
@@ -1082,9 +1082,9 @@ contract EchidnaPool {
         address token0 = LimitPool(pool).token0();
         address token1 = LimitPool(pool).token1();
         if (amount0Delta < 0) {
-            SafeTransfers.transferInto(token0, address(pool), uint256(-amount0Delta));
+            SafeTransfers.transferInto(token0, address(this), uint256(-amount0Delta));
         } else {
-            SafeTransfers.transferInto(token1, address(pool), uint256(-amount1Delta));
+            SafeTransfers.transferInto(token1, address(this), uint256(-amount1Delta));
         }
     }
 
@@ -1096,9 +1096,9 @@ contract EchidnaPool {
         address token0 = LimitPool(pool).token0();
         address token1 = LimitPool(pool).token1();
         if (amount0Delta < 0) {
-            SafeTransfers.transferInto(token0, address(pool), uint256(-amount0Delta));
+            SafeTransfers.transferInto(token0, address(this), uint256(-amount0Delta));
         } else {
-            SafeTransfers.transferInto(token1, address(pool), uint256(-amount1Delta));
+            SafeTransfers.transferInto(token1, address(this), uint256(-amount1Delta));
         }
     }
 

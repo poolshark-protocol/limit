@@ -33,6 +33,9 @@ contract EchidnaPool {
     event LiquidityDeltaAndAbsolute(int128 delta, uint128 abs);
     event PriceChange(uint160 priceBefore, uint160 priceAfter);
     event PositionIdNext(uint32 idNextBefore, uint32 idNextAfter);
+    event LimitCallbackOnEchidnaPool();
+    event RangeCallbackOnEchidnaPool();
+    event GetResizedTicks(address contract);
 
     int16 tickSpacing;
     uint16 swapFee;
@@ -195,6 +198,7 @@ contract EchidnaPool {
         // Get the ticks the position will be minted with rather than what was passed directly by fuzzer
         // This is so the we can properly compare before and after mint states of particular ticks.
         bool posCreated;
+        emit GetResizedTicks(address(this));
         (lower, upper, posCreated) = pool.getResizedTicksForMint(params);
         emit PositionTicks(lower, upper);
         emit PositionCreated(posCreated);
@@ -1065,6 +1069,7 @@ contract EchidnaPool {
         int256 amount1Delta,
         bytes calldata data
     ) external {
+        emit LimitCallbackOnEchidnaPool();
         address token0 = LimitPool(pool).token0();
         address token1 = LimitPool(pool).token1();
         if (amount0Delta < 0) {
@@ -1079,6 +1084,7 @@ contract EchidnaPool {
         int256 amount1Delta,
         bytes calldata data
     ) external {
+        emit RangeCallbackOnEchidnaPool();
         address token0 = LimitPool(pool).token0();
         address token1 = LimitPool(pool).token1();
         if (amount0Delta < 0) {

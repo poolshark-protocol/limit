@@ -15,7 +15,7 @@ library EchidnaMintLimitCall {
 
     event TestEvent();
 
-    event MsgSender(address sender);
+    event MsgSender(address sender, address thisAddress);
 
     event MintLimit(
         address indexed to,
@@ -227,7 +227,7 @@ library EchidnaMintLimitCall {
         save(cache, globalState, params.zeroForOne);
 
         emit TestEvent();
-        emit MsgSender(msg.sender);
+        emit MsgSender(msg.sender, address(this));
 
         // check balance and execute callback
         uint256 balanceStart = balance(params, cache);

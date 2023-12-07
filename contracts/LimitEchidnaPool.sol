@@ -1056,6 +1056,8 @@ contract EchidnaPool {
         tokenOut.mint(address(this), 100000000000 ether);
         tokenIn.approve(address(router), type(uint256).max);
         tokenOut.approve(address(router), type(uint256).max);
+        tokenIn.approve(address(pool), type(uint256).max);
+        tokenOut.approve(address(pool), type(uint256).max);
     }
 
     function limitPoolMintLimitCallback(

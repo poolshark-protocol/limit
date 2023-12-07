@@ -4,8 +4,8 @@ pragma solidity 0.8.13;
 import '../../external/openzeppelin/contracts/token/ERC20/ERC20.sol';
 
 library SafeTransfers {
-    event BalanceCheck(uint256 balance);
-    event AllowanceCheck(uint256 allowance, address owner, address spender);
+    event BalanceCheck(uint256 balance, uint256 amount);
+    event AllowanceCheck(uint256 allowance, address owner, address spender, address msgSender);
     /**
      * @dev Similar to EIP20 transfer, except it handles a False success from `transfer` and returns an explanatory
      *      error code rather than reverting. If caller has not called checked protocol's balance, this may revert due to
@@ -73,8 +73,8 @@ library SafeTransfers {
         uint256 balanceBefore = IERC20(token).balanceOf(address(this));
 
         /// @dev - msg.sender here is the pool
-        emit BalanceCheck(erc20Token.balanceOf(sender));
-        emit AllowanceCheck(erc20Token.allowance(sender, msg.sender), sender, address(this));
+        emit BalanceCheck(erc20Token.balanceOf(sender), amount);
+        emit AllowanceCheck(erc20Token.allowance(sender, msg.sender), sender, address(this), msg.sender);
         erc20Token.transferFrom(sender, msg.sender, amount);
 
         bool success;

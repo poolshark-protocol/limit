@@ -35,7 +35,7 @@ contract EchidnaPool {
     event PositionIdNext(uint32 idNextBefore, uint32 idNextAfter);
     event LimitCallbackOnEchidnaPool();
     event RangeCallbackOnEchidnaPool();
-    event GetResizedTicks(address contract);
+    event GetResizedTicks(address pool);
 
     int16 tickSpacing;
     uint16 swapFee;

@@ -1077,11 +1077,11 @@ contract EchidnaPool {
         address token1 = LimitPool(pool).token1();
         if (amount0Delta < 0) {
             emit MsgSenderPool(msg.sender, address(this));
-            SafeTransfers.transferInto(token0, address(this), uint256(-amount0Delta));
+            SafeTransfers.transferOut(msg.sender, token0, uint256(-amount0Delta));
             emit MsgSenderPool(msg.sender, address(this));
         }
         if (amount1Delta < 0) {
-            SafeTransfers.transferInto(token1, address(this), uint256(-amount1Delta));
+            SafeTransfers.transferOut(msg.sender, token1, uint256(-amount1Delta));
         }
     }
 
@@ -1094,9 +1094,12 @@ contract EchidnaPool {
         address token0 = LimitPool(pool).token0();
         address token1 = LimitPool(pool).token1();
         if (amount0Delta < 0) {
-            SafeTransfers.transferInto(token0, address(this), uint256(-amount0Delta));
-        } else {
-            SafeTransfers.transferInto(token1, address(this), uint256(-amount1Delta));
+            emit MsgSenderPool(msg.sender, address(this));
+            SafeTransfers.transferOut(msg.sender, token0, uint256(-amount0Delta));
+            emit MsgSenderPool(msg.sender, address(this));
+        }
+        if (amount1Delta < 0) {
+            SafeTransfers.transferOut(msg.sender, token1, uint256(-amount1Delta));
         }
     }
 
@@ -1108,9 +1111,12 @@ contract EchidnaPool {
         address token0 = LimitPool(pool).token0();
         address token1 = LimitPool(pool).token1();
         if (amount0Delta < 0) {
-            SafeTransfers.transferInto(token0, address(this), uint256(-amount0Delta));
-        } else {
-            SafeTransfers.transferInto(token1, address(this), uint256(-amount1Delta));
+            emit MsgSenderPool(msg.sender, address(this));
+            SafeTransfers.transferOut(msg.sender, token0, uint256(-amount0Delta));
+            emit MsgSenderPool(msg.sender, address(this));
+        }
+        if (amount1Delta < 0) {
+            SafeTransfers.transferOut(msg.sender, token1, uint256(-amount1Delta));
         }
     }
 

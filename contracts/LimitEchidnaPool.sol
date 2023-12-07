@@ -1058,6 +1058,48 @@ contract EchidnaPool {
         tokenOut.approve(address(router), type(uint256).max);
     }
 
+    function limitPoolMintLimitCallback(
+        int256 amount0Delta,
+        int256 amount1Delta,
+        bytes calldata data
+    ) external {
+        address token0 = LimitPool(pool).token0();
+        address token1 = LimitPool(pool).token1();
+        if (amount0Delta < 0) {
+            SafeTransfers.transferInto(token0, address(pool), uint256(-amount0Delta));
+        } else {
+            SafeTransfers.transferInto(token1, address(pool), uint256(-amount1Delta));
+        }
+    }
+
+    function limitPoolMintRangeCallback(
+        int256 amount0Delta,
+        int256 amount1Delta,
+        bytes calldata data
+    ) external {
+        address token0 = LimitPool(pool).token0();
+        address token1 = LimitPool(pool).token1();
+        if (amount0Delta < 0) {
+            SafeTransfers.transferInto(token0, address(pool), uint256(-amount0Delta));
+        } else {
+            SafeTransfers.transferInto(token1, address(pool), uint256(-amount1Delta));
+        }
+    }
+
+    function limitPoolSwapCallback(
+        int256 amount0Delta,
+        int256 amount1Delta,
+        bytes calldata data
+    ) external {
+        address token0 = LimitPool(pool).token0();
+        address token1 = LimitPool(pool).token1();
+        if (amount0Delta < 0) {
+            SafeTransfers.transferInto(token0, address(pool), uint256(-amount0Delta));
+        } else {
+            SafeTransfers.transferInto(token1, address(pool), uint256(-amount1Delta));
+        }
+    }
+
     function _between(uint128 val, uint low, uint high) internal pure returns(uint128) {
         return uint128(low + (val % (high-low +1))); 
     }

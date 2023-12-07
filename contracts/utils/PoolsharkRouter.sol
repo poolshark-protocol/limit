@@ -33,6 +33,10 @@ contract PoolsharkRouter is
     address public immutable limitPoolFactory;
     address public immutable coverPoolFactory;
 
+    event RouterContract(address router);
+
+    event MintAmoutns(int256 amount0Delta, int256 amount1Delta);
+
     event RouterDeployed(
         address router,
         address limitPoolFactory,

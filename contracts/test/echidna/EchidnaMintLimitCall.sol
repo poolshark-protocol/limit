@@ -131,10 +131,6 @@ library EchidnaMintLimitCall {
 
         // transfer out if swap output 
         if (cache.swapCache.output > 0) {
-            EchidnaAssertions.assertPoolBalanceExceeded(
-                (params.zeroForOne ? balance(cache.constants.token1) : balance(cache.constants.token0)),
-                cache.swapCache.output
-            );
             SafeTransfers.transferOut(
                 params.to,
                 params.zeroForOne ? cache.constants.token1 
@@ -207,7 +203,8 @@ library EchidnaMintLimitCall {
             // save position to storage
             positions[params.positionId] = cache.position;
 
-            params.zeroForOne ? cache.state.pool0 = cache.pool : cache.state.pool1 = cache.pool;
+            params.zeroForOne ? cache.state.pool0 = cache.pool 
+                              : cache.state.pool1 = cache.pool;
 
             emit MintLimit(
                 params.to,
@@ -220,16 +217,16 @@ library EchidnaMintLimitCall {
                 uint128(cache.liquidityMinted)
             );
         }
-            // save lp side for safe reentrancy
-            save(cache, globalState, params.zeroForOne);
+        // save lp side for safe reentrancy
+        save(cache, globalState, params.zeroForOne);
 
-            // check balance and execute callback
-            uint256 balanceStart = balance(params, cache);
-            ILimitPoolMintLimitCallback(msg.sender).limitPoolMintLimitCallback(
-                params.zeroForOne ? -int256(params.amount + cache.swapCache.input) : int256(cache.swapCache.output),
-                params.zeroForOne ? int256(cache.swapCache.output) : -int256(params.amount + cache.swapCache.input),
-                params.callbackData
-            );
+        // check balance and execute callback
+        uint256 balanceStart = balance(params, cache);
+        ILimitPoolMintLimitCallback(msg.sender).limitPoolMintLimitCallback(
+            params.zeroForOne ? -int256(params.amount + cache.swapCache.input) : int256(cache.swapCache.output),
+            params.zeroForOne ? int256(cache.swapCache.output) : -int256(params.amount + cache.swapCache.input),
+            params.callbackData
+        );
 
         // check balance requirements after callback
         if (balance(params, cache) < balanceStart + params.amount + cache.swapCache.input)

@@ -1,4 +1,5 @@
 # ssh -i ~/Downloads/alpha-key.pem ec2-user@18.212.239.218
+# ssh -i ~/Downloads/alpha-key.pem ec2-user@3.91.149.159
 yum install git -y
 yum install python3-pip
 pip3 install crytic-compile

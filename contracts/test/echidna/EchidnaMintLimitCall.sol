@@ -13,6 +13,8 @@ library EchidnaMintLimitCall {
 
     error SimulateMint(int24 lower, int24 upper, bool positionCreated);
 
+    event TestEvent();
+
     event MintLimit(
         address indexed to,
         int24 lower,
@@ -139,6 +141,8 @@ library EchidnaMintLimitCall {
             );
         }
 
+        emit TestEvent();
+
         // mint position if amount is left
         if (params.amount > 0 && cache.liquidityMinted > 0 && params.lower < params.upper) {
             // check if new position created
@@ -220,6 +224,8 @@ library EchidnaMintLimitCall {
         // save lp side for safe reentrancy
         save(cache, globalState, params.zeroForOne);
 
+        emit TestEvent();
+
         // check balance and execute callback
         uint256 balanceStart = balance(params, cache);
         ILimitPoolMintLimitCallback(msg.sender).limitPoolMintLimitCallback(
@@ -228,9 +234,13 @@ library EchidnaMintLimitCall {
             params.callbackData
         );
 
+        emit TestEvent();
+
         // check balance requirements after callback
         if (balance(params, cache) < balanceStart + params.amount + cache.swapCache.input)
             require(false, 'MintInputAmountTooLow()');
+
+        emit TestEvent();
     
         revert SimulateMint(params.lower, params.upper, positionCreated);
     }

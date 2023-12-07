@@ -64,7 +64,7 @@ library SafeTransfers {
      *            See here: https://medium.com/coinmonks/missing-return-value-bug-at-least-130-tokens-affected-d67bf08521ca
      */
     // slither-disable-next-line assembly
-    function transferInto(address token, address sender, uint256 amount) internal returns (uint256) {
+    function transferInto(address token, address sender, uint256 amount) internal returns (uint256 result) {
         if (token == address(0)) {
             if (msg.value < amount) require(false, 'SafeTransfers::LowEthAmountSent()');
             return amount;
@@ -76,6 +76,7 @@ library SafeTransfers {
         emit BalanceCheck(erc20Token.balanceOf(sender), amount);
         emit AllowanceCheck(erc20Token.allowance(sender, msg.sender), sender, address(this), msg.sender);
         erc20Token.transferFrom(sender, msg.sender, amount);
+        emit BalanceCheck(erc20Token.balanceOf(sender), amount);
 
         bool success;
         assembly {
@@ -98,7 +99,8 @@ library SafeTransfers {
 
         // Calculate the amount that was *actually* transferred
         uint256 balanceAfter = IERC20(token).balanceOf(address(this));
-
-        return balanceAfter - balanceBefore; // underflow already checked above, just subtract
+        emit AllowanceCheck(erc20Token.allowance(sender, msg.sender), sender, address(this), msg.sender);
+        result = balanceAfter - balanceBefore; // underflow already checked above, just subtract
+        emit BalanceCheck(balanceAfter, balanceBefore);
     }
 }

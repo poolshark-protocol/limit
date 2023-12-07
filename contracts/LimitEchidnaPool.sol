@@ -33,8 +33,8 @@ contract EchidnaPool {
     event LiquidityDeltaAndAbsolute(int128 delta, uint128 abs);
     event PriceChange(uint160 priceBefore, uint160 priceAfter);
     event PositionIdNext(uint32 idNextBefore, uint32 idNextAfter);
-    event LimitCallbackOnEchidnaPool();
-    event RangeCallbackOnEchidnaPool();
+    event LimitCallbackOnEchidnaPool(uint256 amount0, uint256 amount1);
+    event RangeCallbackOnEchidnaPool(uint256 amount0, uint256 amount1);
     event GetResizedTicks(address pool);
     event MsgSenderPool(address sender, address thisAddress);
 
@@ -1070,12 +1070,13 @@ contract EchidnaPool {
         int256 amount1Delta,
         bytes calldata data
     ) external {
-        emit LimitCallbackOnEchidnaPool();
+        emit LimitCallbackOnEchidnaPool(uint256(-amount0Delta), uint256(-amount1Delta));
         address token0 = LimitPool(pool).token0();
         address token1 = LimitPool(pool).token1();
         if (amount0Delta < 0) {
             emit MsgSenderPool(msg.sender, address(this));
             SafeTransfers.transferInto(token0, address(this), uint256(-amount0Delta));
+            emit MsgSenderPool(msg.sender, address(this));
         }
         if (amount1Delta < 0) {
             SafeTransfers.transferInto(token1, address(this), uint256(-amount1Delta));
@@ -1087,7 +1088,7 @@ contract EchidnaPool {
         int256 amount1Delta,
         bytes calldata data
     ) external {
-        emit RangeCallbackOnEchidnaPool();
+        emit RangeCallbackOnEchidnaPool(uint256(-amount0Delta), uint256(-amount1Delta));
         address token0 = LimitPool(pool).token0();
         address token1 = LimitPool(pool).token1();
         if (amount0Delta < 0) {

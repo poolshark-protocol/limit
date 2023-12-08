@@ -39,6 +39,12 @@ const config: HardhatUserConfig = {
             accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
             timeout: 60000,
         },
+        arb_one: {
+            chainId: 42161,
+            url: process.env.ARBITRUM_ONE_URL || '',
+            accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+            timeout: 60000,
+        },
         scrollSepolia: {
             chainId: 534351,
             url: "https://sepolia-rpc.scroll.io/" || "",
@@ -55,6 +61,7 @@ const config: HardhatUserConfig = {
     },
     etherscan: { 
         apiKey: {
+            arbitrumOne: process.env.ARBITRUM_ONE_API_KEY,
             arbitrumGoerli: process.env.ARBITRUM_GOERLI_API_KEY,
             scrollSepolia: 'D62920783A4311EE9D6600155D570C742E',
         },

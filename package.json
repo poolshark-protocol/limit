@@ -7,7 +7,7 @@
         "clean": "rm -rf ./artifacts ./cache ./typechain; npx hardhat clean",
         "compile": "npx hardhat compile",
         "test": "npx hardhat test",
-        "deploy": "rm -rf ./artifacts ./cache ./typechain; npx hardhat clean; npx hardhat deploy-limitpools --network arb_goerli;",
+        "deploy": "rm -rf ./artifacts ./cache ./typechain; npx hardhat clean; npx hardhat compile; npx hardhat deploy-limitpools --network arb_goerli;",
         "verify": "npx hardhat verify-contracts",
         "all": "yarn clean; yarn compile; yarn test; yarn deploy;"
     },

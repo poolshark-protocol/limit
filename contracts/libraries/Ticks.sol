@@ -149,7 +149,7 @@ library Ticks {
             cache.averagePrice,
             cache.secondsPerLiquidityAccum,
             cache.tickSecondsAccum
-         ) = Samples.getLatest(cache.state, cache.constants, cache.liquidity);
+         ) = Samples.getLatest(cache.state, cache.constants, cache.state.pool.liquidity);
 
         // grab latest sample and store in cache for _cross
         while (cache.cross) {

@@ -37,6 +37,12 @@ const config: HardhatUserConfig = {
             accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
             timeout: 60000,
         },
+        arb_one: {
+            chainId: 42161,
+            url: process.env.ARBITRUM_ONE_URL || '',
+            accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+            timeout: 60000,
+        },
         scrollSepolia: {
             chainId: 534351,
             url: "https://sepolia-rpc.scroll.io/" || "",

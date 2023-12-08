@@ -1,7 +1,15 @@
 # ssh -i ~/Downloads/alpha-key.pem ec2-user@18.212.239.218
-# ssh -i ~/Downloads/alpha-key.pem ec2-user@3.91.149.159
 # ssh -i ~/Downloads/alpha-key.pem ec2-user@3.90.33.225
-# ssh -i ~/Downloads/alpha-key.pem ec2-user@44.201.209.21
+# ssh -i ~/Downloads/alpha-key.pem ec2-user@72.44.54.189
+# ssh -i ~/Downloads/alpha-key.pem ec2-user@54.152.13.15
+# ssh -i ~/Downloads/alpha-key.pem ec2-user@54.226.3.45
+# ssh -i ~/Downloads/alpha-key.pem ec2-user@54.242.87.172
+# ssh -i ~/Downloads/alpha-key.pem ec2-user@3.91.249.149
+# ssh -i ~/Downloads/alpha-key.pem ec2-user@54.83.64.160
+# ssh -i ~/Downloads/alpha-key.pem ec2-user@34.228.42.169
+# ssh -i ~/Downloads/alpha-key.pem ec2-user@18.208.251.68
+# stop all machines at 5pm and save corpuses
+# restart all machines w/ updated corpus
 yum install git -y
 yum install python3-pip
 pip3 install crytic-compile
@@ -17,7 +25,7 @@ solc-select use 0.8.13
 cd ~/git/limit
 nohup ./echidna contracts/LimitEchidnaPool.sol --config contracts/test/echidna/config.yaml --corpus-dir corpus --workers 128 &
 top -o %MEM -c
-tail -f nohup.out -n 100
+tail -f ~/git/limit/nohup.out -n 100
 
 # running a single reproducer file
 # 1. mkdir -p corpus-new/reproducers

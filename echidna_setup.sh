@@ -1,5 +1,7 @@
 # ssh -i ~/Downloads/alpha-key.pem ec2-user@18.212.239.218
 # ssh -i ~/Downloads/alpha-key.pem ec2-user@3.91.149.159
+# ssh -i ~/Downloads/alpha-key.pem ec2-user@3.90.33.225
+# ssh -i ~/Downloads/alpha-key.pem ec2-user@44.201.209.21
 yum install git -y
 yum install python3-pip
 pip3 install crytic-compile
@@ -12,7 +14,8 @@ unzip echidna.zip
 tar xvf echidna.tar.gz
 solc-select install 0.8.13
 solc-select use 0.8.13
-nohup ./echidna contracts/LimitEchidnaPool.sol --config contracts/test/echidna/config.yaml --corpus-dir corpus --workers 12 &
+cd ~/git/limit
+nohup ./echidna contracts/LimitEchidnaPool.sol --config contracts/test/echidna/config.yaml --corpus-dir corpus --workers 128 &
 top -o %MEM -c
 tail -f nohup.out -n 100
 

@@ -13,11 +13,16 @@ import '../libraries/utils/SafeCast.sol';
 import '../libraries/utils/SafeTransfers.sol';
 import '../libraries/math/OverflowMath.sol';
 import '../external/solady/LibClone.sol';
+import '../external/openzeppelin/security/ReentrancyGuard.sol';
 
 /**
  * @dev Defines the actions which can be executed by the factory admin.
  */
-contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
+contract RangeStaker is
+    RangeStakerEvents,
+    PoolsharkStructs,
+    ReentrancyGuard
+{
     address public immutable limitPoolFactory;
     uint32 public immutable startTimestamp;
     uint32 public immutable endTimestamp;
@@ -71,7 +76,9 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
         uint32 positionIdNext;
     }
 
-    function stakeRange(StakeRangeParams memory params) external {
+    function stakeRange(
+        StakeRangeParams memory params
+    ) external nonReentrant() {
 
         // load pool constants
         StakeRangeLocals memory locals;
@@ -209,7 +216,9 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
             SafeTransfers.transferOut(locals.stake.owner, locals.constants.token1, locals.feeGrowth1Accrued);
     }
 
-    function unstakeRange(UnstakeRangeParams memory params) external {
+    function unstakeRange(
+        UnstakeRangeParams memory params
+    ) external nonReentrant() {
 
         StakeRangeLocals memory locals;
 
@@ -294,7 +303,7 @@ contract RangeStaker is RangeStakerEvents, PoolsharkStructs {
     function burnRangeStake(
         address pool,
         BurnRangeParams memory params
-    ) external {
+    ) external nonReentrant() {
         StakeRangeLocals memory locals;
 
         locals.stakeKey = keccak256(abi.encode(

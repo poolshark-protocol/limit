@@ -155,13 +155,13 @@
         },
         "poolRouter": {
             "contractName": "PoolsharkRouter",
-            "contractAddress": "0x7183ffeefc0883d499c52c1a1dff1af716467a46",
+            "contractAddress": "0x62e0671022af1b2e705f08b282767c57d29c7c4c",
             "constructorArguments": [
                 "0x9f479560cd8a531e6c0fe04521cb246264fe6b71",
                 "0x0000000000000000000000000000000000000000",
                 "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1"
             ],
-            "created": "2023-12-08T17:57:31.406Z"
+            "created": "2023-12-09T02:36:07.159Z"
         },
         "rangeStaker": {
             "contractName": "RangeStaker",
@@ -543,5 +543,6 @@
             "created": "2023-10-02T23:25:47.853Z"
         }
     },
-    "undefined": {}
+    "undefined": {
+    }
 }

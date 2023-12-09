@@ -6,7 +6,7 @@ schema:
 templates:
     - kind: ethereum/contract
       name: LimitPoolTemplate
-      network: arbitrum-one
+      network: {{network}}
       source:
           abi: LimitPool
       mapping:
@@ -63,7 +63,7 @@ templates:
     # ERC-1155 events
     - kind: ethereum/contract
       name: PositionERC1155Template
-      network: arbitrum-one
+      network: arbitrum-goerli
       source:
           abi: PositionERC1155
       mapping:
@@ -86,7 +86,7 @@ templates:
     # RangeStaker events
     - kind: ethereum/contract
       name: RangeStakerTemplate
-      network: arbitrum-one
+      network: arbitrum-goerli
       source:
           # address: '0xe5e2E95A986CE078606C403593593b18Ed98f4d6'
           abi: RangeStaker
@@ -114,11 +114,11 @@ templates:
 dataSources:
   - kind: ethereum/contract
     name: LimitPoolFactory
-    network: arbitrum-one
+    network: arbitrum-goerli
     source:
-        address: '0x9f479560cd8a531e6c0fe04521cb246264fe6b71'
+        address: '{{0x1b215002e688135549cc0290d6cf1f94e3aa425c}}'
         abi: LimitPoolFactory
-        startBlock: 158133516
+        startBlock: 56821935
     mapping:
         kind: ethereum/events
         apiVersion: 0.0.6
@@ -143,11 +143,11 @@ dataSources:
               handler: handlePoolCreated
   - kind: ethereum/contract
     name: LimitPoolManager
-    network: arbitrum-one
+    network: arbitrum-goerli
     source:
-        address: '0xd50b04a5693f2d026d589bf239609bf5b8346adc'
+        address: '0x6d3af137e75097b892683832a2c0132f99625d0e'
         abi: LimitPoolManager
-        startBlock: 158133499
+        startBlock: 56821935
     mapping:
         kind: ethereum/events
         apiVersion: 0.0.6
@@ -178,11 +178,11 @@ dataSources:
               handler: ProtocolSwapFeesModified
   - kind: ethereum/contract
     name: PoolsharkRouter
-    network: arbitrum-one
+    network: arbitrum-goerli
     source:
-        address: '0x7183ffeefc0883d499c52c1a1dff1af716467a46'
+        address: '0x4b5a159109bb997135e9b2bb6e486e2101466881'
         abi: PoolsharkRouter
-        startBlock: 158133499
+        startBlock: 56821935
     mapping:
         kind: ethereum/events
         apiVersion: 0.0.6
@@ -196,3 +196,5 @@ dataSources:
         eventHandlers:
             - event: RouterDeployed(address,address,address)
               handler: handleRouterDeployed
+
+

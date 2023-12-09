@@ -1,5 +1,5 @@
 /* eslint-disable prefer-const */
-import { MINIMUM_ETH_LOCKED, ONE_BD, STABLE_COINS, STABLE_IS_TOKEN_0, STABLE_POOL_ADDRESS, WETH_ADDRESS, WHITELISTED_TOKENS, ZERO_BD, ZERO_BI } from '../../constants/constants'
+import { MINIMUM_ETH_LOCKED, ONE_BD, STABLE_COINS, STABLE_IS_TOKEN_0, STABLE_POOL_ADDRESS, WETH_ADDRESS, WHITELISTED_TOKENS, ZERO_BD, ZERO_BI } from '../../constants/arbitrum'
 import { BasePrice, LimitPool, Token } from '../../../generated/schema'
 import { BigDecimal, BigInt, log } from '@graphprotocol/graph-ts'
 import { exponentToBigDecimal, safeDiv } from './math'

@@ -3,7 +3,7 @@ import { safeLoadBasePrice, safeLoadBurnLog, safeLoadRangePositionById, safeLoad
 import {
     BigInt,
 } from '@graphprotocol/graph-ts'
-import { ONE_BI } from "../../constants/constants"
+import { ONE_BI } from "../../constants/arbitrum"
 import { updateDerivedTVLAmounts } from "../utils/tvl"
 import { BIGINT_ZERO, convertTokenToDecimal } from "../utils/helpers"
 import { findEthPerToken } from "../utils/price"

@@ -6,7 +6,7 @@ schema:
 templates:
     - kind: ethereum/contract
       name: LimitPoolTemplate
-      network: arbitrum-one
+      network: arbitrum
       source:
           abi: LimitPool
       mapping:
@@ -196,3 +196,5 @@ dataSources:
         eventHandlers:
             - event: RouterDeployed(address,address,address)
               handler: handleRouterDeployed
+
+

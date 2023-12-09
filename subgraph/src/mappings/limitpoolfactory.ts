@@ -9,7 +9,7 @@ import {
 } from './utils/helpers'
 import { safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadLimitPoolToken, safeLoadToken } from './utils/loads'
 import { BigInt } from '@graphprotocol/graph-ts'
-import { FACTORY_ADDRESS, ONE_BI, RANGE_STAKER_ADDRESS, STABLE_COINS, WETH_ADDRESS } from '../constants/constants'
+import { FACTORY_ADDRESS, ONE_BI, RANGE_STAKER_ADDRESS, STABLE_COINS, WETH_ADDRESS } from '../constants/arbitrum'
 
 export function handlePoolCreated(event: PoolCreated): void {
     // grab event parameters

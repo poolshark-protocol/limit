@@ -3,7 +3,7 @@
 import { BigDecimal, log } from '@graphprotocol/graph-ts'
 import { BasePrice, LimitPoolFactory, LimitPool, Token } from '../../../generated/schema'
 import { AmountType, getAdjustedAmounts } from './price'
-import { ZERO_ADDRESS } from '../../constants/constants'
+import { ZERO_ADDRESS } from '../../constants/arbitrum'
 import { safeLoadBasePrice, safeLoadToken } from './loads'
 
 

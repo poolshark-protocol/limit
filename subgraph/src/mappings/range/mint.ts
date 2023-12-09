@@ -12,7 +12,7 @@ import {
     safeLoadTvlUpdateLog,
 } from '../utils/loads'
 import { BIGINT_ONE, convertTokenToDecimal } from '../utils/helpers'
-import { ONE_BI } from '../../constants/constants'
+import { ONE_BI } from '../../constants/arbitrum'
 import { updateDerivedTVLAmounts } from '../utils/tvl'
 import { findEthPerToken } from '../utils/price'
 import { MintRange } from '../../../generated/LimitPoolFactory/LimitPool'

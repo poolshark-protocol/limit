@@ -34,8 +34,8 @@ export class MintPosition {
         const token0Amount = ethers.utils.parseUnits('100', await hre.props.token0.decimals())
         const token1Amount = ethers.utils.parseUnits('100', await hre.props.token1.decimals())
 
-        await mintSigners20(hre.props.token0, token0Amount.mul(10000), [hre.props.alice])
-        await mintSigners20(hre.props.token1, token1Amount.mul(10000), [hre.props.alice])
+        // await mintSigners20(hre.props.token0, token0Amount.mul(10000), [hre.props.alice])
+        // await mintSigners20(hre.props.token1, token1Amount.mul(10000), [hre.props.alice])
 
         const liquidityAmount = '49802891105937278098768'
 
@@ -98,31 +98,32 @@ export class MintPosition {
         //     revertMessage: '',
         // })
         // return
-        // const signer = hre.props.alice
+        const signer = hre.props.alice
         // let approveTxn = await hre.props.token1.connect(signer).approve(hre.props.poolRouter.address, token1Amount.mul(1000))
         // await approveTxn.wait()
         // // for (let i=0; i < 20; i++) {
 
-        //     const zeroForOne = false
-        //     const amountIn = token1Amount.mul(1000)
-        //     const priceLimit = BigNumber.from('3169126500570573503741758013440')
-
-        //     let txn = await hre.props.poolRouter
-        //     .connect(signer)
-        //     .multiSwapSplit(
-        //     [hre.props.limitPool.address],
-        //         [
-        //         {
-        //             to: signer.address,
-        //             priceLimit: priceLimit,
-        //             amount: amountIn,
-        //             zeroForOne: zeroForOne,
-        //             exactIn: true,
-        //             callbackData: ethers.utils.formatBytes32String('')
-        //         },
-        //         ], {gasLimit: 3000000})
-        //     await txn.wait()
+            const zeroForOne = true
+            const amountIn = token1Amount.mul(1000)
+            const priceLimit = BigNumber.from('3848890000000000000000000')
+            let txn = await hre.props.poolRouter
+            .connect(signer)
+            .multiSwapSplit(
+            ['0xc641fbc8f6ab236249c99bf83b9be34b753c7882'],
+                [
+                {
+                    to: signer.address,
+                    priceLimit: priceLimit,
+                    amount: 1,
+                    zeroForOne: zeroForOne,
+                    exactIn: true,
+                    callbackData: ethers.utils.formatBytes32String('')
+                },
+                ])
+            await txn.wait()
         // }
+
+        return
 
         // const globalStateAfter = (await hre.props.limitPool.globalState())
         // console.log('sample state', globalStateAfter.pool.samples.index, globalStateAfter.pool.samples.count, globalStateAfter.pool.samples.countMax, globalStateAfter.pool.tickAtPrice)

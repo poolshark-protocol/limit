@@ -1,6 +1,6 @@
 import { Address, BigDecimal, BigInt, Bytes, ethereum, log } from '@graphprotocol/graph-ts'
 import { LimitPool, LimitPoolFactory, LimitPoolManager, LimitPosition, Token, FeeTier, BasePrice, RangePosition, RangeTick, Transaction, LimitTick, Swap, CompoundRangeLog, MintRangeLog, BurnRangeLog, PoolRouter, TvlUpdateLog, HistoricalOrder, TotalSeasonReward, UserSeasonReward, LimitPoolToken } from '../../../generated/schema'
-import { ONE_BD } from '../../constants/constants'
+import { ONE_BD } from '../../constants/arbitrum'
 import {
     fetchTokenSymbol,
     fetchTokenName,
@@ -479,10 +479,7 @@ export function safeLoadHistoricalOrder(tokenInAddress: string, tokenOutAddress:
 
     if (!historicalOrderEntity) {
         historicalOrderEntity = new HistoricalOrder(historicalOrderId)
-<<<<<<< HEAD
         historicalOrderEntity.positionId = BIGINT_ZERO
-=======
->>>>>>> master
         historicalOrderEntity.tokenIn = tokenInAddress
         historicalOrderEntity.tokenOut = tokenOutAddress
         historicalOrderEntity.amountIn = BIGDECIMAL_ZERO

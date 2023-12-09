@@ -187,12 +187,20 @@ contract PoolsharkRouter is
         // decode original sender
         MintRangeCallbackData memory _data = abi.decode(data, (MintRangeCallbackData));
 
-        // transfer from mint caller
+        // transfer from swap caller
         if (amount0Delta < 0) {
-            SafeTransfers.transferInto(constants.token0, _data.sender, uint256(-amount0Delta));
+            if (constants.token0 == wethAddress && _data.wrapped) {
+                wrapEth(uint256(-amount0Delta));
+            } else {
+                SafeTransfers.transferInto(constants.token0, _data.sender, uint256(-amount0Delta));   
+            }
         }
         if (amount1Delta < 0) {
-            SafeTransfers.transferInto(constants.token1, _data.sender, uint256(-amount1Delta));
+            if (constants.token1 == wethAddress && _data.wrapped) {
+                wrapEth(uint256(-amount1Delta));
+            } else {
+                SafeTransfers.transferInto(constants.token1, _data.sender, uint256(-amount1Delta));
+            }
         }
     }
 

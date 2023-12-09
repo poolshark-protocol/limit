@@ -17,9 +17,9 @@ pip3 install slither-analyzer --user
 mkdir ~/git
 cd ~/git
 git clone -b echidna https://github.com/poolshark-protocol/limit.git
-curl -fL https://github.com/crytic/echidna/releases/download/v2.2.1/echidna-2.2.1-Linux.zip -o echidna.zip
-unzip echidna.zip
-tar xvf echidna.tar.gz
+# curl -fL https://github.com/crytic/echidna/releases/download/v2.2.1/echidna-2.2.1-Linux.zip -o echidna.zip
+# unzip echidna.zip
+# tar xvf echidna.tar.gz
 solc-select install 0.8.13
 solc-select use 0.8.13
 cd ~/git/limit

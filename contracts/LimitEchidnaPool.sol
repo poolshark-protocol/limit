@@ -37,6 +37,8 @@ contract EchidnaPool {
     event RangeCallbackOnEchidnaPool(uint256 amount0, uint256 amount1);
     event GetResizedTicks(address pool);
     event MsgSenderPool(address sender, address thisAddress);
+    event PriceCheck0(uint160 priceBefore, uint160 priceAfter, uint256 upperPrice);
+    event PriceCheck1(uint160 priceBefore, uint160 priceAfter, uint256 lowerPrice);
 
     int16 tickSpacing;
     uint16 swapFee;
@@ -262,10 +264,10 @@ contract EchidnaPool {
             if(zeroForOne){
                 if(values.pool0After.price >= values.pool0Before.price){
                     // ensure liquidityAbsolute is strictly equal
-                    //TODO: be falsified if liquidity cleared out
                     emit LiquidityAbsoluteNoPosCreated(values.upperTickBefore.liquidityAbsolute, values.upperTickAfter.liquidityAbsolute);
                     values.constants = pool.immutables();
                     uint256 upperPrice = ConstantProduct.getPriceAtTick(upper, values.constants);
+                    emit PriceCheck0(values.pool0Before.price, values.pool1After.price, upperPrice);
                     if (values.pool1Before.price >= upperPrice && values.pool1After.price <= upperPrice) {
                         assert(values.upperTickAfter.liquidityAbsolute == 0);
                     } else {
@@ -275,10 +277,10 @@ contract EchidnaPool {
             } else {
                 if(values.pool1Before.price >= values.pool1After.price){
                     // ensure liquidityAbsolute is strictly equal
-                    //TODO: be falsified if liquidity cleared out
                     emit LiquidityAbsoluteNoPosCreated(values.lowerTickBefore.liquidityAbsolute, values.lowerTickAfter.liquidityAbsolute);
                     values.constants = pool.immutables();
                     uint256 lowerPrice = ConstantProduct.getPriceAtTick(lower, values.constants);
+                    emit PriceCheck1(values.pool0Before.price, values.pool1After.price, lowerPrice);
                     if (values.pool0Before.price <= lowerPrice && values.pool1After.price >= lowerPrice) {
                         assert(values.lowerTickAfter.liquidityAbsolute == 0);
                     } else {

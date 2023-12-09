@@ -1,5 +1,5 @@
 # ssh -i ~/Downloads/alpha-key.pem ec2-user@18.212.239.218
-# ssh -i ~/Downloads/alpha-key.pem ec2-user@3.90.33.225
+# ssh -i ~/Downloads/alpha-key.pem ec2-user@3.90.33.225 //
 # ssh -i ~/Downloads/alpha-key.pem ec2-user@72.44.54.189
 # ssh -i ~/Downloads/alpha-key.pem ec2-user@54.152.13.15
 # ssh -i ~/Downloads/alpha-key.pem ec2-user@54.226.3.45

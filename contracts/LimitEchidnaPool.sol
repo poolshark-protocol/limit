@@ -280,8 +280,8 @@ contract EchidnaPool {
                     emit LiquidityAbsoluteNoPosCreated(values.lowerTickBefore.liquidityAbsolute, values.lowerTickAfter.liquidityAbsolute);
                     values.constants = pool.immutables();
                     uint256 lowerPrice = ConstantProduct.getPriceAtTick(lower, values.constants);
-                    emit PriceCheck1(values.pool0Before.price, values.pool1After.price, lowerPrice);
-                    if (values.pool0Before.price <= lowerPrice && values.pool1After.price >= lowerPrice) {
+                    emit PriceCheck1(values.pool0Before.price, values.pool0After.price, lowerPrice);
+                    if (values.pool0Before.price <= lowerPrice && values.pool0After.price >= lowerPrice) {
                         assert(values.lowerTickAfter.liquidityAbsolute == 0);
                     } else {
                         assert(values.lowerTickAfter.liquidityAbsolute == values.lowerTickBefore.liquidityAbsolute);

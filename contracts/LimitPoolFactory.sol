@@ -14,6 +14,11 @@ import './libraries/utils/SafeCast.sol';
 import './libraries/utils/PositionTokens.sol';
 import './libraries/math/ConstantProduct.sol';
 
+/**
+* @notice Limit Pool Factory
+* @author Poolshark
+* @author @alphak3y
+*/
 contract LimitPoolFactory is
     ILimitPoolFactory,
     LimitPoolStructs,
@@ -23,19 +28,25 @@ contract LimitPoolFactory is
     using LibClone for address;
     using SafeCast for uint256;
 
-    address public immutable owner;
+    /// @notice The original address of the deployed contract
     address public immutable original;
+    /// @notice The owner address for all LimitPool contracts
+    address public immutable owner;
 
     constructor(address owner_) {
         owner = owner_;
         original = address(this);
     }
 
+    /// @notice This modifier ensures against delegate calls
     modifier originalOnly() {
         _onlyOriginal();
         _;
     }
 
+    /// @notice Creates a new LimitPool for the selected poolTypeId
+    /// @param params the params for which to create the pool with
+    /// @dev See PoolsharkStructs.sol for struct data
     function createLimitPool(LimitPoolParams memory params)
         public
         override
@@ -135,6 +146,11 @@ contract LimitPoolFactory is
         return (pool, constants.poolToken);
     }
 
+    /// @notice Gets a new LimitPool for the selected poolTypeId
+    /// @param tokenIn the first token in the pair
+    /// @param tokenOut the second token in the pair
+    /// @param swapFee the swap fee for the pool
+    /// @param poolTypeId the poolTypeId for the pool
     function getLimitPool(
         address tokenIn,
         address tokenOut,

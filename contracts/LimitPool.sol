@@ -22,8 +22,11 @@ import './libraries/math/ConstantProduct.sol';
 import './external/solady/LibClone.sol';
 import './external/openzeppelin/security/LimitReentrancyGuard.sol';
 
-/// @notice Poolshark Limit Pool Implementation
-/// @notice Supports Constant Product
+/**
+* @title Limit Pool - Constant Product
+* @author Poolshark
+* @author @alphak3y
+*/
 contract LimitPool is
     ILimitPool,
     ILimitPoolView,
@@ -31,22 +34,27 @@ contract LimitPool is
     LimitPoolImmutables,
     LimitReentrancyGuard
 {
+    /// @notice This modifier only allows `owner` to call a function
     modifier ownerOnly() {
         _onlyOwner();
         _;
     }
 
+    /// @notice This modifier only allows `factory` to call a function
     modifier factoryOnly() {
         _onlyFactory();
         _;
     }
 
+    /// @notice This modifier checks for canoncial limit pools
     modifier canonicalOnly() {
         _onlyCanoncialClones();
         _;
     }
 
+    /// @notice The original address of the deployed contract
     address public immutable original;
+    /// @notice The factory address for the `initialize()` call
     address public immutable factory;
 
     constructor(address factory_) {
@@ -54,6 +62,8 @@ contract LimitPool is
         factory = factory_;
     }
 
+    /// @notice Initializes the LimitPool contract storage
+    /// @param startPrice the Q64.96 sqrt price to start the pool from
     function initialize(uint160 startPrice)
         external
         nonReentrant(globalState)
@@ -71,6 +81,9 @@ contract LimitPool is
         );
     }
 
+    /// @notice Adds bidirectional liquidity (RangePosition)
+    /// @param params the params for minting the position
+    /// @dev See PoolsharkStructs.sol for struct data
     function mintRange(MintRangeParams memory params)
         external
         nonReentrant(globalState)
@@ -91,6 +104,9 @@ contract LimitPool is
             );
     }
 
+    /// @notice Removes bidirectional liquidity (RangePosition)
+    /// @param params the params for burning the position
+    /// @dev See PoolsharkStructs.sol for struct data
     function burnRange(BurnRangeParams memory params)
         external
         nonReentrant(globalState)
@@ -111,6 +127,9 @@ contract LimitPool is
             );
     }
 
+    /// @notice Adds directional liquidity (LimitPosition)
+    /// @param params the params for minting the position
+    /// @dev See PoolsharkStructs.sol for struct data
     function mintLimit(MintLimitParams memory params)
         external
         nonReentrant(globalState)
@@ -132,6 +151,9 @@ contract LimitPool is
             );
     }
 
+    /// @notice Removes directional liquidity (LimitPosition)
+    /// @param params the params for burning the position
+    /// @dev See PoolsharkStructs.sol for struct data
     function burnLimit(BurnLimitParams memory params)
         external
         nonReentrant(globalState)
@@ -151,6 +173,9 @@ contract LimitPool is
             );
     }
 
+    /// @notice Swaps tokens with the liquidity pool
+    /// @param params the params for executing the swap
+    /// @dev See PoolsharkStructs.sol for struct data
     function swap(SwapParams memory params)
         external
         nonReentrant(globalState)
@@ -171,6 +196,8 @@ contract LimitPool is
             );
     }
 
+    /// @notice Increase the max sample count for oracle data
+    /// @param newSampleCountMax the new max sample count
     function increaseSampleCount(uint16 newSampleCountMax)
         external
         nonReentrant(globalState)
@@ -179,6 +206,9 @@ contract LimitPool is
         Samples.expand(samples, globalState.pool, newSampleCountMax);
     }
 
+    /// @notice Modify or collect protocol fees
+    /// @param params the params for modifying fees
+    /// @dev See PoolsharkStructs.sol for struct data
     function fees(FeesParams memory params)
         external
         ownerOnly
@@ -189,6 +219,9 @@ contract LimitPool is
         return FeesCall.perform(globalState, params, immutables());
     }
 
+    /// @notice Receive a swap quote for tokenIn and tokenOut amounts
+    /// @param params the params for executing the quote
+    /// @dev See PoolsharkStructs.sol for struct data
     function quote(QuoteParams memory params)
         external
         view
@@ -211,6 +244,8 @@ contract LimitPool is
             );
     }
 
+    /// @notice Receive oracle samples
+    /// @param secondsAgo an array of seconds in the past to receive samples for
     function sample(uint32[] memory secondsAgo)
         external
         view
@@ -226,6 +261,8 @@ contract LimitPool is
         return SampleCall.perform(globalState, immutables(), secondsAgo);
     }
 
+    /// @notice Snapshot token amounts for a RangePosition
+    /// @param positionId the position id to snapshot values for
     function snapshotRange(uint32 positionId)
         external
         view
@@ -246,6 +283,9 @@ contract LimitPool is
             );
     }
 
+    /// @notice Snapshot token amounts for a LimitPosition
+    /// @param params the params to snapshot values for
+    /// @dev See PoolsharkStructs.sol for struct data
     function snapshotLimit(SnapshotLimitParams memory params)
         external
         view
@@ -262,6 +302,8 @@ contract LimitPool is
             );
     }
 
+    /// @notice Immutable values embedded directly in the contract bytecode
+    /// @dev See PoolsharkStructs.sol for struct data
     function immutables() public view returns (LimitImmutables memory) {
         return
             LimitImmutables(
@@ -278,6 +320,7 @@ contract LimitPool is
             );
     }
 
+    /// @notice The price bounds for the given curve math
     function priceBounds(int16 tickSpacing)
         external
         pure

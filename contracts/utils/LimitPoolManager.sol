@@ -9,8 +9,11 @@ import '../base/events/LimitPoolManagerEvents.sol';
 import '../libraries/utils/SafeCast.sol';
 
 /**
- * @dev Defines the actions which can be executed by the factory admin.
- */
+* @title LimitPoolManager
+* @notice The manager for all limit pools
+* @author Poolshark
+* @author @alphak3y
+*/
 contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
     address public owner;
     address public feeTo;

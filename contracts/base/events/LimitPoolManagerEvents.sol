@@ -5,6 +5,7 @@ import '../../interfaces/structs/PoolsharkStructs.sol';
 
 abstract contract LimitPoolManagerEvents is PoolsharkStructs {
     event FactoryChanged(address indexed previousFactory, address indexed newFactory);
+    event FeeDeltaConstChanged(uint16 oldFeeDeltaConst, uint16 newFeeDeltaConst);
     event PoolTypeEnabled(
         bytes32 poolTypeName,
         address poolImpl,

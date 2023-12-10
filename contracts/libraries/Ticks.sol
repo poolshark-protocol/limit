@@ -276,7 +276,7 @@ library Ticks {
         PoolsharkStructs.SwapCache memory cache,
         uint160 priceLimit,
         bool zeroForOne
-    ) internal pure returns (
+    ) internal view returns (
         PoolsharkStructs.SwapCache memory
     ) {
         if ((zeroForOne ? priceLimit >= cache.price

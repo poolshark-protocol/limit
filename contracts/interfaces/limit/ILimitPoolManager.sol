@@ -3,9 +3,9 @@ pragma solidity 0.8.18;
 
 /// @notice LimitPoolManager interface
 interface ILimitPoolManager {
-    
     function owner() external view returns (address);
     function feeTo() external view returns (address);
+    function feeDeltaConst() external view returns (uint16);
     function poolTypes(
         uint16 poolType
     ) external view returns (

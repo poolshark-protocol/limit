@@ -3221,5 +3221,4 @@ describe('RangePool Exact Out Tests', function () {
       console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
     }
   })
-  //TODO: swapping to boundary price w/ exactOut
 })

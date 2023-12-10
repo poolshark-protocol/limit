@@ -62,13 +62,11 @@ library SafeTransfers {
      *            See here: https://medium.com/coinmonks/missing-return-value-bug-at-least-130-tokens-affected-d67bf08521ca
      */
     // slither-disable-next-line assembly
-    function transferInto(address token, address sender, uint256 amount) internal returns (uint256) {
+    function transferInto(address token, address sender, uint256 amount) internal {
         if (token == address(0)) {
-            if (msg.value < amount) require(false, 'SafeTransfers::LowEthAmountSent()');
-            return amount;
+            require(false, 'SafeTransfers::CannotTransferInEth()');
         }
         IERC20 erc20Token = IERC20(token);
-        uint256 balanceBefore = IERC20(token).balanceOf(address(this));
 
         /// @dev - msg.sender here is the pool
         erc20Token.transferFrom(sender, msg.sender, amount);
@@ -91,10 +89,5 @@ library SafeTransfers {
             }
         }
         if (!success) require(false, 'TransferFailed(msg.sender, address(this)');
-
-        // Calculate the amount that was *actually* transferred
-        uint256 balanceAfter = IERC20(token).balanceOf(address(this));
-
-        return balanceAfter - balanceBefore; // underflow already checked above, just subtract
     }
 }

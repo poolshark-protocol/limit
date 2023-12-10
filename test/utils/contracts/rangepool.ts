@@ -53,6 +53,7 @@ export interface ValidateMintParams {
   poolContract?: LimitPool
   poolTokenContract?: PositionERC1155
   stake?: boolean
+  customMsgValue?: BigNumber
 }
 
 export interface ValidateSampleParams {
@@ -325,10 +326,11 @@ export async function validateMint(params: ValidateMintParams): Promise<number> 
   const revertMessage = params.revertMessage
   const collectRevertMessage = params.collectRevertMessage
   const positionId = params.positionId ? params.positionId : 0
-  const expectedPositionId = params.positionId ? params.positionId
-                                               : (await hre.props.limitPool.globalState()).positionIdNext
   const poolContract = params.poolContract ?? hre.props.limitPool
   const poolTokenContract = params.poolTokenContract ?? hre.props.limitPoolToken
+  const expectedPositionId = params.positionId ? params.positionId
+                                               : (await poolContract.globalState()).positionIdNext
+
   const stake = params.stake ?? false
 
   let balance0Before

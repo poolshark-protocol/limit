@@ -4,6 +4,7 @@ pragma solidity 0.8.18;
 import '@openzeppelin/contracts/access/Ownable.sol';
 import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 import '@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol';
+import '../libraries/utils/SafeTransfers.sol';
 
 contract Token20 is ERC20, ERC20Burnable, Ownable {
     uint8 _decimals;
@@ -23,5 +24,9 @@ contract Token20 is ERC20, ERC20Burnable, Ownable {
 
     function decimals() public view override returns (uint8) {
         return _decimals;
+    }
+
+    function transferIntoTest() external {
+        SafeTransfers.transferInto(address(0), address(0), 0);
     }
 }

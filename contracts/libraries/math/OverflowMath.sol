@@ -3,9 +3,12 @@ pragma solidity 0.8.18;
 
 /// @notice Math library that facilitates multiplication and division that can have overflow of an intermediate value without any loss of precision.
 library OverflowMath {
-
     // @dev no underflow or overflow checks
-    function divRoundingUp(uint256 x, uint256 y) internal pure returns (uint256 z) {
+    function divRoundingUp(uint256 x, uint256 y)
+        internal
+        pure
+        returns (uint256 z)
+    {
         assembly {
             z := add(div(x, y), gt(mod(x, y), 0))
         }
@@ -118,7 +121,8 @@ library OverflowMath {
         result = mulDiv(a, b, denominator);
         unchecked {
             if (mulmod(a, b, denominator) != 0) {
-                if (result >= type(uint256).max) require (false, 'MaxUintExceeded()');
+                if (result >= type(uint256).max)
+                    require(false, 'MaxUintExceeded()');
                 result++;
             }
         }

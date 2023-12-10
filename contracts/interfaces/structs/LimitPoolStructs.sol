@@ -4,13 +4,12 @@ pragma solidity 0.8.18;
 import './PoolsharkStructs.sol';
 
 interface LimitPoolStructs is PoolsharkStructs {
-
     struct LimitPosition {
         uint128 liquidity; // expected amount to be used not actual
-        uint32 epochLast;  // epoch when this position was created at
-        int24 lower;       // lower price tick of position range
-        int24 upper;       // upper price tick of position range
-        bool crossedInto;  // whether the position was crossed into already
+        uint32 epochLast; // epoch when this position was created at
+        int24 lower; // lower price tick of position range
+        int24 upper; // upper price tick of position range
+        bool crossedInto; // whether the position was crossed into already
     }
 
     struct MintLimitCache {

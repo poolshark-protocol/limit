@@ -207,19 +207,6 @@ describe('LimitPoolManager Tests', function () {
     ).to.be.revertedWith('InvalidSwapFee()')
   })
 
-  /// @dev - pool type id is incremented each time
-  // it('Should not enable pool type a second time', async function () {
-  //   await expect(
-  //     hre.props.limitPoolManager
-  //       .connect(hre.props.admin)
-  //       .enablePoolType(
-  //         hre.props.limitPoolImpl.address,
-  //         hre.props.positionERC1155.address,
-  //         constantProductString
-  //       )
-  //   ).to.be.revertedWith('PoolTypeAlreadyExists()')
-  // })
-
   it('Should not enable pool type w/ invalid impl addresses', async function () {
     await expect(
       hre.props.limitPoolManager
@@ -249,34 +236,6 @@ describe('LimitPoolManager Tests', function () {
         )
     ).to.be.revertedWith('InvalidImplAddresses()')
   })
-
-  // it('Should enable new twap source', async function () {
-  //   await hre.props.limitPoolManager
-  //       .connect(hre.props.admin)
-  //       .enableTwapSource(psharkString, hre.props.uniswapV3Source.address, hre.props.uniswapV3Source.address)
-    
-  //   const twapSource = await hre.props.limitPoolManager
-  //     .twapSources(psharkString)
-  //   expect(twapSource[0]).to.be.equal(hre.props.uniswapV3Source.address)
-  //   expect(twapSource[1]).to.be.equal(hre.props.uniswapV3Source.address)
-  // })
-
-
-  // it('Should not enable twap source with OwnerOnly()', async function () {
-  //   await expect(
-  //     hre.props.limitPoolManager
-  //       .connect(hre.props.bob)
-  //       .enableTwapSource(psharkString, hre.props.uniswapV3Source.address, hre.props.uniswapV3Source.address)
-  //   ).to.be.revertedWith('OwnerOnly()')
-  // })
-
-  // it('Should not enable twap source with invalid string', async function () {
-  //   await expect(
-  //     hre.props.limitPoolManager
-  //       .connect(hre.props.admin)
-  //       .enableTwapSource(ethers.utils.formatBytes32String(''), hre.props.uniswapV3Source.address, hre.props.uniswapV3Source.address)
-  //   ).to.be.revertedWith('TwapSourceNameInvalid()')
-  // })
 
   it('Should not update protocol fees on pool', async function () {
     let globalStateBefore = await hre.props.limitPool.globalState();
@@ -341,9 +300,127 @@ describe('LimitPoolManager Tests', function () {
     let globalStateAfter = await hre.props.limitPool.globalState();
     expect(globalStateBefore.pool.protocolSwapFee0).to.be.equal(globalStateAfter.pool.protocolSwapFee0)
     expect(globalStateBefore.pool.protocolSwapFee1).to.be.equal(globalStateAfter.pool.protocolSwapFee1)
-    expect(globalStateBefore.pool0.protocolFillFee).to.be.equal(globalStateBefore.pool0.protocolFillFee)
-    expect(globalStateBefore.pool1.protocolFillFee).to.be.equal(globalStateBefore.pool1.protocolFillFee)
+    expect(globalStateBefore.pool0.protocolFillFee).to.be.equal(globalStateAfter.pool0.protocolFillFee)
+    expect(globalStateBefore.pool1.protocolFillFee).to.be.equal(globalStateAfter.pool1.protocolFillFee)
     // erc-20 balance should not change
+  })
+
+  it('Should update protocol fees on pool', async function () {
+    // protocol swap fee 0
+    let globalStateBefore = await hre.props.limitPool.globalState();
+    let txn = await hre.props.limitPoolManager
+    .connect(hre.props.admin)
+    .modifyProtocolFees(
+      [hre.props.limitPool.address],
+      [
+        {
+          protocolSwapFee0: 500,
+          protocolSwapFee1: 500,
+          protocolFillFee0: 500,
+          protocolFillFee1: 500,
+          setFeesFlags: 1
+        }
+      ]
+    )
+    let globalStateAfter = await hre.props.limitPool.globalState();
+    expect(globalStateBefore.pool.protocolSwapFee0).to.not.be.equal(globalStateAfter.pool.protocolSwapFee0)
+    expect(globalStateAfter.pool.protocolSwapFee0).to.be.equal(500)
+    expect(globalStateBefore.pool.protocolSwapFee1).to.be.equal(globalStateAfter.pool.protocolSwapFee1)
+    expect(globalStateBefore.pool0.protocolFillFee).to.be.equal(globalStateAfter.pool0.protocolFillFee)
+    expect(globalStateBefore.pool1.protocolFillFee).to.be.equal(globalStateAfter.pool1.protocolFillFee)
+
+    // protocol swap fee 1
+    globalStateBefore = globalStateAfter
+    txn = await hre.props.limitPoolManager
+    .connect(hre.props.admin)
+    .modifyProtocolFees(
+      [hre.props.limitPool.address],
+      [
+        {
+          protocolSwapFee0: 500,
+          protocolSwapFee1: 500,
+          protocolFillFee0: 500,
+          protocolFillFee1: 500,
+          setFeesFlags: 2
+        }
+      ]
+    )
+    globalStateAfter = await hre.props.limitPool.globalState();
+    expect(globalStateBefore.pool.protocolSwapFee0).to.be.equal(globalStateAfter.pool.protocolSwapFee0)
+    expect(globalStateBefore.pool.protocolSwapFee1).to.not.be.equal(globalStateAfter.pool.protocolSwapFee1)
+    expect(globalStateAfter.pool.protocolSwapFee1).to.be.equal(500)
+    expect(globalStateBefore.pool0.protocolFillFee).to.be.equal(globalStateAfter.pool0.protocolFillFee)
+    expect(globalStateBefore.pool1.protocolFillFee).to.be.equal(globalStateAfter.pool1.protocolFillFee)
+
+    // protocol fill fee 0
+    globalStateBefore = globalStateAfter
+    txn = await hre.props.limitPoolManager
+    .connect(hre.props.admin)
+    .modifyProtocolFees(
+      [hre.props.limitPool.address],
+      [
+        {
+          protocolSwapFee0: 500,
+          protocolSwapFee1: 500,
+          protocolFillFee0: 50,
+          protocolFillFee1: 50,
+          setFeesFlags: 4
+        }
+      ]
+    )
+    globalStateAfter = await hre.props.limitPool.globalState();
+    expect(globalStateBefore.pool.protocolSwapFee0).to.be.equal(globalStateAfter.pool.protocolSwapFee0)
+    expect(globalStateBefore.pool.protocolSwapFee1).to.be.equal(globalStateAfter.pool.protocolSwapFee1)
+
+    expect(globalStateBefore.pool0.protocolFillFee).to.be.equal(globalStateAfter.pool0.protocolFillFee)
+    expect(globalStateBefore.pool1.protocolFillFee).to.not.be.equal(globalStateAfter.pool1.protocolFillFee)
+    expect(globalStateAfter.pool1.protocolFillFee).to.be.equal(50)
+
+    // protocol fill fee 1
+    globalStateBefore = globalStateAfter
+    txn = await hre.props.limitPoolManager
+    .connect(hre.props.admin)
+    .modifyProtocolFees(
+      [hre.props.limitPool.address],
+      [
+        {
+          protocolSwapFee0: 500,
+          protocolSwapFee1: 500,
+          protocolFillFee0: 50,
+          protocolFillFee1: 50,
+          setFeesFlags: 8
+        }
+      ]
+    )
+    globalStateAfter = await hre.props.limitPool.globalState();
+    expect(globalStateBefore.pool.protocolSwapFee0).to.be.equal(globalStateAfter.pool.protocolSwapFee0)
+    expect(globalStateBefore.pool.protocolSwapFee1).to.be.equal(globalStateAfter.pool.protocolSwapFee1)
+
+    expect(globalStateBefore.pool0.protocolFillFee).to.not.be.equal(globalStateAfter.pool0.protocolFillFee)
+    expect(globalStateBefore.pool1.protocolFillFee).to.be.equal(globalStateAfter.pool1.protocolFillFee)
+    expect(globalStateAfter.pool0.protocolFillFee).to.be.equal(50)
+
+    // reset all protocol fees
+    globalStateBefore = globalStateAfter
+    txn = await hre.props.limitPoolManager
+    .connect(hre.props.admin)
+    .modifyProtocolFees(
+      [hre.props.limitPool.address],
+      [
+        {
+          protocolSwapFee0: 0,
+          protocolSwapFee1: 0,
+          protocolFillFee0: 0,
+          protocolFillFee1: 0,
+          setFeesFlags: 15 // 8 + 4 + 2 + 1 = 15
+        }
+      ]
+    )
+    globalStateAfter = await hre.props.limitPool.globalState();
+    expect(globalStateAfter.pool.protocolSwapFee0).to.be.equal(0)
+    expect(globalStateAfter.pool.protocolSwapFee1).to.be.equal(0)
+    expect(globalStateAfter.pool0.protocolFillFee).to.be.equal(0)
+    expect(globalStateAfter.pool1.protocolFillFee).to.be.equal(0)
   })
 
   // modify each protocol fee one by one and verify others do not change

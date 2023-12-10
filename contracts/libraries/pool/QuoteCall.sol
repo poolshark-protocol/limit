@@ -24,20 +24,18 @@ library QuoteCall {
         PoolsharkStructs.GlobalState storage globalState,
         PoolsharkStructs.QuoteParams memory params,
         PoolsharkStructs.SwapCache memory cache
-    ) external view returns (
-        uint256,
-        uint256,
-        uint160
-    ) {
+    )
+        external
+        view
+        returns (
+            uint256,
+            uint256,
+            uint160
+        )
+    {
         if (cache.state.unlocked == _ENTERED)
             require(false, 'ReentrancyGuardReadOnlyReentrantCall()');
         cache.state = globalState;
-        return Ticks.quote(
-            ticks,
-            rangeTickMap,
-            limitTickMap,
-            params,
-            cache
-        );
+        return Ticks.quote(ticks, rangeTickMap, limitTickMap, params, cache);
     }
 }

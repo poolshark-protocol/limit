@@ -19,27 +19,30 @@ library SnapshotRangeCall {
     );
 
     function perform(
-        mapping(uint256 => RangePoolStructs.RangePosition)
-            storage positions,
+        mapping(uint256 => RangePoolStructs.RangePosition) storage positions,
         mapping(int24 => PoolsharkStructs.Tick) storage ticks,
         PoolsharkStructs.GlobalState memory state,
         PoolsharkStructs.LimitImmutables memory constants,
         uint32 positionId
-    ) external view returns (
-        int56,
-        uint160,
-        uint128,
-        uint128
     )
+        external
+        view
+        returns (
+            int56,
+            uint160,
+            uint128,
+            uint128
+        )
     {
         if (state.unlocked == _ENTERED)
             require(false, 'ReentrancyGuardReadOnlyReentrantCall()');
-        return RangePositions.snapshot(
-            positions,
-            ticks,
-            state,
-            constants,
-            positionId
-        );
+        return
+            RangePositions.snapshot(
+                positions,
+                ticks,
+                state,
+                constants,
+                positionId
+            );
     }
 }

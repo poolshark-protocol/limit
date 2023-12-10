@@ -85,7 +85,11 @@ abstract contract LimitReentrancyGuard is PoolsharkStructs {
      * @dev Returns true if the reentrancy guard is currently set to "entered", which indicates there is a
      * `nonReentrant` function in the call stack.
      */
-    function _reentrancyGuardEntered(GlobalState storage state) internal view returns (bool) {
+    function _reentrancyGuardEntered(GlobalState storage state)
+        internal
+        view
+        returns (bool)
+    {
         return state.unlocked == _ENTERED;
     }
 }

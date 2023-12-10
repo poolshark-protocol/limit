@@ -22,8 +22,11 @@ import './libraries/math/ConstantProduct.sol';
 import './external/solady/LibClone.sol';
 import './external/openzeppelin/security/LimitReentrancyGuard.sol';
 
-
-/// @notice Poolshark Limit Pool Implementation
+/**
+ * @title Limit Pool - Constant Product
+ * @author Poolshark
+ * @author @alphak3y
+ */
 contract LimitPool is
     ILimitPool,
     ILimitPoolView,
@@ -31,35 +34,38 @@ contract LimitPool is
     LimitPoolImmutables,
     LimitReentrancyGuard
 {
-
+    /// @notice This modifier only allows `owner` to call a function
     modifier ownerOnly() {
         _onlyOwner();
         _;
     }
 
+    /// @notice This modifier only allows `factory` to call a function
     modifier factoryOnly() {
         _onlyFactory();
         _;
     }
 
+    /// @notice This modifier checks for canoncial limit pools
     modifier canonicalOnly() {
         _onlyCanoncialClones();
         _;
     }
 
+    /// @notice The original address of the deployed contract
     address public immutable original;
+    /// @notice The factory address for the `initialize()` call
     address public immutable factory;
 
-    constructor(
-        address factory_
-    ) {
+    constructor(address factory_) {
         original = address(this);
         factory = factory_;
     }
 
-    function initialize(
-        uint160 startPrice
-    ) external  
+    /// @notice Initializes the LimitPool contract storage
+    /// @param startPrice the Q64.96 sqrt price to start the pool from
+    function initialize(uint160 startPrice)
+        external
         nonReentrant(globalState)
         factoryOnly
         canonicalOnly
@@ -75,239 +81,251 @@ contract LimitPool is
         );
     }
 
-    function mintRange(
-        MintRangeParams memory params
-    ) external 
+    /// @notice Adds bidirectional liquidity (RangePosition)
+    /// @param params the params for minting the position
+    /// @dev See PoolsharkStructs.sol for struct data
+    function mintRange(MintRangeParams memory params)
+        external
         nonReentrant(globalState)
         canonicalOnly
-    returns (
-        int256,
-        int256
-    ) {
+        returns (int256, int256)
+    {
         MintRangeCache memory cache;
         cache.constants = immutables();
-        return MintRangeCall.perform(
-            positions,
-            ticks,
-            rangeTickMap,
-            samples,
-            globalState,
-            cache,
-            params
-        );
+        return
+            MintRangeCall.perform(
+                positions,
+                ticks,
+                rangeTickMap,
+                samples,
+                globalState,
+                cache,
+                params
+            );
     }
 
-    function burnRange(
-        BurnRangeParams memory params
-    ) external 
+    /// @notice Removes bidirectional liquidity (RangePosition)
+    /// @param params the params for burning the position
+    /// @dev See PoolsharkStructs.sol for struct data
+    function burnRange(BurnRangeParams memory params)
+        external
         nonReentrant(globalState)
         canonicalOnly
-    returns (
-        int256,
-        int256
-    ) {
+        returns (int256, int256)
+    {
         BurnRangeCache memory cache;
         cache.constants = immutables();
-        return BurnRangeCall.perform(
-            positions,
-            ticks,
-            rangeTickMap,
-            samples,
-            globalState,
-            cache,
-            params
-        );
+        return
+            BurnRangeCall.perform(
+                positions,
+                ticks,
+                rangeTickMap,
+                samples,
+                globalState,
+                cache,
+                params
+            );
     }
 
-    //limitSwap
-    function mintLimit(
-        MintLimitParams memory params
-    ) external 
+    /// @notice Adds directional liquidity (LimitPosition)
+    /// @param params the params for minting the position
+    /// @dev See PoolsharkStructs.sol for struct data
+    function mintLimit(MintLimitParams memory params)
+        external
         nonReentrant(globalState)
         canonicalOnly
-    returns (
-        int256,
-        int256
-    ) {
+        returns (int256, int256)
+    {
         MintLimitCache memory cache;
         cache.constants = immutables();
-        return MintLimitCall.perform(
-            params.zeroForOne ? positions0 : positions1,
-            ticks,
-            samples,
-            rangeTickMap,
-            limitTickMap,
-            globalState,
-            params,
-            cache
-        );
+        return
+            MintLimitCall.perform(
+                params.zeroForOne ? positions0 : positions1,
+                ticks,
+                samples,
+                rangeTickMap,
+                limitTickMap,
+                globalState,
+                params,
+                cache
+            );
     }
 
-    function burnLimit(
-        BurnLimitParams memory params
-    ) external 
+    /// @notice Removes directional liquidity (LimitPosition)
+    /// @param params the params for burning the position
+    /// @dev See PoolsharkStructs.sol for struct data
+    function burnLimit(BurnLimitParams memory params)
+        external
         nonReentrant(globalState)
         canonicalOnly
-    returns (
-        int256,
-        int256
-    ) {
+        returns (int256, int256)
+    {
         BurnLimitCache memory cache;
         cache.constants = immutables();
-        return BurnLimitCall.perform(
-            params.zeroForOne ? positions0 : positions1,
-            ticks,
-            limitTickMap,
-            globalState,
-            params, 
-            cache
-        );
+        return
+            BurnLimitCall.perform(
+                params.zeroForOne ? positions0 : positions1,
+                ticks,
+                limitTickMap,
+                globalState,
+                params,
+                cache
+            );
     }
 
-    function swap(
-        SwapParams memory params
-    ) external 
+    /// @notice Swaps tokens with the liquidity pool
+    /// @param params the params for executing the swap
+    /// @dev See PoolsharkStructs.sol for struct data
+    function swap(SwapParams memory params)
+        external
         nonReentrant(globalState)
         canonicalOnly
-    returns (
-        int256,
-        int256
-    ) 
+        returns (int256, int256)
     {
         SwapCache memory cache;
         cache.constants = immutables();
-        return SwapCall.perform(
-            ticks,
-            samples,
-            rangeTickMap,
-            limitTickMap,
-            globalState,
-            params,
-            cache
-        );
+        return
+            SwapCall.perform(
+                ticks,
+                samples,
+                rangeTickMap,
+                limitTickMap,
+                globalState,
+                params,
+                cache
+            );
     }
 
-    function increaseSampleCount(
-        uint16 newSampleCountMax
-    ) external 
+    /// @notice Increase the max sample count for oracle data
+    /// @param newSampleCountMax the new max sample count
+    function increaseSampleCount(uint16 newSampleCountMax)
+        external
         nonReentrant(globalState)
-        canonicalOnly 
+        canonicalOnly
     {
-        Samples.expand(
-            samples,
-            globalState.pool,
-            newSampleCountMax
-        );
+        Samples.expand(samples, globalState.pool, newSampleCountMax);
     }
 
-    function fees(
-        FeesParams memory params
-    ) external 
+    /// @notice Modify or collect protocol fees
+    /// @param params the params for modifying fees
+    /// @dev See PoolsharkStructs.sol for struct data
+    function fees(FeesParams memory params)
+        external
         ownerOnly
         nonReentrant(globalState)
-        canonicalOnly 
-    returns (
-        uint128 token0Fees,
-        uint128 token1Fees
-    ) {
-        return FeesCall.perform(
-            globalState,
-            params,
-            immutables()
-        );
+        canonicalOnly
+        returns (uint128 token0Fees, uint128 token1Fees)
+    {
+        return FeesCall.perform(globalState, params, immutables());
     }
 
-    function quote(
-        QuoteParams memory params
-    ) external view 
-    returns (
-        uint256,
-        uint256,
-        uint160
-    ) {
+    /// @notice Receive a swap quote for tokenIn and tokenOut amounts
+    /// @param params the params for executing the quote
+    /// @dev See PoolsharkStructs.sol for struct data
+    function quote(QuoteParams memory params)
+        external
+        view
+        returns (
+            uint256,
+            uint256,
+            uint160
+        )
+    {
         SwapCache memory cache;
         cache.constants = immutables();
-        return QuoteCall.perform(
-            ticks,
-            rangeTickMap,
-            limitTickMap,
-            globalState,
-            params,
-            cache
-        );
+        return
+            QuoteCall.perform(
+                ticks,
+                rangeTickMap,
+                limitTickMap,
+                globalState,
+                params,
+                cache
+            );
     }
 
-    function sample(
-        uint32[] memory secondsAgo
-    ) external view override
-    returns(
-        int56[]   memory tickSecondsAccum,
-        uint160[] memory secondsPerLiquidityAccum,
-        uint160 averagePrice,
-        uint128 averageLiquidity,
-        int24 averageTick
-    ) 
+    /// @notice Receive oracle samples
+    /// @param secondsAgo an array of seconds in the past to receive samples for
+    function sample(uint32[] memory secondsAgo)
+        external
+        view
+        override
+        returns (
+            int56[] memory tickSecondsAccum,
+            uint160[] memory secondsPerLiquidityAccum,
+            uint160 averagePrice,
+            uint128 averageLiquidity,
+            int24 averageTick
+        )
     {
-        return SampleCall.perform(
-            globalState,
-            immutables(),
-            secondsAgo
-        );
+        return SampleCall.perform(globalState, immutables(), secondsAgo);
     }
 
-    function snapshotRange(
-        uint32 positionId 
-    ) external view  returns (
-        int56   tickSecondsAccum,
-        uint160 secondsPerLiquidityAccum,
-        uint128 feesOwed0,
-        uint128 feesOwed1
-    ) {
-        return SnapshotRangeCall.perform(
-            positions,
-            ticks,
-            globalState,
-            immutables(),
-            positionId
-        );
+    /// @notice Snapshot token amounts for a RangePosition
+    /// @param positionId the position id to snapshot values for
+    function snapshotRange(uint32 positionId)
+        external
+        view
+        returns (
+            int56 tickSecondsAccum,
+            uint160 secondsPerLiquidityAccum,
+            uint128 feesOwed0,
+            uint128 feesOwed1
+        )
+    {
+        return
+            SnapshotRangeCall.perform(
+                positions,
+                ticks,
+                globalState,
+                immutables(),
+                positionId
+            );
     }
 
-    function snapshotLimit(
-        SnapshotLimitParams memory params
-    ) external view returns(
-        uint128,
-        uint128
-    ) {
-        return SnapshotLimitCall.perform(
-            params.zeroForOne ? positions0 : positions1,
-            ticks,
-            limitTickMap,
-            globalState,
-            immutables(),
-            params
-        );
+    /// @notice Snapshot token amounts for a LimitPosition
+    /// @param params the params to snapshot values for
+    /// @dev See PoolsharkStructs.sol for struct data
+    function snapshotLimit(SnapshotLimitParams memory params)
+        external
+        view
+        returns (uint128, uint128)
+    {
+        return
+            SnapshotLimitCall.perform(
+                params.zeroForOne ? positions0 : positions1,
+                ticks,
+                limitTickMap,
+                globalState,
+                immutables(),
+                params
+            );
     }
 
-    function immutables() public view returns (
-        LimitImmutables memory
-    ) {
-        return LimitImmutables(
-            owner(),
-            original,
-            factory,
-            PriceBounds(minPrice(), maxPrice()),
-            token0(),
-            token1(),
-            poolToken(),
-            genesisTime(),
-            tickSpacing(),
-            swapFee()
-        );
+    /// @notice Immutable values embedded directly in the contract bytecode
+    /// @dev See PoolsharkStructs.sol for struct data
+    function immutables() public view returns (LimitImmutables memory) {
+        return
+            LimitImmutables(
+                owner(),
+                original,
+                factory,
+                PriceBounds(minPrice(), maxPrice()),
+                token0(),
+                token1(),
+                poolToken(),
+                genesisTime(),
+                tickSpacing(),
+                swapFee()
+            );
     }
 
-    function priceBounds(
-        int16 tickSpacing
-    ) external pure returns (uint160, uint160) {
+    /// @notice The price bounds for the given curve math
+    function priceBounds(int16 tickSpacing)
+        external
+        pure
+        returns (uint160, uint160)
+    {
         return ConstantProduct.priceBounds(tickSpacing);
     }
 
@@ -317,8 +335,10 @@ contract LimitPool is
 
     function _onlyCanoncialClones() private view {
         // compute pool key
-        bytes32 key = keccak256(abi.encode(original, token0(), token1(), swapFee()));
-        
+        bytes32 key = keccak256(
+            abi.encode(original, token0(), token1(), swapFee())
+        );
+
         // compute canonical pool address
         address predictedAddress = LibClone.predictDeterministicAddress(
             original,
@@ -337,7 +357,8 @@ contract LimitPool is
             factory
         );
         // only allow delegateCall from canonical clones
-        if (address(this) != predictedAddress) require(false, 'NoDelegateCall()');
+        if (address(this) != predictedAddress)
+            require(false, 'NoDelegateCall()');
     }
 
     function _onlyFactory() private view {

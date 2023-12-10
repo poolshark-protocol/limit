@@ -29,45 +29,46 @@ library BurnLimitCall {
     }
 
     function perform(
-        mapping(uint256 => LimitPoolStructs.LimitPosition)
-            storage positions,
+        mapping(uint256 => LimitPoolStructs.LimitPosition) storage positions,
         mapping(int24 => LimitPoolStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
         PoolsharkStructs.GlobalState storage globalState,
         PoolsharkStructs.BurnLimitParams memory params,
         LimitPoolStructs.BurnLimitCache memory cache
-    ) external returns (
-        int256, // amount0Delta
-        int256  // amount1Delta
     )
+        external
+        returns (
+            int256, // amount0Delta
+            int256 // amount1Delta
+        )
     {
         // check for invalid receiver
-        if (params.to == address(0))
-            require(false, 'CollectToZeroAddress()');
+        if (params.to == address(0)) require(false, 'CollectToZeroAddress()');
 
         // initialize cache
         cache.state = globalState;
         cache.position = positions[params.positionId];
 
-        if (cache.position.liquidity == 0) 
-            require(false, 'PositionNotFound()');
-        if (PositionTokens.balanceOf(cache.constants, msg.sender, params.positionId) == 0)
-            require(false, 'PositionOwnerMismatch()');
-        
+        if (cache.position.liquidity == 0) require(false, 'PositionNotFound()');
+        if (
+            PositionTokens.balanceOf(
+                cache.constants,
+                msg.sender,
+                params.positionId
+            ) == 0
+        ) require(false, 'PositionOwnerMismatch()');
+
         // update position
-        (
-            params,
-            cache
-        ) = LimitPositions.update(
-            ticks,
-            tickMap,
-            cache,
-            params
-        );
+        (params, cache) = LimitPositions.update(ticks, tickMap, cache, params);
 
         // save position before transfer
-        if ((params.zeroForOne ? params.claim != cache.position.upper
-                               : params.claim != cache.position.lower)) {
+        if (
+            (
+                params.zeroForOne
+                    ? params.claim != cache.position.upper
+                    : params.claim != cache.position.lower
+            )
+        ) {
             if (cache.position.liquidity > 0) {
                 if (params.zeroForOne) {
                     cache.position.lower = params.claim;
@@ -76,23 +77,29 @@ library BurnLimitCall {
                 }
                 positions[params.positionId] = cache.position;
             } else {
-                IPositionERC1155(cache.constants.poolToken).burn(msg.sender, params.positionId, 1, cache.constants);
+                IPositionERC1155(cache.constants.poolToken).burn(
+                    msg.sender,
+                    params.positionId,
+                    1,
+                    cache.constants
+                );
                 delete positions[params.positionId];
             }
         } else {
-            IPositionERC1155(cache.constants.poolToken).burn(msg.sender, params.positionId, 1, cache.constants);
+            IPositionERC1155(cache.constants.poolToken).burn(
+                msg.sender,
+                params.positionId,
+                1,
+                cache.constants
+            );
             delete positions[params.positionId];
         }
 
         // save state before transfer call
         save(cache, globalState, params.zeroForOne);
-        
+
         BurnLimitLocals memory locals;
-        (
-            cache,
-            locals.amount0Delta,
-            locals.amount1Delta
-        ) = Collect.burnLimit(
+        (cache, locals.amount0Delta, locals.amount1Delta) = Collect.burnLimit(
             cache,
             params
         );

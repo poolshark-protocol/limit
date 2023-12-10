@@ -10,7 +10,8 @@
         "deploy-test": "rm -rf ./artifacts ./cache ./typechain; npx hardhat clean; npx hardhat compile; npx hardhat deploy-limitpools --network arb_goerli;",
         "deploy-main": "npx hardhat deploy-limitpools --network arb_one",
         "verify": "npx hardhat verify-contracts",
-        "all": "yarn clean; yarn compile; yarn test; yarn deploy;"
+        "all": "yarn clean; yarn compile; yarn test; yarn deploy;",
+        "prettier": "prettier --write --plugin=prettier-plugin-solidity contracts/**/*.sol"
     },
     "devDependencies": {
         "@nomicfoundation/hardhat-network-helpers": "1.0.8",
@@ -41,8 +42,8 @@
         "hardhat-contract-sizer": "2.6.1",
         "hardhat-gas-reporter": "1.0.9",
         "mythxjs": "1.3.13",
-        "prettier": "2.7.1",
-        "prettier-plugin-solidity": "1.0.0-beta.24",
+        "prettier": "^2.7.1",
+        "prettier-plugin-solidity": "^1.0.0-beta.24",
         "solhint": "3.3.7",
         "solidity-coverage": "0.7.22",
         "ts-node": "10.9.1",

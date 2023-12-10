@@ -3,7 +3,7 @@
 pragma solidity 0.8.18;
 
 import '../interfaces/structs/PoolsharkStructs.sol';
-import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import '@openzeppelin/contracts/utils/introspection/IERC165.sol';
 
 interface IPositionERC1155 is IERC165, PoolsharkStructs {
     event TransferSingle(
@@ -32,18 +32,22 @@ interface IPositionERC1155 is IERC165, PoolsharkStructs {
 
     function symbol() external view returns (string memory);
 
-    function balanceOf(address account, uint256 id) external view returns (uint256);
+    function balanceOf(address account, uint256 id)
+        external
+        view
+        returns (uint256);
 
-    function balanceOfBatch(
-        address[] calldata accounts,
-        uint256[] calldata ids
-    ) external view returns (
-        uint256[] memory batchBalances
-    );
+    function balanceOfBatch(address[] calldata accounts, uint256[] calldata ids)
+        external
+        view
+        returns (uint256[] memory batchBalances);
 
     function totalSupply(uint256 id) external view returns (uint256);
 
-    function isApprovedForAll(address owner, address spender) external view returns (bool);
+    function isApprovedForAll(address owner, address spender)
+        external
+        view
+        returns (bool);
 
     function setApprovalForAll(address sender, bool approved) external;
 

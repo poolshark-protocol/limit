@@ -7,6 +7,7 @@ import '../utils/SafeTransfers.sol';
 
 library Collect {
     using SafeCast for int128;
+    using SafeCast for uint128;
 
     event CollectRange0(
         uint128 amount0
@@ -39,7 +40,9 @@ library Collect {
         LimitPoolStructs.BurnLimitCache memory cache,
         PoolsharkStructs.BurnLimitParams memory params
     ) internal returns (
-        LimitPoolStructs.BurnLimitCache memory
+        LimitPoolStructs.BurnLimitCache memory,
+        int128 amount0Delta,
+        int128 amount1Delta
     )    
     {
         uint128 amount0 = params.zeroForOne ? cache.amountOut : cache.amountIn;
@@ -54,6 +57,6 @@ library Collect {
             cache.amountOut = 0;
             SafeTransfers.transferOut(params.to, cache.constants.token1, amount1);
         }
-        return cache;
+        return (cache, amount0.toInt128(), amount1.toInt128());
     }
 }

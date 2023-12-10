@@ -7,11 +7,17 @@ import './IRangePoolManager.sol';
 interface IRangePool is RangePoolStructs {
     function mintRange(
         MintRangeParams memory mintParams
-    ) external;
+    ) external returns (
+        int256,
+        int256
+    );
 
     function burnRange(
         BurnRangeParams memory burnParams
-    ) external;
+    ) external returns (
+        int256,
+        int256
+    );
 
     function swap(
         SwapParams memory params

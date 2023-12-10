@@ -38,7 +38,10 @@ library MintLimitCall {
         PoolsharkStructs.GlobalState storage globalState,
         PoolsharkStructs.MintLimitParams memory params,
         LimitPoolStructs.MintLimitCache memory cache
-    ) external {
+    ) external returns (
+        int256, // amount0Delta
+        int256  // amount1Delta
+    ){
         // check for invalid receiver
         if (params.to == address(0))
             require(false, "CollectToZeroAddress()");
@@ -168,6 +171,11 @@ library MintLimitCall {
         // check balance requirements after callback
         if (balance(params, cache) < balanceStart + params.amount + cache.swapCache.input)
             require(false, 'MintInputAmountTooLow()');
+
+        return (
+            params.zeroForOne ? -int256(params.amount + cache.swapCache.input) : int256(cache.swapCache.output),
+            params.zeroForOne ? int256(cache.swapCache.output) : -int256(params.amount + cache.swapCache.input)
+        );
     }
 
     function save(

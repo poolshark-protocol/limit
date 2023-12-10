@@ -256,6 +256,19 @@ describe('WethPool Tests', function () {
                 .connect(hre.props.alice)
                 .transferIntoTest()
             ).to.be.revertedWith('SafeTransfers::CannotTransferInEth()');
+
+            await validateBurnRange({
+                signer: hre.props.alice,
+                positionId: aliceId,
+                lower: '69080',
+                upper: '80070',
+                liquidityAmount: BigNumber.from("5202983406365169180"),
+                balance0Increase: BigNumber.from('7356461269128717'),
+                balance1Increase: BigNumber.from('99999999999999999990'),
+                revertMessage: '',
+                poolContract: hre.props.wethPool,
+                poolTokenContract: hre.props.wethPoolToken,
+            })
         }
     })
 })

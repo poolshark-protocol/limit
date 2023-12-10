@@ -10,11 +10,17 @@ interface ILimitPool is LimitPoolStructs {
 
     function mintLimit(
         MintLimitParams memory params
-    ) external;
+    ) external returns (
+        int256,
+        int256
+    );
 
     function burnLimit(
         BurnLimitParams memory params
-    ) external;
+    ) external returns (
+        int256,
+        int256
+    );
 
     function fees(
         FeesParams memory params

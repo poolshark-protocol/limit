@@ -38,7 +38,11 @@ library MintRangeCall {
         PoolsharkStructs.GlobalState storage globalState,
         RangePoolStructs.MintRangeCache memory cache,
         RangePoolStructs.MintRangeParams memory params
-    ) external {
+    ) external returns (
+        int256, // amount0Delta
+        int256  // amount1Delta
+    )
+    {
         // check for invalid receiver
         if (params.to == address(0))
             require(false, "CollectToZeroAddress()");
@@ -150,6 +154,11 @@ library MintRangeCall {
         if (cache.amount1 < 0)
             if (balance1(cache) < startBalance.amount1 + (-cache.amount1).toUint128())
                 require(false, 'MintInputAmount1TooLow()');
+
+        return (
+            cache.amount0 + cache.feesAccrued0,
+            cache.amount1 + cache.feesAccrued1
+        );
     }
 
     function save(

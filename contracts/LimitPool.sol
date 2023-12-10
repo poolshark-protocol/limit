@@ -80,10 +80,13 @@ contract LimitPool is
     ) external 
         nonReentrant(globalState)
         canonicalOnly
-    {
+    returns (
+        int256,
+        int256
+    ) {
         MintRangeCache memory cache;
         cache.constants = immutables();
-        MintRangeCall.perform(
+        return MintRangeCall.perform(
             positions,
             ticks,
             rangeTickMap,
@@ -99,10 +102,13 @@ contract LimitPool is
     ) external 
         nonReentrant(globalState)
         canonicalOnly
-    {
+    returns (
+        int256,
+        int256
+    ) {
         BurnRangeCache memory cache;
         cache.constants = immutables();
-        BurnRangeCall.perform(
+        return BurnRangeCall.perform(
             positions,
             ticks,
             rangeTickMap,
@@ -119,10 +125,13 @@ contract LimitPool is
     ) external 
         nonReentrant(globalState)
         canonicalOnly
-    {
+    returns (
+        int256,
+        int256
+    ) {
         MintLimitCache memory cache;
         cache.constants = immutables();
-        MintLimitCall.perform(
+        return MintLimitCall.perform(
             params.zeroForOne ? positions0 : positions1,
             ticks,
             samples,
@@ -139,10 +148,13 @@ contract LimitPool is
     ) external 
         nonReentrant(globalState)
         canonicalOnly
-    {
+    returns (
+        int256,
+        int256
+    ) {
         BurnLimitCache memory cache;
         cache.constants = immutables();
-        BurnLimitCall.perform(
+        return BurnLimitCall.perform(
             params.zeroForOne ? positions0 : positions1,
             ticks,
             limitTickMap,

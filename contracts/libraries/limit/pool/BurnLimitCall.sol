@@ -8,6 +8,8 @@ import '../../utils/Collect.sol';
 import '../../utils/PositionTokens.sol';
 
 library BurnLimitCall {
+    using SafeCast for uint128;
+
     event BurnLimit(
         address indexed to,
         uint32 positionId,
@@ -21,6 +23,11 @@ library BurnLimitCall {
         uint128 tokenOutBurned
     );
 
+    struct BurnLimitLocals {
+        int128 amount0Delta;
+        int128 amount1Delta;
+    }
+
     function perform(
         mapping(uint256 => LimitPoolStructs.LimitPosition)
             storage positions,
@@ -29,7 +36,11 @@ library BurnLimitCall {
         PoolsharkStructs.GlobalState storage globalState,
         PoolsharkStructs.BurnLimitParams memory params,
         LimitPoolStructs.BurnLimitCache memory cache
-    ) external {
+    ) external returns (
+        int256, // amount0Delta
+        int256  // amount1Delta
+    )
+    {
         // check for invalid receiver
         if (params.to == address(0))
             require(false, 'CollectToZeroAddress()');
@@ -76,10 +87,17 @@ library BurnLimitCall {
         // save state before transfer call
         save(cache, globalState, params.zeroForOne);
         
-        cache = Collect.burnLimit(
+        BurnLimitLocals memory locals;
+        (
+            cache,
+            locals.amount0Delta,
+            locals.amount1Delta
+        ) = Collect.burnLimit(
             cache,
             params
         );
+
+        return (locals.amount0Delta, locals.amount1Delta);
     }
 
     function save(

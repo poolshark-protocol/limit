@@ -22,8 +22,8 @@ import './libraries/math/ConstantProduct.sol';
 import './external/solady/LibClone.sol';
 import './external/openzeppelin/security/LimitReentrancyGuard.sol';
 
-
 /// @notice Poolshark Limit Pool Implementation
+/// @notice Supports Constant Product
 contract LimitPool is
     ILimitPool,
     ILimitPoolView,
@@ -31,7 +31,6 @@ contract LimitPool is
     LimitPoolImmutables,
     LimitReentrancyGuard
 {
-
     modifier ownerOnly() {
         _onlyOwner();
         _;
@@ -50,16 +49,13 @@ contract LimitPool is
     address public immutable original;
     address public immutable factory;
 
-    constructor(
-        address factory_
-    ) {
+    constructor(address factory_) {
         original = address(this);
         factory = factory_;
     }
 
-    function initialize(
-        uint160 startPrice
-    ) external  
+    function initialize(uint160 startPrice)
+        external
         nonReentrant(globalState)
         factoryOnly
         canonicalOnly
@@ -75,239 +71,218 @@ contract LimitPool is
         );
     }
 
-    function mintRange(
-        MintRangeParams memory params
-    ) external 
+    function mintRange(MintRangeParams memory params)
+        external
         nonReentrant(globalState)
         canonicalOnly
-    returns (
-        int256,
-        int256
-    ) {
+        returns (int256, int256)
+    {
         MintRangeCache memory cache;
         cache.constants = immutables();
-        return MintRangeCall.perform(
-            positions,
-            ticks,
-            rangeTickMap,
-            samples,
-            globalState,
-            cache,
-            params
-        );
+        return
+            MintRangeCall.perform(
+                positions,
+                ticks,
+                rangeTickMap,
+                samples,
+                globalState,
+                cache,
+                params
+            );
     }
 
-    function burnRange(
-        BurnRangeParams memory params
-    ) external 
+    function burnRange(BurnRangeParams memory params)
+        external
         nonReentrant(globalState)
         canonicalOnly
-    returns (
-        int256,
-        int256
-    ) {
+        returns (int256, int256)
+    {
         BurnRangeCache memory cache;
         cache.constants = immutables();
-        return BurnRangeCall.perform(
-            positions,
-            ticks,
-            rangeTickMap,
-            samples,
-            globalState,
-            cache,
-            params
-        );
+        return
+            BurnRangeCall.perform(
+                positions,
+                ticks,
+                rangeTickMap,
+                samples,
+                globalState,
+                cache,
+                params
+            );
     }
 
-    //limitSwap
-    function mintLimit(
-        MintLimitParams memory params
-    ) external 
+    function mintLimit(MintLimitParams memory params)
+        external
         nonReentrant(globalState)
         canonicalOnly
-    returns (
-        int256,
-        int256
-    ) {
+        returns (int256, int256)
+    {
         MintLimitCache memory cache;
         cache.constants = immutables();
-        return MintLimitCall.perform(
-            params.zeroForOne ? positions0 : positions1,
-            ticks,
-            samples,
-            rangeTickMap,
-            limitTickMap,
-            globalState,
-            params,
-            cache
-        );
+        return
+            MintLimitCall.perform(
+                params.zeroForOne ? positions0 : positions1,
+                ticks,
+                samples,
+                rangeTickMap,
+                limitTickMap,
+                globalState,
+                params,
+                cache
+            );
     }
 
-    function burnLimit(
-        BurnLimitParams memory params
-    ) external 
+    function burnLimit(BurnLimitParams memory params)
+        external
         nonReentrant(globalState)
         canonicalOnly
-    returns (
-        int256,
-        int256
-    ) {
+        returns (int256, int256)
+    {
         BurnLimitCache memory cache;
         cache.constants = immutables();
-        return BurnLimitCall.perform(
-            params.zeroForOne ? positions0 : positions1,
-            ticks,
-            limitTickMap,
-            globalState,
-            params, 
-            cache
-        );
+        return
+            BurnLimitCall.perform(
+                params.zeroForOne ? positions0 : positions1,
+                ticks,
+                limitTickMap,
+                globalState,
+                params,
+                cache
+            );
     }
 
-    function swap(
-        SwapParams memory params
-    ) external 
+    function swap(SwapParams memory params)
+        external
         nonReentrant(globalState)
         canonicalOnly
-    returns (
-        int256,
-        int256
-    ) 
+        returns (int256, int256)
     {
         SwapCache memory cache;
         cache.constants = immutables();
-        return SwapCall.perform(
-            ticks,
-            samples,
-            rangeTickMap,
-            limitTickMap,
-            globalState,
-            params,
-            cache
-        );
+        return
+            SwapCall.perform(
+                ticks,
+                samples,
+                rangeTickMap,
+                limitTickMap,
+                globalState,
+                params,
+                cache
+            );
     }
 
-    function increaseSampleCount(
-        uint16 newSampleCountMax
-    ) external 
+    function increaseSampleCount(uint16 newSampleCountMax)
+        external
         nonReentrant(globalState)
-        canonicalOnly 
+        canonicalOnly
     {
-        Samples.expand(
-            samples,
-            globalState.pool,
-            newSampleCountMax
-        );
+        Samples.expand(samples, globalState.pool, newSampleCountMax);
     }
 
-    function fees(
-        FeesParams memory params
-    ) external 
+    function fees(FeesParams memory params)
+        external
         ownerOnly
         nonReentrant(globalState)
-        canonicalOnly 
-    returns (
-        uint128 token0Fees,
-        uint128 token1Fees
-    ) {
-        return FeesCall.perform(
-            globalState,
-            params,
-            immutables()
-        );
+        canonicalOnly
+        returns (uint128 token0Fees, uint128 token1Fees)
+    {
+        return FeesCall.perform(globalState, params, immutables());
     }
 
-    function quote(
-        QuoteParams memory params
-    ) external view 
-    returns (
-        uint256,
-        uint256,
-        uint160
-    ) {
+    function quote(QuoteParams memory params)
+        external
+        view
+        returns (
+            uint256,
+            uint256,
+            uint160
+        )
+    {
         SwapCache memory cache;
         cache.constants = immutables();
-        return QuoteCall.perform(
-            ticks,
-            rangeTickMap,
-            limitTickMap,
-            globalState,
-            params,
-            cache
-        );
+        return
+            QuoteCall.perform(
+                ticks,
+                rangeTickMap,
+                limitTickMap,
+                globalState,
+                params,
+                cache
+            );
     }
 
-    function sample(
-        uint32[] memory secondsAgo
-    ) external view override
-    returns(
-        int56[]   memory tickSecondsAccum,
-        uint160[] memory secondsPerLiquidityAccum,
-        uint160 averagePrice,
-        uint128 averageLiquidity,
-        int24 averageTick
-    ) 
+    function sample(uint32[] memory secondsAgo)
+        external
+        view
+        override
+        returns (
+            int56[] memory tickSecondsAccum,
+            uint160[] memory secondsPerLiquidityAccum,
+            uint160 averagePrice,
+            uint128 averageLiquidity,
+            int24 averageTick
+        )
     {
-        return SampleCall.perform(
-            globalState,
-            immutables(),
-            secondsAgo
-        );
+        return SampleCall.perform(globalState, immutables(), secondsAgo);
     }
 
-    function snapshotRange(
-        uint32 positionId 
-    ) external view  returns (
-        int56   tickSecondsAccum,
-        uint160 secondsPerLiquidityAccum,
-        uint128 feesOwed0,
-        uint128 feesOwed1
-    ) {
-        return SnapshotRangeCall.perform(
-            positions,
-            ticks,
-            globalState,
-            immutables(),
-            positionId
-        );
+    function snapshotRange(uint32 positionId)
+        external
+        view
+        returns (
+            int56 tickSecondsAccum,
+            uint160 secondsPerLiquidityAccum,
+            uint128 feesOwed0,
+            uint128 feesOwed1
+        )
+    {
+        return
+            SnapshotRangeCall.perform(
+                positions,
+                ticks,
+                globalState,
+                immutables(),
+                positionId
+            );
     }
 
-    function snapshotLimit(
-        SnapshotLimitParams memory params
-    ) external view returns(
-        uint128,
-        uint128
-    ) {
-        return SnapshotLimitCall.perform(
-            params.zeroForOne ? positions0 : positions1,
-            ticks,
-            limitTickMap,
-            globalState,
-            immutables(),
-            params
-        );
+    function snapshotLimit(SnapshotLimitParams memory params)
+        external
+        view
+        returns (uint128, uint128)
+    {
+        return
+            SnapshotLimitCall.perform(
+                params.zeroForOne ? positions0 : positions1,
+                ticks,
+                limitTickMap,
+                globalState,
+                immutables(),
+                params
+            );
     }
 
-    function immutables() public view returns (
-        LimitImmutables memory
-    ) {
-        return LimitImmutables(
-            owner(),
-            original,
-            factory,
-            PriceBounds(minPrice(), maxPrice()),
-            token0(),
-            token1(),
-            poolToken(),
-            genesisTime(),
-            tickSpacing(),
-            swapFee()
-        );
+    function immutables() public view returns (LimitImmutables memory) {
+        return
+            LimitImmutables(
+                owner(),
+                original,
+                factory,
+                PriceBounds(minPrice(), maxPrice()),
+                token0(),
+                token1(),
+                poolToken(),
+                genesisTime(),
+                tickSpacing(),
+                swapFee()
+            );
     }
 
-    function priceBounds(
-        int16 tickSpacing
-    ) external pure returns (uint160, uint160) {
+    function priceBounds(int16 tickSpacing)
+        external
+        pure
+        returns (uint160, uint160)
+    {
         return ConstantProduct.priceBounds(tickSpacing);
     }
 
@@ -317,8 +292,10 @@ contract LimitPool is
 
     function _onlyCanoncialClones() private view {
         // compute pool key
-        bytes32 key = keccak256(abi.encode(original, token0(), token1(), swapFee()));
-        
+        bytes32 key = keccak256(
+            abi.encode(original, token0(), token1(), swapFee())
+        );
+
         // compute canonical pool address
         address predictedAddress = LibClone.predictDeterministicAddress(
             original,
@@ -337,7 +314,8 @@ contract LimitPool is
             factory
         );
         // only allow delegateCall from canonical clones
-        if (address(this) != predictedAddress) require(false, 'NoDelegateCall()');
+        if (address(this) != predictedAddress)
+            require(false, 'NoDelegateCall()');
     }
 
     function _onlyFactory() private view {

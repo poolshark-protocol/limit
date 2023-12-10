@@ -6,10 +6,10 @@ interface IWETH9 {
     function deposit() external payable;
 
     /// @notice Withdraws ether from wrapped ether balance
-    function withdraw(uint wad) external;
+    function withdraw(uint256 wad) external;
 
     /// @notice Withdraws ether from wrapped ether balance
-    function transfer(address dst, uint wad) external returns (bool);
+    function transfer(address dst, uint256 wad) external returns (bool);
 
     /// @notice Returns balance for address
     function balanceOf(address account) external returns (uint256);

@@ -15,5 +15,5 @@ interface IRangePoolFactory {
         uint256 fee
     ) external view returns (address);
 
-    function owner() external view returns(address);
+    function owner() external view returns (address);
 }

@@ -9,7 +9,7 @@ interface PoolsharkStructs {
         LimitPoolState pool0;
         LimitPoolState pool1;
         uint128 liquidityGlobal;
-        uint32  positionIdNext;
+        uint32 positionIdNext;
         uint32 epoch;
         uint8 unlocked;
     }
@@ -23,14 +23,14 @@ interface PoolsharkStructs {
     }
 
     struct RangePoolState {
-        SampleState  samples;
+        SampleState samples;
         uint200 feeGrowthGlobal0;
         uint200 feeGrowthGlobal1;
         uint160 secondsPerLiquidityAccum;
-        uint160 price;               /// @dev Starting price current
-        uint128 liquidity;           /// @dev Liquidity currently active
-        int56   tickSecondsAccum;
-        int24   tickAtPrice;
+        uint160 price; /// @dev Starting price current
+        uint128 liquidity; /// @dev Liquidity currently active
+        int56 tickSecondsAccum;
+        int24 tickAtPrice;
         uint16 protocolSwapFee0;
         uint16 protocolSwapFee1;
     }
@@ -56,29 +56,29 @@ interface PoolsharkStructs {
     }
 
     struct Sample {
-        uint32  blockTimestamp;
-        int56   tickSecondsAccum;
+        uint32 blockTimestamp;
+        int56 tickSecondsAccum;
         uint160 secondsPerLiquidityAccum;
     }
 
     struct SampleState {
-        uint16  index;
-        uint16  count;
-        uint16  countMax;
+        uint16 index;
+        uint16 count;
+        uint16 countMax;
     }
 
     struct LimitPoolParams {
         address tokenIn;
         address tokenOut;
         uint160 startPrice;
-        uint16  swapFee;
-        uint16  poolTypeId;
+        uint16 swapFee;
+        uint16 poolTypeId;
     }
 
     struct SwapParams {
         address to;
         uint160 priceLimit;
-        uint128  amount;
+        uint128 amount;
         bool exactIn;
         bool zeroForOne;
         bytes callbackData;
@@ -168,38 +168,32 @@ interface PoolsharkStructs {
          * @notice Address for the receiver of the minted position
          */
         address to;
-
         /**
          * @custom:field amount
          * @notice Token amount to be deposited into the minted position
          */
         uint128 amount;
-
         /**
          * @custom:field positionId
          * @notice 0 if creating a new position; id of previous if adding liquidity
          */
         uint32 positionId;
-
         /**
          * @custom:field lower
          * @notice The lower price tick for the position range
          */
         int24 lower;
-
         /**
          * @custom:field upper
          * @notice The upper price tick for the position range
          */
         int24 upper;
-
         /**
          * @custom:field zeroForOne
          * @notice True if depositing token0, the first token address in lexographical order
-         * @notice False if depositing token1, the second token address in lexographical order 
+         * @notice False if depositing token1, the second token address in lexographical order
          */
         bool zeroForOne;
-
         /**
          * @custom:field callbackData
          * @notice callback data which gets passed back to msg.sender at the end of a `mint` call
@@ -216,7 +210,6 @@ interface PoolsharkStructs {
          * @notice Address for the receiver of the collected position amounts
          */
         address to;
-
         /**
          * @custom:field burnPercent
          * @notice Percent of the remaining liquidity to be removed
@@ -225,13 +218,11 @@ interface PoolsharkStructs {
          * @notice 1e37 represents 10%
          */
         uint128 burnPercent;
-
         /**
          * @custom:field positionId
          * @notice 0 if creating a new position; id of previous if adding liquidity
          */
         uint32 positionId;
-
         /**
          * @custom:field claim
          * @notice The most recent tick crossed in this range
@@ -239,18 +230,16 @@ interface PoolsharkStructs {
          * @notice if `zeroForOne` is false, claim tick progresses from lower => upper
          */
         int24 claim;
-
         /**
          * @custom:field zeroForOne
          * @notice True if deposited token0, the first token address in lexographical order
-         * @notice False if deposited token1, the second token address in lexographical order 
+         * @notice False if deposited token1, the second token address in lexographical order
          */
         bool zeroForOne;
-
         /**
          * @custom:field sync
          * @notice True will sync the pool latestTick
-         * @notice False will skip syncing latestTick 
+         * @notice False will skip syncing latestTick
          */
         bool sync;
     }
@@ -264,13 +253,11 @@ interface PoolsharkStructs {
          * @notice Address of the position owner
          */
         address owner;
-
         /**
          * @custom:field positionId
          * @notice id of position
          */
         uint32 positionId;
-
         /**
          * @custom:field burnPercent
          * @notice Percent of the remaining liquidity to be removed
@@ -279,7 +266,6 @@ interface PoolsharkStructs {
          * @notice 1e37 represents 10%
          */
         uint128 burnPercent;
-
         /**
          * @custom:field claim
          * @notice The most recent tick crossed in this range
@@ -287,11 +273,10 @@ interface PoolsharkStructs {
          * @notice if `zeroForOne` is false, claim tick progresses from lower => upper
          */
         int24 claim;
-
         /**
          * @custom:field zeroForOne
          * @notice True if deposited token0, the first token address in lexographical order
-         * @notice False if deposited token1, the second token address in lexographical order 
+         * @notice False if deposited token1, the second token address in lexographical order
          */
         bool zeroForOne;
     }
@@ -302,7 +287,7 @@ interface PoolsharkStructs {
         int256 amountOut;
         uint160 priceAfter;
     }
-    
+
     struct LimitImmutables {
         address owner;
         address poolImpl;
@@ -327,8 +312,8 @@ interface PoolsharkStructs {
         address inputPool;
         uint128 minAmountPerAuction;
         uint32 genesisTime;
-        int16  minPositionWidth;
-        int16  tickSpread;
+        int16 minPositionWidth;
+        int16 tickSpread;
         uint16 twapLength;
         uint16 auctionLength;
         uint16 sampleInterval;
@@ -343,9 +328,9 @@ interface PoolsharkStructs {
     }
 
     struct TickMap {
-        uint256 blocks;                     /// @dev - sets of words
-        mapping(uint256 => uint256) words;  /// @dev - sets to words
-        mapping(uint256 => uint256) ticks;  /// @dev - words to ticks
+        uint256 blocks; /// @dev - sets of words
+        mapping(uint256 => uint256) words; /// @dev - sets to words
+        mapping(uint256 => uint256) ticks; /// @dev - words to ticks
         mapping(uint256 => mapping(uint256 => mapping(uint256 => uint256))) epochs0; /// @dev - ticks to epochs
         mapping(uint256 => mapping(uint256 => mapping(uint256 => uint256))) epochs1; /// @dev - ticks to epochs
     }
@@ -362,14 +347,14 @@ interface PoolsharkStructs {
         uint160 averagePrice;
         uint160 secondsPerLiquidityAccum;
         uint128 feeAmount;
-        int56   tickSecondsAccum;
-        int56   tickSecondsAccumBase;
-        int24   crossTick;
-        uint8   crossStatus;
-        bool    limitActive;
-        bool    exactIn;
-        bool    cross;
-    }  
+        int56 tickSecondsAccum;
+        int56 tickSecondsAccumBase;
+        int24 crossTick;
+        uint8 crossStatus;
+        bool limitActive;
+        bool exactIn;
+        bool cross;
+    }
 
     enum CrossStatus {
         RANGE,

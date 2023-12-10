@@ -11,11 +11,7 @@ abstract contract RangeStakerEvents {
         uint128 liquidity
     );
 
-    event UnstakeRange(
-        address pool,
-        uint32 positionId,
-        address recipient
-    );
+    event UnstakeRange(address pool, uint32 positionId, address recipient);
 
     event StakeRangeAccrued(
         address pool,

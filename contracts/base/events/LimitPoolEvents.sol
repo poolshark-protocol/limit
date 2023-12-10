@@ -28,9 +28,7 @@ abstract contract LimitPoolEvents {
         uint160 secondsPerLiquidityAccum
     );
 
-    event SampleCountIncreased(
-        uint16 newSampleCountMax
-    );
+    event SampleCountIncreased(uint16 newSampleCountMax);
 
     event MintRange(
         address indexed recipient,
@@ -50,18 +48,11 @@ abstract contract LimitPoolEvents {
         int128 amount1
     );
 
-    event CompoundRange(
-        uint32 indexed positionId,
-        uint128 liquidityCompounded
-    );
+    event CompoundRange(uint32 indexed positionId, uint128 liquidityCompounded);
 
-    event CollectRange0(
-        uint128 amount0
-    );
+    event CollectRange0(uint128 amount0);
 
-    event CollectRange1(
-        uint128 amount1
-    );
+    event CollectRange1(uint128 amount1);
 
     event SyncRangeTick(
         uint200 feeGrowthOutside0,
@@ -107,9 +98,5 @@ abstract contract LimitPoolEvents {
         bool zeroForOne
     );
 
-    event SyncLimitTick(
-        uint32 epoch,
-        int24 tick,
-        bool zeroForOne
-    );
+    event SyncLimitTick(uint32 epoch, int24 tick, bool zeroForOne);
 }

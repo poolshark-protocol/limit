@@ -8,7 +8,6 @@ import '../utils/String.sol';
 import '../utils/SafeCast.sol';
 
 library Claims {
-
     using SafeCast for uint256;
 
     // if claim tick searched, look max 512 spacings ahead
@@ -19,24 +18,39 @@ library Claims {
         PoolsharkStructs.TickMap storage tickMap,
         PoolsharkStructs.BurnLimitParams memory params,
         LimitPoolStructs.BurnLimitCache memory cache
-    ) internal view returns (
-        PoolsharkStructs.BurnLimitParams memory,
-        LimitPoolStructs.BurnLimitCache memory
-    ) { 
-        if (params.claim < cache.position.lower ||
-                params.claim > cache.position.upper)
-            require (false, 'ClaimTick::OutsidePositionBounds()');
-        
+    )
+        internal
+        view
+        returns (
+            PoolsharkStructs.BurnLimitParams memory,
+            LimitPoolStructs.BurnLimitCache memory
+        )
+    {
+        if (
+            params.claim < cache.position.lower ||
+            params.claim > cache.position.upper
+        ) require(false, 'ClaimTick::OutsidePositionBounds()');
+
         if (params.claim % (cache.constants.tickSpacing / 2) != 0)
-            require (false, 'ClaimTick::NotHalfTickOrFullTick()');
+            require(false, 'ClaimTick::NotHalfTickOrFullTick()');
 
-        uint32 claimTickEpoch = EpochMap.get(params.claim, params.zeroForOne, tickMap, cache.constants);
+        uint32 claimTickEpoch = EpochMap.get(
+            params.claim,
+            params.zeroForOne,
+            tickMap,
+            cache.constants
+        );
 
-        if (params.zeroForOne){
+        if (params.zeroForOne) {
             if (cache.pool.price >= cache.priceClaim) {
                 if (cache.pool.price <= cache.priceUpper) {
                     cache.priceClaim = cache.pool.price;
-                    params.claim = TickMap.roundBack(cache.pool.tickAtPrice, cache.constants, params.zeroForOne, cache.priceClaim);
+                    params.claim = TickMap.roundBack(
+                        cache.pool.tickAtPrice,
+                        cache.constants,
+                        params.zeroForOne,
+                        cache.priceClaim
+                    );
                 } else {
                     cache.priceClaim = cache.priceUpper;
                     params.claim = cache.position.upper;
@@ -47,10 +61,9 @@ library Claims {
                 if (cache.claimTick.priceAt == 0) {
                     // if tick untouched since position creation revert
                     if (claimTickEpoch <= cache.position.epochLast)
-                        require (false, 'ClaimTick::HalfTickClaimInvalid()'); 
-                    else
+                        require(false, 'ClaimTick::HalfTickClaimInvalid()');
                         // search ahead for the correct claim tick
-                        cache.search = true;
+                    else cache.search = true;
                 }
                 cache.priceClaim = cache.claimTick.priceAt;
             }
@@ -58,7 +71,12 @@ library Claims {
             if (cache.pool.price <= cache.priceClaim) {
                 if (cache.pool.price >= cache.priceLower) {
                     cache.priceClaim = cache.pool.price;
-                    params.claim = TickMap.roundBack(cache.pool.tickAtPrice, cache.constants, params.zeroForOne, cache.priceClaim);
+                    params.claim = TickMap.roundBack(
+                        cache.pool.tickAtPrice,
+                        cache.constants,
+                        params.zeroForOne,
+                        cache.priceClaim
+                    );
                 } else {
                     cache.priceClaim = cache.priceLower;
                     params.claim = cache.position.lower;
@@ -68,26 +86,33 @@ library Claims {
             } else if (params.claim % cache.constants.tickSpacing != 0) {
                 if (cache.claimTick.priceAt == 0) {
                     if (claimTickEpoch <= cache.position.epochLast)
-                        require (false, 'ClaimTick::HalfTickClaimInvalid()'); 
-                    else
+                        require(false, 'ClaimTick::HalfTickClaimInvalid()');
                         // search ahead for the correct claim tick
-                        cache.search = true;
+                    else cache.search = true;
                 }
                 cache.priceClaim = cache.claimTick.priceAt;
             }
         }
 
-        if (params.claim == (params.zeroForOne ? cache.position.upper : cache.position.lower)) {
+        if (
+            params.claim ==
+            (params.zeroForOne ? cache.position.upper : cache.position.lower)
+        ) {
             // check if final tick crossed
             cache.liquidityBurned = 0;
             if (claimTickEpoch <= cache.position.epochLast)
                 // nothing to search
-                require (false, 'ClaimTick::FinalTickNotCrossedYet()');
+                require(false, 'ClaimTick::FinalTickNotCrossedYet()');
         } else if (cache.liquidityBurned > 0) {
             /// @dev - partway claim is valid as long as liquidity is not being removed
             if (params.zeroForOne) {
                 // check final tick first
-                uint32 endTickEpoch = EpochMap.get(cache.position.upper, params.zeroForOne, tickMap, cache.constants);
+                uint32 endTickEpoch = EpochMap.get(
+                    cache.position.upper,
+                    params.zeroForOne,
+                    tickMap,
+                    cache.constants
+                );
                 if (endTickEpoch > cache.position.epochLast) {
                     // final tick crossed
                     params.claim = cache.position.upper;
@@ -96,8 +121,18 @@ library Claims {
                     cache.liquidityBurned = 0;
                 } else {
                     // check claim tick passed is valid
-                    int24 claimTickNext = TickMap.next(tickMap, params.claim, cache.constants.tickSpacing, false);
-                    uint32 claimTickNextEpoch = EpochMap.get(claimTickNext, params.zeroForOne, tickMap, cache.constants);
+                    int24 claimTickNext = TickMap.next(
+                        tickMap,
+                        params.claim,
+                        cache.constants.tickSpacing,
+                        false
+                    );
+                    uint32 claimTickNextEpoch = EpochMap.get(
+                        claimTickNext,
+                        params.zeroForOne,
+                        tickMap,
+                        cache.constants
+                    );
                     if (claimTickNextEpoch > cache.position.epochLast) {
                         ///@dev - next tick in range should not have been crossed
                         // require (false, 'ClaimTick::NextTickAlreadyCrossed()');
@@ -106,7 +141,12 @@ library Claims {
                 }
             } else {
                 // check final tick first
-                uint32 endTickEpoch = EpochMap.get(cache.position.lower, params.zeroForOne, tickMap, cache.constants);
+                uint32 endTickEpoch = EpochMap.get(
+                    cache.position.lower,
+                    params.zeroForOne,
+                    tickMap,
+                    cache.constants
+                );
                 if (endTickEpoch > cache.position.epochLast) {
                     // final tick crossed
                     params.claim = cache.position.lower;
@@ -115,8 +155,18 @@ library Claims {
                     cache.liquidityBurned = 0;
                 } else {
                     // check claim tick passed is valid
-                    int24 claimTickNext = TickMap.previous(tickMap, params.claim, cache.constants.tickSpacing, false);
-                    uint32 claimTickNextEpoch = EpochMap.get(claimTickNext, params.zeroForOne, tickMap, cache.constants);
+                    int24 claimTickNext = TickMap.previous(
+                        tickMap,
+                        params.claim,
+                        cache.constants.tickSpacing,
+                        false
+                    );
+                    uint32 claimTickNextEpoch = EpochMap.get(
+                        claimTickNext,
+                        params.zeroForOne,
+                        tickMap,
+                        cache.constants
+                    );
                     if (claimTickNextEpoch > cache.position.epochLast) {
                         ///@dev - next tick in range should not have been crossed
                         // require (false, 'ClaimTick::NextTickAlreadyCrossed()');
@@ -127,14 +177,22 @@ library Claims {
         }
 
         if (cache.search) {
-            (params, cache, claimTickEpoch) = search(ticks, tickMap, params, cache);
+            (params, cache, claimTickEpoch) = search(
+                ticks,
+                tickMap,
+                params,
+                cache
+            );
         }
 
         /// @dev - start tick does not overwrite position and final tick clears position
-        if (params.claim != cache.position.upper && params.claim != cache.position.lower) {
+        if (
+            params.claim != cache.position.upper &&
+            params.claim != cache.position.lower
+        ) {
             // check epochLast on claim tick
             if (claimTickEpoch <= cache.position.epochLast)
-                require (false, 'ClaimTick::TickNotCrossed()');
+                require(false, 'ClaimTick::TickNotCrossed()');
         }
 
         return (params, cache);
@@ -144,9 +202,7 @@ library Claims {
         PoolsharkStructs.BurnLimitParams memory params,
         LimitPoolStructs.BurnLimitCache memory cache,
         PoolsharkStructs.LimitImmutables memory constants
-    ) internal pure returns (
-        LimitPoolStructs.BurnLimitCache memory
-    ) {
+    ) internal pure returns (LimitPoolStructs.BurnLimitCache memory) {
         // if half tick priceAt > 0 add amountOut to amountOutClaimed
         // set claimPriceLast if zero
         if (!cache.position.crossedInto) {
@@ -156,35 +212,95 @@ library Claims {
 
         if (params.claim % constants.tickSpacing != 0)
             // this should pass price at the claim tick
-            locals.previousFullTick = TickMap.roundBack(params.claim, constants, params.zeroForOne, ConstantProduct.getPriceAtTick(params.claim, constants));
-        else
-            locals.previousFullTick = params.claim;
-        locals.pricePrevious = ConstantProduct.getPriceAtTick(locals.previousFullTick, constants);
-        if (params.zeroForOne ? locals.previousFullTick > cache.position.lower
-                              : locals.previousFullTick < cache.position.upper) {
-            
+            locals.previousFullTick = TickMap.roundBack(
+                params.claim,
+                constants,
+                params.zeroForOne,
+                ConstantProduct.getPriceAtTick(params.claim, constants)
+            );
+        else locals.previousFullTick = params.claim;
+        locals.pricePrevious = ConstantProduct.getPriceAtTick(
+            locals.previousFullTick,
+            constants
+        );
+        if (
+            params.zeroForOne
+                ? locals.previousFullTick > cache.position.lower
+                : locals.previousFullTick < cache.position.upper
+        ) {
             // claim amounts up to latest full tick crossed
-            cache.amountIn += uint128(params.zeroForOne ? ConstantProduct.getDy(cache.position.liquidity, cache.priceLower, locals.pricePrevious, false)
-                                                        : ConstantProduct.getDx(cache.position.liquidity, locals.pricePrevious, cache.priceUpper, false));
+            cache.amountIn += uint128(
+                params.zeroForOne
+                    ? ConstantProduct.getDy(
+                        cache.position.liquidity,
+                        cache.priceLower,
+                        locals.pricePrevious,
+                        false
+                    )
+                    : ConstantProduct.getDx(
+                        cache.position.liquidity,
+                        locals.pricePrevious,
+                        cache.priceUpper,
+                        false
+                    )
+            );
         }
         if (cache.liquidityBurned > 0) {
-           // if tick hasn't been set back calculate amountIn
-            if (params.zeroForOne ? cache.priceClaim > locals.pricePrevious
-                                  : cache.priceClaim < locals.pricePrevious) {
+            // if tick hasn't been set back calculate amountIn
+            if (
+                params.zeroForOne
+                    ? cache.priceClaim > locals.pricePrevious
+                    : cache.priceClaim < locals.pricePrevious
+            ) {
                 // allow partial tick claim if removing liquidity
-                cache.amountIn += uint128(params.zeroForOne ? ConstantProduct.getDy(cache.liquidityBurned, locals.pricePrevious, cache.priceClaim, false)
-                                                            : ConstantProduct.getDx(cache.liquidityBurned, cache.priceClaim, locals.pricePrevious, false));
+                cache.amountIn += uint128(
+                    params.zeroForOne
+                        ? ConstantProduct.getDy(
+                            cache.liquidityBurned,
+                            locals.pricePrevious,
+                            cache.priceClaim,
+                            false
+                        )
+                        : ConstantProduct.getDx(
+                            cache.liquidityBurned,
+                            cache.priceClaim,
+                            locals.pricePrevious,
+                            false
+                        )
+                );
             }
             // use priceClaim if tick hasn't been set back
             // else use claimPriceLast to calculate amountOut
-            if (params.claim != (params.zeroForOne ? cache.position.upper : cache.position.lower)) {
-                cache.amountOut += uint128(params.zeroForOne ? ConstantProduct.getDx(cache.liquidityBurned, cache.priceClaim, cache.priceUpper, false)
-                                                             : ConstantProduct.getDy(cache.liquidityBurned, cache.priceLower, cache.priceClaim, false));
+            if (
+                params.claim !=
+                (
+                    params.zeroForOne
+                        ? cache.position.upper
+                        : cache.position.lower
+                )
+            ) {
+                cache.amountOut += uint128(
+                    params.zeroForOne
+                        ? ConstantProduct.getDx(
+                            cache.liquidityBurned,
+                            cache.priceClaim,
+                            cache.priceUpper,
+                            false
+                        )
+                        : ConstantProduct.getDy(
+                            cache.liquidityBurned,
+                            cache.priceLower,
+                            cache.priceClaim,
+                            false
+                        )
+                );
             }
         }
         // take protocol fee if needed
         if (cache.pool.protocolFillFee > 0 && cache.amountIn > 0) {
-            uint128 protocolFeeAmount = OverflowMath.mulDiv(cache.amountIn, cache.pool.protocolFillFee, 1e4).toUint128();
+            uint128 protocolFeeAmount = OverflowMath
+                .mulDiv(cache.amountIn, cache.pool.protocolFillFee, 1e4)
+                .toUint128();
             cache.amountIn -= protocolFeeAmount;
             cache.pool.protocolFees += protocolFeeAmount;
         }
@@ -196,18 +312,26 @@ library Claims {
         PoolsharkStructs.TickMap storage tickMap,
         PoolsharkStructs.BurnLimitParams memory params,
         LimitPoolStructs.BurnLimitCache memory cache
-    ) internal view returns (
-        PoolsharkStructs.BurnLimitParams memory,
-        LimitPoolStructs.BurnLimitCache memory,
-        uint32 claimTickEpoch
-    ) {
+    )
+        internal
+        view
+        returns (
+            PoolsharkStructs.BurnLimitParams memory,
+            LimitPoolStructs.BurnLimitCache memory,
+            uint32 claimTickEpoch
+        )
+    {
         LimitPoolStructs.SearchLocals memory locals;
 
         locals.ticksFound = new int24[](256);
         locals.searchTick = params.claim;
         if (params.zeroForOne) {
-            for (uint i=0; i < maxWordsSearched;) {
-                (locals.ticksFound, locals.ticksIncluded, locals.searchTick) = TickMap.nextTicksWithinWord(
+            for (uint256 i = 0; i < maxWordsSearched; ) {
+                (
+                    locals.ticksFound,
+                    locals.ticksIncluded,
+                    locals.searchTick
+                ) = TickMap.nextTicksWithinWord(
                     tickMap,
                     locals.searchTick,
                     cache.constants.tickSpacing,
@@ -216,15 +340,24 @@ library Claims {
                     locals.ticksIncluded
                 );
                 // add start of next word if tick exists and is within range
-                if (locals.searchTick < cache.position.upper && TickMap.get(tickMap, locals.searchTick, cache.constants.tickSpacing)) {
+                if (
+                    locals.searchTick < cache.position.upper &&
+                    TickMap.get(
+                        tickMap,
+                        locals.searchTick,
+                        cache.constants.tickSpacing
+                    )
+                ) {
                     locals.ticksFound[locals.ticksIncluded] = locals.searchTick;
                     unchecked {
                         ++locals.ticksIncluded;
                     }
                 }
                 // if we reached the final tick break the loop
-                if (locals.ticksIncluded > 0 && 
-                        locals.searchTick >= cache.position.upper) {
+                if (
+                    locals.ticksIncluded > 0 &&
+                    locals.searchTick >= cache.position.upper
+                ) {
                     break;
                 }
                 unchecked {
@@ -232,8 +365,12 @@ library Claims {
                 }
             }
         } else {
-            for (int i=0; i<2;) {
-                (locals.ticksFound, locals.ticksIncluded, locals.searchTick) = TickMap.previousTicksWithinWord(
+            for (int256 i = 0; i < 2; ) {
+                (
+                    locals.ticksFound,
+                    locals.ticksIncluded,
+                    locals.searchTick
+                ) = TickMap.previousTicksWithinWord(
                     tickMap,
                     locals.searchTick,
                     cache.constants.tickSpacing,
@@ -242,49 +379,84 @@ library Claims {
                     locals.ticksIncluded
                 );
                 // add start of next word if tick exists and is within range
-                if (locals.searchTick > cache.position.lower && TickMap.get(tickMap, locals.searchTick, cache.constants.tickSpacing)) {
+                if (
+                    locals.searchTick > cache.position.lower &&
+                    TickMap.get(
+                        tickMap,
+                        locals.searchTick,
+                        cache.constants.tickSpacing
+                    )
+                ) {
                     locals.ticksFound[locals.ticksIncluded] = locals.searchTick;
                     unchecked {
                         ++locals.ticksIncluded;
                     }
                 }
                 // if we reached the final tick break the loop
-                if (locals.ticksIncluded > 0 && 
-                        locals.searchTick <= cache.position.lower) {
+                if (
+                    locals.ticksIncluded > 0 &&
+                    locals.searchTick <= cache.position.lower
+                ) {
                     break;
                 }
                 unchecked {
                     ++i;
                 }
-            } 
+            }
         }
 
         // set initial endIdx
         if (locals.ticksIncluded > 0) {
             locals.endIdx = locals.ticksIncluded - 1;
         } else {
-            require(false, "ClaimTick::NoTicksFoundViaSearch()");
+            require(false, 'ClaimTick::NoTicksFoundViaSearch()');
         }
 
         while (locals.startIdx <= locals.endIdx) {
             // set idx at middle of start & end
-            locals.searchIdx = (locals.endIdx - locals.startIdx) / 2 + locals.startIdx;
-            
+            locals.searchIdx =
+                (locals.endIdx - locals.startIdx) /
+                2 +
+                locals.startIdx;
+
             // set ticks
             locals.searchTick = locals.ticksFound[locals.searchIdx];
             if (locals.searchIdx + 1 < locals.ticksIncluded) {
                 // tick ahead in array
-                locals.searchTickAhead = locals.ticksFound[locals.searchIdx + 1];
+                locals.searchTickAhead = locals.ticksFound[
+                    locals.searchIdx + 1
+                ];
             } else {
                 // tick ahead in storage
-                locals.searchTickAhead = params.zeroForOne ? TickMap.next(tickMap, locals.searchTick, cache.constants.tickSpacing, false)
-                                                           : TickMap.previous(tickMap, locals.searchTick, cache.constants.tickSpacing, false);
+                locals.searchTickAhead = params.zeroForOne
+                    ? TickMap.next(
+                        tickMap,
+                        locals.searchTick,
+                        cache.constants.tickSpacing,
+                        false
+                    )
+                    : TickMap.previous(
+                        tickMap,
+                        locals.searchTick,
+                        cache.constants.tickSpacing,
+                        false
+                    );
             }
 
             // set epochs
-            locals.claimTickEpoch = EpochMap.get(locals.searchTick, params.zeroForOne, tickMap, cache.constants);
-            locals.claimTickAheadEpoch = EpochMap.get(locals.searchTickAhead, params.zeroForOne, tickMap, cache.constants);
-            
+            locals.claimTickEpoch = EpochMap.get(
+                locals.searchTick,
+                params.zeroForOne,
+                tickMap,
+                cache.constants
+            );
+            locals.claimTickAheadEpoch = EpochMap.get(
+                locals.searchTickAhead,
+                params.zeroForOne,
+                tickMap,
+                cache.constants
+            );
+
             // check epochs
             if (locals.claimTickEpoch > cache.position.epochLast) {
                 if (locals.claimTickAheadEpoch <= cache.position.epochLast) {
@@ -304,21 +476,30 @@ library Claims {
         }
 
         // final check on valid claim tick
-        if (locals.claimTickEpoch <= cache.position.epochLast ||
-                locals.claimTickAheadEpoch > cache.position.epochLast) {
-            require(false, "ClaimTick::NotFoundViaSearch()");
+        if (
+            locals.claimTickEpoch <= cache.position.epochLast ||
+            locals.claimTickAheadEpoch > cache.position.epochLast
+        ) {
+            require(false, 'ClaimTick::NotFoundViaSearch()');
         }
-        
+
         cache.claimTick = ticks[locals.searchTick].limit;
         if ((locals.searchTick % cache.constants.tickSpacing) == 0)
-            cache.priceClaim = ConstantProduct.getPriceAtTick(locals.searchTick, cache.constants);
+            cache.priceClaim = ConstantProduct.getPriceAtTick(
+                locals.searchTick,
+                cache.constants
+            );
         else {
             cache.priceClaim = cache.claimTick.priceAt;
         }
         if (cache.liquidityBurned == 0)
-            params.claim = TickMap.roundBack(locals.searchTick, cache.constants, params.zeroForOne, cache.priceClaim);
-        else
-            params.claim = locals.searchTick;
+            params.claim = TickMap.roundBack(
+                locals.searchTick,
+                cache.constants,
+                params.zeroForOne,
+                cache.priceClaim
+            );
+        else params.claim = locals.searchTick;
 
         return (params, cache, locals.claimTickEpoch);
     }

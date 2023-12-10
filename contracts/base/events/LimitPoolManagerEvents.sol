@@ -4,20 +4,29 @@ pragma solidity 0.8.18;
 import '../../interfaces/structs/PoolsharkStructs.sol';
 
 abstract contract LimitPoolManagerEvents is PoolsharkStructs {
-    event FactoryChanged(address indexed previousFactory, address indexed newFactory);
-    event FeeDeltaConstChanged(uint16 oldFeeDeltaConst, uint16 newFeeDeltaConst);
+    event FactoryChanged(
+        address indexed previousFactory,
+        address indexed newFactory
+    );
+    event FeeDeltaConstChanged(
+        uint16 oldFeeDeltaConst,
+        uint16 newFeeDeltaConst
+    );
     event PoolTypeEnabled(
         bytes32 poolTypeName,
         address poolImpl,
         address tokenImpl,
-        uint16  poolTypeId
+        uint16 poolTypeId
     );
-    event FeeTierEnabled(
-        uint16 swapFee,
-        int16 tickSpacing
+    event FeeTierEnabled(uint16 swapFee, int16 tickSpacing);
+    event FeeToTransfer(
+        address indexed previousFeeTo,
+        address indexed newFeeTo
     );
-    event FeeToTransfer(address indexed previousFeeTo, address indexed newFeeTo);
-    event OwnerTransfer(address indexed previousOwner, address indexed newOwner);
+    event OwnerTransfer(
+        address indexed previousOwner,
+        address indexed newOwner
+    );
     event ProtocolSwapFeesModified(
         address[] pools,
         int16[] protocolSwapFees0,

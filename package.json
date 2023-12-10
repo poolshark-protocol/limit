@@ -11,7 +11,7 @@
         "deploy-main": "npx hardhat deploy-limitpools --network arb_one",
         "verify": "npx hardhat verify-contracts",
         "all": "yarn clean; yarn compile; yarn test; yarn deploy;",
-        "prettier": "prettier --write --plugin=prettier-plugin-solidity 'contracts/**/*.sol'"
+        "prettier": "prettier --write --plugin=prettier-plugin-solidity contracts/**/**/**/*.sol"
     },
     "devDependencies": {
         "@nomicfoundation/hardhat-network-helpers": "1.0.8",

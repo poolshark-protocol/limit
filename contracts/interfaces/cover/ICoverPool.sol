@@ -9,11 +9,10 @@ import '../structs/PoolsharkStructs.sol';
  * @notice Defines the basic interface for a Cover Pool.
  */
 interface ICoverPool is PoolsharkStructs {
-
-    function immutables(
-    ) external view returns (
-        CoverImmutables memory constants
-    );
+    function immutables()
+        external
+        view
+        returns (CoverImmutables memory constants);
 
     /**
      * @notice Deposits `amountIn` of asset to be auctioned off each time price range is crossed further into.
@@ -24,9 +23,7 @@ interface ICoverPool is PoolsharkStructs {
      * @dev The position will be minted with the `to` address as the owner.
      * @param params The parameters for the function. See MintCoverParams.
      */
-    function mint(
-        MintCoverParams memory params
-    ) external;
+    function mint(MintCoverParams memory params) external;
 
     /**
      * @notice Withdraws the input token and returns any filled and/or unfilled amounts to the 'to' address specified. 
@@ -38,9 +35,7 @@ interface ICoverPool is PoolsharkStructs {
      * @dev The `sync` flag can be set to false so users can exit safely without syncing latestTick.
      * @param params The parameters for the function. See BurnCoverParams.
      */
-    function burn(
-        BurnCoverParams memory params
-    ) external;
+    function burn(BurnCoverParams memory params) external;
 
     /**
      * @notice Swaps `tokenIn` for `tokenOut`. 
@@ -53,12 +48,9 @@ interface ICoverPool is PoolsharkStructs {
      * @return amount0Delta The amount of token0 spent (negative) or received (positive) by the user
      * @return amount1Delta The amount of token1 spent (negative) or received (positive) by the user
      */
-    function swap(
-        SwapParams memory params
-    ) external returns (
-        int256 amount0Delta,
-        int256 amount1Delta
-    );
+    function swap(SwapParams memory params)
+        external
+        returns (int256 amount0Delta, int256 amount1Delta);
 
     /**
      * @notice Quotes the amount of `tokenIn` for `tokenOut`. 
@@ -72,11 +64,12 @@ interface ICoverPool is PoolsharkStructs {
      * @return outAmount The amount of tokenOut to be received
      * @return priceAfter The Q64.96 square root price after the swap
      */
-    function quote(
-        QuoteParams memory params
-    ) external view returns (
-        int256 inAmount,
-        int256 outAmount,
-        uint256 priceAfter
-    );
+    function quote(QuoteParams memory params)
+        external
+        view
+        returns (
+            int256 inAmount,
+            int256 outAmount,
+            uint256 priceAfter
+        );
 }

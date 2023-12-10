@@ -2,7 +2,7 @@
 pragma solidity 0.8.18;
 
 library Bytes {
-    bytes16 private constant alphabet = "0123456789abcdef";
+    bytes16 private constant alphabet = '0123456789abcdef';
 
     function from(string memory source) internal pure returns (bytes32 result) {
         bytes memory tempEmptyStringTest = bytes(source);
@@ -15,9 +15,13 @@ library Bytes {
         }
     }
 
-    function bytes32ToString(bytes32 _bytes32) internal pure returns (string memory) {
+    function bytes32ToString(bytes32 _bytes32)
+        internal
+        pure
+        returns (string memory)
+    {
         uint8 i = 0;
-        while(i < 32 && _bytes32[i] != 0) {
+        while (i < 32 && _bytes32[i] != 0) {
             i++;
         }
         bytes memory bytesArray = new bytes(i);

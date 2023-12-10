@@ -14,7 +14,6 @@ interface ICoverPoolMintCallback {
     ) external;
 }
 
-
 /// @title Callback for swaps
 /// @notice Any contract that calls the `swap` function must implement this interface.
 interface ICoverPoolSwapCallback {

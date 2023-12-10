@@ -22,8 +22,8 @@ library SafeTransfers {
         bool success;
         if (amount == 0) return;
         if (token == address(0)) {
-            (success, ) = to.call{value: amount}("");
-            if (!success) require(false, "SafeTransfers::EthTransferFailed()");
+            (success, ) = to.call{value: amount}('');
+            if (!success) require(false, 'SafeTransfers::EthTransferFailed()');
             return;
         }
         IERC20 erc20Token = IERC20(token);
@@ -49,7 +49,8 @@ library SafeTransfers {
                 success := 0
             }
         }
-        if (!success) require(false, 'TransferFailed(address(this), msg.sender');
+        if (!success)
+            require(false, 'TransferFailed(address(this), msg.sender');
     }
 
     /**
@@ -62,7 +63,11 @@ library SafeTransfers {
      *            See here: https://medium.com/coinmonks/missing-return-value-bug-at-least-130-tokens-affected-d67bf08521ca
      */
     // slither-disable-next-line assembly
-    function transferInto(address token, address sender, uint256 amount) internal {
+    function transferInto(
+        address token,
+        address sender,
+        uint256 amount
+    ) internal {
         if (token == address(0)) {
             require(false, 'SafeTransfers::CannotTransferInEth()');
         }
@@ -88,6 +93,7 @@ library SafeTransfers {
                 success := 0
             }
         }
-        if (!success) require(false, 'TransferFailed(msg.sender, address(this)');
+        if (!success)
+            require(false, 'TransferFailed(msg.sender, address(this)');
     }
 }

@@ -22,37 +22,28 @@ library SnapshotLimitCall {
     );
 
     function perform(
-        mapping(uint256 => LimitPoolStructs.LimitPosition)
-            storage positions,
+        mapping(uint256 => LimitPoolStructs.LimitPosition) storage positions,
         mapping(int24 => LimitPoolStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
         PoolsharkStructs.GlobalState memory state,
         PoolsharkStructs.LimitImmutables memory constants,
         LimitPoolStructs.SnapshotLimitParams memory params
-    ) external view returns (
-        uint128,
-        uint128
-    )
-    {
+    ) external view returns (uint128, uint128) {
         if (state.unlocked == _ENTERED)
             require(false, 'ReentrancyGuardReadOnlyReentrantCall()');
         LimitPoolStructs.BurnLimitCache memory cache;
         cache.state = state;
         cache.constants = constants;
         cache.position = positions[params.positionId];
-        PoolsharkStructs.BurnLimitParams memory burnParams = PoolsharkStructs.BurnLimitParams ({
-            to: params.owner,
-            burnPercent: params.burnPercent,
-            positionId: params.positionId,
-            claim: params.claim,
-            zeroForOne: params.zeroForOne
-        });
+        PoolsharkStructs.BurnLimitParams memory burnParams = PoolsharkStructs
+            .BurnLimitParams({
+                to: params.owner,
+                burnPercent: params.burnPercent,
+                positionId: params.positionId,
+                claim: params.claim,
+                zeroForOne: params.zeroForOne
+            });
         if (cache.position.epochLast == 0) require(false, 'PositionNotFound()');
-        return LimitPositions.snapshot(
-            ticks,
-            tickMap,
-            cache,
-            burnParams
-        );
+        return LimitPositions.snapshot(ticks, tickMap, cache, burnParams);
     }
 }

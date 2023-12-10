@@ -209,7 +209,7 @@ describe('WethPool Tests', function () {
         if (debugMode) console.log('pool token eth balance after:', (await ethers.provider.getBalance(hre.props.limitPoolToken.address)).toString())
     })
 
-    it.only('pool - send too low of ETH amount in msg.value', async function () {
+    it('pool - send too low of ETH amount in msg.value', async function () {
 
         const wethToken0 = hre.props.weth9.address == (await hre.props.wethPool.token0())
 

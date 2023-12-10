@@ -34,6 +34,7 @@ library Collect {
             SafeTransfers.transferOut(recipient, constants.token1, amount1.toUint128());
             emit CollectRange1(amount1.toUint128());
         }
+        
     }
 
     function burnLimit(

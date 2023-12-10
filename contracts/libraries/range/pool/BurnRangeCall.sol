@@ -28,7 +28,11 @@ library BurnRangeCall {
         PoolsharkStructs.GlobalState storage globalState,
         RangePoolStructs.BurnRangeCache memory cache,
         RangePoolStructs.BurnRangeParams memory params
-    ) external {
+    ) external returns (
+        int256,
+        int256   
+    )
+    {
         // check for invalid receiver
         if (params.to == address(0))
             require(false, "CollectToZeroAddress()");
@@ -100,6 +104,12 @@ library BurnRangeCall {
                 cache.amount0,
                 cache.amount1
             );
+
+        // return amount deltas
+        return (
+            cache.amount0,
+            cache.amount1
+        );
     }
 
     function save(

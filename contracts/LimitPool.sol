@@ -86,7 +86,7 @@ contract LimitPool is
     ) {
         MintRangeCache memory cache;
         cache.constants = immutables();
-        MintRangeCall.perform(
+        return MintRangeCall.perform(
             positions,
             ticks,
             rangeTickMap,
@@ -108,7 +108,7 @@ contract LimitPool is
     ) {
         BurnRangeCache memory cache;
         cache.constants = immutables();
-        BurnRangeCall.perform(
+        return BurnRangeCall.perform(
             positions,
             ticks,
             rangeTickMap,

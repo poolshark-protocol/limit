@@ -4,7 +4,7 @@ module.exports = {
         'utils',
         'libraries/TickMap.sol', 
         'libraries/EpochMap.sol',
-        'libraries/utils/String.sol',
+        'libraries/utils',
         'external',
         'staking/FinStaker.sol',
     ],

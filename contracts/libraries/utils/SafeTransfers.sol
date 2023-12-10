@@ -20,12 +20,12 @@ library SafeTransfers {
         uint256 amount
     ) internal {
         bool success;
+        if (amount == 0) return;
         if (token == address(0)) {
             (success, ) = to.call{value: amount}("");
             if (!success) require(false, "SafeTransfers::EthTransferFailed()");
             return;
         }
-        if (amount == 0) return;
         IERC20 erc20Token = IERC20(token);
         // ? We are checking the transfer, but since we are doing so in an assembly block
         // ? Slither does not pick up on that and results in a hit

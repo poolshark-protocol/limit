@@ -80,7 +80,11 @@ contract PoolsharkRouter is
         );
     }
 
-    receive() external payable {}
+    receive() external payable {
+        if (msg.sender != wethAddress) {
+            require(false, "PoolsharkRouter::ReceiveInvalid()");
+        }
+    }
 
     /// @inheritdoc ILimitPoolSwapCallback
     function limitPoolSwapCallback(

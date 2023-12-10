@@ -257,6 +257,13 @@ describe('WethPool Tests', function () {
                 .transferIntoTest()
             ).to.be.revertedWith('SafeTransfers::CannotTransferInEth()');
 
+            await expect(
+                hre.props.alice.sendTransaction({
+                    to: hre.props.poolRouter.address,
+                    value: ethers.utils.parseEther("50.0")
+                })
+            ).to.be.revertedWith('PoolsharkRouter::ReceiveInvalid()');
+
             await validateBurnRange({
                 signer: hre.props.alice,
                 positionId: aliceId,

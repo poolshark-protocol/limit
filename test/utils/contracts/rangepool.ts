@@ -53,6 +53,7 @@ export interface ValidateMintParams {
   poolContract?: LimitPool
   poolTokenContract?: PositionERC1155
   stake?: boolean
+  customMsgValue?: BigNumber
 }
 
 export interface ValidateSampleParams {

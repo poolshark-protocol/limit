@@ -5,6 +5,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { BigNumber } from 'ethers'
 import { mintSigners20 } from '../utils/token'
 import {
+    BN_ONE,
     BN_ZERO,
     LimitPoolState,
     getLiquidity,
@@ -206,5 +207,55 @@ describe('WethPool Tests', function () {
 
         if (debugMode) console.log('pool eth balance after collect:', (await ethers.provider.getBalance(hre.props.limitPool.address)).toString())
         if (debugMode) console.log('pool token eth balance after:', (await ethers.provider.getBalance(hre.props.limitPoolToken.address)).toString())
+    })
+
+    it.only('pool - send too low of ETH amount in msg.value', async function () {
+
+        const wethToken0 = hre.props.weth9.address == (await hre.props.wethPool.token0())
+
+        if (wethToken0) {
+            let globalState = await hre.props.wethPool.globalState()
+            if (debugMode) console.log('weth pool start:', globalState.pool.price.toString(), globalState.pool.liquidity.toString())
+            const aliceLiquidity = '10405966812730338361'
+            // mint should revert
+            const aliceId = await validateMintRange({
+                signer: hre.props.alice,
+                recipient: hre.props.alice.address,
+                lower: '69080',
+                upper: '80070',
+                amount0: BigNumber.from(tokenAmount),
+                amount1: BigNumber.from(tokenAmount),
+                balance0Decrease: BigNumber.from('62417722102310161'),
+                balance1Decrease: BigNumber.from('99999999999999999996'),
+                liquidityIncrease: BigNumber.from(aliceLiquidity),
+                revertMessage: '',
+                poolContract: hre.props.wethPool,
+                poolTokenContract: hre.props.wethPoolToken
+            })
+            // globalState = await hre.props.wethPool.globalState()
+            // console.log('weth pool swap1:', globalState.pool.price.toString(), globalState.pool.liquidity.toString())
+            
+            // no-op swap
+            await validateSwap({
+                signer: hre.props.alice,
+                recipient: hre.props.alice.address,
+                zeroForOne: true,
+                amountIn: tokenAmountBn.mul(2),
+                priceLimit: minPrice,
+                balanceInDecrease: '396087570498016', // only gas is used; all other ETH is returned
+                balanceOutIncrease: '0',
+                revertMessage: 'WrapEth::LowEthBalance()',
+                nativeIn: true,
+                poolContract: hre.props.wethPool,
+                gasUsed: '396087570498016',
+                customMsgValue: BigNumber.from(2)
+            })
+
+            await expect(
+                hre.props.token0
+                .connect(hre.props.alice)
+                .transferIntoTest()
+            ).to.be.revertedWith('SafeTransfers::CannotTransferInEth()');
+        }
     })
 })

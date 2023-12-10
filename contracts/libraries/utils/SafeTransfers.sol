@@ -64,8 +64,7 @@ library SafeTransfers {
     // slither-disable-next-line assembly
     function transferInto(address token, address sender, uint256 amount) internal {
         if (token == address(0)) {
-            if (msg.value < amount) require(false, 'SafeTransfers::LowEthAmountSent()');
-            return;
+            require(false, 'SafeTransfers::CannotTransferInEth()');
         }
         IERC20 erc20Token = IERC20(token);
 

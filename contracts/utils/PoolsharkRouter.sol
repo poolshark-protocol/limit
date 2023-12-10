@@ -277,10 +277,7 @@ contract PoolsharkRouter is
                 ++i;
             }
         }
-        if (address(this).balance > 0) {
-            // return eth balance to msg.sender
-            SafeTransfers.transferOut(msg.sender, ethAddress, address(this).balance);
-        }
+        refundEth();
     }
 
     function multiMintRange(
@@ -316,10 +313,7 @@ contract PoolsharkRouter is
                 ++i;
             }
         }
-        if (address(this).balance > 0) {
-            // return eth balance to msg.sender
-            SafeTransfers.transferOut(msg.sender, ethAddress, address(this).balance);
-        }
+        refundEth();
     }
 
     function multiMintCover(
@@ -338,10 +332,7 @@ contract PoolsharkRouter is
                 ++i;
             }
         }
-        if (address(this).balance > 0) {
-            // return eth balance to msg.sender
-            SafeTransfers.transferOut(msg.sender, ethAddress, address(this).balance);
-        }
+        refundEth();
     }
 
     function multiQuote(
@@ -439,10 +430,7 @@ contract PoolsharkRouter is
                 ++i;
             }
         }
-        if (address(this).balance > 0) {
-            // return eth balance to msg.sender
-            SafeTransfers.transferOut(msg.sender, ethAddress, address(this).balance);
-        }
+        refundEth();
     }
 
     function multiSnapshotLimit(
@@ -531,10 +519,7 @@ contract PoolsharkRouter is
                 ++i;
             }
         }
-        if (address(this).balance > 0) {
-            // send remaining eth to msg.sender
-            SafeTransfers.transferOut(msg.sender, ethAddress, address(this).balance);
-        }
+        refundEth();
     }
 
     function createCoverPoolAndMint(
@@ -573,10 +558,7 @@ contract PoolsharkRouter is
                 ++i;
             }
         }
-        if (address(this).balance > 0) {
-            // send remaining eth to msg.sender
-            SafeTransfers.transferOut(msg.sender, ethAddress, address(this).balance);
-        }
+        refundEth();
     }
 
     struct SortQuoteResultsLocals {
@@ -786,5 +768,15 @@ contract PoolsharkRouter is
         weth.withdraw(amount);
         // send balance to recipient
         SafeTransfers.transferOut(recipient, ethAddress, amount);
+    }
+
+    function refundEth() private {
+        if (address(this).balance > 0) {
+            if (address(this).balance >= msg.value) {
+                SafeTransfers.transferOut(msg.sender, ethAddress, msg.value);
+            } else {
+                SafeTransfers.transferOut(msg.sender, ethAddress, address(this).balance);
+            }
+        }
     }
 }

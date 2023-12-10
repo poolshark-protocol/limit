@@ -4,6 +4,7 @@ pragma solidity 0.8.18;
 import '../../Samples.sol';
 import '../../utils/SafeCast.sol';
 import "../../math/OverflowMath.sol";
+import '../../../interfaces/limit/ILimitPoolManager.sol';
 import '../../../interfaces/structs/PoolsharkStructs.sol';
 import "../../../interfaces/structs/RangePoolStructs.sol";
 
@@ -11,9 +12,6 @@ import "../../../interfaces/structs/RangePoolStructs.sol";
 library FeeMath {
     using SafeCast for uint256;
 
-    uint256 internal constant FEE_DELTA_CONST = 0;
-    //TODO: change FEE_DELTA_CONST before launch
-    // uint256 internal constant FEE_DELTA_CONST = 5000;
     uint256 internal constant Q128 = 0x100000000000000000000000000000000;
 
     struct CalculateLocals {
@@ -33,7 +31,7 @@ library FeeMath {
         uint256 amountIn,
         uint256 amountOut,
         bool zeroForOne
-    ) internal pure returns (
+    ) internal view returns (
         PoolsharkStructs.SwapCache memory
     )
     {
@@ -51,8 +49,9 @@ library FeeMath {
                     locals.lastPrice = locals.minPrice;
                 // delta is % modifier on the swapFee
                 uint256 delta = OverflowMath.mulDiv(
-                        FEE_DELTA_CONST / uint16(cache.constants.tickSpacing), // higher FEE_DELTA_CONST means
-                        (                                                      // more aggressive dynamic fee
+                        ILimitPoolManager(cache.constants.owner).feeDeltaConst() // higher feeDeltaConst means
+                        / uint16(cache.constants.tickSpacing),                   // more aggressive dynamic fee
+                        (                                                      
                             locals.price > locals.lastPrice
                                 ? locals.price - locals.lastPrice
                                 : locals.lastPrice - locals.price

@@ -6948,7 +6948,7 @@ describe('LimitPool Tests', function () {
             zeroForOne: false,
             balanceInIncrease: "364",
             balanceOutIncrease: "0",
-            lowerTickCleared: true, //TODO: double check this
+            lowerTickCleared: true,
             upperTickCleared: true,
             revertMessage: "",
         });
@@ -7225,7 +7225,7 @@ describe('LimitPool Tests', function () {
             balanceInDecrease: tokenAmount,
             positionLiquidityChange: '24296516120648317604804',
             liquidityIncrease: "46581025846542819175371",
-            balanceOutIncrease: "51167329561763357462", //TODO: why is this number different on this side
+            balanceOutIncrease: "51167329561763357462",
             upperTickCleared: false,
             lowerTickCleared: true,
             revertMessage: "",

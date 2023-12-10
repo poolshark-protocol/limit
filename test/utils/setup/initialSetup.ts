@@ -385,7 +385,7 @@ export class InitialSetup {
                     tokenIn: hre.props.token0.address,
                     tokenOut: hre.props.token1.address,
                     swapFee: '1000',
-                    startPrice: '1738267302024796147492397123192298'
+                    startPrice: '3825621589765822368824140'
                 });
                 await createPoolTxn.wait();
     
@@ -399,28 +399,28 @@ export class InitialSetup {
                 )
     
                 hre.nonce += 1;
+                // @dev - skip 0.3% and 1% fee tiers for now
+                // createPoolTxn = await hre.props.limitPoolFactory.createLimitPool({
+                //     poolTypeId: 0,
+                //     tokenIn: hre.props.token0.address,
+                //     tokenOut: hre.props.token1.address,
+                //     swapFee: '3000',
+                //     startPrice: '1738267302024796147492397123192298'
+                // });
+                // await createPoolTxn.wait();
     
-                createPoolTxn = await hre.props.limitPoolFactory.createLimitPool({
-                    poolTypeId: 0,
-                    tokenIn: hre.props.token0.address,
-                    tokenOut: hre.props.token1.address,
-                    swapFee: '3000',
-                    startPrice: '1738267302024796147492397123192298'
-                });
-                await createPoolTxn.wait();
+                // hre.nonce += 1;
     
-                hre.nonce += 1;
-    
-                createPoolTxn = await hre.props.limitPoolFactory.createLimitPool({
-                    poolTypeId: 0,
-                    tokenIn: hre.props.token0.address,
-                    tokenOut: hre.props.token1.address,
-                    swapFee: '10000',
-                    startPrice: '1738267302024796147492397123192298'
-                });
-                await createPoolTxn.wait();
+                // createPoolTxn = await hre.props.limitPoolFactory.createLimitPool({
+                //     poolTypeId: 0,
+                //     tokenIn: hre.props.token0.address,
+                //     tokenOut: hre.props.token1.address,
+                //     swapFee: '10000',
+                //     startPrice: '1738267302024796147492397123192298'
+                // });
+                // await createPoolTxn.wait();
 
-                hre.nonce += 1;
+                // hre.nonce += 1;
             }
     
             hre.props.limitPool = await hre.ethers.getContractAt('LimitPool', limitPoolAddress)

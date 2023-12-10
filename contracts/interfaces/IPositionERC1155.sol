@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.8.13;
+pragma solidity 0.8.18;
 
 import '../interfaces/structs/PoolsharkStructs.sol';
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";

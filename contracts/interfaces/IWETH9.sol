@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity 0.8.13;
+pragma solidity 0.8.18;
 
 interface IWETH9 {
     /// @notice Deposits ether in return for wrapped ether

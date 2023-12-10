@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // OpenZeppelin Contracts (last updated v4.9.0) (security/ReentrancyGuard.sol)
 
-pragma solidity 0.8.13;
+pragma solidity 0.8.18;
 
 import '../../../interfaces/structs/PoolsharkStructs.sol';
 

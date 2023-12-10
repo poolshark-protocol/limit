@@ -225,9 +225,9 @@ describe('WethPool Tests', function () {
                 upper: '80070',
                 amount0: BigNumber.from(tokenAmount),
                 amount1: BigNumber.from(tokenAmount),
-                balance0Decrease: BigNumber.from('62417722102310161'),
-                balance1Decrease: BigNumber.from('99999999999999999996'),
-                liquidityIncrease: BigNumber.from(aliceLiquidity),
+                balance0Decrease: BigNumber.from('7356461269128718'),
+                balance1Decrease: BigNumber.from('99999999999999999991'),
+                liquidityIncrease: BigNumber.from("5202983406365169180"),
                 revertMessage: '',
                 poolContract: hre.props.wethPool,
                 poolTokenContract: hre.props.wethPoolToken

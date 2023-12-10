@@ -15,10 +15,10 @@ import './libraries/utils/PositionTokens.sol';
 import './libraries/math/ConstantProduct.sol';
 
 /**
-* @notice Limit Pool Factory
-* @author Poolshark
-* @author @alphak3y
-*/
+ * @notice Limit Pool Factory
+ * @author Poolshark
+ * @author @alphak3y
+ */
 contract LimitPoolFactory is
     ILimitPoolFactory,
     LimitPoolStructs,

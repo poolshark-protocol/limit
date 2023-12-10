@@ -23,10 +23,10 @@ import './external/solady/LibClone.sol';
 import './external/openzeppelin/security/LimitReentrancyGuard.sol';
 
 /**
-* @title Limit Pool - Constant Product
-* @author Poolshark
-* @author @alphak3y
-*/
+ * @title Limit Pool - Constant Product
+ * @author Poolshark
+ * @author @alphak3y
+ */
 contract LimitPool is
     ILimitPool,
     ILimitPoolView,

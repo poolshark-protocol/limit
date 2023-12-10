@@ -5,6 +5,7 @@ export enum SUPPORTED_NETWORKS {
     /* Testnet Supported  Networks */
     GOERLI = 'goerli',
     ARB_GOERLI = 'arb_goerli',
+    ARB_ONE = 'arb_one',
     SCROLL_SEPOLIA = 'scrollSepolia'
 }
 

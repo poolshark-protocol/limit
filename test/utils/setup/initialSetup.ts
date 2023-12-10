@@ -33,7 +33,7 @@ export class InitialSetup {
     private deployContracts = false
     private deployPools = false
     private deployRouter = true
-    private deployStaker = false
+    private deployStaker = true
 
     constructor() {
         this.deployAssist = new DeployAssist()
@@ -385,7 +385,7 @@ export class InitialSetup {
                     tokenIn: hre.props.token0.address,
                     tokenOut: hre.props.token1.address,
                     swapFee: '1000',
-                    startPrice: '3825621589765822368824140'
+                    startPrice: '3854594635971501655978346'
                 });
                 await createPoolTxn.wait();
     

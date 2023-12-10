@@ -33,9 +33,16 @@ contract LimitPoolFactory is
         original = address(this);
     }
 
+    modifier originalOnly() {
+        _onlyOriginal();
+        _;
+    }
+
     function createLimitPool(
         LimitPoolParams memory params
-    ) public override returns (
+    ) public override
+        originalOnly
+    returns (
         address pool,
         address poolToken
     ) {
@@ -171,5 +178,9 @@ contract LimitPoolFactory is
         );
 
         return (pool, poolToken);
+    }
+
+    function _onlyOriginal() private view {
+        if (address(this) != original) require(false, 'OriginalOnly()');
     }
 }

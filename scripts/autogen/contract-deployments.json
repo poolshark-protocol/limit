@@ -20,6 +20,26 @@
             ],
             "created": "2023-08-23T15:56:24.723Z"
         },
+        "tokenPay": {
+            "contractName": "Token20",
+            "contractAddress": "0x3788ce0817512e33130b1ea0490d2957b4ffc406",
+            "constructorArguments": [
+                "Payout Token",
+                "PAY",
+                18
+            ],
+            "created": "2023-12-10T00:19:39.570Z"
+        },
+        "tokenQuote": {
+            "contractName": "Token20",
+            "contractAddress": "0xeb590779e7f68e12a48f8b146252a0b0200df16f",
+            "constructorArguments": [
+                "Quote Token",
+                "QUOTE",
+                18
+            ],
+            "created": "2023-12-10T00:19:45.000Z"
+        },
         "weth9": {
             "contractName": "WETH9",
             "contractAddress": "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
@@ -544,5 +564,6 @@
         }
     },
     "undefined": {
+        
     }
 }

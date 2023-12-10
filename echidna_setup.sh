@@ -1,13 +1,13 @@
-# ssh -i ~/Downloads/alpha-key.pem ec2-user@18.212.239.218
-# ssh -i ~/Downloads/alpha-key.pem ec2-user@3.90.33.225 //
-# ssh -i ~/Downloads/alpha-key.pem ec2-user@72.44.54.189
-# ssh -i ~/Downloads/alpha-key.pem ec2-user@54.152.13.15
-# ssh -i ~/Downloads/alpha-key.pem ec2-user@54.226.3.45
-# ssh -i ~/Downloads/alpha-key.pem ec2-user@54.242.87.172
-# ssh -i ~/Downloads/alpha-key.pem ec2-user@3.91.249.149
-# ssh -i ~/Downloads/alpha-key.pem ec2-user@54.83.64.160
-# ssh -i ~/Downloads/alpha-key.pem ec2-user@34.228.42.169
-# ssh -i ~/Downloads/alpha-key.pem ec2-user@18.208.251.68
+# ssh -i ~/Downloads/alpha-key.pem ec2-user@18.212.239.218 // RUNNING
+# ssh -i ~/Downloads/alpha-key.pem ec2-user@3.90.33.225 // RUNNING
+# ssh -i ~/Downloads/alpha-key.pem ec2-user@72.44.54.189 // RUNNING
+# ssh -i ~/Downloads/alpha-key.pem ec2-user@54.152.13.15 // RUNNING
+# ssh -i ~/Downloads/alpha-key.pem ec2-user@54.226.3.45 // RUNNING
+# ssh -i ~/Downloads/alpha-key.pem ec2-user@54.242.87.172 // RUNNING
+# ssh -i ~/Downloads/alpha-key.pem ec2-user@3.91.249.149 // RUNNING
+# ssh -i ~/Downloads/alpha-key.pem ec2-user@54.83.64.160 // RUNNING
+# ssh -i ~/Downloads/alpha-key.pem ec2-user@34.228.42.169 // RUNNING
+# ssh -i ~/Downloads/alpha-key.pem ec2-user@18.208.251.68 // RUNNING
 # stop all machines at 5pm and save corpuses
 # restart all machines w/ updated corpus
 yum install git -y

@@ -29,8 +29,8 @@ library BurnRangeCall {
         RangePoolStructs.BurnRangeCache memory cache,
         RangePoolStructs.BurnRangeParams memory params
     ) external returns (
-        int256,
-        int256   
+        int256, // amount0Delta
+        int256  // amount1Delta
     )
     {
         // check for invalid receiver

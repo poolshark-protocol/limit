@@ -73,8 +73,6 @@ library FeeMath {
                     // if swapping towards twap price and delta > 100%, set fee to zero
                     locals.swapFee = 0;
                 }
-                // console.log('price movement', locals.lastPrice, locals.price);
-                // console.log('swap fee adjustment',cache.constants.swapFee + delta * cache.constants.swapFee / 1e6);
             }
             if (cache.exactIn) {
                 // calculate output from range liquidity
@@ -92,10 +90,8 @@ library FeeMath {
             // add to total fees paid for swap
             cache.feeAmount += locals.feeAmount.toUint128();
             // load protocol fee from cache
-            // zeroForOne && exactIn   = fee on token1
             // zeroForOne && !exactIn  = fee on token0
-            // !zeroForOne && !exactIn = fee on token1
-            // !zeroForOne && exactIn  = fee on token0
+            // zeroForOne && exactIn   = fee on token1
             locals.protocolFee = (zeroForOne == cache.exactIn) ? cache.state.pool.protocolSwapFee1 
                                                                : cache.state.pool.protocolSwapFee0;
             // calculate fee

@@ -371,3 +371,12 @@ type UserSeasonReward @entity {
     stakingPoints: BigInt!
 }
 
+type VFinPosition @entity {
+    # vFinAddress + positionId
+    id: ID!
+
+    owner: Bytes!
+    positionId: BigInt!
+    vFinAddress: Bytes!
+}
+

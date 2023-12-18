@@ -195,3 +195,23 @@ dataSources:
         eventHandlers:
             - event: RouterDeployed(address,address,address)
               handler: handleRouterDeployed
+  - kind: ethereum/contract
+    name: vFIN
+    network: arbitrum-one
+    source:
+        address: '0xFA3e62Aae5DE014c4CD20377Ec90Eb8e59d31169'
+        abi: vFIN
+        startBlock: 161266335
+    mapping:
+        kind: ethereum/events
+        apiVersion: 0.0.6
+        language: wasm/assemblyscript
+        file: ./src/mappings/vfin.ts
+        entities:
+            - VestedFin
+        abis:
+            - name: vFIN
+              file: ./abis/vFIN.json
+        eventHandlers:
+            - event: Transfer(indexed address,indexed address,indexed uint256)
+              handler: handleTransfer

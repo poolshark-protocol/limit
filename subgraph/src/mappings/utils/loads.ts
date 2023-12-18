@@ -1,5 +1,5 @@
 import { Address, BigDecimal, BigInt, Bytes, ethereum, log } from '@graphprotocol/graph-ts'
-import { LimitPool, LimitPoolFactory, LimitPoolManager, LimitPosition, Token, FeeTier, BasePrice, RangePosition, RangeTick, Transaction, LimitTick, Swap, CompoundRangeLog, MintRangeLog, BurnRangeLog, PoolRouter, TvlUpdateLog, HistoricalOrder, TotalSeasonReward, UserSeasonReward, LimitPoolToken } from '../../../generated/schema'
+import { LimitPool, LimitPoolFactory, LimitPoolManager, LimitPosition, Token, FeeTier, BasePrice, RangePosition, RangeTick, Transaction, LimitTick, Swap, CompoundRangeLog, MintRangeLog, BurnRangeLog, PoolRouter, TvlUpdateLog, HistoricalOrder, TotalSeasonReward, UserSeasonReward, LimitPoolToken, VFinPosition } from '../../../generated/schema'
 import { ONE_BD } from '../../constants/arbitrum'
 import {
     fetchTokenSymbol,
@@ -256,6 +256,28 @@ export function safeLoadPoolRouter(routerAddress: string): LoadPoolRouterRet {
 
     return {
         entity: poolRouterEntity,
+        exists: exists,
+    }
+}
+
+class LoadVFinPositionRet {
+    entity: VFinPosition
+    exists: boolean
+}
+export function safeLoadVFinPosition(vFinAddress: string, positionId: BigInt): LoadVFinPositionRet {
+    let exists = true
+
+    let vFinPositionId = vFinAddress.concat(positionId.toString())
+
+    let vFinPositionEntity = VFinPosition.load(vFinPositionId)
+
+    if (!vFinPositionEntity) {
+        vFinPositionEntity = new VFinPosition(vFinPositionId)
+        exists = false
+    }
+
+    return {
+        entity: vFinPositionEntity,
         exists: exists,
     }
 }

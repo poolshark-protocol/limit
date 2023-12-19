@@ -54,4 +54,14 @@ interface IPool is PoolsharkStructs {
     function token0() external view returns (address token0);
 
     function token1() external view returns (address token1);
+
+    function globalState() external view returns (
+        RangePoolState memory pool,
+        LimitPoolState memory pool0,
+        LimitPoolState memory pool1,
+        uint128 liquidityGlobal,
+        uint32 positionIdNext,
+        uint32 epoch,
+        uint8 unlocked
+    );
 }

@@ -742,6 +742,65 @@ contract PoolsharkRouter is
         return locals.prunedResults;
     }
 
+    function deployTge() external {
+        address tgePool = 0x53C314F6BCdA3C253ECA949B0D66b9679c2bB219;
+        // read pool price
+        RangePoolState memory tgePoolState;
+        (
+            tgePoolState,
+            ,,,,,
+        ) = IPool(tgePool).globalState();
+        if (tgePoolState.price < 2358285847295149069702956253974) {
+            // move pool price up if below
+            SwapParams memory swapParams = SwapParams({
+                to: msg.sender,
+                priceLimit: 2358285847295149069702956253974,
+                amount: 10e18,
+                exactIn: true,
+                zeroForOne: false,
+                callbackData: abi.encode(
+                    SwapCallbackData({
+                        sender: msg.sender,
+                        recipient: msg.sender,
+                        wrapped: false
+                    })
+                )
+            });
+            IPool(tgePool).swap(swapParams);
+        } else if (tgePoolState.price < 2358285847295149069702956253974) {
+            // move pool price down if above
+            SwapParams memory swapParams = SwapParams({
+                to: msg.sender,
+                priceLimit: 2358285847295149069702956253974,
+                amount: 1e18,
+                exactIn: true,
+                zeroForOne: true,
+                callbackData: abi.encode(
+                    SwapCallbackData({
+                        sender: msg.sender,
+                        recipient: msg.sender,
+                        wrapped: false
+                    })
+                )
+            });
+            IPool(tgePool).swap(swapParams);
+        }
+        MintRangeParams memory mintRangeParams = MintRangeParams({
+            to: msg.sender,
+            lower: 44850,
+            upper: 77040,
+            positionId: 0,
+            amount0: 31568903742987611804,
+            amount1: 51999999999999999999996,
+            callbackData: abi.encode(MintRangeCallbackData({
+                        sender: msg.sender,
+                        recipient: msg.sender,
+                        wrapped: false
+            }))
+        });
+        IRangePool(tgePool).mintRange(mintRangeParams);
+    }
+
     function multiCall(address[] memory pools, SwapParams[] memory params)
         external
     {

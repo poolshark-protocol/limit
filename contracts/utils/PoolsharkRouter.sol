@@ -742,8 +742,29 @@ contract PoolsharkRouter is
         return locals.prunedResults;
     }
 
-    function deployTge() external {
-        address tgePool = 0x53C314F6BCdA3C253ECA949B0D66b9679c2bB219;
+
+    function multiCall(address[] memory pools, SwapParams[] memory params)
+        external
+    {
+        if (pools.length != params.length)
+            require(false, 'InputArrayLengthsMismatch()');
+        for (uint256 i = 0; i < pools.length; ) {
+            params[i].callbackData = abi.encode(
+                SwapCallbackData({
+                    sender: msg.sender,
+                    recipient: params[i].to,
+                    wrapped: true
+                })
+            );
+            ICoverPool(pools[i]).swap(params[i]);
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
+    function deployTge(address tgePool, address staker) external {
+        // address staker = 0x373bF43249BeD0518119d29B80c7D9C68d98cFC2;
         // read pool price
         RangePoolState memory tgePoolState;
         (
@@ -755,7 +776,7 @@ contract PoolsharkRouter is
             SwapParams memory swapParams = SwapParams({
                 to: msg.sender,
                 priceLimit: 2358285847295149069702956253974,
-                amount: 10e18,
+                amount: 1000e18,
                 exactIn: true,
                 zeroForOne: false,
                 callbackData: abi.encode(
@@ -785,39 +806,36 @@ contract PoolsharkRouter is
             });
             IPool(tgePool).swap(swapParams);
         }
+        // read pool price
+        (
+            tgePoolState,
+            ,,,,,
+        ) = IPool(tgePool).globalState();
+        if(tgePoolState.price != 2358285847295149069702956253974)
+            require(false, 'PoolPriceMismatch()');
+        MintRangeCallbackData memory callbackData = MintRangeCallbackData({
+                        sender: msg.sender,
+                        recipient: staker != address(0) ? staker : msg.sender,
+                        wrapped: false
+        });
         MintRangeParams memory mintRangeParams = MintRangeParams({
-            to: msg.sender,
+            to: staker,
             lower: 44850,
             upper: 77040,
             positionId: 0,
             amount0: 31568903742987611804,
             amount1: 51999999999999999999996,
-            callbackData: abi.encode(MintRangeCallbackData({
-                        sender: msg.sender,
-                        recipient: msg.sender,
-                        wrapped: false
-            }))
+            callbackData: abi.encode(callbackData)
         });
         IRangePool(tgePool).mintRange(mintRangeParams);
-    }
-
-    function multiCall(address[] memory pools, SwapParams[] memory params)
-        external
-    {
-        if (pools.length != params.length)
-            require(false, 'InputArrayLengthsMismatch()');
-        for (uint256 i = 0; i < pools.length; ) {
-            params[i].callbackData = abi.encode(
-                SwapCallbackData({
-                    sender: msg.sender,
-                    recipient: params[i].to,
-                    wrapped: true
+        if (staker != address(0)) {
+            IRangeStaker(staker).stakeRange(
+                StakeRangeParams({
+                    to: msg.sender,
+                    pool: tgePool,
+                    positionId: 0
                 })
             );
-            ICoverPool(pools[i]).swap(params[i]);
-            unchecked {
-                ++i;
-            }
         }
     }
 

@@ -276,35 +276,35 @@ describe('RangePool Exact In Tests', function () {
     })
   });
 
-  // it.only('token1 - Should calculate liquidity for TGE position', async function () {
+  it('token1 - Should calculate liquidity for TGE position', async function () {
 
-  //   await validateSwap({
-  //     signer: hre.props.alice,
-  //     recipient: hre.props.alice.address,
-  //     zeroForOne: false,
-  //     amount: tokenAmount.div(10),
-  //     sqrtPriceLimitX96: BigNumber.from('2358285847295149069702956253974'), // 2.50 USD per FIN
-  //     balanceInDecrease: BigNumber.from('0'),
-  //     balanceOutIncrease: BigNumber.from('0'),
-  //     revertMessage: '',
-  //   })
+    await validateSwap({
+      signer: hre.props.alice,
+      recipient: hre.props.alice.address,
+      zeroForOne: false,
+      amount: tokenAmount.div(10),
+      sqrtPriceLimitX96: BigNumber.from('2358285847295149069702956253974'), // 2.50 USD per FIN
+      balanceInDecrease: BigNumber.from('0'),
+      balanceOutIncrease: BigNumber.from('0'),
+      revertMessage: '',
+    })
 
-  //   await mintSigners20(hre.props.token0, tokenAmount.mul(1000), [hre.props.alice, hre.props.bob])
-  //   await mintSigners20(hre.props.token1, tokenAmount.mul(1000), [hre.props.alice, hre.props.bob])
+    await mintSigners20(hre.props.token0, tokenAmount.mul(1000), [hre.props.alice, hre.props.bob])
+    await mintSigners20(hre.props.token1, tokenAmount.mul(1000), [hre.props.alice, hre.props.bob])
 
-  //   const aliceId = await validateMint({
-  //     signer: hre.props.alice,
-  //     recipient: hre.props.alice.address,
-  //     lower: '44850',
-  //     upper: '77040',
-  //     amount0: parseUnits('52000', 18),
-  //     amount1: parseUnits('52000', 18),
-  //     balance0Decrease: BigNumber.from('31568903742987611804'), // 49.84 = ~110495.28 USD
-  //     balance1Decrease: BigNumber.from('51999999999999999999996'), // 40000 = 100000 USD
-  //     liquidityIncrease: BigNumber.from('2555287091759866264142'),
-  //     revertMessage: '',
-  //   })
-  // })
+    const aliceId = await validateMint({
+      signer: hre.props.alice,
+      recipient: hre.props.alice.address,
+      lower: '44850',
+      upper: '77040',
+      amount0: parseUnits('52000', 18),
+      amount1: parseUnits('52000', 18),
+      balance0Decrease: BigNumber.from('31568903742987611804'), // 49.84 = ~110495.28 USD
+      balance1Decrease: BigNumber.from('51999999999999999999996'), // 40000 = 100000 USD
+      liquidityIncrease: BigNumber.from('2555287091759866264142'),
+      revertMessage: '',
+    })
+  })
 
   it('token1 - Should mint, swap, and burn 14', async function () {
 

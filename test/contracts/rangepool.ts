@@ -17,7 +17,7 @@ import {
   getRangeLiquidity,
   getTickLiquidity,
 } from '../utils/contracts/rangepool'
-import { RangePoolState, ZERO_ADDRESS } from '../utils/contracts/limitpool'
+import { RangePoolState, ZERO_ADDRESS, getLiquidity } from '../utils/contracts/limitpool'
 import { parseUnits } from 'ethers/lib/utils'
 
 alice: SignerWithAddress
@@ -153,7 +153,7 @@ describe('RangePool Exact In Tests', function () {
   //   }
   // });
 
-  it('pool - Should not overflow global liquidity', async function () {
+  it.only('pool - Should not overflow global liquidity', async function () {
     const aliceId = await validateMint({
       signer: hre.props.alice,
       recipient: hre.props.alice.address,
@@ -167,6 +167,77 @@ describe('RangePool Exact In Tests', function () {
       revertMessage: 'LiquidityOverflow()',
     })
 
+    if (balanceCheck) {
+      console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
+      console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())
+    }
+  })
+
+  it.only('pool - Should not skip crossing tick - kyber exploit', async function () {
+    console.log('kyber pool:', hre.props.kyberPool.address, hre.props.kyberPoolToken.address)
+
+    await validateSwap({
+      signer: hre.props.alice,
+      recipient: hre.props.alice.address,
+      zeroForOne: true,
+      amount: tokenAmount.div(10),
+      sqrtPriceLimitX96: BigNumber.from('309485009821345068724781056'), // 2.50 USD per FIN
+      balanceInDecrease: BigNumber.from('0'),
+      balanceOutIncrease: BigNumber.from('0'),
+      poolContract: hre.props.kyberPool,
+      revertMessage: '',
+    })
+    const aliceId = await validateMint({
+      signer: hre.props.alice,
+      recipient: hre.props.alice.address,
+      lower: '-111310',
+      upper: '-110908',
+      amount0: BigNumber.from('3408506672908522891'),
+      amount1: BigNumber.from('18870618627071590'),
+      balance0Decrease: BigNumber.from('3408506672908522891'),
+      balance1Decrease: BigNumber.from('18870618627071590'),
+      liquidityIncrease: BigNumber.from('243433600698313192894'),
+      poolContract: hre.props.kyberPool,
+      poolTokenContract: hre.props.kyberPoolToken,
+      revertMessage: '',
+    })
+    await validateBurn({
+      signer: hre.props.alice,
+      recipient: hre.props.alice.address,
+      lower: '-111310',
+      upper: '-110908',
+      positionId: aliceId ?? 0,
+      liquidityAmount: BigNumber.from('40572266783052180174'),
+      balance0Increase: BigNumber.from('568084445484753554'),
+      balance1Increase: BigNumber.from('3145103104511930'),
+      poolContract: hre.props.kyberPool,
+      poolTokenContract: hre.props.kyberPoolToken,
+      revertMessage: '',
+    })
+    await validateSwap({
+      signer: hre.props.alice,
+      recipient: hre.props.alice.address,
+      zeroForOne: true,
+      amount: BigNumber.from('3056056735638220799999'),
+      sqrtPriceLimitX96: BigNumber.from('303343357908702216014253965'),
+      balanceInDecrease: BigNumber.from('1051453208852302636974'),
+      balanceOutIncrease: BigNumber.from('15712935110141611'),
+      poolContract: hre.props.kyberPool,
+      revertMessage: '',
+    })
+    await validateSwap({
+      signer: hre.props.alice,
+      recipient: hre.props.alice.address,
+      zeroForOne: false,
+      amount: BigNumber.from('15768859296842439'),
+      sqrtPriceLimitX96: BigNumber.from('320556756984076944269385500'),
+      balanceInDecrease: BigNumber.from('15768859296842439'),
+      balanceOutIncrease: BigNumber.from('1053450196174862625184'),
+      poolContract: hre.props.kyberPool,
+      revertMessage: '',
+    })
+    await getPrice(hre.props.kyberPool)
+    await getRangeLiquidity()
     if (balanceCheck) {
       console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
       console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())

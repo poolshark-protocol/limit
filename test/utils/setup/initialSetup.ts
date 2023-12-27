@@ -324,6 +324,15 @@ export class InitialSetup {
 
                 hre.nonce += 1;
 
+                // add 500 fee tier
+                enableFeeTierTxn = await hre.props.limitPoolManager.enableFeeTier(
+                    800,
+                    2
+                );
+                await enableFeeTierTxn.wait();
+
+                hre.nonce += 1;
+
                 // create first limit pool
                 let createPoolTxn = await hre.props.limitPoolFactory.createLimitPool({
                     poolTypeId: 0,
@@ -347,6 +356,18 @@ export class InitialSetup {
                 await wethPoollTxn.wait();
     
                 hre.nonce += 1;
+
+                // create kyber test limit pool
+                let kyperPoolTxn = await hre.props.limitPoolFactory.createLimitPool({
+                    poolTypeId: 0,
+                    tokenIn: hre.props.token0.address,
+                    tokenOut: hre.props.token1.address,
+                    swapFee: '800',
+                    startPrice: '3266660825699135434887405499641'
+                });
+                await kyperPoolTxn.wait();
+    
+                hre.nonce += 1;
     
                 [limitPoolAddress, limitPoolTokenAddress] = await hre.props.limitPoolFactory.getLimitPool(
                     hre.props.token0.address,
@@ -365,19 +386,16 @@ export class InitialSetup {
                 hre.props.wethPool = await hre.ethers.getContractAt('LimitPool', wethPoolAddress)
                 hre.props.wethPoolToken = await hre.ethers.getContractAt('PositionERC1155', wethPoolTokenAddress)
 
-                await this.deployAssist.saveContractDeployment(
-                    network,
-                    'LimitPool',
-                    'wethPool',
-                    hre.props.wethPool,
-                    [
-                        hre.props.weth9.address,
-                        hre.props.token1.address,
-                        '500',
-                        '3266660825699135434887405499641',
-                        0
-                    ]
+                let [kyberPoolAddress, kyberPoolTokenAddress] = await hre.props.limitPoolFactory.getLimitPool(
+                    hre.props.token0.address,
+                    hre.props.token1.address,
+                    '800',
+                    0
                 )
+
+                hre.props.kyberPool = await hre.ethers.getContractAt('LimitPool', kyberPoolAddress)
+                hre.props.kyberPoolToken = await hre.ethers.getContractAt('PositionERC1155', kyberPoolTokenAddress)
+
             } else if (this.deployPools) {
                 // create first limit pool
                 let createPoolTxn = await hre.props.limitPoolFactory.createLimitPool({

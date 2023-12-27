@@ -33,6 +33,8 @@ export interface BeforeEachProps {
     wethPoolToken: PositionERC1155
     limitPoolImpl: LimitPool
     limitPoolToken: PositionERC1155
+    kyberPool: LimitPool
+    kyberPoolToken: PositionERC1155
     limitPoolManager: LimitPoolManager
     limitPoolFactory: LimitPoolFactory
     poolRouter: PoolsharkRouter
@@ -94,6 +96,8 @@ export class GetBeforeEach {
         let wethPoolToken: PositionERC1155
         let limitPoolImpl: LimitPool
         let limitPoolToken: PositionERC1155
+        let kyberPool: LimitPool
+        let kyberPoolToken: PositionERC1155
         let limitPoolManager: LimitPoolManager
         let limitPoolFactory: LimitPoolFactory
         let poolRouter: PoolsharkRouter
@@ -133,6 +137,8 @@ export class GetBeforeEach {
             wethPoolToken,
             limitPoolImpl,
             limitPoolToken,
+            kyberPool,
+            kyberPoolToken,
             limitPoolManager,
             limitPoolFactory,
             poolRouter,

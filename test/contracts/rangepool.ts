@@ -153,7 +153,7 @@ describe('RangePool Exact In Tests', function () {
   //   }
   // });
 
-  it.only('pool - Should not overflow global liquidity', async function () {
+  it('pool - Should not overflow global liquidity', async function () {
     const aliceId = await validateMint({
       signer: hre.props.alice,
       recipient: hre.props.alice.address,
@@ -173,7 +173,7 @@ describe('RangePool Exact In Tests', function () {
     }
   })
 
-  it.only('pool - Should not skip crossing tick - kyber exploit', async function () {
+  it('pool - Should not skip crossing tick - kyber exploit', async function () {
     console.log('kyber pool:', hre.props.kyberPool.address, hre.props.kyberPoolToken.address)
 
     await validateSwap({

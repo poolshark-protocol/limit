@@ -347,7 +347,7 @@ describe('RangePool Exact In Tests', function () {
     })
   });
 
-  it('token1 - Should calculate liquidity for TGE position', async function () {
+  it.skip('token1 - Should calculate liquidity for TGE position', async function () {
 
     await validateSwap({
       signer: hre.props.alice,

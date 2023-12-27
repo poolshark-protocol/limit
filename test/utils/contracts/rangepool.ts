@@ -482,6 +482,9 @@ export async function validateBurn(params: ValidateBurnParams) {
     burnPercent = liquidityAmount
                         .mul(ethers.utils.parseUnits('1', 38))
                         .div(positionBefore.liquidity)
+    liquidityAmount = burnPercent
+                        .mul(positionBefore.liquidity)
+                        .div(ethers.utils.parseUnits('1', 38))
   }
   if (revertMessage == '') {
     positionSnapshot = await poolContract.snapshotRange(params.positionId)
@@ -543,13 +546,13 @@ export async function validateBurn(params: ValidateBurnParams) {
   positionAfter = await poolContract.positions(params.positionId)
   if (burnPercent.eq(ethers.utils.parseUnits('1', 38)))
     expect(positionTokenBalanceAfter.sub(positionTokenBalanceBefore)).to.be.equal(-1)
-  // expect(lowerTickAfter.liquidityDelta.sub(lowerTickBefore.liquidityDelta)).to.be.equal(
-  //   BN_ZERO.sub(params.liquidityAmount)
-  // )
-  // expect(upperTickAfter.liquidityDelta.sub(upperTickBefore.liquidityDelta)).to.be.equal(
-  //   liquidityAmount
-  // )
-  // expect(positionAfter.liquidity.sub(positionBefore.liquidity)).to.be.equal(BN_ZERO.sub(liquidityAmount))
+  expect(lowerTickAfter.liquidityDelta.sub(lowerTickBefore.liquidityDelta)).to.be.equal(
+    BN_ZERO.sub(liquidityAmount)
+  )
+  expect(upperTickAfter.liquidityDelta.sub(upperTickBefore.liquidityDelta)).to.be.equal(
+    liquidityAmount
+  )
+  expect(positionAfter.liquidity.sub(positionBefore.liquidity)).to.be.equal(BN_ZERO.sub(liquidityAmount))
 }
 
 export async function validateStake(params: ValidateStakeParams) {

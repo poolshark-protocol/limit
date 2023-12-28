@@ -1,6 +1,4 @@
 # ssh -i ~/Downloads/alpha-key.pem ec2-user@18.212.239.218 // RUNNING
-# ssh -i ~/Downloads/alpha-key.pem ec2-user@3.90.33.225 // RUNNING
-# ssh -i ~/Downloads/alpha-key.pem ec2-user@54.152.13.15 // RUNNING
 # stop all machines at 5pm and save corpuses
 # restart all machines w/ updated corpus
 yum install git -y

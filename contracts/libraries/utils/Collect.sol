@@ -5,16 +5,23 @@ import '../../interfaces/structs/LimitPoolStructs.sol';
 import '../limit/LimitPositions.sol';
 import '../utils/SafeTransfers.sol';
 
-library Collect {
+library Collects {
     using SafeCast for int128;
     using SafeCast for uint128;
 
-    event CollectRange0(uint128 amount0);
-
-    event CollectRange1(uint128 amount1);
+    event Collect(
+        address indexed owner,
+        address recipient,
+        int24 indexed tickLower,
+        int24 indexed tickUpper,
+        uint128 amount0,
+        uint128 amount1
+    );
 
     function range(
+        RangePoolStructs.RangePosition memory position,
         PoolsharkStructs.LimitImmutables memory constants,
+        address owner,
         address recipient,
         int128 amount0,
         int128 amount1
@@ -27,7 +34,6 @@ library Collect {
                 constants.token0,
                 amount0.toUint128()
             );
-            emit CollectRange0(amount0.toUint128());
         }
         if (amount1 > 0) {
             /// @dev - cast to ensure user doesn't owe the pool balance
@@ -36,8 +42,15 @@ library Collect {
                 constants.token1,
                 amount1.toUint128()
             );
-            emit CollectRange1(amount1.toUint128());
         }
+        emit Collect(
+            owner,
+            recipient,
+            position.lower,
+            position.upper,
+            amount0 > 0 ? amount0.toUint128() : 0,
+            amount1 > 0 ? amount1.toUint128() : 0
+        );
     }
 
     function burnLimit(

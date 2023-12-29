@@ -7,12 +7,7 @@ import '../Samples.sol';
 library SampleCall {
     uint8 private constant _ENTERED = 2;
 
-    event SampleRecorded(
-        int56 tickSecondsAccum,
-        uint160 secondsPerLiquidityAccum
-    );
-
-    event SampleLengthIncreased(uint16 sampleLengthNext);
+    event Event();
 
     function perform(
         PoolsharkStructs.GlobalState memory state,

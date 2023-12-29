@@ -2,17 +2,22 @@
 pragma solidity 0.8.18;
 
 /// @notice Events emitted by the LimitPool contract(s)
-abstract contract LimitPoolEvents {
-    /// @notice Event emitted when pool is initialized by the factory
-    event Initialize(
+interface LimitPoolEvents {
+
+    /////////////////////////////////////////////////////////////
+    /////////////////////// Custom Events ///////////////////////
+    /////////////////////////////////////////////////////////////
+
+    /// @notice Custom event emitted when pool is initialized by the factory
+    event InitializeLimit(
         int24 minTick,
         int24 maxTick,
         uint160 startPrice,
         int24 startTick
     );
 
-    /// @notice Event emitted when a swap is successful
-    event Swap(
+    /// @notice Custom event emitted when a swap is successful
+    event SwapLimit(
         address indexed recipient,
         uint256 amountIn,
         uint256 amountOut,
@@ -48,12 +53,6 @@ abstract contract LimitPoolEvents {
 
     /// @notice Event emitted when liquidity is added as a result of calling `burnRange`
     event CompoundRange(uint32 indexed positionId, uint128 liquidityCompounded);
-
-    /// @notice Event emitted when token0 is collected from the pool
-    event CollectRange0(uint128 amount0);
-
-    /// @notice Event emitted when token1 is collected from the pool
-    event CollectRange1(uint128 amount1);
 
     /// @notice Event emitted when a RangeTick is updated
     event SyncRangeTick(
@@ -115,4 +114,53 @@ abstract contract LimitPoolEvents {
 
     /// @notice Event emitted when max sample count is increased
     event SampleCountIncreased(uint16 newSampleCountMax);
+    
+    /////////////////////////////////////////////////////////////
+    ////////////////////// Standard Events //////////////////////
+    /////////////////////////////////////////////////////////////
+
+    /// @notice Emitted when pool is initialized by the factory
+    event Initialize(uint160 price, int24 tick);
+
+    /// @notice Emitted when liquidity is added
+    event Mint(
+        address sender,
+        address indexed owner,
+        int24 indexed tickLower,
+        int24 indexed tickUpper,
+        uint128 amount,
+        uint256 amount0,
+        uint256 amount1
+    );
+
+    /// @notice Emitted when liquidity is removed
+    event Burn(
+        address indexed owner,
+        int24 indexed tickLower,
+        int24 indexed tickUpper,
+        uint128 amount,
+        uint256 amount0,
+        uint256 amount1
+    );
+
+    /// @notice Emitted when liquidity is swapped
+    event Swap(
+        address indexed sender,
+        address indexed recipient,
+        int256 amount0,
+        int256 amount1,
+        uint160 price,
+        uint128 liquidity,
+        int24 tickAtPrice
+    );
+
+    /// @notice Emitted when fees are collected by the owner of a position
+    event Collect(
+        address indexed owner,
+        address recipient,
+        int24 indexed tickLower,
+        int24 indexed tickUpper,
+        uint128 amount0,
+        uint128 amount1
+    );
 }

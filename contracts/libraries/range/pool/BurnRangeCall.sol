@@ -9,6 +9,15 @@ import '../RangePositions.sol';
 library BurnRangeCall {
     using SafeCast for int128;
 
+    event Burn(
+        address indexed owner,
+        int24 indexed tickLower,
+        int24 indexed tickUpper,
+        uint128 amount,
+        uint256 amount0,
+        uint256 amount1
+    );
+
     event BurnRange(
         address indexed recipient,
         int24 lower,
@@ -92,8 +101,10 @@ library BurnRangeCall {
 
         // transfer amounts to user
         if (cache.amount0 > 0 || cache.amount1 > 0)
-            Collect.range(
+            Collects.range(
+                cache.position,
                 cache.constants,
+                msg.sender,
                 params.to,
                 cache.amount0,
                 cache.amount1

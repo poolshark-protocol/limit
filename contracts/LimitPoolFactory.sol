@@ -133,7 +133,17 @@ contract LimitPoolFactory is
         // save pool in mapping
         pools[key] = pool;
 
+        // emit standard event
         emit PoolCreated(
+            constants.token0,
+            constants.token1,
+            constants.swapFee,
+            constants.tickSpacing,
+            pool
+        );
+
+        // emit custom event
+        emit LimitPoolCreated(
             pool,
             constants.poolToken,
             constants.token0,

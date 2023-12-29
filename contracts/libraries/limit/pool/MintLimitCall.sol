@@ -9,6 +9,17 @@ import '../../utils/Collect.sol';
 import '../../utils/PositionTokens.sol';
 
 library MintLimitCall {
+
+    event Mint(
+        address sender,
+        address indexed owner,
+        int24 indexed tickLower,
+        int24 indexed tickUpper,
+        uint128 amount,
+        uint256 amount0,
+        uint256 amount1
+    );
+
     event MintLimit(
         address indexed to,
         int24 lower,
@@ -201,6 +212,16 @@ library MintLimitCall {
             params.zeroForOne
                 ? cache.state.pool0 = cache.pool
                 : cache.state.pool1 = cache.pool;
+
+            emit Mint(
+                msg.sender,
+                params.to,
+                cache.position.lower,
+                cache.position.upper,
+                uint128(cache.liquidityMinted),
+                uint128(params.zeroForOne ? params.amount : 0),
+                uint128(params.zeroForOne ? 0 : params.amount)
+            );
 
             emit MintLimit(
                 params.to,

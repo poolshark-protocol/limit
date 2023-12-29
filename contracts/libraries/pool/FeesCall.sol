@@ -20,8 +20,6 @@ library FeesCall {
     // eth address for safe withdrawal
     address public constant ethAddress = address(0);
 
-    /// @dev - LimitPoolManager (i.e. constants.owner) emits events in aggregate
-
     function perform(
         PoolsharkStructs.GlobalState storage globalState,
         PoolsharkStructs.FeesParams memory params,

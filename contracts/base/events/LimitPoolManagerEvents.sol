@@ -5,6 +5,11 @@ import '../../interfaces/structs/PoolsharkStructs.sol';
 
 /// @notice Events emitted by the LimitPoolManager contract
 abstract contract LimitPoolManagerEvents is PoolsharkStructs {
+
+    /////////////////////////////////////////////////////////////
+    /////////////////////// Custom Events ///////////////////////
+    /////////////////////////////////////////////////////////////
+
     /// @notice Event emitted when pool is initialized by the factory
     event FactoryChanged(
         address indexed previousFactory,

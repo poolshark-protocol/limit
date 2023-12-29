@@ -9,16 +9,18 @@ import '../utils/Collect.sol';
 import '../utils/SafeTransfers.sol';
 
 library SwapCall {
-    event Swap(
-        address indexed recipient,
-        bool zeroForOne,
-        uint256 amountIn,
-        uint256 amountOut,
-        uint160 price,
-        uint128 liquidity,
-        uint128 feeAmount,
-        int24 tickAtPrice
-    );
+    // event Swap(
+    //     address indexed recipient,
+    //     bool zeroForOne,
+    //     uint256 amountIn,
+    //     uint256 amountOut,
+    //     uint160 price,
+    //     uint128 liquidity,
+    //     uint128 feeAmount,
+    //     int24 tickAtPrice
+    // );
+
+    event Event();
 
     function perform(
         mapping(int24 => LimitPoolStructs.Tick) storage ticks,

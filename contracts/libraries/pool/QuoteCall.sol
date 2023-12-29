@@ -7,15 +7,7 @@ import '../Ticks.sol';
 library QuoteCall {
     uint8 private constant _ENTERED = 2;
 
-    event Swap(
-        address indexed recipient,
-        bool zeroForOne,
-        uint256 amountIn,
-        uint256 amountOut,
-        uint160 price,
-        uint128 liquidity,
-        int24 tickAtPrice
-    );
+    event Event();
 
     function perform(
         mapping(int24 => LimitPoolStructs.Tick) storage ticks,

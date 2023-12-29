@@ -2,6 +2,7 @@
 pragma solidity 0.8.18;
 
 import '../interfaces/structs/PoolsharkStructs.sol';
+import '../base/events/LimitPoolEvents.sol';
 import './range/math/FeeMath.sol';
 import './math/OverflowMath.sol';
 import './math/ConstantProduct.sol';
@@ -23,7 +24,8 @@ library Ticks {
     // for Q64.96 numbers
     uint256 internal constant Q96 = 0x1000000000000000000000000;
 
-    event Initialize(
+    event Initialize(uint160 price, int24 tick);
+    event InitializeLimit(
         int24 minTick,
         int24 maxTick,
         uint160 startPrice,
@@ -31,6 +33,15 @@ library Ticks {
     );
 
     event Swap(
+        address indexed sender,
+        address indexed recipient,
+        int256 amount0,
+        int256 amount1,
+        uint160 price,
+        uint128 liquidity,
+        int24 tickAtPrice
+    );
+    event SwapLimit(
         address indexed recipient,
         uint256 amountIn,
         uint256 amountOut,
@@ -108,8 +119,14 @@ library Ticks {
         // intialize samples
         state.pool = Samples.initialize(samples, state.pool);
 
-        // emit event
+        // emit standard event
         emit Initialize(
+            state.pool0.price,
+            state.pool0.tickAtPrice
+        );
+
+        // emit custom event
+        emit InitializeLimit(
             ConstantProduct.minTick(constants.tickSpacing),
             ConstantProduct.maxTick(constants.tickSpacing),
             state.pool0.price,
@@ -188,6 +205,7 @@ library Ticks {
                 );
             }
         }
+    
         /// @dev - write oracle entry after start of block
         (
             cache.state.pool.samples.index,
@@ -198,6 +216,7 @@ library Ticks {
             startLiquidity,
             cache.state.pool.tickAtPrice
         );
+
         // pool liquidity should be updated along the way
         cache.state.pool.price = cache.price.toUint160();
 
@@ -218,7 +237,20 @@ library Ticks {
                 cache.state.pool0.tickAtPrice = cache.state.pool.tickAtPrice;
             }
         }
+
+        // emit standard event
         emit Swap(
+            msg.sender,
+            params.to,
+            params.zeroForOne ? int256(cache.input) : -int256(cache.output),
+            params.zeroForOne ? -int256(cache.output) : int256(cache.input),
+            cache.state.pool.price,
+            cache.liquidity.toUint128(),
+            cache.state.pool.tickAtPrice
+        );
+
+        // emit custom event
+        emit SwapLimit(
             params.to,
             cache.input,
             cache.output,
@@ -284,6 +316,7 @@ library Ticks {
             cross: true,
             averagePrice: 0
         });
+        
         // grab latest price and sample
         (
             cache.averagePrice,
@@ -294,12 +327,14 @@ library Ticks {
             cache.constants,
             cache.state.pool.liquidity
         );
+
         while (cache.cross) {
             cache = _quoteSingle(cache, params.priceLimit, params.zeroForOne);
             if (cache.cross) {
                 cache = _pass(ticks, rangeTickMap, limitTickMap, cache, params);
             }
         }
+
         return (cache.input, cache.output, cache.price.toUint160());
     }
 
@@ -500,6 +535,7 @@ library Ticks {
                     crossTick.secondsPerLiquidityAccumOutside;
                 ticks[cache.crossTick].range = crossTick;
                 int128 liquidityDelta = crossTick.liquidityDelta;
+                // emit custom event
                 emit SyncRangeTick(
                     crossTick.feeGrowthOutside0,
                     crossTick.feeGrowthOutside1,

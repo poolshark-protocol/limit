@@ -101,7 +101,7 @@ describe('TGE Deployment Tests', function () {
     })
   })
 
-  it.only('token1 - Should deploy TGE position', async function () {
+  it('token1 - Should deploy TGE position', async function () {
 
     await mintSigners20(hre.props.token0, tokenAmount.mul(55000), [hre.props.alice, hre.props.bob])
     await mintSigners20(hre.props.token1, tokenAmount.mul(55000), [hre.props.alice, hre.props.bob])

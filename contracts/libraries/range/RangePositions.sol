@@ -21,6 +21,25 @@ library RangePositions {
     uint256 internal constant Q96 = 0x1000000000000000000000000;
     uint256 internal constant Q128 = 0x100000000000000000000000000000000;
 
+    event Mint(
+        address sender,
+        address indexed owner,
+        int24 indexed tickLower,
+        int24 indexed tickUpper,
+        uint128 amount,
+        uint256 amount0,
+        uint256 amount1
+    );
+
+    event Burn(
+        address indexed owner,
+        int24 indexed tickLower,
+        int24 indexed tickUpper,
+        uint128 amount,
+        uint256 amount0,
+        uint256 amount1
+    );
+
     event BurnRange(
         address indexed recipient,
         uint256 indexed positionId,
@@ -157,6 +176,18 @@ library RangePositions {
             cache.position.upper,
             uint128(cache.liquidityBurned)
         );
+
+        // emit standard event
+        emit Burn(
+            msg.sender,
+            cache.position.lower,
+            cache.position.upper,
+            uint128(cache.liquidityBurned),
+            cache.amount0.toUint128(),
+            cache.amount1.toUint128()
+        );
+
+        // emit custom event
         emit BurnRange(
             params.to,
             params.positionId,
@@ -164,10 +195,13 @@ library RangePositions {
             cache.amount0,
             cache.amount1
         );
+
+        // clear position bounds
         if (cache.position.liquidity == 0) {
             cache.position.lower = 0;
             cache.position.upper = 0;
         }
+
         return cache;
     }
 
@@ -224,6 +258,15 @@ library RangePositions {
                 : params.amount1;
             position.liquidity += uint128(liquidityAmount);
         }
+        emit Mint(
+            msg.sender,
+            msg.sender,
+            position.lower,
+            position.upper,
+            liquidityAmount.toUint128(),
+            0,
+            0
+        );
         emit CompoundRange(params.positionId, uint128(liquidityAmount));
         return (
             position,

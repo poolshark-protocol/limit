@@ -15,6 +15,15 @@ import '../Ticks.sol';
 library LimitPositions {
     using SafeCast for uint256;
 
+    event Burn(
+        address indexed owner,
+        int24 indexed tickLower,
+        int24 indexed tickUpper,
+        uint128 amount,
+        uint256 amount0,
+        uint256 amount1
+    );
+
     event BurnLimit(
         address indexed to,
         uint32 positionId,
@@ -419,6 +428,19 @@ library LimitPositions {
             cache.position.crossedInto = false;
         }
 
+        // emit standard event
+        emit Burn(
+            msg.sender,
+            cache.position.lower,
+            cache.position.upper,
+            uint128(cache.liquidityBurned),
+            params.zeroForOne ? cache.amountOut
+                              : cache.amountIn,
+            params.zeroForOne ? cache.amountIn
+                              : cache.amountOut
+        );
+
+        // emit custom event
         emit BurnLimit(
             params.to,
             params.positionId,

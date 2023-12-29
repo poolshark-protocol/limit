@@ -14,6 +14,16 @@ library MintRangeCall {
     using SafeCast for int128;
     using SafeCast for uint128;
 
+    event Mint(
+        address sender,
+        address indexed owner,
+        int24 indexed tickLower,
+        int24 indexed tickUpper,
+        uint128 amount,
+        uint256 amount0,
+        uint256 amount1
+    );
+
     event MintRange(
         address indexed recipient,
         int24 lower,
@@ -119,6 +129,16 @@ library MintRangeCall {
         cache.amount0 -= params.amount0.toInt128();
         cache.amount1 -= params.amount1.toInt128();
 
+        emit Mint(
+            msg.sender,
+            cache.owner,
+            cache.position.lower,
+            cache.position.upper,
+            cache.liquidityMinted.toUint128(),
+            uint128(-cache.amount0),
+            uint128(-cache.amount1)
+        );
+
         emit MintRange(
             cache.owner,
             cache.position.lower,
@@ -137,8 +157,10 @@ library MintRangeCall {
 
         // transfer positive amounts back to user
         if (cache.feesAccrued0 > 0 || cache.feesAccrued1 > 0)
-            Collect.range(
+            Collects.range(
+                cache.position,
                 cache.constants,
+                cache.owner,
                 cache.owner,
                 cache.feesAccrued0,
                 cache.feesAccrued1

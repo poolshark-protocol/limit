@@ -99,7 +99,7 @@ library BurnLimitCall {
         save(cache, globalState, params.zeroForOne);
 
         BurnLimitLocals memory locals;
-        (cache, locals.amount0Delta, locals.amount1Delta) = Collects.burnLimit(
+        (cache, locals.amount0Delta, locals.amount1Delta) = CollectLib.burnLimit(
             cache,
             params
         );

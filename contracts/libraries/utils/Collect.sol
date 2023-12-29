@@ -5,7 +5,7 @@ import '../../interfaces/structs/LimitPoolStructs.sol';
 import '../limit/LimitPositions.sol';
 import '../utils/SafeTransfers.sol';
 
-library Collects {
+library CollectLib {
     using SafeCast for int128;
     using SafeCast for uint128;
 

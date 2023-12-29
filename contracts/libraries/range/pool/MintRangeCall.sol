@@ -135,8 +135,8 @@ library MintRangeCall {
             cache.position.lower,
             cache.position.upper,
             cache.liquidityMinted.toUint128(),
-            uint128(-cache.amount0),
-            uint128(-cache.amount1)
+            params.amount0,
+            params.amount1
         );
 
         emit MintRange(
@@ -157,7 +157,7 @@ library MintRangeCall {
 
         // transfer positive amounts back to user
         if (cache.feesAccrued0 > 0 || cache.feesAccrued1 > 0)
-            Collects.range(
+            CollectLib.range(
                 cache.position,
                 cache.constants,
                 cache.owner,

@@ -101,7 +101,7 @@ library BurnRangeCall {
 
         // transfer amounts to user
         if (cache.amount0 > 0 || cache.amount1 > 0)
-            Collects.range(
+            CollectLib.range(
                 cache.position,
                 cache.constants,
                 msg.sender,

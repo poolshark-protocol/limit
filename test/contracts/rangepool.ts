@@ -174,8 +174,7 @@ describe('RangePool Exact In Tests', function () {
   })
 
   it('pool - Should not skip crossing tick - kyber exploit', async function () {
-    console.log('kyber pool:', hre.props.kyberPool.address, hre.props.kyberPoolToken.address)
-
+    if (debugMode) console.log('kyber pool:', hre.props.kyberPool.address, hre.props.kyberPoolToken.address)
     await validateSwap({
       signer: hre.props.alice,
       recipient: hre.props.alice.address,
@@ -236,8 +235,8 @@ describe('RangePool Exact In Tests', function () {
       poolContract: hre.props.kyberPool,
       revertMessage: '',
     })
-    await getPrice(hre.props.kyberPool)
-    await getRangeLiquidity()
+    if (debugMode) await getPrice(hre.props.kyberPool)
+    if (debugMode) await getRangeLiquidity()
     if (balanceCheck) {
       console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.limitPool.address)).toString())
       console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.limitPool.address)).toString())

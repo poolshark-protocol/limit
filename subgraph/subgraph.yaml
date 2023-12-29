@@ -30,9 +30,9 @@ templates:
               - name: ERC20NameBytes
                 file: ./abis/ERC20NameBytes.json
           eventHandlers:
-              - event: Initialize(int24,int24,uint160,int24)
+              - event: InitializeLimit(int24,int24,uint160,int24)
                 handler: handleInitialize
-              - event: Swap(indexed address,uint256,uint256,uint200,uint200,uint160,uint128,uint128,int24,indexed bool,indexed bool)
+              - event: SwapLimit(indexed address,uint256,uint256,uint200,uint200,uint160,uint128,uint128,int24,indexed bool,indexed bool)
                 handler: handleSwap
               - event: MintLimit(indexed address,int24,int24,bool,uint32,uint32,uint128,uint128)
                 handler: handleMintLimit
@@ -56,10 +56,8 @@ templates:
                 handler: handleSyncLimitLiquidity
               - event: SyncLimitTick(uint32,int24,bool)
                 handler: handleSyncLimitTick
-              - event: CollectRange0(uint128)
+              - event: Collect(indexed address,address,indexed int24,indexed int24,uint128,uint128)
                 handler: handleCollectRange0
-              - event: CollectRange1(uint128)
-                handler: handleCollectRange1
     # ERC-1155 events
     - kind: ethereum/contract
       name: PositionERC1155Template
@@ -138,7 +136,7 @@ dataSources:
             - name: ERC20NameBytes
               file: ./abis/ERC20NameBytes.json
         eventHandlers:
-            - event: PoolCreated(address,address,indexed address,indexed address,indexed uint16,int16,uint16)
+            - event: LimitPoolCreated(address,address,indexed address,indexed address,indexed uint16,int16,uint16)
               handler: handlePoolCreated
   - kind: ethereum/contract
     name: LimitPoolManager

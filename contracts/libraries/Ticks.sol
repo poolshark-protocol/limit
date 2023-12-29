@@ -121,16 +121,16 @@ library Ticks {
 
         // emit standard event
         emit Initialize(
-            state.pool0.price,
-            state.pool0.tickAtPrice
+            startPrice,
+            startTick
         );
 
         // emit custom event
         emit InitializeLimit(
             ConstantProduct.minTick(constants.tickSpacing),
             ConstantProduct.maxTick(constants.tickSpacing),
-            state.pool0.price,
-            state.pool0.tickAtPrice
+            startPrice,
+            startTick
         );
 
         return state;
@@ -263,6 +263,7 @@ library Ticks {
             params.zeroForOne,
             params.exactIn
         );
+
         return cache;
     }
 
@@ -387,6 +388,8 @@ library Ticks {
                     zeroForOne,
                     cache.exactIn
                 );
+                if (newPrice < nextPrice)
+                    require(false, 'NextPriceExceeded()');
                 if (cache.exactIn) {
                     amountIn = cache.amountLeft;
                     amountOut = ConstantProduct.getDy(
@@ -456,6 +459,8 @@ library Ticks {
                     zeroForOne,
                     cache.exactIn
                 );
+                if (newPrice > nextPrice)
+                    require(false, 'NextPriceExceeded()');
                 if (cache.exactIn) {
                     amountIn = cache.amountLeft;
                     amountOut = ConstantProduct.getDx(

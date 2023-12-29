@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: BUSL-1.1
+// SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.18;
 
 import './LimitTicks.sol';
@@ -412,12 +412,27 @@ library LimitPositions {
             );
         }
 
+        // emit custom event
+        emit BurnLimit(
+            params.to,
+            params.positionId,
+            cache.position.lower,
+            cache.position.upper,
+            cache.claim,
+            params.claim,
+            params.zeroForOne,
+            cache.liquidityBurned,
+            cache.amountIn,
+            cache.amountOut
+        );
+
         // clear filled position
         if (
             params.zeroForOne
                 ? params.claim == cache.position.upper
                 : params.claim == cache.position.lower
         ) {
+            cache.liquidityBurned = cache.position.liquidity;
             cache.state.liquidityGlobal -= cache.position.liquidity;
             cache.position.liquidity = 0;
         }
@@ -438,20 +453,6 @@ library LimitPositions {
                               : cache.amountIn,
             params.zeroForOne ? cache.amountIn
                               : cache.amountOut
-        );
-
-        // emit custom event
-        emit BurnLimit(
-            params.to,
-            params.positionId,
-            cache.position.lower,
-            cache.position.upper,
-            cache.claim,
-            params.claim,
-            params.zeroForOne,
-            cache.liquidityBurned,
-            cache.amountIn,
-            cache.amountOut
         );
 
         // save pool to state in memory

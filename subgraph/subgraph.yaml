@@ -113,9 +113,9 @@ dataSources:
     name: LimitPoolFactory
     network: arbitrum-one
     source:
-        address: '0xd28d620853af6837d76f1360dc65229d57ba5435'
+        address: '0x40e21ce13f5089bc421c063506bbb0df02bca07e'
         abi: LimitPoolFactory
-        startBlock: 158864748
+        startBlock: 165077269
     mapping:
         kind: ethereum/events
         apiVersion: 0.0.6
@@ -142,9 +142,9 @@ dataSources:
     name: LimitPoolManager
     network: arbitrum-one
     source:
-        address: '0x441bb7b76c9932d5c65d7a78b3413978d7370761'
+        address: '0x6b1ffc44ec8ed486843640b66180d5ee366fee9f'
         abi: LimitPoolManager
-        startBlock: 158864726
+        startBlock: 165077264
     mapping:
         kind: ethereum/events
         apiVersion: 0.0.6
@@ -177,9 +177,9 @@ dataSources:
     name: PoolsharkRouter
     network: arbitrum-one
     source:
-        address: '0x5357308a5a4db6c65fa6c4b122dfc3d749f2dd6a'
+        address: '0x5bb32287ecb48de323760c3384a3285f732950b6'
         abi: PoolsharkRouter
-        startBlock: 158865312
+        startBlock: 167367213
     mapping:
         kind: ethereum/events
         apiVersion: 0.0.6
@@ -213,3 +213,23 @@ dataSources:
         eventHandlers:
             - event: Transfer(indexed address,indexed address,indexed uint256)
               handler: handleTransfer
+  - kind: ethereum/contract
+    name: v3EthUsdcPool
+    network: arbitrum-one
+    source:
+        address: '0xc31e54c7a869b9fcbecc14363cf510d1c41fa443'
+        abi: v3Pool
+        startBlock: 161266335
+    mapping:
+        kind: ethereum/events
+        apiVersion: 0.0.6
+        language: wasm/assemblyscript
+        file: ./src/mappings/v3Pool.ts
+        entities:
+            - BasePrice
+        abis:
+            - name: v3Pool
+              file: ./abis/v3Pool.json
+        eventHandlers:
+            - event: Swap(indexed address,indexed address,int256,int256,uint160,uint128,int24)
+              handler: handleV3Swap

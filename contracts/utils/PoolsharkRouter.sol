@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.18;
 
 import '../interfaces/IPool.sol';
@@ -17,6 +17,12 @@ import '../libraries/utils/SafeCast.sol';
 import '../interfaces/structs/PoolsharkStructs.sol';
 import '../external/solady/LibClone.sol';
 
+/**
+ * @title LimitPoolManager
+ * @notice The router for all limit and cover pools
+ * @author Poolshark
+ * @author @alphak3y
+ */
 contract PoolsharkRouter is
     PoolsharkStructs,
     ILimitPoolMintRangeCallback,
@@ -771,11 +777,12 @@ contract PoolsharkRouter is
             tgePoolState,
             ,,,,,
         ) = IPool(tgePool).globalState();
-        if (tgePoolState.price < 2358285847295149069702956253974) {
+        uint160 expectedPoolPrice = 2062122576071194503151227620392;
+        if (tgePoolState.price < expectedPoolPrice) {
             // move pool price up if below
             SwapParams memory swapParams = SwapParams({
                 to: msg.sender,
-                priceLimit: 2358285847295149069702956253974,
+                priceLimit: expectedPoolPrice,
                 amount: 1000e18,
                 exactIn: true,
                 zeroForOne: false,
@@ -788,11 +795,11 @@ contract PoolsharkRouter is
                 )
             });
             IPool(tgePool).swap(swapParams);
-        } else if (tgePoolState.price < 2358285847295149069702956253974) {
+        } else if (tgePoolState.price < expectedPoolPrice) {
             // move pool price down if above
             SwapParams memory swapParams = SwapParams({
                 to: msg.sender,
-                priceLimit: 2358285847295149069702956253974,
+                priceLimit: expectedPoolPrice,
                 amount: 1e18,
                 exactIn: true,
                 zeroForOne: true,
@@ -811,7 +818,7 @@ contract PoolsharkRouter is
             tgePoolState,
             ,,,,,
         ) = IPool(tgePool).globalState();
-        if(tgePoolState.price != 2358285847295149069702956253974)
+        if(tgePoolState.price != expectedPoolPrice)
             require(false, 'PoolPriceMismatch()');
         MintRangeCallbackData memory callbackData = MintRangeCallbackData({
                         sender: msg.sender,
@@ -820,11 +827,11 @@ contract PoolsharkRouter is
         });
         MintRangeParams memory mintRangeParams = MintRangeParams({
             to: staker,
-            lower: 44850,
+            lower: 44850, //TODO: change to $10 per FIN = 221.5 = ~54000
             upper: 77040,
             positionId: 0,
-            amount0: 31568903742987611804,
-            amount1: 51999999999999999999996,
+            amount0: 44146000000000000000, //TODO: calculate new amounts
+            amount1: 42586954683848930000000, //TODO: calculate new amounts
             callbackData: abi.encode(callbackData)
         });
         IRangePool(tgePool).mintRange(mintRangeParams);

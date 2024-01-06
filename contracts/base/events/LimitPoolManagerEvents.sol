@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.18;
 
 import '../../interfaces/structs/PoolsharkStructs.sol';
@@ -18,6 +18,13 @@ abstract contract LimitPoolManagerEvents is PoolsharkStructs {
 
     /// @notice Event emitted the fee delta constant is modified
     event FeeDeltaConstChanged(
+        uint16 oldFeeDeltaConst,
+        uint16 newFeeDeltaConst
+    );
+
+    /// @notice Event emitted the fee delta constant is modified
+    event PoolFeeDeltaConstChanged(
+        address pool,
         uint16 oldFeeDeltaConst,
         uint16 newFeeDeltaConst
     );

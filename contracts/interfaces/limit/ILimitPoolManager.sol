@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.18;
 
 /// @notice LimitPoolManager interface
@@ -7,7 +7,7 @@ interface ILimitPoolManager {
 
     function feeTo() external view returns (address);
 
-    function feeDeltaConst() external view returns (uint16);
+    function feeDeltaConsts(address pool) external view returns (uint16);
 
     function poolTypes(uint16 poolType)
         external

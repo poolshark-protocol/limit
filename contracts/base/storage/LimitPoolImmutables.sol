@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: BSD
+// SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.18;
 
 import {Clone} from '../../external/solady/Clone.sol';

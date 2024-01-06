@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.18;
 
 import '../../Samples.sol';
@@ -48,7 +48,7 @@ library FeeMath {
                     locals.lastPrice = locals.minPrice;
                 // delta is % modifier on the swapFee
                 uint256 delta = OverflowMath.mulDiv(
-                    ILimitPoolManager(cache.constants.owner).feeDeltaConst() / // higher feeDeltaConst means
+                    ILimitPoolManager(cache.constants.owner).feeDeltaConsts(address(this)) / // higher feeDeltaConst means
                         uint16(cache.constants.tickSpacing), // more aggressive dynamic fee
                     (
                         locals.price > locals.lastPrice

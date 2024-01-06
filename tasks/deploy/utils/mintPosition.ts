@@ -4,6 +4,7 @@ import { InitialSetup } from '../../../test/utils/setup/initialSetup'
 import { validateMint as validateMintRange, validateBurn as validateBurnRange } from '../../../test/utils/contracts/rangepool'
 import { mintSigners20 } from '../../../test/utils/token'
 import { getNonce } from '../../utils'
+import { parseUnits } from 'ethers/lib/utils'
 
 export class MintPosition {
     private initialSetup: InitialSetup
@@ -84,48 +85,54 @@ export class MintPosition {
         // )
 
         // console.log('position snapshot', snapshot.feesOwed0.toString(), snapshot.feesOwed1.toString())
-
+        const amountIn = parseUnits('1', 16)
+        const signer = hre.props.alice
+        let approveTxn = await hre.props.token0.connect(signer).approve(hre.props.poolRouter.address, amountIn)
+        // let approveTxn = await hre.props.token1.connect(signer).approve(hre.props.poolRouter.address, amountIn)
+        await approveTxn.wait()
         // const aliceId = await validateMintRange({
         //     signer: hre.props.alice,
-        //     recipient: '0x9dA9409D17DeA285B078af06206941C049F692Dc',
-        //     lower: '-400000',
-        //     upper: '100000',
-        //     amount0: token0Amount.mul(1000),
-        //     amount1: token1Amount.mul(1000),
-        //     balance0Decrease: BigNumber.from('624999999999999999'),
-        //     balance1Decrease: token1Amount.mul(10).sub(1),
+        //     recipient: hre.props.alice.address,
+        //     lower: '-200200',
+        //     upper: '-200000',
+        //     amount0: BN_ZERO,
+        //     amount1: amountIn,
+        //     balance0Decrease: BN_ZERO,
+        //     balance1Decrease: amountIn,
         //     liquidityIncrease: BN_ZERO,
         //     revertMessage: '',
         // })
         // return
-        const token0Amount = ethers.utils.parseUnits('1', 16)
-        const signer = hre.props.alice
-        const amountIn = token0Amount
-        let approveTxn = await hre.props.token1.connect(signer).approve(hre.props.poolRouter.address, amountIn)
-        await approveTxn.wait()
-        // // for (let i=0; i < 20; i++) {
+        // const token0Amount = ethers.utils.parseUnits('1', 16)
+
+        // const amountIn = token0Amount
+
+        // // // for (let i=0; i < 20; i++) {
+
+        // 0 => 1 
+        //0xe80dc9a69853483c745f8e32162f0bd5813cb291 => new factory
 
             const zeroForOne = true
 
-            const priceLimit = BigNumber.from('2358285847295149069702956253974')
+            const priceLimit = BigNumber.from('3751434670994143578079625525371')
             let txn = await hre.props.poolRouter
             .connect(signer)
             .multiSwapSplit(
-            ['0x53C314F6BCdA3C253ECA949B0D66b9679c2bB219'],
+            ['0x5330588b4eFD339b8ea441aFedF09AAb851f2d48'],
                 [
                 {
                     to: signer.address,
                     priceLimit: priceLimit,
                     amount: amountIn,
                     zeroForOne: zeroForOne,
-                    exactIn: false,
+                    exactIn: true,
                     callbackData: ethers.utils.formatBytes32String('')
                 },
                 ])
             await txn.wait()
         // }
 
-        return
+        // return
 
         // const globalStateAfter = (await hre.props.limitPool.globalState())
         // console.log('sample state', globalStateAfter.pool.samples.index, globalStateAfter.pool.samples.count, globalStateAfter.pool.samples.countMax, globalStateAfter.pool.tickAtPrice)
@@ -173,7 +180,7 @@ export class MintPosition {
         // await getPrice(false, true)
         // await getLiquidity(false, true)
 
-        console.log('position minted')
+        // console.log('position minted')
     }
 
     public async postDeployment() {}

@@ -27,6 +27,7 @@
         "deploy-hs": "graph deploy --product hosted-service alphak3y/poolshark-limit",
         "deploy-local": "graph deploy example --ipfs http://localhost:5001 --node http://127.0.0.1:8020",
         "deploy-arb-one": "graph deploy --version-label v0.1.1 --node https://api.graph-ams.p2pify.com/e57bc8ecd57c8bac9bfc6222cb8257e7/deploy --ipfs https://api.graph-ams.p2pify.com/e57bc8ecd57c8bac9bfc6222cb8257e7/ipfs limit-arbitrum",
+        "deploy-arb-one-2": "graph deploy --version-label v0.1.1 --node https://api.graph-ams.p2pify.com/1600f38da0b118b394f0184f131232a1/deploy --ipfs https://api.graph-ams.p2pify.com/1600f38da0b118b394f0184f131232a1/ipfs limit-arbitrum-redeploy",
         "test": "graph codegen; graph test -v 0.2.0",
         "prepare:subgraph": "mustache ./config/${NETWORK}.json ./templates/${BLOCKCHAIN}.subgraph.template.yaml > subgraph.yaml && rm -rf generated && npm run generate:schema && npm run subgraph:codegen && npm run subgraph:build",
         "subgraph:deploy:chainstack:test": "graph deploy --version-label v0.3.1 --node https://api.graph-ams.p2pify.com/abafff8142f8181262d18b7dfeac1236/deploy --ipfs https://api.graph-ams.p2pify.com/abafff8142f8181262d18b7dfeac1236/ipfs limit-arbitrumGoerli-test",

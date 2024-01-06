@@ -5,12 +5,4 @@ export const CONTRACT_DEPLOYMENT_KEYS: ContractDeploymentsKey[] = [
         networkName: 'arb_one',
         objectName: 'poolRouter'
     },
-    {
-        networkName: 'arb_one',
-        objectName: 'poolRouter'
-    },
-    {
-        networkName: 'arb_one',
-        objectName: 'poolRouter'
-    },
 ];

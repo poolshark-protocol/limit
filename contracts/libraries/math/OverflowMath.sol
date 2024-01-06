@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.18;
 
 /// @notice Math library that facilitates multiplication and division that can have overflow of an intermediate value without any loss of precision.

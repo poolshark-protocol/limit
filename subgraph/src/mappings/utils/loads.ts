@@ -15,7 +15,7 @@ class LoadBasePriceRet {
     entity: BasePrice
     exists: boolean
 }
-export function safeLoadBasePrice(name: string): LoadBasePriceRet {
+export function safeLoadBasePrice(name: string, stablePool: LimitPool | null = null): LoadBasePriceRet {
     let exists = true
 
     let basePriceEntity = BasePrice.load(name)
@@ -25,7 +25,11 @@ export function safeLoadBasePrice(name: string): LoadBasePriceRet {
         exists = false
     }
 
-    basePriceEntity.USD = getEthPriceInUSD()
+    if (stablePool !== null) {
+        // only non-null when updating v3 pool price
+        basePriceEntity.USD = getEthPriceInUSD(stablePool)
+    }
+
 
     return {
         entity: basePriceEntity,

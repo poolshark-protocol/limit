@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.18;
 
 import '../cover/ITwapSource.sol';
@@ -87,6 +87,13 @@ interface PoolsharkStructs {
          * @notice id of previous position minted
          */
         uint32 positionId;
+        /**
+         * @custom:field burnPercent
+         * @notice Percent of the remaining liquidity to be removed
+         * @notice 1e38 represents 100%
+         * @notice 5e37 represents 50%
+         * @notice 1e37 represents 10%
+         */
         uint128 burnPercent;
     }
 

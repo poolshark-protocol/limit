@@ -1,8 +1,6 @@
 import { BigNumber } from 'ethers'
-import { BN_ZERO, getLiquidity, getPrice, validateBurn, validateMint, validateSwap, } from '../../../test/utils/contracts/limitpool'
+import { BN_ZERO, } from '../../../test/utils/contracts/limitpool'
 import { InitialSetup } from '../../../test/utils/setup/initialSetup'
-import { validateMint as validateMintRange, validateBurn as validateBurnRange } from '../../../test/utils/contracts/rangepool'
-import { mintSigners20 } from '../../../test/utils/token'
 import { getNonce } from '../../utils'
 import { parseUnits } from 'ethers/lib/utils'
 
@@ -114,7 +112,7 @@ export class MintPosition {
 
             const zeroForOne = true
 
-            const priceLimit = BigNumber.from('3751434670994143578079625525371')
+            const priceLimit = BigNumber.from('3721491874816186603690483')
             let txn = await hre.props.poolRouter
             .connect(signer)
             .multiSwapSplit(

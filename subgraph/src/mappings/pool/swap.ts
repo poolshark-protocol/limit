@@ -1,7 +1,7 @@
 import { BigDecimal, BigInt, log } from "@graphprotocol/graph-ts"
 import { safeLoadBasePrice, safeLoadHistoricalOrder, safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadSwap, safeLoadToken, safeLoadTotalSeasonReward, safeLoadTransaction, safeLoadTvlUpdateLog, safeLoadUserSeasonReward } from "../utils/loads"
 import { BIGDECIMAL_ZERO, BIGINT_ONE, BIGINT_ZERO, convertTokenToDecimal } from "../utils/helpers"
-import { ZERO_BD, TWO_BD, ONE_BI, FACTORY_ADDRESS, SEASON_1_END_TIME, SEASON_1_START_TIME } from "../../constants/arbitrum"
+import { ZERO_BD, TWO_BD, ONE_BI, FACTORY_ADDRESS, SEASON_1_END_TIME, SEASON_1_START_TIME } from "../../constants/constants"
 import { AmountType, findEthPerToken, getAdjustedAmounts, getEthPriceInUSD, sqrtPriceX96ToTokenPrices } from "../utils/price"
 import { updateDerivedTVLAmounts } from "../utils/tvl"
 import { Swap, SwapLimit } from "../../../generated/LimitPoolFactory/LimitPool"

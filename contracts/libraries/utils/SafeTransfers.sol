@@ -1,4 +1,4 @@
-//SPDX-License-Identifier: AGPL-3.0-only
+//SPDX-License-Identifier: SSPL-1.0
 pragma solidity 0.8.18;
 
 import '@openzeppelin/contracts/token/ERC20/ERC20.sol';

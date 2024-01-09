@@ -1,6 +1,6 @@
 import { RouterDeployed } from "../../generated/PoolsharkRouter/PoolsharkRouter";
 import { TransferBatch, TransferSingle } from "../../generated/templates/PositionERC1155Template/PositionERC1155";
-import { RANGE_STAKER_ADDRESS } from "../constants/arbitrum";
+import { RANGE_STAKER_ADDRESS } from "../constants/constants";
 import { safeLoadLimitPoolToken, safeLoadLimitPosition, safeLoadPoolRouter, safeLoadRangePosition } from "./utils/loads";
 
 export function handleTransferSingle(event: TransferSingle): void {

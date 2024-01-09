@@ -1,6 +1,6 @@
 import { safeLoadLimitPool, safeLoadRangePosition, safeLoadToken, safeLoadTotalSeasonReward, safeLoadUserSeasonReward } from '../utils/loads'
 import { FeeToTransfer, OwnerTransfer, StakeRange, StakeRangeAccrued, UnstakeRange } from '../../../generated/templates/RangeStakerTemplate/RangeStaker'
-import { FACTORY_ADDRESS, SEASON_1_END_TIME, SEASON_1_START_TIME, WHITELISTED_PAIRS, WHITELISTED_TOKENS } from '../../constants/arbitrum'
+import { FACTORY_ADDRESS, SEASON_1_END_TIME, SEASON_1_START_TIME, WHITELISTED_PAIRS, WHITELISTED_TOKENS } from '../../constants/constants'
 import { convertTokenToDecimal } from '../utils/helpers'
 
 export function handleFeeToTransfer(event: FeeToTransfer): void {

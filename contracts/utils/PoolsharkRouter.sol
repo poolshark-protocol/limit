@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: SSPL-1.0
 pragma solidity 0.8.18;
 
 import '../interfaces/IPool.sol';
@@ -18,7 +18,7 @@ import '../interfaces/structs/PoolsharkStructs.sol';
 import '../external/solady/LibClone.sol';
 
 /**
- * @title LimitPoolManager
+ * @title PoolsharkRouter
  * @notice The router for all limit and cover pools
  * @author Poolshark
  * @author @alphak3y
@@ -770,14 +770,13 @@ contract PoolsharkRouter is
     }
 
     function deployTge(address tgePool, address staker) external {
-        // address staker = 0x373bF43249BeD0518119d29B80c7D9C68d98cFC2;
         // read pool price
         RangePoolState memory tgePoolState;
         (
             tgePoolState,
             ,,,,,
         ) = IPool(tgePool).globalState();
-        uint160 expectedPoolPrice = 2062122576071194503151227620392;
+        uint160 expectedPoolPrice = 2172618421097231267834892073346;
         if (tgePoolState.price < expectedPoolPrice) {
             // move pool price up if below
             SwapParams memory swapParams = SwapParams({
@@ -795,7 +794,7 @@ contract PoolsharkRouter is
                 )
             });
             IPool(tgePool).swap(swapParams);
-        } else if (tgePoolState.price < expectedPoolPrice) {
+        } else if (tgePoolState.price > expectedPoolPrice) {
             // move pool price down if above
             SwapParams memory swapParams = SwapParams({
                 to: msg.sender,
@@ -827,11 +826,11 @@ contract PoolsharkRouter is
         });
         MintRangeParams memory mintRangeParams = MintRangeParams({
             to: staker,
-            lower: 44850, //TODO: change to $10 per FIN = 221.5 = ~54000
+            lower: 54000,
             upper: 77040,
             positionId: 0,
-            amount0: 44146000000000000000, //TODO: calculate new amounts
-            amount1: 42586954683848930000000, //TODO: calculate new amounts
+            amount0: 39168000000000000000,
+            amount1: 33000000000000000000000,
             callbackData: abi.encode(callbackData)
         });
         IRangePool(tgePool).mintRange(mintRangeParams);

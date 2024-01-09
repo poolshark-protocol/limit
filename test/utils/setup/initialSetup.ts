@@ -30,9 +30,9 @@ export class InitialSetup {
 
     /// DEPLOY CONFIG
     private deployTokens = false
-    private deployContracts = false
-    private deployPools = false
-    private deployRouter = false
+    private deployContracts = true
+    private deployPools = true
+    private deployRouter = true
     private deployStaker = true
 
     constructor() {
@@ -402,8 +402,8 @@ export class InitialSetup {
                     poolTypeId: 0,
                     tokenIn: hre.props.token0.address,
                     tokenOut: hre.props.token1.address,
-                    swapFee: '1000',
-                    startPrice: '3854594635971501655978346'
+                    swapFee: '3000',
+                    startPrice: '2565382193812633925403'
                 });
                 await createPoolTxn.wait();
     
@@ -412,11 +412,10 @@ export class InitialSetup {
                 [limitPoolAddress, limitPoolTokenAddress] = await hre.props.limitPoolFactory.getLimitPool(
                     hre.props.token0.address,
                     hre.props.token1.address,
-                    '1000',
+                    '3000',
                     0
                 )
-    
-                hre.nonce += 1;
+
                 // @dev - skip 0.3% and 1% fee tiers for now
                 // createPoolTxn = await hre.props.limitPoolFactory.createLimitPool({
                 //     poolTypeId: 0,
@@ -455,7 +454,7 @@ export class InitialSetup {
                 [
                     hre.props.token0.address,
                     hre.props.token1.address,
-                    hre.network.name == 'hardhat' ? '500' : '1000',
+                    hre.network.name == 'hardhat' ? '500' : '3000',
                     0
                 ]
             )

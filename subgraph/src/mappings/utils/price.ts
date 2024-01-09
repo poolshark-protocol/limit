@@ -1,5 +1,5 @@
 /* eslint-disable prefer-const */
-import { MINIMUM_ETH_LOCKED, ONE_BD, STABLE_COINS, STABLE_IS_TOKEN_0, STABLE_POOL_ADDRESS, WETH_ADDRESS, WHITELISTED_TOKENS, ZERO_BD, ZERO_BI } from '../../constants/arbitrum'
+import { MINIMUM_ETH_LOCKED, ONE_BD, STABLE_COINS, STABLE_IS_TOKEN_0, STABLE_POOL_ADDRESS, WETH_ADDRESS, WHITELISTED_TOKENS, ZERO_BD, ZERO_BI } from '../../constants/constants'
 import { BasePrice, LimitPool, Token } from '../../../generated/schema'
 import { BigDecimal, BigInt, log } from '@graphprotocol/graph-ts'
 import { exponentToBigDecimal, safeDiv } from './math'
@@ -9,6 +9,7 @@ import { safeLoadBasePrice, safeLoadLimitPool, safeLoadToken } from './loads'
 export function sqrtPriceX96ToTokenPrices(sqrtPriceX96: BigInt, token0: Token, token1: Token): BigDecimal[] {
   let num = sqrtPriceX96.times(sqrtPriceX96).toBigDecimal()
   let Q192 = BigInt.fromI32(2).pow(192).toBigDecimal()
+  log.warning("before decimals", [])
   let price1 = num
     .div(Q192)
     .times(
@@ -17,7 +18,7 @@ export function sqrtPriceX96ToTokenPrices(sqrtPriceX96: BigInt, token0: Token, t
         exponentToBigDecimal(token1.decimals)
       )
     );
-
+    log.warning("after decimals", [])
   let price0 = BIGDECIMAL_ZERO
   if (price1.gt(BIGDECIMAL_ZERO)) {
     price0 = safeDiv(BigDecimal.fromString('1'), price1);

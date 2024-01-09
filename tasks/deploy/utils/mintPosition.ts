@@ -85,8 +85,8 @@ export class MintPosition {
         // console.log('position snapshot', snapshot.feesOwed0.toString(), snapshot.feesOwed1.toString())
         const amountIn = parseUnits('1', 16)
         const signer = hre.props.alice
-        let approveTxn = await hre.props.token0.connect(signer).approve(hre.props.poolRouter.address, amountIn)
-        // let approveTxn = await hre.props.token1.connect(signer).approve(hre.props.poolRouter.address, amountIn)
+        // let approveTxn = await hre.props.token0.connect(signer).approve(hre.props.poolRouter.address, amountIn)
+        let approveTxn = await hre.props.token1.connect(signer).approve(hre.props.poolRouter.address, amountIn)
         await approveTxn.wait()
         // const aliceId = await validateMintRange({
         //     signer: hre.props.alice,
@@ -110,13 +110,13 @@ export class MintPosition {
         // 0 => 1 
         //0xe80dc9a69853483c745f8e32162f0bd5813cb291 => new factory
 
-            const zeroForOne = true
+            const zeroForOne = false
 
-            const priceLimit = BigNumber.from('3721491874816186603690483')
+            const priceLimit = BigNumber.from('2172618421097231267834892073346')
             let txn = await hre.props.poolRouter
             .connect(signer)
             .multiSwapSplit(
-            ['0x5330588b4eFD339b8ea441aFedF09AAb851f2d48'],
+            ['0xa43ddbcc4b78512c316bd7091b4c60f06db0fe42'],
                 [
                 {
                     to: signer.address,

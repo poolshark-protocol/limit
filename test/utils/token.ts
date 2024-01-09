@@ -13,6 +13,18 @@ export async function mintSigners20(
     }
 }
 
+export async function mintSigners20WithRecipient(
+    token: Contract,
+    amount: BigNumberish,
+    signers: SignerWithAddress[],
+    recipient: string
+): Promise<void> {
+    for (let signer of signers) {
+        const txn = await token.connect(hre.props.alice).mint(recipient, amount)
+        await txn.wait()
+    }
+}
+
 export async function mintAddresses20(
     token: Contract,
     amount: BigNumberish,

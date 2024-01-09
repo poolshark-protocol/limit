@@ -1,6 +1,6 @@
 import { store, BigInt } from "@graphprotocol/graph-ts"
 import { BurnLimit } from "../../../generated/LimitPoolFactory/LimitPool"
-import { FACTORY_ADDRESS, ONE_BI, SEASON_1_END_TIME, SEASON_1_START_TIME } from "../../constants/arbitrum"
+import { FACTORY_ADDRESS, ONE_BI, SEASON_1_END_TIME, SEASON_1_START_TIME } from "../../constants/constants"
 import { BIGINT_ONE, BIGINT_ZERO, convertTokenToDecimal } from "../utils/helpers"
 import { safeLoadBasePrice, safeLoadBurnLog, safeLoadHistoricalOrder, safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadLimitPosition, safeLoadLimitTick, safeLoadToken, safeLoadTotalSeasonReward, safeLoadTvlUpdateLog, safeLoadUserSeasonReward } from "../utils/loads"
 import { findEthPerToken } from "../utils/price"

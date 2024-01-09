@@ -3,7 +3,7 @@ import {
     Bytes,
 } from '@graphprotocol/graph-ts'
 import { MintLimit } from "../../../generated/LimitPoolFactory/LimitPool"
-import { ONE_BI } from "../../constants/arbitrum"
+import { ONE_BI } from "../../constants/constants"
 import { BIGDECIMAL_ZERO, BIGINT_ONE, BIGINT_ZERO, convertTokenToDecimal } from "../utils/helpers"
 import { safeLoadBasePrice, safeLoadHistoricalOrder, safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadLimitPosition, safeLoadLimitTick, safeLoadToken, safeLoadTvlUpdateLog } from "../utils/loads"
 import { findEthPerToken } from '../utils/price'

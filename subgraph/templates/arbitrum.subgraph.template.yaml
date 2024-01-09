@@ -6,7 +6,7 @@ schema:
 templates:
     - kind: ethereum/contract
       name: LimitPoolTemplate
-      network: arbitrum
+      network: arbitrum-one
       source:
           abi: LimitPool
       mapping:
@@ -30,9 +30,9 @@ templates:
               - name: ERC20NameBytes
                 file: ./abis/ERC20NameBytes.json
           eventHandlers:
-              - event: Initialize(int24,int24,uint160,int24)
+              - event: InitializeLimit(int24,int24,uint160,int24)
                 handler: handleInitialize
-              - event: Swap(indexed address,uint256,uint256,uint200,uint200,uint160,uint128,uint128,int24,indexed bool,indexed bool)
+              - event: SwapLimit(indexed address,uint256,uint256,uint200,uint200,uint160,uint128,uint128,int24,indexed bool,indexed bool)
                 handler: handleSwap
               - event: MintLimit(indexed address,int24,int24,bool,uint32,uint32,uint128,uint128)
                 handler: handleMintLimit
@@ -56,10 +56,8 @@ templates:
                 handler: handleSyncLimitLiquidity
               - event: SyncLimitTick(uint32,int24,bool)
                 handler: handleSyncLimitTick
-              - event: CollectRange0(uint128)
-                handler: handleCollectRange0
-              - event: CollectRange1(uint128)
-                handler: handleCollectRange1
+              - event: Collect(indexed address,address,indexed int24,indexed int24,uint128,uint128)
+                handler: handleCollect
     # ERC-1155 events
     - kind: ethereum/contract
       name: PositionERC1155Template
@@ -115,9 +113,9 @@ dataSources:
     name: LimitPoolFactory
     network: arbitrum-one
     source:
-        address: '0xd28d620853af6837d76f1360dc65229d57ba5435'
+        address: '0x8bb5db1625adb4ae4beb94a188d33062303f8fb7'
         abi: LimitPoolFactory
-        startBlock: 158864748
+        startBlock: 168223582
     mapping:
         kind: ethereum/events
         apiVersion: 0.0.6
@@ -138,15 +136,15 @@ dataSources:
             - name: ERC20NameBytes
               file: ./abis/ERC20NameBytes.json
         eventHandlers:
-            - event: PoolCreated(address,address,indexed address,indexed address,indexed uint16,int16,uint16)
+            - event: LimitPoolCreated(address,address,indexed address,indexed address,indexed uint16,int16,uint16)
               handler: handlePoolCreated
   - kind: ethereum/contract
     name: LimitPoolManager
     network: arbitrum-one
     source:
-        address: '0x441bb7b76c9932d5c65d7a78b3413978d7370761'
+        address: '0xc773049bf7131a5ddd85daded4397a1fd4264a3d'
         abi: LimitPoolManager
-        startBlock: 158864726
+        startBlock: 168223575
     mapping:
         kind: ethereum/events
         apiVersion: 0.0.6
@@ -179,9 +177,9 @@ dataSources:
     name: PoolsharkRouter
     network: arbitrum-one
     source:
-        address: '0x5357308a5a4db6c65fa6c4b122dfc3d749f2dd6a'
+        address: '0x12b7a6dd3a3dfde6a0f112a1bd876f704d933915'
         abi: PoolsharkRouter
-        startBlock: 158865312
+        startBlock: 168223826
     mapping:
         kind: ethereum/events
         apiVersion: 0.0.6
@@ -195,5 +193,43 @@ dataSources:
         eventHandlers:
             - event: RouterDeployed(address,address,address)
               handler: handleRouterDeployed
-
-
+  - kind: ethereum/contract
+    name: vFIN
+    network: arbitrum-one
+    source:
+        address: '0xFA3e62Aae5DE014c4CD20377Ec90Eb8e59d31169'
+        abi: vFIN
+        startBlock: 161266335
+    mapping:
+        kind: ethereum/events
+        apiVersion: 0.0.6
+        language: wasm/assemblyscript
+        file: ./src/mappings/vfin.ts
+        entities:
+            - VestedFin
+        abis:
+            - name: vFIN
+              file: ./abis/vFIN.json
+        eventHandlers:
+            - event: Transfer(indexed address,indexed address,indexed uint256)
+              handler: handleTransfer
+  - kind: ethereum/contract
+    name: v3EthUsdcPool
+    network: arbitrum-one
+    source:
+        address: '0xc31e54c7a869b9fcbecc14363cf510d1c41fa443'
+        abi: v3Pool
+        startBlock: 168223500
+    mapping:
+        kind: ethereum/events
+        apiVersion: 0.0.6
+        language: wasm/assemblyscript
+        file: ./src/mappings/v3Pool.ts
+        entities:
+            - BasePrice
+        abis:
+            - name: v3Pool
+              file: ./abis/v3Pool.json
+        eventHandlers:
+            - event: Swap(indexed address,indexed address,int256,int256,uint160,uint128,int24)
+              handler: handleV3Swap

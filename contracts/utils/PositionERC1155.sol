@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: SSPL-1.0
 
 pragma solidity 0.8.18;
 
@@ -25,8 +25,8 @@ contract PositionERC1155 is IPositionERC1155, PositionERC1155Immutables {
     /// @dev owner => spender => approved
     mapping(address => mapping(address => bool)) private _spenderApprovals;
 
-    /// @dev token id => total supply
-    mapping(uint256 => uint256) private _totalSupplyById;
+    /// @dev total supply for all token ids
+    uint256 public totalSupply;
 
     // eth address for safe withdrawal
     address public constant ethAddress = address(0);
@@ -186,16 +186,6 @@ contract PositionERC1155 is IPositionERC1155, PositionERC1155Immutables {
         return Bytes.bytes32ToString(tokenSymbol());
     }
 
-    function totalSupply(uint256 _id)
-        public
-        view
-        virtual
-        override
-        returns (uint256)
-    {
-        return _totalSupplyById[_id];
-    }
-
     function balanceOf(address _account, uint256 _id)
         public
         view
@@ -232,9 +222,9 @@ contract PositionERC1155 is IPositionERC1155, PositionERC1155Immutables {
     ) internal virtual {
         if (_account == address(0)) require(false, 'MintToAddress0()');
         _beforeTokenTransfer(address(0), _account, _id, _amount);
-        _totalSupplyById[_id] += _amount;
         uint256 _accountBalance = _tokenBalances[_id][_account];
         unchecked {
+            totalSupply += _amount;
             _tokenBalances[_id][_account] = _accountBalance + _amount;
         }
         emit TransferSingle(msg.sender, address(0), _account, _id, _amount);
@@ -262,8 +252,8 @@ contract PositionERC1155 is IPositionERC1155, PositionERC1155Immutables {
             );
         _beforeTokenTransfer(_account, address(0), _id, _amount);
         unchecked {
+            totalSupply -= _amount;
             _tokenBalances[_id][_account] = _accountBalance - _amount;
-            _totalSupplyById[_id] -= _amount;
         }
         emit TransferSingle(msg.sender, _account, address(0), _id, _amount);
     }

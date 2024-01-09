@@ -1,35 +1,38 @@
 /* eslint-disable */
 import { BigInt, BigDecimal, Address } from '@graphprotocol/graph-ts'
 import { LimitPoolFactory as FactoryContract } from '../../generated/templates/LimitPoolTemplate/LimitPoolFactory'
-export let FACTORY_ADDRESS = '0x1b215002e688135549cc0290d6cf1f94e3aa425c'
-export let RANGE_STAKER_ADDRESS = '0xe5e2E95A986CE078606C403593593b18Ed98f4d6'
-export let WETH_ADDRESS = '0xefb283ef3167ca2ee9d93b201af15e2af3f6e8c7'
+
+// -------------- START REQUIRED CONFIG PER DEPLOYMENT --------------
+export let FACTORY_ADDRESS = '0x8e40c68b7546efd009a1a300c92e25da3c8725dc'
+export let RANGE_STAKER_ADDRESS = '0x62e0671022af1b2e705f08b282767c57d29c7c4c'
+// used for safe eth pricing
+export const STABLE_POOL_ADDRESS = '0x02225f6a3d83648d7906a23856331c819265394d'
+// --------------  END REQUIRED CONFIG PER DEPLOYMENT  --------------
+
+// determines which token to use for eth <-> usd rate, true means stable is token0 in pool above 
+export const STABLE_IS_TOKEN_0 = true
+
+// chain WETH address
+export let WETH_ADDRESS = '0x414b73f989e7ca0653b5c98186749a348405e6d5'
 
 // tokens where USD value is safe to use for globals
 export let WHITELISTED_TOKENS: string[] = [
-  '0xefb283ef3167ca2ee9d93b201af15e2af3f6e8c7', // WETH
-  '0x19bee8e887a5db5cf20a841eb4daacbcacf14b1b', // DAI
-  '0xebff7a98149b4774c9743c5d1f382305fe5422c9' // USDC
+  '0x414b73f989e7ca0653b5c98186749a348405e6d5', // WETH
+  '0x9f479560cd8a531e6c0fe04521cb246264fe6b71', // DAI
 ]
+
+//TODO: incentivizing only FIN - WETH 0.3% for now
 
 export let WHITELISTED_PAIRS: string[] = [
-  '0xebff7a98149b4774c9743c5d1f382305fe5422c9-0xefb283ef3167ca2ee9d93b201af15e2af3f6e8c7' // WETH - USDC
 ]
 
-export let SEASON_1_START_TIME = BigInt.fromString('0')
-export let SEASON_1_END_TIME = BigInt.fromString('2000707154')
+export let SEASON_1_START_TIME = BigInt.fromString('1574345600') // 11-1-2019 0:00 GMT
+export let SEASON_1_END_TIME = BigInt.fromString('1684713600') // 5-22-2024 0:00 GMT
 
 // used for safe eth pricing 
 export let STABLE_COINS: string[] = [
-  '0x19bee8e887a5db5cf20a841eb4daacbcacf14b1b', //DAI
-  '0xebff7a98149b4774c9743c5d1f382305fe5422c9' //USDC
+    '0x9f479560cd8a531e6c0fe04521cb246264fe6b71', // DAI
 ]
-
-// used for safe eth pricing 
-export const STABLE_POOL_ADDRESS = '0x4998545e13a668a884272aaebff14ab21c5b4e89'
-
-// determines which token to use for eth <-> usd rate, true means stable is token0 in pool above 
-export const STABLE_IS_TOKEN_0 = false
 
 // minimum eth required in pool to count usd values towards global prices 
 export let MINIMUM_ETH_LOCKED = BigDecimal.fromString('0')

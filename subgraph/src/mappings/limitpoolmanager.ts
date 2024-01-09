@@ -1,6 +1,6 @@
 import { safeLoadManager, safeLoadLimitPoolFactory, safeLoadFeeTier } from './utils/loads'
 import { BigInt, log } from '@graphprotocol/graph-ts'
-import { FACTORY_ADDRESS } from '../constants/arbitrum'
+import { FACTORY_ADDRESS } from '../constants/constants'
 import { FactoryChanged, FeeTierEnabled, FeeToTransfer, PoolTypeEnabled, OwnerTransfer, ProtocolSwapFeesModified, ProtocolFeesCollected, ProtocolFillFeesModified } from '../../generated/LimitPoolManager/LimitPoolManager'
 
 export function handleFeeTierEnabled(event: FeeTierEnabled): void {

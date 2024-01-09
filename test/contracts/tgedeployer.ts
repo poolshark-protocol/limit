@@ -106,16 +106,21 @@ describe('TGE Deployment Tests', function () {
     await mintSigners20(hre.props.token0, tokenAmount.mul(55000), [hre.props.alice, hre.props.bob])
     await mintSigners20(hre.props.token1, tokenAmount.mul(55000), [hre.props.alice, hre.props.bob])
 
+    const aliceLiquidity = BigNumber.from('2572549719381782803480')
+
+    const amount0 = BigNumber.from('39168000000000000000')
+    const amount1 = BigNumber.from('32271546804490624383438')
+
     const aliceId = await validateDeployTge({
         signer: hre.props.alice,
         recipient: hre.props.alice.address,
-        lower: '44850', // $25 per FIN
+        lower: '54000', // $10 per FIN
         upper: '77040', // $1 per FIN
-        amount0: parseUnits('52000', 18),
-        amount1: parseUnits('52000', 18),
-        balance0Decrease: BigNumber.from('31568903742987611804'), // 31.568 ETH
-        balance1Decrease: BigNumber.from('51999999999999999999996'), // 52k FIN
-        liquidityIncrease: BigNumber.from('2555287091759866264142'),
+        amount0: parseUnits('41', 18),
+        amount1: parseUnits('34000', 18),
+        balance0Decrease: amount0, // TODO: change to correct value
+        balance1Decrease: amount1, // 52k FIN
+        liquidityIncrease: aliceLiquidity,
         revertMessage: '',
         stake: true
     })
@@ -123,12 +128,12 @@ describe('TGE Deployment Tests', function () {
     await validateBurn({
         signer: hre.props.alice,
         recipient: hre.props.alice.address,
-        lower: '44850', // $25 per FIN
+        lower: '54000', // $10 per FIN
         upper: '77040', // $1 per FIN,
         positionId: aliceId,
-        liquidityAmount: BigNumber.from('2555287091759866264142'),
-        balance0Increase: BigNumber.from('31568903742987611803'), // 31.568 ETH
-        balance1Increase: BigNumber.from('51999999999999999999995'), // 52k FIN
+        liquidityAmount: aliceLiquidity,
+        balance0Increase: amount0.sub(1), // 39.168 ETH
+        balance1Increase: amount1.sub(1), // 52k FIN
         revertMessage: '',
         staked: true
     })

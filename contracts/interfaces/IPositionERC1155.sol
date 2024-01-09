@@ -42,7 +42,7 @@ interface IPositionERC1155 is IERC165, PoolsharkStructs {
         view
         returns (uint256[] memory batchBalances);
 
-    function totalSupply(uint256 id) external view returns (uint256);
+    function totalSupply() external view returns (uint256);
 
     function isApprovedForAll(address owner, address spender)
         external

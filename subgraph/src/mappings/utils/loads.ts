@@ -1,6 +1,6 @@
 import { Address, BigDecimal, BigInt, Bytes, ethereum, log } from '@graphprotocol/graph-ts'
 import { LimitPool, LimitPoolFactory, LimitPoolManager, LimitPosition, Token, FeeTier, BasePrice, RangePosition, RangeTick, Transaction, LimitTick, Swap, CompoundRangeLog, MintRangeLog, BurnRangeLog, PoolRouter, TvlUpdateLog, HistoricalOrder, TotalSeasonReward, UserSeasonReward, LimitPoolToken, VFinPosition } from '../../../generated/schema'
-import { ONE_BD } from '../../constants/arbitrum'
+import { ONE_BD } from '../../constants/constants'
 import {
     fetchTokenSymbol,
     fetchTokenName,
@@ -26,10 +26,12 @@ export function safeLoadBasePrice(name: string, stablePool: LimitPool | null = n
     }
 
     if (stablePool !== null) {
+        log.info("pool data: {}", [stablePool.id])
         // only non-null when updating v3 pool price
         basePriceEntity.USD = getEthPriceInUSD(stablePool)
+    } else {
+        log.info("pool data is null", [])
     }
-
 
     return {
         entity: basePriceEntity,

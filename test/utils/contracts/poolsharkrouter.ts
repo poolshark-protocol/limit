@@ -118,7 +118,7 @@ export async function validateDeployTge(params: ValidateMintParams): Promise<num
     upperTickAfter = (await poolContract.ticks(upper)).range
 
     let globalStateAfter: GlobalState = await poolContract.globalState();
-    expect(globalStateAfter.pool.price).to.be.equal(BigNumber.from('2358285847295149069702956253974'))
+    expect(globalStateAfter.pool.price).to.be.equal(BigNumber.from('2172618421097231267834892073346'))
   
     positionAfter = await poolContract.positions(expectedPositionId)
     positionTokens = await hre.ethers.getContractAt('PositionERC1155', poolTokenContract.address);

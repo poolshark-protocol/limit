@@ -37,23 +37,21 @@
         "subgraph:deploy:chainstack:ordertest": "graph deploy --version-label v0.1.0 --node https://api.graph-ams.p2pify.com/719c33840eec545dba4ed49d362448f0/deploy --ipfs https://api.graph-ams.p2pify.com/719c33840eec545dba4ed49d362448f0/ipfs limit-arbitrumGoerli-order-testing",
         "deploy:chainstack:arb-goerli": "BLOCKCHAIN=arbitrum =arbitrum-goerli env-cmd npm run prepare:subgraph && SLUG=aave/protocol-v2-goerli env-cmd npm run subgraph:deploy:chainstack:ordertest"
     },
-    "devDependencies": {
-        "@graphprotocol/graph-cli": "0.25.1",
-        "@graphprotocol/graph-ts": "0.24.1",
-        "eslint": "7.32.0",
-        "eslint-config-prettier": "8.5.0",
-        "eslint-config-standard": "16.0.3",
-        "eslint-plugin-prettier": "3.4.1",
-        "libpq": "1.8.12",
-        "matchstick-as": "0.2.0"
-    },
     "dependencies": {
-        "assemblyscript": "0.20.19",
-        "assemblyscript-json": "1.1.0",
-        "json-as": "0.2.6",
-        "node-gyp": "9.1.0",
-        "source-map-support": "0.5.21",
-        "mustache": "^3.1.0",
-        "env-cmd": "^10.1.0"
+        "babel-polyfill": "^6.26.0",
+        "babel-register": "^6.26.0"
+    },
+    "devDependencies": {
+        "@graphprotocol/graph-cli": "^0.60.0",
+        "@graphprotocol/graph-ts": "^0.31.0",
+        "@trivago/prettier-plugin-sort-imports": "4.1.0",
+        "@typescript-eslint/eslint-plugin": "^5.59.11",
+        "@typescript-eslint/parser": "^5.59.11",
+        "eslint": "^8.25.0",
+        "eslint-config-prettier": "^8.5.0",
+        "mustache": "^4.2.0",
+        "prettier": "^2.8.8",
+        "rimraf": "^3.0.2",
+        "typescript": "5.1.3"
     }
 }

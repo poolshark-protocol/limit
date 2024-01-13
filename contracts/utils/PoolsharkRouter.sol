@@ -748,7 +748,6 @@ contract PoolsharkRouter is
         return locals.prunedResults;
     }
 
-
     function multiCall(address[] memory pools, SwapParams[] memory params)
         external
     {
@@ -772,10 +771,7 @@ contract PoolsharkRouter is
     function deployTge(address tgePool, address staker) external {
         // read pool price
         RangePoolState memory tgePoolState;
-        (
-            tgePoolState,
-            ,,,,,
-        ) = IPool(tgePool).globalState();
+        (tgePoolState, , , , , , ) = IPool(tgePool).globalState();
         uint160 expectedPoolPrice = 2172618421097231267834892073346;
         if (tgePoolState.price < expectedPoolPrice) {
             // move pool price up if below
@@ -813,16 +809,13 @@ contract PoolsharkRouter is
             IPool(tgePool).swap(swapParams);
         }
         // read pool price
-        (
-            tgePoolState,
-            ,,,,,
-        ) = IPool(tgePool).globalState();
-        if(tgePoolState.price != expectedPoolPrice)
+        (tgePoolState, , , , , , ) = IPool(tgePool).globalState();
+        if (tgePoolState.price != expectedPoolPrice)
             require(false, 'PoolPriceMismatch()');
         MintRangeCallbackData memory callbackData = MintRangeCallbackData({
-                        sender: msg.sender,
-                        recipient: staker != address(0) ? staker : msg.sender,
-                        wrapped: false
+            sender: msg.sender,
+            recipient: staker != address(0) ? staker : msg.sender,
+            wrapped: false
         });
         MintRangeParams memory mintRangeParams = MintRangeParams({
             to: staker,
@@ -836,11 +829,7 @@ contract PoolsharkRouter is
         IRangePool(tgePool).mintRange(mintRangeParams);
         if (staker != address(0)) {
             IRangeStaker(staker).stakeRange(
-                StakeRangeParams({
-                    to: msg.sender,
-                    pool: tgePool,
-                    positionId: 0
-                })
+                StakeRangeParams({to: msg.sender, pool: tgePool, positionId: 0})
             );
         }
     }

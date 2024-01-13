@@ -58,7 +58,7 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
     address public factory;
     // fee delta const for dynamic fees
     uint16 public feeDeltaConst;
-    mapping (address => uint16) poolFeeDeltaConsts;
+    mapping(address => uint16) poolFeeDeltaConsts;
     // max protocol fees
     uint16 public constant MAX_PROTOCOL_SWAP_FEE = 1e4; /// @dev - max protocol swap fee of 100%
     uint16 public constant MAX_PROTOCOL_FILL_FEE = 1e2; /// @dev - max protocol fill fee of 1%
@@ -184,14 +184,21 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
         factory = factory_;
     }
 
-    function setFeeDeltaConst(address pool, uint16 feeDeltaConst_) external onlyOwner {
+    function setFeeDeltaConst(address pool, uint16 feeDeltaConst_)
+        external
+        onlyOwner
+    {
         if (feeDeltaConst_ > 10000)
             require(false, 'FeeDeltaConstCeilingExceeded()');
         if (pool == address(0)) {
             emit FeeDeltaConstChanged(feeDeltaConst, feeDeltaConst_);
-            feeDeltaConst = feeDeltaConst_; 
+            feeDeltaConst = feeDeltaConst_;
         } else {
-            emit PoolFeeDeltaConstChanged(pool, poolFeeDeltaConsts[pool], feeDeltaConst_);
+            emit PoolFeeDeltaConstChanged(
+                pool,
+                poolFeeDeltaConsts[pool],
+                feeDeltaConst_
+            );
             poolFeeDeltaConsts[pool] = feeDeltaConst_;
         }
     }

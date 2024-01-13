@@ -51,41 +51,44 @@ import '../libraries/math/ConstantProduct.sol';
  * @author @alphak3y
  */
 contract TickQuoter is PoolsharkStructs {
-
     struct TickData {
         int24 tick;
         int128 liquidityNet;
         uint128 liquidityGross;
     }
 
-    function getTickDataInWord(
-        address pool,
-        int16 tickBitmapIndex
-    ) public view returns (
-        TickData[] memory populatedTicks
-    ) {
+    function getTickDataInWord(address pool, int16 tickBitmapIndex)
+        public
+        view
+        returns (TickData[] memory populatedTicks)
+    {
         int16 tickSpacing = (ILimitPoolView(pool).immutables()).tickSpacing;
-        int24 startTick = (int24(tickBitmapIndex) << 8) * tickSpacing / 2;
+        int24 startTick = ((int24(tickBitmapIndex) << 8) * tickSpacing) / 2;
         uint8 ticksCount;
 
         // array for tick data found; max size of 256
         TickData[] memory foundTicks = new TickData[](256);
 
-
-        for (int24 i = 0; i < 256;) {
+        for (int24 i = 0; i < 256; ) {
+            // offset currenTick from startTick 
             int24 currentTick = startTick + i * (tickSpacing / 2);
-            RangeTick memory rangeTick; LimitTick memory limitTick;
-            (
-                rangeTick,
-                limitTick
-            ) = ILimitPoolStorageView(pool).ticks(currentTick);
-            ((int24(tickBitmapIndex) << 8) + int24(i)) * tickSpacing;
+
+            // read tick from storage
+            RangeTick memory rangeTick;
+            LimitTick memory limitTick;
+            (rangeTick, limitTick) = ILimitPoolStorageView(pool).ticks(
+                currentTick
+            );
+            
+            // check for non-zero liquidity
             if (rangeTick.liquidityAbsolute + limitTick.liquidityAbsolute > 0) {
                 // push active tick to array
                 foundTicks[ticksCount] = TickData({
                     tick: currentTick,
-                    liquidityNet: rangeTick.liquidityDelta + limitTick.liquidityDelta,
-                    liquidityGross: rangeTick.liquidityAbsolute + limitTick.liquidityAbsolute
+                    liquidityNet: rangeTick.liquidityDelta +
+                        limitTick.liquidityDelta,
+                    liquidityGross: rangeTick.liquidityAbsolute +
+                        limitTick.liquidityAbsolute
                 });
                 unchecked {
                     // count number of active ticks
@@ -101,7 +104,7 @@ contract TickQuoter is PoolsharkStructs {
         populatedTicks = new TickData[](ticksCount);
 
         // push tick data to returned array
-        for (uint i; i < ticksCount;) {
+        for (uint256 i; i < ticksCount; ) {
             populatedTicks[i] = foundTicks[i];
             unchecked {
                 ++i;

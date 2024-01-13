@@ -45,7 +45,7 @@ import '../libraries/math/ConstantProduct.sol';
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@*/
 
 /**
- * @title TickData
+ * @title TickQuoter
  * @notice A contract to query tick data
  * @author Poolshark
  * @author @alphak3y

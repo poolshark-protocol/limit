@@ -443,7 +443,7 @@ interface PoolsharkStructs {
 
     struct TickMap {
         uint256 blocks; /// @dev - sets of words
-        mapping(uint256 => uint256) words; /// @dev - sets to words
+        mapping(uint256 => uint256) words; /// @dev - blocks to words
         mapping(uint256 => uint256) ticks; /// @dev - words to ticks
         mapping(uint256 => mapping(uint256 => mapping(uint256 => uint256))) epochs0; /// @dev - ticks to epochs
         mapping(uint256 => mapping(uint256 => mapping(uint256 => uint256))) epochs1; /// @dev - ticks to epochs

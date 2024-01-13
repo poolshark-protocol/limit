@@ -16,4 +16,12 @@ interface ILimitPoolStorageView is LimitPoolStructs {
             uint32 epoch,
             uint8 unlocked
         );
+    
+    function ticks(int24 tickIndex)
+        external
+        view
+        returns (
+            RangeTick memory,
+            LimitTick memory
+        );
 }

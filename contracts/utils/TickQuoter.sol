@@ -70,7 +70,7 @@ contract TickQuoter is PoolsharkStructs {
         TickData[] memory foundTicks = new TickData[](256);
 
         for (int24 i = 0; i < 256; ) {
-            // offset currenTick from startTick 
+            // offset currentTick from startTick 
             int24 currentTick = startTick + i * (tickSpacing / 2);
 
             // read tick from storage

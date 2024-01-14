@@ -995,6 +995,7 @@ describe('RangePool Exact In Tests', function () {
   })
 
   it('pool - Should mint position inside the other 17', async function () {
+    // await getPrice()
     const pool: RangePoolState = (await hre.props.limitPool.globalState()).pool
     const aliceLiquidity = BigNumber.from('7705754408611783555308')
     const bobLiquidity = BigNumber.from('12891478442546858467877')

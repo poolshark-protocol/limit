@@ -19,6 +19,7 @@ import {
     SnapshotLimitCall,
     WETH9,
     RangeStaker,
+    TickQuoter,
 } from '../../../typechain'
 import { InitialSetup } from './initialSetup'
 import { MintRangeCall } from '../../../typechain'
@@ -37,6 +38,7 @@ export interface BeforeEachProps {
     kyberPoolToken: PositionERC1155
     limitPoolManager: LimitPoolManager
     limitPoolFactory: LimitPoolFactory
+    tickQuoter: TickQuoter
     poolRouter: PoolsharkRouter
     ticksLib: Ticks
     tickMapLib: TickMap
@@ -100,6 +102,7 @@ export class GetBeforeEach {
         let kyberPoolToken: PositionERC1155
         let limitPoolManager: LimitPoolManager
         let limitPoolFactory: LimitPoolFactory
+        let tickQuoter: TickQuoter
         let poolRouter: PoolsharkRouter
         let tickMapLib: TickMap
         let ticksLib: Ticks
@@ -141,6 +144,7 @@ export class GetBeforeEach {
             kyberPoolToken,
             limitPoolManager,
             limitPoolFactory,
+            tickQuoter,
             poolRouter,
             tickMapLib,
             ticksLib,

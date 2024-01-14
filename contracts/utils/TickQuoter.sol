@@ -5,6 +5,7 @@ import '../interfaces/limit/ILimitPoolView.sol';
 import '../interfaces/limit/ILimitPoolStorageView.sol';
 import '../interfaces/structs/PoolsharkStructs.sol';
 import '../libraries/math/ConstantProduct.sol';
+import '../external/solady/LibClone.sol';
 
 /*@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -51,10 +52,34 @@ import '../libraries/math/ConstantProduct.sol';
  * @author @alphak3y
  */
 contract TickQuoter is PoolsharkStructs {
+    address public immutable limitPoolFactory;
+
     struct TickData {
+        /**
+         * @custom:field tick
+         * @notice The index of the tick
+         */
         int24 tick;
-        int128 liquidityNet;
-        uint128 liquidityGross;
+
+        /**
+         * @custom:field liquidityDelta
+         * @notice The +/- liquidity change at the tick
+         * @notice Delta applied for upward crosses
+         * @notice Opposite delta applied for downward crosses
+         */
+        int128 liquidityDelta;
+
+        /**
+         * @custom:field liquidityAbsolute
+         * @notice The absolute value of liquidity at the tick
+         */
+        uint128 liquidityAbsolute;
+    }
+
+    constructor(
+        address limitPoolFactory_
+    ) {
+        limitPoolFactory = limitPoolFactory_;
     }
 
     function getTickDataInWord(address pool, int16 tickBitmapIndex)
@@ -62,14 +87,20 @@ contract TickQuoter is PoolsharkStructs {
         view
         returns (TickData[] memory populatedTicks)
     {
-        int16 tickSpacing = (ILimitPoolView(pool).immutables()).tickSpacing;
-        int24 startTick = ((int24(tickBitmapIndex) << 8) * tickSpacing) / 2;
+        // read constants from pool
+        LimitImmutables memory constants = ILimitPoolView(pool).immutables();
+        
+        // validate address is a canonical limit pool
+        canonicalLimitPoolsOnly(pool, constants);
+
+        int16 tickSpacing = constants.tickSpacing;
+        int24 startTick = (int24(tickBitmapIndex) << 8) * (tickSpacing / 2);
         uint8 ticksCount;
 
         // array for tick data found; max size of 256
         TickData[] memory foundTicks = new TickData[](256);
 
-        for (int24 i = 0; i < 256; ) {
+        for (int24 i = 0; i < 256;) {
             // offset currentTick from startTick 
             int24 currentTick = startTick + i * (tickSpacing / 2);
 
@@ -85,9 +116,9 @@ contract TickQuoter is PoolsharkStructs {
                 // push active tick to array
                 foundTicks[ticksCount] = TickData({
                     tick: currentTick,
-                    liquidityNet: rangeTick.liquidityDelta +
+                    liquidityDelta: rangeTick.liquidityDelta +
                         limitTick.liquidityDelta,
-                    liquidityGross: rangeTick.liquidityAbsolute +
+                    liquidityAbsolute: rangeTick.liquidityAbsolute +
                         limitTick.liquidityAbsolute
                 });
                 unchecked {
@@ -105,10 +136,56 @@ contract TickQuoter is PoolsharkStructs {
 
         // push tick data to returned array
         for (uint256 i; i < ticksCount; ) {
-            populatedTicks[i] = foundTicks[i];
+            populatedTicks[i] = foundTicks[ticksCount - i - 1];
             unchecked {
                 ++i;
             }
         }
     }
-}
+
+    function canonicalLimitPoolsOnly(
+        address pool,
+        PoolsharkStructs.LimitImmutables memory constants
+    ) private view {
+        // generate key for pool
+        bytes32 key = keccak256(
+            abi.encode(
+                constants.poolImpl,
+                constants.token0,
+                constants.token1,
+                constants.swapFee
+            )
+        );
+
+        // compute address
+        address predictedAddress = LibClone.predictDeterministicAddress(
+            constants.poolImpl,
+            encodeLimit(constants),
+            key,
+            limitPoolFactory
+        );
+
+        // revert on sender mismatch
+        if (pool != predictedAddress)
+            require(false, 'InvalidPoolAddress()');
+    }
+
+    function encodeLimit(LimitImmutables memory constants)
+        private
+        pure
+        returns (bytes memory)
+    {
+        return
+            abi.encodePacked(
+                constants.owner,
+                constants.token0,
+                constants.token1,
+                constants.poolToken,
+                constants.bounds.min,
+                constants.bounds.max,
+                constants.genesisTime,
+                constants.tickSpacing,
+                constants.swapFee
+            );
+    }
+} 

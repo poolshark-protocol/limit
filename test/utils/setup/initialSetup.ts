@@ -3,7 +3,7 @@ import { SUPPORTED_NETWORKS } from '../../../scripts/constants/supportedNetworks
 import { DeployAssist } from '../../../scripts/util/deployAssist'
 import { ContractDeploymentsKeys } from '../../../scripts/util/files/contractDeploymentKeys'
 import { ContractDeploymentsJson } from '../../../scripts/util/files/contractDeploymentsJson'
-import { BurnLimitCall__factory, LimitPool__factory, MintLimitCall__factory, LimitPositions__factory, QuoteCall__factory, PositionERC1155__factory, LimitTicks__factory, FeesCall__factory, SampleCall__factory, SnapshotRangeCall__factory, SnapshotLimitCall__factory, WETH9__factory, RangeStaker, RangeStaker__factory } from '../../../typechain'
+import { BurnLimitCall__factory, LimitPool__factory, MintLimitCall__factory, LimitPositions__factory, QuoteCall__factory, PositionERC1155__factory, LimitTicks__factory, FeesCall__factory, SampleCall__factory, SnapshotRangeCall__factory, SnapshotLimitCall__factory, WETH9__factory, RangeStaker, RangeStaker__factory, TickQuoter__factory } from '../../../typechain'
 import { BurnRangeCall__factory } from '../../../typechain'
 import { SwapCall__factory } from '../../../typechain'
 import { MintRangeCall__factory } from '../../../typechain'
@@ -165,6 +165,16 @@ export class InitialSetup {
                 'limitPoolFactory',
                 [   
                     hre.props.limitPoolManager.address
+                ],
+            )
+
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                TickQuoter__factory,
+                'tickQuoter',
+                [   
+                    hre.props.limitPoolFactory.address
                 ],
             )
 

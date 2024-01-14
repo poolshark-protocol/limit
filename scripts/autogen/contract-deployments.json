@@ -194,6 +194,14 @@
                 }
             ],
             "created": "2024-01-08T04:23:06.825Z"
+        },
+        "tickQuoter": {
+            "contractName": "TickQuoter",
+            "contractAddress": "0xc7cdb74fbc16fc9e7c57836d00ef2eb5e9c499bc",
+            "constructorArguments": [
+                "0x8bb5db1625adb4ae4beb94a188d33062303f8fb7"
+            ],
+            "created": "2024-01-14T02:58:50.837Z"
         }
     },
     "arb_goerli": {

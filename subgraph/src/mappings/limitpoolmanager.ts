@@ -2,6 +2,7 @@ import { safeLoadManager, safeLoadLimitPoolFactory, safeLoadFeeTier } from './ut
 import { BigInt, log } from '@graphprotocol/graph-ts'
 import { FACTORY_ADDRESS } from '../constants/constants'
 import { FactoryChanged, FeeTierEnabled, FeeToTransfer, PoolTypeEnabled, OwnerTransfer, ProtocolSwapFeesModified, ProtocolFeesCollected, ProtocolFillFeesModified } from '../../generated/LimitPoolManager/LimitPoolManager'
+import { FeeTier } from '../../generated/schema'
 
 export function handleFeeTierEnabled(event: FeeTierEnabled): void {
     let swapFeeParam     = event.params.swapFee
@@ -72,10 +73,9 @@ export function handleOwnerTransfer(event: OwnerTransfer): void {
 
     if(!loadManager.exists) {
         manager.feeTo = newOwnerParam
-        // manager.factory = FACTORY_ADDRESS
     }
     if(!loadFactory.exists) {
-        //factory.owner = manager.id
+        factory.manager = manager.id
     }
 
     manager.owner = newOwnerParam

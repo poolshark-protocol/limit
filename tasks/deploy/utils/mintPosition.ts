@@ -3,6 +3,7 @@ import { BN_ZERO, } from '../../../test/utils/contracts/limitpool'
 import { InitialSetup } from '../../../test/utils/setup/initialSetup'
 import { getNonce } from '../../utils'
 import { parseUnits } from 'ethers/lib/utils'
+import { mintSigners20 } from '../../../test/utils/token'
 
 export class MintPosition {
     private initialSetup: InitialSetup
@@ -31,9 +32,9 @@ export class MintPosition {
         await this.initialSetup.readLimitPoolSetup(this.nonce)
         console.log('read positions')
 
-        // const token1Amount = ethers.utils.parseUnits('100', await hre.props.token1.decimals())
+        const token0Amount = ethers.utils.parseUnits('100', await hre.props.token0.decimals())
 
-        // await mintSigners20(hre.props.token0, token0Amount.mul(10000), [hre.props.alice])
+        await mintSigners20(hre.props.token0, token0Amount, [hre.props.alice])
         // await mintSigners20(hre.props.token1, token1Amount.mul(10000), [hre.props.alice])
 
         const liquidityAmount = '49802891105937278098768'
@@ -83,10 +84,10 @@ export class MintPosition {
         // )
 
         // console.log('position snapshot', snapshot.feesOwed0.toString(), snapshot.feesOwed1.toString())
-        const amountIn = parseUnits('1', 16)
+        const amountIn = parseUnits('20', 18)
         const signer = hre.props.alice
         // let approveTxn = await hre.props.token0.connect(signer).approve(hre.props.poolRouter.address, amountIn)
-        let approveTxn = await hre.props.token1.connect(signer).approve(hre.props.poolRouter.address, amountIn)
+        let approveTxn = await hre.props.token0.connect(signer).approve(hre.props.poolRouter.address, amountIn)
         await approveTxn.wait()
         // const aliceId = await validateMintRange({
         //     signer: hre.props.alice,
@@ -108,11 +109,11 @@ export class MintPosition {
         // // // for (let i=0; i < 20; i++) {
 
         // 0 => 1 
-        //0xe80dc9a69853483c745f8e32162f0bd5813cb291 => new factory
+        //0xe80dc9a69853483c745f8e32162f0bd5813c    b291 => new factory
 
-            const zeroForOne = false
+            const zeroForOne = true
 
-            const priceLimit = BigNumber.from('2172618421097231267834892073346')
+            const priceLimit = BigNumber.from('1553792102639747119534487568')
             let txn = await hre.props.poolRouter
             .connect(signer)
             .multiSwapSplit(

@@ -11,6 +11,7 @@ export const STABLE_POOL_ADDRESS = '0xc31e54c7a869b9fcbecc14363cf510d1c41fa443'
 
 // determines which token to use for eth <-> usd rate, true means stable is token0 in pool above 
 export const STABLE_IS_TOKEN_0 = false
+export const STABLE_TOKEN_DECIMALS = '6'
 
 // chain WETH address
 export let WETH_ADDRESS = '0x82af49447d8a07e3bd95bd0d56f35241523fbab1'

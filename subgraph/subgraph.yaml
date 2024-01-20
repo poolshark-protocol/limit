@@ -6,7 +6,7 @@ schema:
 templates:
     - kind: ethereum/contract
       name: LimitPoolTemplate
-      network: scroll-sepolia
+      network: arbitrum-sepolia
       source:
           abi: LimitPool
       mapping:
@@ -61,7 +61,7 @@ templates:
     # ERC-1155 events
     - kind: ethereum/contract
       name: PositionERC1155Template
-      network: scroll-sepolia
+      network: arbitrum-sepolia
       source:
           abi: PositionERC1155
       mapping:
@@ -84,7 +84,7 @@ templates:
     # RangeStaker events
     - kind: ethereum/contract
       name: RangeStakerTemplate
-      network: scroll-sepolia
+      network: arbitrum-sepolia
       source:
           abi: RangeStaker
       mapping:
@@ -111,11 +111,11 @@ templates:
 dataSources:
   - kind: ethereum/contract
     name: LimitPoolFactory
-    network: scroll-sepolia
+    network: arbitrum-sepolia
     source:
-        address: '0xd506193e48f13438e35a1edc4ef5394876b5efa4'
+        address: '0x8e40c68b7546efd009a1a300c92e25da3c8725dc'
         abi: LimitPoolFactory
-        startBlock: 2764010
+        startBlock: 5789864
     mapping:
         kind: ethereum/events
         apiVersion: 0.0.6
@@ -140,11 +140,11 @@ dataSources:
               handler: handlePoolCreated
   - kind: ethereum/contract
     name: LimitPoolManager
-    network: scroll-sepolia
+    network: arbitrum-sepolia
     source:
-        address: '0x7113aec7595accbaea1e61bc59f97e35d3a87bd5'
+        address: '0x0385d0a8d169b1f1510bb5fa0be264463002f6f6'
         abi: LimitPoolManager
-        startBlock: 2764009
+        startBlock: 5789859
     mapping:
         kind: ethereum/events
         apiVersion: 0.0.6
@@ -175,11 +175,11 @@ dataSources:
               handler: handleProtocolSwapFeesModified
   - kind: ethereum/contract
     name: PoolsharkRouter
-    network: scroll-sepolia
+    network: arbitrum-sepolia
     source:
-        address: '0x14ce728bf96d5ec0976f332605fe80a42ec0b244'
+        address: '0x33df95efe07a3b3e69ba31438ae511d360d89b32'
         abi: PoolsharkRouter
-        startBlock: 2764065
+        startBlock: 5789931
     mapping:
         kind: ethereum/events
         apiVersion: 0.0.6
@@ -195,11 +195,11 @@ dataSources:
               handler: handleRouterDeployed
   - kind: ethereum/contract
     name: vFIN
-    network: scroll-sepolia
+    network: arbitrum-sepolia
     source:
-        address: '0x1a16415867fde435d3f8a6631ef308ae7bf96b3b'
+        address: '0xed0ef8101900dfed208ac99ce47b723debb6bfe6'
         abi: vFIN
-        startBlock: 2764254
+        startBlock: 5795375
     mapping:
         kind: ethereum/events
         apiVersion: 0.0.6
@@ -215,11 +215,11 @@ dataSources:
               handler: handleTransfer
   - kind: ethereum/contract
     name: v3EthUsdcPool
-    network: scroll-sepolia
+    network: arbitrum-sepolia
     source:
-        address: '0xea578474c65f859739c8ec362543eedc04f0d48e'
+        address: '0x02225f6a3d83648d7906a23856331c819265394d'
         abi: v3Pool
-        startBlock: 2764030
+        startBlock: 5789922
     mapping:
         kind: ethereum/events
         apiVersion: 0.0.6

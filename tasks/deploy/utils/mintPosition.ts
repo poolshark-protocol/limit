@@ -32,11 +32,11 @@ export class MintPosition {
         await this.initialSetup.readLimitPoolSetup(this.nonce)
         console.log('read positions')
 
-        const token0Amount = ethers.utils.parseUnits('100', await hre.props.token0.decimals())
-
-        await mintSigners20(hre.props.token0, token0Amount, [hre.props.alice])
-        // await mintSigners20(hre.props.token1, token1Amount.mul(10000), [hre.props.alice])
-
+        const token0Amount = ethers.utils.parseUnits('1000', 18)
+        console.log('mint tokens', hre.props.alice.address)
+        // await mintSigners20(hre.props.token0, token0Amount.mul(10000), [hre.props.alice])
+        await mintSigners20(hre.props.token1, token0Amount, [hre.props.alice])
+        console.log('minted tokens')
         const liquidityAmount = '49802891105937278098768'
 
         // await getPrice(true)
@@ -84,10 +84,11 @@ export class MintPosition {
         // )
 
         // console.log('position snapshot', snapshot.feesOwed0.toString(), snapshot.feesOwed1.toString())
-        const amountIn = parseUnits('20', 18)
+        const amountIn = parseUnits('100', 18)
         const signer = hre.props.alice
         // let approveTxn = await hre.props.token0.connect(signer).approve(hre.props.poolRouter.address, amountIn)
-        let approveTxn = await hre.props.token0.connect(signer).approve(hre.props.poolRouter.address, amountIn)
+        console.log('approve tokens')
+        let approveTxn = await hre.props.token1.connect(signer).approve(hre.props.poolRouter.address, amountIn)
         await approveTxn.wait()
         // const aliceId = await validateMintRange({
         //     signer: hre.props.alice,
@@ -113,11 +114,12 @@ export class MintPosition {
 
             const zeroForOne = true
 
-            const priceLimit = BigNumber.from('1553792102639747119534487568')
+            const priceLimit = BigNumber.from('4039859466863342510789667678182')
+            console.log('before swap')
             let txn = await hre.props.poolRouter
             .connect(signer)
             .multiSwapSplit(
-            ['0xa43ddbcc4b78512c316bd7091b4c60f06db0fe42'],
+            ['0x02225f6a3d83648d7906a23856331c819265394d'],
                 [
                 {
                     to: signer.address,

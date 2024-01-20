@@ -390,7 +390,7 @@
         },
         "token0": {
             "contractName": "Token20",
-            "contractAddress": "0xcd453b942f35adf0364d89c05a892518825c1c3b",
+            "contractAddress": "0x9f479560cd8a531e6c0fe04521cb246264fe6b71",
             "constructorArguments": [
                 "Dai Stablecoin",
                 "DAI",
@@ -537,13 +537,13 @@
         },
         "poolRouter": {
             "contractName": "PoolsharkRouter",
-            "contractAddress": "0x33df95efe07a3b3e69ba31438ae511d360d89b32",
+            "contractAddress": "0x73ac9a2e665925719d9c272a3df60b97dbc3e50d",
             "constructorArguments": [
                 "0x8e40c68b7546efd009a1a300c92e25da3c8725dc",
                 "0x0000000000000000000000000000000000000000",
-                "0xfa807ce77b103129597cce4a7bf7f504f9e7bd9e"
+                "0x414b73f989e7ca0653b5c98186749a348405e6d5"
             ],
-            "created": "2024-01-09T01:02:54.485Z"
+            "created": "2024-01-17T00:16:04.942Z"
         },
         "rangeStaker": {
             "contractName": "RangeStaker",

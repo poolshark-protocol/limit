@@ -30,10 +30,10 @@ export class InitialSetup {
 
     /// DEPLOY CONFIG
     private deployTokens = false
-    private deployContracts = true
-    private deployPools = true
+    private deployContracts = false
+    private deployPools = false
     private deployRouter = true
-    private deployStaker = true
+    private deployStaker = false
 
     constructor() {
         this.deployAssist = new DeployAssist()

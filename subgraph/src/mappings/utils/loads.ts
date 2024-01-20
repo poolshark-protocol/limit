@@ -11,7 +11,7 @@ import {
 } from './helpers'
 import { bigDecimalExponated, safeDiv } from './math'
 import { getEthPriceInUSD } from './price'
-import { ZERO_ADDRESS } from '../../constants/arbitrum-goerli'
+import { ZERO_ADDRESS } from '../../constants/constants'
 
 class LoadLimitPoolFactoryRet {
     entity: LimitPoolFactory

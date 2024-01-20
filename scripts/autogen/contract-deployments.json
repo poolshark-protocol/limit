@@ -204,6 +204,185 @@
             "created": "2024-01-14T02:58:50.837Z"
         }
     },
+    "scroll": {
+        "token0": {
+            "contractName": "Token20",
+            "contractAddress": "0x06eFdBFf2a14a7c8E15944D1F4A48F9F95F663A4",
+            "constructorArguments": [
+                "USD Coin",
+                "USDC",
+                18
+            ]
+        },
+        "token1": {
+            "contractName": "Token20",
+            "contractAddress": "0x5300000000000000000000000000000000000004",
+            "constructorArguments": [
+                "Wrapped Ether",
+                "WETH",
+                18
+            ]
+        },
+        "weth9": {
+            "contractName": "WETH9",
+            "contractAddress": "0x5300000000000000000000000000000000000004",
+            "constructorArguments": [],
+            "created": "2024-01-08T22:55:37.005Z"
+        },
+        "coverPoolFactory": {
+            "contractName": "CoverPoolFactory",
+            "contractAddress": "0x0000000000000000000000000000000000000000"
+        },
+        "tickMapLib": {
+            "contractName": "TickMap",
+            "contractAddress": "0xb7d1520f29ceb86f649684361b3c1b0e2a1f5427",
+            "constructorArguments": [],
+            "created": "2024-01-20T21:53:03.553Z"
+        },
+        "ticksLib": {
+            "contractName": "Ticks",
+            "contractAddress": "0x85023692e5fff6531004130c0f01046aab816c53",
+            "constructorArguments": [],
+            "created": "2024-01-20T21:53:12.892Z"
+        },
+        "limitPositionsLib": {
+            "contractName": "LimitPositions",
+            "contractAddress": "0x7ab4bdba31a7cb916d525d2397ba742311a5acf5",
+            "constructorArguments": [],
+            "created": "2024-01-20T21:53:22.053Z"
+        },
+        "limitPoolManager": {
+            "contractName": "LimitPoolManager",
+            "contractAddress": "0x334a70f0cb8b9ceee3d0f4ea232581ff3dfc6e58",
+            "constructorArguments": [],
+            "created": "2024-01-20T21:53:31.049Z"
+        },
+        "limitPoolFactory": {
+            "contractName": "LimitPoolFactory",
+            "contractAddress": "0x3fa761492f411ebc64a81fcf3292fdc0b677c00f",
+            "constructorArguments": [
+                "0x334a70F0CB8b9CeeE3D0f4ea232581ff3DfC6e58"
+            ],
+            "created": "2024-01-20T21:53:40.060Z"
+        },
+        "tickQuoter": {
+            "contractName": "TickQuoter",
+            "contractAddress": "0x414b73f989e7ca0653b5c98186749a348405e6d5",
+            "constructorArguments": [
+                "0x3FA761492f411EBC64A81FCf3292fdC0b677c00f"
+            ],
+            "created": "2024-01-20T21:53:49.028Z"
+        },
+        "swapCall": {
+            "contractName": "SwapCall",
+            "contractAddress": "0xd50b04a5693f2d026d589bf239609bf5b8346adc",
+            "constructorArguments": [],
+            "created": "2024-01-20T21:53:58.421Z"
+        },
+        "mintRangeCall": {
+            "contractName": "MintRangeCall",
+            "contractAddress": "0x9f479560cd8a531e6c0fe04521cb246264fe6b71",
+            "constructorArguments": [],
+            "created": "2024-01-20T21:54:04.937Z"
+        },
+        "burnRangeCall": {
+            "contractName": "BurnRangeCall",
+            "contractAddress": "0xd58628f15d4391a036c578638105e67f857b6770",
+            "constructorArguments": [],
+            "created": "2024-01-20T21:54:11.579Z"
+        },
+        "mintLimitCall": {
+            "contractName": "MintLimitCall",
+            "contractAddress": "0xe7623a3a8d94296f9fe2b0c1fdfbcd36cc9c8d32",
+            "constructorArguments": [],
+            "created": "2024-01-20T21:54:21.254Z"
+        },
+        "burnLimitCall": {
+            "contractName": "BurnLimitCall",
+            "contractAddress": "0x26323c7e4f000227932d3ed640ea79d6027701de",
+            "constructorArguments": [],
+            "created": "2024-01-20T21:54:30.669Z"
+        },
+        "snapshotLimitCall": {
+            "contractName": "SnapshotLimitCall",
+            "contractAddress": "0x912c3e7d140e4ec85eb8e3910447acda8654d523",
+            "constructorArguments": [],
+            "created": "2024-01-20T21:54:40.567Z"
+        },
+        "quoteCall": {
+            "contractName": "QuoteCall",
+            "contractAddress": "0x7024879eda80577cbc0cb039ad3c7081f38abb41",
+            "constructorArguments": [],
+            "created": "2024-01-20T21:54:46.005Z"
+        },
+        "feesCall": {
+            "contractName": "FeesCall",
+            "contractAddress": "0xa826f06c47597549faa74d8916ef4da8f417f16c",
+            "constructorArguments": [],
+            "created": "2024-01-20T21:54:55.281Z"
+        },
+        "sampleCall": {
+            "contractName": "SampleCall",
+            "contractAddress": "0x92192101f6c5138160c093882b0fa502dee889cd",
+            "constructorArguments": [],
+            "created": "2024-01-20T21:55:04.304Z"
+        },
+        "snapshotRangeCall": {
+            "contractName": "SnapshotRangeCall",
+            "contractAddress": "0x4dc4f1a2a3303e40a07c3aac4919a97f33ab01eb",
+            "constructorArguments": [],
+            "created": "2024-01-20T21:55:10.099Z"
+        },
+        "limitPoolImpl": {
+            "contractName": "LimitPool",
+            "contractAddress": "0xc1e9a857e96aeefe28f8340cf82de7801bd95a77",
+            "constructorArguments": [
+                "0x3FA761492f411EBC64A81FCf3292fdC0b677c00f"
+            ],
+            "created": "2024-01-20T21:55:19.452Z"
+        },
+        "positionERC1155": {
+            "contractName": "PositionERC1155",
+            "contractAddress": "0x215afe9a2d7e1f8b82d221213d880f7e28e1dd03",
+            "constructorArguments": [
+                "0x3fa761492f411ebc64a81fcf3292fdc0b677c00f"
+            ],
+            "created": "2024-01-20T22:18:37.079Z"
+        },
+        "limitPool": {
+            "contractName": "LimitPool",
+            "contractAddress": "0x50456024eed7921fc69298a8b742598bad35582a",
+            "constructorArguments": [
+                "0x06eFdBFf2a14a7c8E15944D1F4A48F9F95F663A4",
+                "0x5300000000000000000000000000000000000004",
+                "3000",
+                0
+            ],
+            "created": "2024-01-20T22:18:58.524Z"
+        },
+        "poolRouter": {
+            "contractName": "PoolsharkRouter",
+            "contractAddress": "0x895e1c476130ce9e1b19e01be8801f19122a958c",
+            "constructorArguments": [
+                "0x3fa761492f411ebc64a81fcf3292fdc0b677c00f",
+                "0x0000000000000000000000000000000000000000",
+                "0x5300000000000000000000000000000000000004"
+            ],
+            "created": "2024-01-20T22:19:04.359Z"
+        },
+        "rangeStaker": {
+            "contractName": "RangeStaker",
+            "contractAddress": "0xebf57cb31ed38e6ccb53fb71ba246ea549c42e51",
+            "constructorArguments": [
+                {
+                    "limitPoolFactory": "0x3fa761492f411ebc64a81fcf3292fdc0b677c00f",
+                    "startTime": 0,
+                    "endTime": 2000707154
+                }
+            ],
+            "created": "2024-01-20T22:19:13.452Z"
+        }
+    },
     "scrollSepolia": {
         "token0": {
             "contractName": "Token20",
@@ -557,5 +736,6 @@
             ],
             "created": "2024-01-09T01:02:55.607Z"
         }
-    }
+    },
+    "undefined": {}
 }

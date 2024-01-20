@@ -172,7 +172,7 @@ dataSources:
             - event: ProtocolFillFeesModified(address[],int16[],int16[])
               handler: handleProtocolFillFeesModified
             - event: ProtocolSwapFeesModified(address[],int16[],int16[])
-              handler: ProtocolSwapFeesModified
+              handler: handleProtocolSwapFeesModified
   - kind: ethereum/contract
     name: PoolsharkRouter
     network: arbitrum-sepolia

@@ -30,10 +30,10 @@ export class InitialSetup {
 
     /// DEPLOY CONFIG
     private deployTokens = false
-    private deployContracts = false
-    private deployPools = false
+    private deployContracts = true
+    private deployPools = true
     private deployRouter = true
-    private deployStaker = false
+    private deployStaker = true
 
     constructor() {
         this.deployAssist = new DeployAssist()
@@ -122,171 +122,171 @@ export class InitialSetup {
         // console.log('encoded data:', signature);
         if (this.deployContracts || hre.network.name == 'hardhat') {
             // shared
-            await this.deployAssist.deployContractWithRetry(
-                network,
-                // @ts-ignore
-                TickMap__factory,
-                'tickMapLib',
-                []
-            )
+            // await this.deployAssist.deployContractWithRetry(
+            //     network,
+            //     // @ts-ignore
+            //     TickMap__factory,
+            //     'tickMapLib',
+            //     []
+            // )
 
-            await this.deployAssist.deployContractWithRetry(
-                network,
-                // @ts-ignore
-                Ticks__factory,
-                'ticksLib',
-                [],
-            )
+            // await this.deployAssist.deployContractWithRetry(
+            //     network,
+            //     // @ts-ignore
+            //     Ticks__factory,
+            //     'ticksLib',
+            //     [],
+            // )
 
-            // limit
-            await this.deployAssist.deployContractWithRetry(
-                network,
-                // @ts-ignore
-                LimitPositions__factory,
-                'limitPositionsLib',
-                [],
-                {
-                    'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address
-                }
-            )
+            // // limit
+            // await this.deployAssist.deployContractWithRetry(
+            //     network,
+            //     // @ts-ignore
+            //     LimitPositions__factory,
+            //     'limitPositionsLib',
+            //     [],
+            //     {
+            //         'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address
+            //     }
+            // )
 
-            await this.deployAssist.deployContractWithRetry(
-                network,
-                // @ts-ignore
-                LimitPoolManager__factory,
-                'limitPoolManager',
-                []
-            )
+            // await this.deployAssist.deployContractWithRetry(
+            //     network,
+            //     // @ts-ignore
+            //     LimitPoolManager__factory,
+            //     'limitPoolManager',
+            //     []
+            // )
 
-            await this.deployAssist.deployContractWithRetry(
-                network,
-                // @ts-ignore
-                LimitPoolFactory__factory,
-                'limitPoolFactory',
-                [   
-                    hre.props.limitPoolManager.address
-                ],
-            )
+            // await this.deployAssist.deployContractWithRetry(
+            //     network,
+            //     // @ts-ignore
+            //     LimitPoolFactory__factory,
+            //     'limitPoolFactory',
+            //     [   
+            //         hre.props.limitPoolManager.address
+            //     ],
+            // )
 
-            await this.deployAssist.deployContractWithRetry(
-                network,
-                // @ts-ignore
-                TickQuoter__factory,
-                'tickQuoter',
-                [   
-                    hre.props.limitPoolFactory.address
-                ],
-            )
+            // await this.deployAssist.deployContractWithRetry(
+            //     network,
+            //     // @ts-ignore
+            //     TickQuoter__factory,
+            //     'tickQuoter',
+            //     [   
+            //         hre.props.limitPoolFactory.address
+            //     ],
+            // )
 
-            await this.deployAssist.deployContractWithRetry(
-                network,
-                // @ts-ignore
-                SwapCall__factory,
-                'swapCall',
-                [],
-                {
-                    'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address,
-                }
-            )
+            // await this.deployAssist.deployContractWithRetry(
+            //     network,
+            //     // @ts-ignore
+            //     SwapCall__factory,
+            //     'swapCall',
+            //     [],
+            //     {
+            //         'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address,
+            //     }
+            // )
 
-            await this.deployAssist.deployContractWithRetry(
-                network,
-                // @ts-ignore
-                MintRangeCall__factory,
-                'mintRangeCall',
-                []
-            )
+            // await this.deployAssist.deployContractWithRetry(
+            //     network,
+            //     // @ts-ignore
+            //     MintRangeCall__factory,
+            //     'mintRangeCall',
+            //     []
+            // )
 
-            await this.deployAssist.deployContractWithRetry(
-                network,
-                // @ts-ignore
-                BurnRangeCall__factory,
-                'burnRangeCall',
-                []
-            )
+            // await this.deployAssist.deployContractWithRetry(
+            //     network,
+            //     // @ts-ignore
+            //     BurnRangeCall__factory,
+            //     'burnRangeCall',
+            //     []
+            // )
 
-            await this.deployAssist.deployContractWithRetry(
-                network,
-                // @ts-ignore
-                MintLimitCall__factory,
-                'mintLimitCall',
-                [],
-                {
-                    'contracts/libraries/limit/LimitPositions.sol:LimitPositions': hre.props.limitPositionsLib.address
-                }
-            )
+            // await this.deployAssist.deployContractWithRetry(
+            //     network,
+            //     // @ts-ignore
+            //     MintLimitCall__factory,
+            //     'mintLimitCall',
+            //     [],
+            //     {
+            //         'contracts/libraries/limit/LimitPositions.sol:LimitPositions': hre.props.limitPositionsLib.address
+            //     }
+            // )
 
-            await this.deployAssist.deployContractWithRetry(
-                network,
-                // @ts-ignore
-                BurnLimitCall__factory,
-                'burnLimitCall',
-                []
-            )
+            // await this.deployAssist.deployContractWithRetry(
+            //     network,
+            //     // @ts-ignore
+            //     BurnLimitCall__factory,
+            //     'burnLimitCall',
+            //     []
+            // )
 
-            await this.deployAssist.deployContractWithRetry(
-                network,
-                // @ts-ignore
-                SnapshotLimitCall__factory,
-                'snapshotLimitCall',
-                []
-            )
+            // await this.deployAssist.deployContractWithRetry(
+            //     network,
+            //     // @ts-ignore
+            //     SnapshotLimitCall__factory,
+            //     'snapshotLimitCall',
+            //     []
+            // )
 
-            await this.deployAssist.deployContractWithRetry(
-                network,
-                // @ts-ignore
-                QuoteCall__factory,
-                'quoteCall',
-                []
-            )
+            // await this.deployAssist.deployContractWithRetry(
+            //     network,
+            //     // @ts-ignore
+            //     QuoteCall__factory,
+            //     'quoteCall',
+            //     []
+            // )
             
-            await this.deployAssist.deployContractWithRetry(
-                network,
-                // @ts-ignore
-                FeesCall__factory,
-                'feesCall',
-                []
-            )
+            // await this.deployAssist.deployContractWithRetry(
+            //     network,
+            //     // @ts-ignore
+            //     FeesCall__factory,
+            //     'feesCall',
+            //     []
+            // )
 
-            await this.deployAssist.deployContractWithRetry(
-                network,
-                // @ts-ignore
-                SampleCall__factory,
-                'sampleCall',
-                []
-            )
+            // await this.deployAssist.deployContractWithRetry(
+            //     network,
+            //     // @ts-ignore
+            //     SampleCall__factory,
+            //     'sampleCall',
+            //     []
+            // )
 
-            await this.deployAssist.deployContractWithRetry(
-                network,
-                // @ts-ignore
-                SnapshotRangeCall__factory,
-                'snapshotRangeCall',
-                []
-            )
+            // await this.deployAssist.deployContractWithRetry(
+            //     network,
+            //     // @ts-ignore
+            //     SnapshotRangeCall__factory,
+            //     'snapshotRangeCall',
+            //     []
+            // )
 
-            await this.deployAssist.deployContractWithRetry(
-                network,
-                // @ts-ignore
-                LimitPool__factory,
-                'limitPoolImpl',
-                [
-                    hre.props.limitPoolFactory.address
-                ],
-                {
-                    'contracts/libraries/limit/LimitPositions.sol:LimitPositions': hre.props.limitPositionsLib.address,
-                    'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address,
-                    'contracts/libraries/range/pool/MintRangeCall.sol:MintRangeCall': hre.props.mintRangeCall.address,
-                    'contracts/libraries/range/pool/BurnRangeCall.sol:BurnRangeCall': hre.props.burnRangeCall.address,
-                    'contracts/libraries/range/pool/SnapshotRangeCall.sol:SnapshotRangeCall': hre.props.snapshotRangeCall.address,
-                    'contracts/libraries/limit/pool/MintLimitCall.sol:MintLimitCall': hre.props.mintLimitCall.address,
-                    'contracts/libraries/limit/pool/BurnLimitCall.sol:BurnLimitCall': hre.props.burnLimitCall.address,
-                    'contracts/libraries/limit/pool/SnapshotLimitCall.sol:SnapshotLimitCall': hre.props.snapshotLimitCall.address,
-                    'contracts/libraries/pool/SwapCall.sol:SwapCall': hre.props.swapCall.address,
-                    'contracts/libraries/pool/QuoteCall.sol:QuoteCall': hre.props.quoteCall.address,
-                    'contracts/libraries/pool/FeesCall.sol:FeesCall': hre.props.feesCall.address,
-                    'contracts/libraries/pool/SampleCall.sol:SampleCall': hre.props.sampleCall.address
-                }
-            )
+            // await this.deployAssist.deployContractWithRetry(
+            //     network,
+            //     // @ts-ignore
+            //     LimitPool__factory,
+            //     'limitPoolImpl',
+            //     [
+            //         hre.props.limitPoolFactory.address
+            //     ],
+            //     {
+            //         'contracts/libraries/limit/LimitPositions.sol:LimitPositions': hre.props.limitPositionsLib.address,
+            //         'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address,
+            //         'contracts/libraries/range/pool/MintRangeCall.sol:MintRangeCall': hre.props.mintRangeCall.address,
+            //         'contracts/libraries/range/pool/BurnRangeCall.sol:BurnRangeCall': hre.props.burnRangeCall.address,
+            //         'contracts/libraries/range/pool/SnapshotRangeCall.sol:SnapshotRangeCall': hre.props.snapshotRangeCall.address,
+            //         'contracts/libraries/limit/pool/MintLimitCall.sol:MintLimitCall': hre.props.mintLimitCall.address,
+            //         'contracts/libraries/limit/pool/BurnLimitCall.sol:BurnLimitCall': hre.props.burnLimitCall.address,
+            //         'contracts/libraries/limit/pool/SnapshotLimitCall.sol:SnapshotLimitCall': hre.props.snapshotLimitCall.address,
+            //         'contracts/libraries/pool/SwapCall.sol:SwapCall': hre.props.swapCall.address,
+            //         'contracts/libraries/pool/QuoteCall.sol:QuoteCall': hre.props.quoteCall.address,
+            //         'contracts/libraries/pool/FeesCall.sol:FeesCall': hre.props.feesCall.address,
+            //         'contracts/libraries/pool/SampleCall.sol:SampleCall': hre.props.sampleCall.address
+            //     }
+            // )
 
             await this.deployAssist.deployContractWithRetry(
                 network,
@@ -294,12 +294,25 @@ export class InitialSetup {
                 PositionERC1155__factory,
                 'positionERC1155',
                 [
-                    hre.props.limitPoolFactory.address
+                    // hre.props.limitPoolFactory.address
+                    '0x3fa761492f411ebc64a81fcf3292fdc0b677c00f'
                 ]
             )
 
+            const limitPoolManagerAddress = (
+                await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
+                    {
+                        networkName: hre.network.name,
+                        objectName: 'limitPoolManager',
+                    },
+                    'readLimitPoolSetup'
+                )
+            ).contractAddress
+            hre.props.limitPoolManager = await hre.ethers.getContractAt('LimitPoolManager', limitPoolManagerAddress)
+
             const enableImplTxn = await hre.props.limitPoolManager.enablePoolType(
-                hre.props.limitPoolImpl.address,
+                // hre.props.limitPoolImpl.address,
+                '0xc1e9a857e96aeefe28f8340cf82de7801bd95a77',
                 hre.props.positionERC1155.address,
                 this.constantProductString
             )
@@ -308,7 +321,8 @@ export class InitialSetup {
             hre.nonce += 1;
 
             const setFactoryTxn = await hre.props.limitPoolManager.setFactory(
-                hre.props.limitPoolFactory.address
+                // hre.props.limitPoolFactory.address
+                '0x3fa761492f411ebc64a81fcf3292fdc0b677c00f'
             )
             await setFactoryTxn.wait()
 
@@ -407,6 +421,17 @@ export class InitialSetup {
                 hre.props.kyberPoolToken = await hre.ethers.getContractAt('PositionERC1155', kyberPoolTokenAddress)
 
             } else if (this.deployPools) {
+                const limitPoolFactoryAddress = (
+                    await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
+                        {
+                            networkName: hre.network.name,
+                            objectName: 'limitPoolFactory',
+                        },
+                        'readLimitPoolSetup'
+                    )
+                ).contractAddress
+                hre.props.limitPoolFactory = await hre.ethers.getContractAt('LimitPoolFactory', limitPoolFactoryAddress)
+
                 // create first limit pool
                 let createPoolTxn = await hre.props.limitPoolFactory.createLimitPool({
                     poolTypeId: 0,
@@ -530,7 +555,7 @@ export class InitialSetup {
                         },
                         'readLimitPoolSetup'
                     )
-                ).contractAddress 
+                ).contractAddress
             }
             await this.deployAssist.deployContractWithRetry(
                 network,

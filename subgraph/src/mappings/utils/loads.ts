@@ -576,6 +576,20 @@ export function safeLoadTvlUpdateLog(txnHash: Bytes, pool: string): LoadTvlUpdat
 
     if (!tvlUpdateLogEntity) {
         tvlUpdateLogEntity = new TvlUpdateLog(tvlUpdateLogId)
+
+        tvlUpdateLogEntity.pool = ZERO_ADDRESS
+        tvlUpdateLogEntity.eventName = "default"
+        tvlUpdateLogEntity.txnHash = Bytes.fromHexString(ZERO_ADDRESS)
+        tvlUpdateLogEntity.txnBlockNumber = BIGINT_ZERO
+        tvlUpdateLogEntity.amount0Change = BIGDECIMAL_ZERO
+        tvlUpdateLogEntity.amount1Change = BIGDECIMAL_ZERO
+        tvlUpdateLogEntity.amount0Total = BIGDECIMAL_ZERO
+        tvlUpdateLogEntity.amount1Total = BIGDECIMAL_ZERO
+        tvlUpdateLogEntity.token0UsdPrice = BIGDECIMAL_ZERO
+        tvlUpdateLogEntity.token1UsdPrice = BIGDECIMAL_ZERO
+        tvlUpdateLogEntity.amountUsdChange = BIGDECIMAL_ZERO
+        tvlUpdateLogEntity.amountUsdTotal = BIGDECIMAL_ZERO
+
         exists = false
     }
 
@@ -602,6 +616,15 @@ export function safeLoadMintRangeLog(txnHash: Bytes, pool: string, positionId: B
 
     if (!mintRangeLogEntity) {
         mintRangeLogEntity = new MintRangeLog(mintRangeLogId)
+        
+        mintRangeLogEntity.sender = Bytes.fromHexString(ZERO_ADDRESS)
+        mintRangeLogEntity.recipient = Bytes.fromHexString(ZERO_ADDRESS)
+        mintRangeLogEntity.lower = BIGINT_ZERO
+        mintRangeLogEntity.upper = BIGINT_ZERO
+        mintRangeLogEntity.positionId = BIGINT_ZERO
+        mintRangeLogEntity.liquidityMinted = BIGINT_ZERO
+        mintRangeLogEntity.pool = ZERO_ADDRESS
+
         exists = false
     }
 
@@ -628,6 +651,15 @@ export function safeLoadBurnLog(txnHash: Bytes, pool: string, positionId: BigInt
 
     if (!burnRangeLogEntity) {
         burnRangeLogEntity = new BurnRangeLog(burnRangeLogId)
+
+        burnRangeLogEntity.owner = Bytes.fromHexString(ZERO_ADDRESS)
+        burnRangeLogEntity.recipient = Bytes.fromHexString(ZERO_ADDRESS)
+        burnRangeLogEntity.lower = BIGINT_ZERO
+        burnRangeLogEntity.upper = BIGINT_ZERO
+        burnRangeLogEntity.positionId = BIGINT_ZERO
+        burnRangeLogEntity.liquidityBurned = BIGINT_ZERO
+        burnRangeLogEntity.pool = ZERO_ADDRESS
+
         exists = false
     }
 
@@ -654,6 +686,12 @@ export function safeLoadCompoundRangeLog(txnHash: Bytes, pool: string, positionI
 
     if (!compoundLogEntity) {
         compoundLogEntity = new CompoundRangeLog(compoundLogId)
+
+        compoundLogEntity.sender = Bytes.fromHexString(ZERO_ADDRESS)
+        compoundLogEntity.pool = ZERO_ADDRESS
+        compoundLogEntity.liquidityCompounded = BIGINT_ZERO
+        compoundLogEntity.positionId = BIGINT_ZERO
+
         exists = false
     }
 

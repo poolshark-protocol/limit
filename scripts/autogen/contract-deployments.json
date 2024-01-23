@@ -211,7 +211,7 @@
             "constructorArguments": [
                 "USD Coin",
                 "USDC",
-                18
+                6
             ]
         },
         "token1": {

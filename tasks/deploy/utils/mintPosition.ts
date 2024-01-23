@@ -35,8 +35,8 @@ export class MintPosition {
         const token0Amount = ethers.utils.parseUnits('1000', 18)
         console.log('mint tokens', hre.props.alice.address)
         // await mintSigners20(hre.props.token0, token0Amount.mul(10000), [hre.props.alice])
-        await mintSigners20(hre.props.token1, token0Amount, [hre.props.alice])
-        console.log('minted tokens')
+        // await mintSigners20(hre.props.token1, token0Amount, [hre.props.alice])
+        // console.log('minted tokens')
         const liquidityAmount = '49802891105937278098768'
 
         // await getPrice(true)
@@ -112,14 +112,14 @@ export class MintPosition {
         // 0 => 1 
         //0xe80dc9a69853483c745f8e32162f0bd5813c    b291 => new factory
 
-            const zeroForOne = true
+            const zeroForOne = false
 
-            const priceLimit = BigNumber.from('4039859466863342510789667678182')
+            const priceLimit = BigNumber.from('1644512651807278503717224857536888')
             console.log('before swap')
             let txn = await hre.props.poolRouter
             .connect(signer)
             .multiSwapSplit(
-            ['0x02225f6a3d83648d7906a23856331c819265394d'],
+            ['0x50456024eEd7921FC69298a8B742598bAd35582a'],
                 [
                 {
                     to: signer.address,

@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: MIT
-pragma solidity 0.8.13;
+// SPDX-License-Identifier: SSPL-1.0
+pragma solidity 0.8.18;
 
 import '../interfaces/IPool.sol';
 import '../interfaces/IPositionERC1155.sol';
@@ -18,11 +18,7 @@ import '../external/openzeppelin/security/ReentrancyGuard.sol';
 /**
  * @dev Defines the actions which can be executed by the factory admin.
  */
-contract RangeStaker is
-    RangeStakerEvents,
-    PoolsharkStructs,
-    ReentrancyGuard
-{
+contract RangeStaker is RangeStakerEvents, PoolsharkStructs, ReentrancyGuard {
     address public immutable limitPoolFactory;
     uint32 public immutable startTimestamp;
     uint32 public immutable endTimestamp;
@@ -50,9 +46,7 @@ contract RangeStaker is
         uint32 endTime;
     }
 
-    constructor(
-        RangeStakerParams memory params
-    ) {
+    constructor(RangeStakerParams memory params) {
         owner = msg.sender;
         feeTo = msg.sender;
         limitPoolFactory = params.limitPoolFactory;
@@ -76,14 +70,11 @@ contract RangeStaker is
         uint32 positionIdNext;
     }
 
-    function stakeRange(
-        StakeRangeParams memory params
-    ) external nonReentrant() {
-
+    function stakeRange(StakeRangeParams memory params) external nonReentrant {
         // load pool constants
         StakeRangeLocals memory locals;
         locals.constants = ILimitPoolView(params.pool).immutables();
-        
+
         // Checks: validate deterministic address
         canonicalLimitPoolsOnly(params.pool, locals.constants);
 
@@ -92,41 +83,43 @@ contract RangeStaker is
             locals.stake.positionId = params.positionId;
         } else {
             // grab positionIdNext from pool
-            (,,,,locals.positionIdNext,,) = ILimitPoolStorageView(params.pool).globalState();
+            (, , , , locals.positionIdNext, , ) = ILimitPoolStorageView(
+                params.pool
+            ).globalState();
             locals.stake.positionId = locals.positionIdNext - 1;
         }
 
         // stake info
         locals.stake.pool = params.pool;
         locals.poolToken = locals.constants.poolToken;
-        locals.stakeKey = keccak256(abi.encode(
-            locals.stake.pool,
-            locals.stake.positionId
-        ));
+        locals.stakeKey = keccak256(
+            abi.encode(locals.stake.pool, locals.stake.positionId)
+        );
 
         // load previous fee growth and staked flag
         locals.stake.isStaked = rangeStakes[locals.stakeKey].isStaked;
 
         // check position exists
         if (!locals.stake.isStaked) {
-            (
-                ,,
-                locals.stake.liquidity,,
-            ) = IRangePool(params.pool).positions(locals.stake.positionId);
+            (, , locals.stake.liquidity, , ) = IRangePool(params.pool)
+                .positions(locals.stake.positionId);
         } else {
             locals.stake.owner = rangeStakes[locals.stakeKey].owner;
             locals.stake.liquidity = rangeStakes[locals.stakeKey].liquidity;
             if (locals.stake.owner != params.to) {
-                require(false, "RangeStake::PositionOwnerMismatch()");
+                require(false, 'RangeStake::PositionOwnerMismatch()');
             }
         }
 
         if (locals.stake.liquidity == 0) {
-            require(false, "RangeStake::PositionNotFound()");
+            require(false, 'RangeStake::PositionNotFound()');
         }
 
         // check if transfer needed
-        locals.positionBalance = IPositionERC1155(locals.poolToken).balanceOf(address(this), locals.stake.positionId);
+        locals.positionBalance = IPositionERC1155(locals.poolToken).balanceOf(
+            address(this),
+            locals.stake.positionId
+        );
 
         if (locals.positionBalance == 0) {
             // position not staked and balance not held
@@ -141,15 +134,19 @@ contract RangeStaker is
         // start tracking fee growth from after compound
         if (!locals.stake.isStaked) {
             // compound position to avoid including old fees accrued
-            IRangePool(params.pool).burnRange(BurnRangeParams({
-                to: params.to,
-                positionId: locals.stake.positionId,
-                burnPercent: 0
-            }));
+            IRangePool(params.pool).burnRange(
+                BurnRangeParams({
+                    to: params.to,
+                    positionId: locals.stake.positionId,
+                    burnPercent: 0
+                })
+            );
             (
                 locals.stake.feeGrowthInside0Last,
                 locals.stake.feeGrowthInside1Last,
-                ,,
+                ,
+                ,
+
             ) = IRangePool(params.pool).positions(locals.stake.positionId);
 
             // mark position as staked
@@ -157,10 +154,7 @@ contract RangeStaker is
             locals.stake.owner = params.to;
         } else {
             // load previous fee growth
-            (
-                locals.feeGrowthInside0Start,
-                locals.feeGrowthInside1Start
-            ) = (
+            (locals.feeGrowthInside0Start, locals.feeGrowthInside1Start) = (
                 rangeStakes[locals.stakeKey].feeGrowthInside0Last,
                 rangeStakes[locals.stakeKey].feeGrowthInside1Last
             );
@@ -168,23 +162,32 @@ contract RangeStaker is
             (
                 locals.stake.feeGrowthInside0Last,
                 locals.stake.feeGrowthInside1Last,
-                locals.newPositionLiquidity,,
+                locals.newPositionLiquidity,
+                ,
+
             ) = IRangePool(params.pool).positions(params.positionId);
 
             // increment fee growth accrued if inside reward period
             locals.feeGrowth0Accrued = OverflowMath.mulDiv(
-                locals.stake.feeGrowthInside0Last - locals.feeGrowthInside0Start,
+                locals.stake.feeGrowthInside0Last -
+                    locals.feeGrowthInside0Start,
                 locals.stake.liquidity,
                 Q128
             );
             locals.feeGrowth1Accrued = OverflowMath.mulDiv(
-                locals.stake.feeGrowthInside1Last - locals.feeGrowthInside1Start,
+                locals.stake.feeGrowthInside1Last -
+                    locals.feeGrowthInside1Start,
                 locals.stake.liquidity,
                 Q128
             );
 
-            if (block.timestamp > startTimestamp && block.timestamp <= endTimestamp) {
-                if (locals.feeGrowth0Accrued > 0 || locals.feeGrowth1Accrued > 0)
+            if (
+                block.timestamp > startTimestamp &&
+                block.timestamp <= endTimestamp
+            ) {
+                if (
+                    locals.feeGrowth0Accrued > 0 || locals.feeGrowth1Accrued > 0
+                )
                     emit StakeRangeAccrued(
                         locals.stake.pool,
                         locals.stake.positionId,
@@ -211,63 +214,78 @@ contract RangeStaker is
 
         // Interactions: transfer out fees accrued
         if (locals.feeGrowth0Accrued > 0)
-            SafeTransfers.transferOut(locals.stake.owner, locals.constants.token0, locals.feeGrowth0Accrued);
+            SafeTransfers.transferOut(
+                locals.stake.owner,
+                locals.constants.token0,
+                locals.feeGrowth0Accrued
+            );
         if (locals.feeGrowth1Accrued > 0)
-            SafeTransfers.transferOut(locals.stake.owner, locals.constants.token1, locals.feeGrowth1Accrued);
+            SafeTransfers.transferOut(
+                locals.stake.owner,
+                locals.constants.token1,
+                locals.feeGrowth1Accrued
+            );
     }
 
-    function unstakeRange(
-        UnstakeRangeParams memory params
-    ) external nonReentrant() {
-
+    function unstakeRange(UnstakeRangeParams memory params)
+        external
+        nonReentrant
+    {
         StakeRangeLocals memory locals;
 
         locals.poolToken = IPool(params.pool).poolToken();
-        locals.stakeKey = keccak256(abi.encode(
-            params.pool,
-            params.positionId
-        ));
+        locals.stakeKey = keccak256(abi.encode(params.pool, params.positionId));
 
         // load previous stake
         locals.stake = rangeStakes[locals.stakeKey];
 
         if (locals.stake.pool == address(0)) {
-            require(false, "RangeUnstake::StakeNotFound()");
+            require(false, 'RangeUnstake::StakeNotFound()');
         } else if (locals.stake.owner != msg.sender) {
-            require(false, "RangeUnstake::PositionOwnerMisMatch()");
+            require(false, 'RangeUnstake::PositionOwnerMisMatch()');
         } else if (!locals.stake.isStaked) {
-            require(false, "RangeUnstake::PositionAlreadyUnstaked()");
+            require(false, 'RangeUnstake::PositionAlreadyUnstaked()');
         }
 
         (
             locals.feeGrowthInside0Start,
             locals.feeGrowthInside1Start,
-            ,,
+            ,
+            ,
+
         ) = IRangePool(params.pool).positions(params.positionId);
 
         // compound position to reward user for staked period
-        IRangePool(params.pool).burnRange(BurnRangeParams({
-            to: params.to,
-            positionId: params.positionId,
-            burnPercent: 0
-        }));
+        IRangePool(params.pool).burnRange(
+            BurnRangeParams({
+                to: params.to,
+                positionId: params.positionId,
+                burnPercent: 0
+            })
+        );
 
         // start tracking fee growth from after compound
         (
             locals.stake.feeGrowthInside0Last,
             locals.stake.feeGrowthInside1Last,
-            ,,
+            ,
+            ,
+
         ) = IRangePool(params.pool).positions(params.positionId);
 
-        if (block.timestamp > startTimestamp && block.timestamp <= endTimestamp) {
+        if (
+            block.timestamp > startTimestamp && block.timestamp <= endTimestamp
+        ) {
             // increment fee growth accrued if inside reward period
             locals.feeGrowth0Accrued = OverflowMath.mulDiv(
-                locals.stake.feeGrowthInside0Last - locals.feeGrowthInside0Start,
+                locals.stake.feeGrowthInside0Last -
+                    locals.feeGrowthInside0Start,
                 locals.stake.liquidity,
                 Q128
             );
             locals.feeGrowth1Accrued = OverflowMath.mulDiv(
-                locals.stake.feeGrowthInside1Last - locals.feeGrowthInside1Start,
+                locals.stake.feeGrowthInside1Last -
+                    locals.feeGrowthInside1Start,
                 locals.stake.liquidity,
                 Q128
             );
@@ -286,7 +304,7 @@ contract RangeStaker is
             params.positionId,
             1
         );
-        
+
         // mark position unstaked
         locals.stake.isStaked = false;
 
@@ -300,32 +318,31 @@ contract RangeStaker is
         rangeStakes[locals.stakeKey] = locals.stake;
     }
 
-    function burnRangeStake(
-        address pool,
-        BurnRangeParams memory params
-    ) external nonReentrant() {
+    function burnRangeStake(address pool, BurnRangeParams memory params)
+        external
+        nonReentrant
+    {
         StakeRangeLocals memory locals;
 
-        locals.stakeKey = keccak256(abi.encode(
-            pool,
-            params.positionId
-        ));
+        locals.stakeKey = keccak256(abi.encode(pool, params.positionId));
 
         // load previous stake
         locals.stake = rangeStakes[locals.stakeKey];
 
         if (locals.stake.pool == address(0)) {
-            require(false, "BurnRangeStake::StakeNotFound()");
+            require(false, 'BurnRangeStake::StakeNotFound()');
         } else if (locals.stake.owner != msg.sender) {
-            require(false, "BurnRangeStake::PositionOwnerMismatch()");
+            require(false, 'BurnRangeStake::PositionOwnerMismatch()');
         } else if (!locals.stake.isStaked) {
-            require(false, "BurnRangeStake::PositionAlreadyUnstaked()");
+            require(false, 'BurnRangeStake::PositionAlreadyUnstaked()');
         }
 
         (
             locals.feeGrowthInside0Start,
             locals.feeGrowthInside1Start,
-            ,,
+            ,
+            ,
+
         ) = IRangePool(pool).positions(params.positionId);
 
         // compound position to reward user for staked period
@@ -335,18 +352,24 @@ contract RangeStaker is
         (
             locals.stake.feeGrowthInside0Last,
             locals.stake.feeGrowthInside1Last,
-            locals.stake.liquidity,,
+            locals.stake.liquidity,
+            ,
+
         ) = IRangePool(pool).positions(params.positionId);
 
-        if (block.timestamp > startTimestamp && block.timestamp <= endTimestamp) {
+        if (
+            block.timestamp > startTimestamp && block.timestamp <= endTimestamp
+        ) {
             // increment fee growth accrued if inside reward period
             locals.feeGrowth0Accrued = OverflowMath.mulDiv(
-                locals.stake.feeGrowthInside0Last - locals.feeGrowthInside0Start,
+                locals.stake.feeGrowthInside0Last -
+                    locals.feeGrowthInside0Start,
                 locals.stake.liquidity,
                 Q128
             );
             locals.feeGrowth1Accrued = OverflowMath.mulDiv(
-                locals.stake.feeGrowthInside1Last - locals.feeGrowthInside1Start,
+                locals.stake.feeGrowthInside1Last -
+                    locals.feeGrowthInside1Start,
                 locals.stake.liquidity,
                 Q128
             );
@@ -384,12 +407,14 @@ contract RangeStaker is
      * Can only be called by the current owner.
      */
     function transferOwner(address newOwner) public virtual onlyOwner {
-        if(newOwner == address(0)) require (false, 'TransferredToZeroAddress()');
+        if (newOwner == address(0))
+            require(false, 'TransferredToZeroAddress()');
         _transferOwner(newOwner);
     }
 
     function transferFeeTo(address newFeeTo) public virtual onlyFeeTo {
-        if(newFeeTo == address(0)) require (false, 'TransferredToZeroAddress()');
+        if (newFeeTo == address(0))
+            require(false, 'TransferredToZeroAddress()');
         _transferFeeTo(newFeeTo);
     }
 
@@ -417,19 +442,24 @@ contract RangeStaker is
      * @dev Throws if the sender is not the owner.
      */
     function _checkOwner() internal view {
-        if (owner != msg.sender) require (false, 'OwnerOnly()');
+        if (owner != msg.sender) require(false, 'OwnerOnly()');
     }
 
     /**
      * @dev Throws if the sender is not the feeTo.
      */
     function _checkFeeTo() internal view {
-        if (feeTo != msg.sender) require (false, 'FeeToOnly()');
+        if (feeTo != msg.sender) require(false, 'FeeToOnly()');
     }
 
-    function supportsInterface(bytes4 interfaceId) external pure returns (bool) {
-      return  interfaceId == 0x01ffc9a7 ||    // ERC-165 support
-              interfaceId == 0xd9b67a26;      // ERC-1155 support
+    function supportsInterface(bytes4 interfaceId)
+        external
+        pure
+        returns (bool)
+    {
+        return
+            interfaceId == 0x01ffc9a7 || // ERC-165 support
+            interfaceId == 0xd9b67a26; // ERC-1155 support
     }
 
     function canonicalLimitPoolsOnly(
@@ -437,12 +467,14 @@ contract RangeStaker is
         PoolsharkStructs.LimitImmutables memory constants
     ) private view {
         // generate key for pool
-        bytes32 key = keccak256(abi.encode(
-            constants.poolImpl,
-            constants.token0,
-            constants.token1,
-            constants.swapFee
-        ));
+        bytes32 key = keccak256(
+            abi.encode(
+                constants.poolImpl,
+                constants.token0,
+                constants.token1,
+                constants.swapFee
+            )
+        );
 
         // compute address
         address predictedAddress = LibClone.predictDeterministicAddress(
@@ -456,10 +488,13 @@ contract RangeStaker is
         if (pool != predictedAddress) require(false, 'InvalidCallerAddress()');
     }
 
-    function encodeLimit(
-        LimitImmutables memory constants
-    ) private pure returns (bytes memory) {
-        return abi.encodePacked(
+    function encodeLimit(LimitImmutables memory constants)
+        private
+        pure
+        returns (bytes memory)
+    {
+        return
+            abi.encodePacked(
                 constants.owner,
                 constants.token0,
                 constants.token1,
@@ -469,6 +504,6 @@ contract RangeStaker is
                 constants.genesisTime,
                 constants.tickSpacing,
                 constants.swapFee
-        );
+            );
     }
 }

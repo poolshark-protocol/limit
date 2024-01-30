@@ -1,25 +1,20 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: SSPL-1.0
 
-pragma solidity 0.8.13;
+pragma solidity 0.8.18;
 
 import '../interfaces/IPool.sol';
 import '../base/storage/PositionERC1155Immutables.sol';
-import "../interfaces/IPositionERC1155.sol";
+import '../interfaces/IPositionERC1155.sol';
 import '../external/solady/LibClone.sol';
 import '../libraries/utils/String.sol';
 import '../libraries/utils/SafeTransfers.sol';
 import '../libraries/utils/PositionTokens.sol';
 
-contract PositionERC1155 is
-    IPositionERC1155,
-    PositionERC1155Immutables
-{
+contract PositionERC1155 is IPositionERC1155, PositionERC1155Immutables {
     address public immutable factory;
     address public immutable original;
 
-    constructor(
-        address factory_
-    ) {
+    constructor(address factory_) {
         factory = factory_;
         original = address(this);
     }
@@ -30,8 +25,8 @@ contract PositionERC1155 is
     /// @dev owner => spender => approved
     mapping(address => mapping(address => bool)) private _spenderApprovals;
 
-    /// @dev token id => total supply
-    mapping(uint256 => uint256) private _totalSupplyById;
+    /// @dev total supply for all token ids
+    uint256 public totalSupply;
 
     // eth address for safe withdrawal
     address public constant ethAddress = address(0);
@@ -39,31 +34,54 @@ contract PositionERC1155 is
     modifier onlyCanonicalClones(
         PoolsharkStructs.LimitImmutables memory constants
     ) {
-        if(!_onlyCanonicalPools(constants)) require (false, 'CanoncialPoolsOnly()');
-        if(!_onlyCanonicalPoolTokens(constants)) require (false, 'CanoncialPoolTokensOnly()');
+        if (!_onlyCanonicalPools(constants))
+            require(false, 'CanoncialPoolsOnly()');
+        if (!_onlyCanonicalPoolTokens(constants))
+            require(false, 'CanoncialPoolTokensOnly()');
         _;
     }
 
     modifier checkApproval(address _from, address _spender) {
         if (_from != _spender)
-            if(!_isApprovedForAll(_from, _spender)) 
-                require(false, string.concat('SpenderNotApproved(', String.from(_from), ', ', String.from(_spender), ')'));
+            if (!_isApprovedForAll(_from, _spender))
+                require(
+                    false,
+                    string.concat(
+                        'SpenderNotApproved(',
+                        String.from(_from),
+                        ', ',
+                        String.from(_spender),
+                        ')'
+                    )
+                );
         _;
     }
 
     modifier checkAddresses(address _from, address _to) {
-        if (_from == address(0) || _to == address(0)) require(false, 'TransferFromOrToAddress0()');
+        if (_from == address(0) || _to == address(0))
+            require(false, 'TransferFromOrToAddress0()');
         if (_from == _to) require(false, 'TransferToSelf()');
         _;
     }
 
     modifier checkLength(uint256 _lengthA, uint256 _lengthB) {
-        if (_lengthA != _lengthB) require(false, string.concat('LengthMismatch(', String.from(_lengthA), ', ',  String.from(_lengthB), ')'));
+        if (_lengthA != _lengthB)
+            require(
+                false,
+                string.concat(
+                    'LengthMismatch(',
+                    String.from(_lengthA),
+                    ', ',
+                    String.from(_lengthB),
+                    ')'
+                )
+            );
         _;
     }
 
     modifier checkERC1155Support(address recipient) {
-        if (!_verifyERC1155Support(recipient)) require(false, 'ERC1155NotSupported()');
+        if (!_verifyERC1155Support(recipient))
+            require(false, 'ERC1155NotSupported()');
         _;
     }
 
@@ -72,10 +90,7 @@ contract PositionERC1155 is
         uint256 _id,
         uint256 _amount,
         PoolsharkStructs.LimitImmutables memory constants
-    ) external 
-        onlyCanonicalClones(constants)
-        checkERC1155Support(_account)
-    {
+    ) external onlyCanonicalClones(constants) checkERC1155Support(_account) {
         _mint(_account, _id, _amount);
     }
 
@@ -84,13 +99,15 @@ contract PositionERC1155 is
         uint256 _id,
         uint256 _amount,
         PoolsharkStructs.LimitImmutables memory constants
-    ) external
-        onlyCanonicalClones(constants)
-    {
+    ) external onlyCanonicalClones(constants) {
         _burn(_account, _id, _amount);
     }
 
-    function setApprovalForAll(address _spender, bool _approved) public virtual override {
+    function setApprovalForAll(address _spender, bool _approved)
+        public
+        virtual
+        override
+    {
         _setApprovalForAll(msg.sender, _spender, _approved);
     }
 
@@ -99,7 +116,10 @@ contract PositionERC1155 is
         address _to,
         uint256 _id,
         uint256 _amount
-    ) public virtual override
+    )
+        public
+        virtual
+        override
         checkAddresses(_from, _to)
         checkApproval(_from, msg.sender)
         checkERC1155Support(_to)
@@ -114,7 +134,10 @@ contract PositionERC1155 is
         address _to,
         uint256[] calldata _ids,
         uint256[] calldata _amounts
-    ) public virtual override
+    )
+        public
+        virtual
+        override
         checkLength(_ids.length, _amounts.length)
         checkAddresses(_from, _to)
         checkApproval(_from, msg.sender)
@@ -131,19 +154,28 @@ contract PositionERC1155 is
     function withdrawEth(
         address recipient,
         PoolsharkStructs.LimitImmutables memory constants
-    ) external
-        onlyCanonicalClones(constants)
-    {
+    ) external onlyCanonicalClones(constants) {
         SafeTransfers.transferOut(recipient, ethAddress, address(this).balance);
     }
 
-    function isApprovedForAll(address _owner, address _spender) public view virtual override returns (bool) {
+    function isApprovedForAll(address _owner, address _spender)
+        public
+        view
+        virtual
+        override
+        returns (bool)
+    {
         return _isApprovedForAll(_owner, _spender);
     }
 
-    function supportsInterface(bytes4 interfaceID) external pure returns (bool) {
-      return  interfaceID == 0x01ffc9a7 ||    // ERC-165 support
-              interfaceID == 0xd9b67a26;      // ERC-1155 support
+    function supportsInterface(bytes4 interfaceID)
+        external
+        pure
+        returns (bool)
+    {
+        return
+            interfaceID == 0x01ffc9a7 || // ERC-165 support
+            interfaceID == 0xd9b67a26; // ERC-1155 support
     }
 
     function name() public pure virtual override returns (string memory) {
@@ -154,18 +186,24 @@ contract PositionERC1155 is
         return Bytes.bytes32ToString(tokenSymbol());
     }
 
-    function totalSupply(uint256 _id) public view virtual override returns (uint256) {
-        return _totalSupplyById[_id];
-    }
-
-    function balanceOf(address _account, uint256 _id) public view virtual override returns (uint256) {
+    function balanceOf(address _account, uint256 _id)
+        public
+        view
+        virtual
+        override
+        returns (uint256)
+    {
         return _tokenBalances[_id][_account];
     }
 
     function balanceOfBatch(
         address[] calldata _accounts,
         uint256[] calldata _ids
-    ) public view virtual override
+    )
+        public
+        view
+        virtual
+        override
         checkLength(_accounts.length, _ids.length)
         returns (uint256[] memory batchBalances)
     {
@@ -184,9 +222,9 @@ contract PositionERC1155 is
     ) internal virtual {
         if (_account == address(0)) require(false, 'MintToAddress0()');
         _beforeTokenTransfer(address(0), _account, _id, _amount);
-        _totalSupplyById[_id] += _amount;
         uint256 _accountBalance = _tokenBalances[_id][_account];
         unchecked {
+            totalSupply += _amount;
             _tokenBalances[_id][_account] = _accountBalance + _amount;
         }
         emit TransferSingle(msg.sender, address(0), _account, _id, _amount);
@@ -199,11 +237,23 @@ contract PositionERC1155 is
     ) internal virtual {
         if (_account == address(0)) require(false, 'BurnFromAddress0()');
         uint256 _accountBalance = _tokenBalances[_id][_account];
-        if (_accountBalance < _amount) require(false, string.concat('BurnExceedsBalance(', String.from(_account), ', ', String.from(_id), ', ', String.from(_amount), ')'));
+        if (_accountBalance < _amount)
+            require(
+                false,
+                string.concat(
+                    'BurnExceedsBalance(',
+                    String.from(_account),
+                    ', ',
+                    String.from(_id),
+                    ', ',
+                    String.from(_amount),
+                    ')'
+                )
+            );
         _beforeTokenTransfer(_account, address(0), _id, _amount);
         unchecked {
+            totalSupply -= _amount;
             _tokenBalances[_id][_account] = _accountBalance - _amount;
-            _totalSupplyById[_id] -= _amount;
         }
         emit TransferSingle(msg.sender, _account, address(0), _id, _amount);
     }
@@ -215,7 +265,19 @@ contract PositionERC1155 is
         uint256 _amount
     ) internal virtual {
         uint256 _fromBalance = _tokenBalances[_id][_from];
-        if (_fromBalance < _amount) require(false, string.concat('TransferExceedsBalance(', String.from(_from), ', ', String.from(_id), ', ', String.from(_amount), ')'));
+        if (_fromBalance < _amount)
+            require(
+                false,
+                string.concat(
+                    'TransferExceedsBalance(',
+                    String.from(_from),
+                    ', ',
+                    String.from(_id),
+                    ', ',
+                    String.from(_amount),
+                    ')'
+                )
+            );
         _beforeTokenTransfer(_from, _to, _id, _amount);
         unchecked {
             _tokenBalances[_id][_from] = _fromBalance - _amount;
@@ -231,12 +293,21 @@ contract PositionERC1155 is
         address _spender,
         bool _approved
     ) internal virtual {
-        if (_owner == _spender) require(false, string.concat('SelfApproval(', String.from(_owner), ')'));
+        if (_owner == _spender)
+            require(
+                false,
+                string.concat('SelfApproval(', String.from(_owner), ')')
+            );
         _spenderApprovals[_owner][_spender] = _approved;
         emit ApprovalForAll(_owner, _spender, _approved);
     }
 
-    function _isApprovedForAll(address _owner, address _spender) internal view virtual returns (bool) {
+    function _isApprovedForAll(address _owner, address _spender)
+        internal
+        view
+        virtual
+        returns (bool)
+    {
         return _owner == _spender || _spenderApprovals[_owner][_spender];
     }
 
@@ -252,20 +323,19 @@ contract PositionERC1155 is
         PoolsharkStructs.LimitImmutables memory constants
     ) private view returns (bool) {
         // generate key for pool
-        bytes32 key = keccak256(abi.encode(
-            constants.poolImpl,
-            constants.token0,
-            constants.token1,
-            constants.swapFee
-        ));
+        bytes32 key = keccak256(
+            abi.encode(
+                constants.poolImpl,
+                constants.token0,
+                constants.token1,
+                constants.swapFee
+            )
+        );
 
         // compute address
         address predictedAddress = LibClone.predictDeterministicAddress(
             original,
-            abi.encodePacked(
-                tokenName(),
-                tokenSymbol()
-            ),
+            abi.encodePacked(tokenName(), tokenSymbol()),
             key,
             factory
         );
@@ -279,12 +349,14 @@ contract PositionERC1155 is
         PoolsharkStructs.LimitImmutables memory constants
     ) private view returns (bool) {
         // generate key for pool
-        bytes32 key = keccak256(abi.encode(
-            constants.poolImpl,
-            constants.token0,
-            constants.token1,
-            constants.swapFee
-        ));
+        bytes32 key = keccak256(
+            abi.encode(
+                constants.poolImpl,
+                constants.token0,
+                constants.token1,
+                constants.swapFee
+            )
+        );
 
         // compute address
         address predictedAddress = LibClone.predictDeterministicAddress(
@@ -312,13 +384,19 @@ contract PositionERC1155 is
     /// @notice Return if the `_target` contract supports ERC-1155 interface
     /// @param _target The address of the contract
     /// @return supported Whether the contract is supported (true) or not (false)
-    function _verifyERC1155Support(address _target) private view returns (bool supported) {
+    function _verifyERC1155Support(address _target)
+        private
+        view
+        returns (bool supported)
+    {
         if (_target.code.length == 0) return true;
         bytes memory encodedParams = abi.encodeWithSelector(
             IERC165.supportsInterface.selector,
             bytes4(0xd9b67a26) // ERC-1155 support
         );
-        (bool success, bytes memory result) = _target.staticcall{gas: 30_000}(encodedParams);
+        (bool success, bytes memory result) = _target.staticcall{gas: 30_000}(
+            encodedParams
+        );
         if (result.length < 32) return false;
         return success && abi.decode(result, (bool));
     }

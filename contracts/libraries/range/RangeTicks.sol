@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: GPLv3
-pragma solidity 0.8.13;
+// SPDX-License-Identifier: BUSL-1.1
+pragma solidity 0.8.18;
 
 import '../../interfaces/structs/PoolsharkStructs.sol';
 import '../../interfaces/structs/RangePoolStructs.sol';
@@ -14,7 +14,6 @@ import '../Samples.sol';
 
 /// @notice Tick management library for range pools
 library RangeTicks {
-
     event SyncRangeTick(
         uint200 feeGrowthOutside0,
         uint200 feeGrowthOutside1,
@@ -30,9 +29,11 @@ library RangeTicks {
         int16 tickSpacing
     ) internal pure {
         if (lower % tickSpacing != 0) require(false, 'InvalidLowerTick()');
-        if (lower < ConstantProduct.minTick(tickSpacing)) require(false, 'InvalidLowerTick()');
+        if (lower < ConstantProduct.minTick(tickSpacing))
+            require(false, 'InvalidLowerTick()');
         if (upper % tickSpacing != 0) require(false, 'InvalidUpperTick()');
-        if (upper > ConstantProduct.maxTick(tickSpacing)) require(false, 'InvalidUpperTick()');
+        if (upper > ConstantProduct.maxTick(tickSpacing))
+            require(false, 'InvalidUpperTick()');
         if (lower >= upper) require(false, 'InvalidPositionBounds()');
     }
 
@@ -46,11 +47,10 @@ library RangeTicks {
         int24 upper,
         uint128 amount
     ) internal returns (PoolsharkStructs.GlobalState memory) {
-
         // get tick at price
         int24 tickAtPrice = state.pool.tickAtPrice;
 
-        if(TickMap.set(tickMap, lower, constants.tickSpacing)) {
+        if (TickMap.set(tickMap, lower, constants.tickSpacing)) {
             ticks[lower].range.liquidityDelta += int128(amount);
             ticks[lower].range.liquidityAbsolute += amount;
         } else {
@@ -59,7 +59,7 @@ library RangeTicks {
                     int56 tickSecondsAccum,
                     uint160 secondsPerLiquidityAccum
                 ) = Samples.getSingle(
-                        IRangePool(address(this)), 
+                        IRangePool(address(this)),
                         RangePoolStructs.SampleParams(
                             state.pool.samples.index,
                             state.pool.samples.count,
@@ -70,14 +70,14 @@ library RangeTicks {
                             constants
                         ),
                         0
-                );
+                    );
                 ticks[lower].range = PoolsharkStructs.RangeTick(
                     state.pool.feeGrowthGlobal0,
                     state.pool.feeGrowthGlobal1,
                     secondsPerLiquidityAccum,
                     tickSecondsAccum,
-                    int128(amount),             // liquidityDelta
-                    amount                      // liquidityAbsolute
+                    int128(amount), // liquidityDelta
+                    amount // liquidityAbsolute
                 );
                 emit SyncRangeTick(
                     state.pool.feeGrowthGlobal0,
@@ -89,17 +89,16 @@ library RangeTicks {
                 ticks[lower].range.liquidityAbsolute += amount;
             }
         }
-        if(TickMap.set(tickMap, upper, constants.tickSpacing)) {
+        if (TickMap.set(tickMap, upper, constants.tickSpacing)) {
             ticks[upper].range.liquidityDelta -= int128(amount);
             ticks[upper].range.liquidityAbsolute += amount;
         } else {
             if (upper <= tickAtPrice) {
-
                 (
                     int56 tickSecondsAccum,
                     uint160 secondsPerLiquidityAccum
                 ) = Samples.getSingle(
-                        IRangePool(address(this)), 
+                        IRangePool(address(this)),
                         RangePoolStructs.SampleParams(
                             state.pool.samples.index,
                             state.pool.samples.count,
@@ -110,7 +109,7 @@ library RangeTicks {
                             constants
                         ),
                         0
-                );
+                    );
                 ticks[upper].range = PoolsharkStructs.RangeTick(
                     state.pool.feeGrowthGlobal0,
                     state.pool.feeGrowthGlobal1,
@@ -151,7 +150,7 @@ library RangeTicks {
         RangePoolStructs.Sample[65535] storage samples,
         PoolsharkStructs.TickMap storage tickMap,
         PoolsharkStructs.GlobalState memory state,
-        PoolsharkStructs.LimitImmutables memory constants, 
+        PoolsharkStructs.LimitImmutables memory constants,
         int24 lower,
         int24 upper,
         uint128 amount
@@ -159,8 +158,10 @@ library RangeTicks {
         validate(lower, upper, constants.tickSpacing);
         //check for amount to overflow liquidity delta & global
         if (amount == 0) return state;
-        if (amount > uint128(type(int128).max)) require(false, 'LiquidityUnderflow()');
-        if (amount > state.liquidityGlobal) require(false, 'LiquidityUnderflow()');
+        if (amount > uint128(type(int128).max))
+            require(false, 'LiquidityUnderflow()');
+        if (amount > state.liquidityGlobal)
+            require(false, 'LiquidityUnderflow()');
 
         // get pool tick at price
         int24 tickAtPrice = state.pool.tickAtPrice;
@@ -193,7 +194,7 @@ library RangeTicks {
                 state.pool.liquidity,
                 tickAtPrice
             );
-            state.pool.liquidity -= amount;  
+            state.pool.liquidity -= amount;
         }
         state.liquidityGlobal -= amount;
 
@@ -207,19 +208,28 @@ library RangeTicks {
         int24 tickToClear
     ) internal {
         if (_empty(ticks[tickToClear])) {
-            if (tickToClear != ConstantProduct.maxTick(constants.tickSpacing) &&
-                    tickToClear != ConstantProduct.minTick(constants.tickSpacing)) {
-                ticks[tickToClear].range = PoolsharkStructs.RangeTick(0,0,0,0,0,0);
+            if (
+                tickToClear != ConstantProduct.maxTick(constants.tickSpacing) &&
+                tickToClear != ConstantProduct.minTick(constants.tickSpacing)
+            ) {
+                ticks[tickToClear].range = PoolsharkStructs.RangeTick(
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0
+                );
                 TickMap.unset(tickMap, tickToClear, constants.tickSpacing);
             }
         }
     }
 
-    function _empty(
-        LimitPoolStructs.Tick memory tick
-    ) internal pure returns (
-        bool
-    ) {
+    function _empty(LimitPoolStructs.Tick memory tick)
+        internal
+        pure
+        returns (bool)
+    {
         return tick.range.liquidityAbsolute == 0;
     }
 }

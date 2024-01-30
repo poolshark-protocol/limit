@@ -1,9 +1,9 @@
 import { BigInt, log } from "@graphprotocol/graph-ts"
-import { Initialize } from "../../../generated/LimitPoolFactory/LimitPool"
+import { Initialize, InitializeLimit } from "../../../generated/LimitPoolFactory/LimitPool"
 import { safeLoadBasePrice, safeLoadLimitPool, safeLoadLimitTick, safeLoadRangeTick, safeLoadToken } from "../utils/loads"
 import { sqrtPriceX96ToTokenPrices, findEthPerToken } from "../utils/price"
 
-export function handleInitialize(event: Initialize): void {
+export function handleInitialize(event: InitializeLimit): void {
     let minTickParam = event.params.minTick
     let maxTickParam = event.params.maxTick
     let startPriceParam = event.params.startPrice

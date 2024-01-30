@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity 0.8.13;
+// SPDX-License-Identifier: SSPL-1.0
+pragma solidity 0.8.18;
 
 interface IERC20Minimal {
     /// @notice Returns the balance of a token

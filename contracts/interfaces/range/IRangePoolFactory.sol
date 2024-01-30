@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: GPLv3
-pragma solidity 0.8.13;
+// SPDX-License-Identifier: SSPL-1.0
+pragma solidity 0.8.18;
 
 interface IRangePoolFactory {
     function createRangePool(
@@ -15,5 +15,5 @@ interface IRangePoolFactory {
         uint256 fee
     ) external view returns (address);
 
-    function owner() external view returns(address);
+    function owner() external view returns (address);
 }

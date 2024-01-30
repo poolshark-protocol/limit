@@ -9,6 +9,7 @@ import { safeLoadBasePrice, safeLoadLimitPool, safeLoadToken } from './loads'
 export function sqrtPriceX96ToTokenPrices(sqrtPriceX96: BigInt, token0: Token, token1: Token): BigDecimal[] {
   let num = sqrtPriceX96.times(sqrtPriceX96).toBigDecimal()
   let Q192 = BigInt.fromI32(2).pow(192).toBigDecimal()
+  log.warning("before decimals", [])
   let price1 = num
     .div(Q192)
     .times(
@@ -17,7 +18,7 @@ export function sqrtPriceX96ToTokenPrices(sqrtPriceX96: BigInt, token0: Token, t
         exponentToBigDecimal(token1.decimals)
       )
     );
-
+    log.warning("after decimals", [])
   let price0 = BIGDECIMAL_ZERO
   if (price1.gt(BIGDECIMAL_ZERO)) {
     price0 = safeDiv(BigDecimal.fromString('1'), price1);
@@ -26,9 +27,8 @@ export function sqrtPriceX96ToTokenPrices(sqrtPriceX96: BigInt, token0: Token, t
   return [price0, price1]
 }
 
-export function getEthPriceInUSD(): BigDecimal {
+export function getEthPriceInUSD(stablePool: LimitPool): BigDecimal {
   // fetch eth prices for each stablecoin
-  let stablePool = LimitPool.load(STABLE_POOL_ADDRESS) // stable is token0
   if (stablePool !== null) {
     if (STABLE_IS_TOKEN_0) {
       log.info('stable pool token0: {}', [stablePool.price0.toString()])

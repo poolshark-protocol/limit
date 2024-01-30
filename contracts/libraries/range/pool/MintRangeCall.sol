@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: MIT
-pragma solidity 0.8.13;
+// SPDX-License-Identifier: BUSL-1.1
+pragma solidity 0.8.18;
 
 import '../../../interfaces/structs/RangePoolStructs.sol';
 import '../../../interfaces/callbacks/ILimitPoolCallback.sol';
@@ -13,6 +13,16 @@ library MintRangeCall {
     using SafeCast for uint256;
     using SafeCast for int128;
     using SafeCast for uint128;
+
+    event Mint(
+        address sender,
+        address indexed owner,
+        int24 indexed tickLower,
+        int24 indexed tickUpper,
+        uint128 amount,
+        uint256 amount0,
+        uint256 amount1
+    );
 
     event MintRange(
         address indexed recipient,
@@ -30,21 +40,29 @@ library MintRangeCall {
     }
 
     function perform(
-        mapping(uint256 => RangePoolStructs.RangePosition)
-            storage positions,
+        mapping(uint256 => RangePoolStructs.RangePosition) storage positions,
         mapping(int24 => PoolsharkStructs.Tick) storage ticks,
         PoolsharkStructs.TickMap storage tickMap,
         RangePoolStructs.Sample[65535] storage samples,
         PoolsharkStructs.GlobalState storage globalState,
         RangePoolStructs.MintRangeCache memory cache,
         RangePoolStructs.MintRangeParams memory params
-    ) external {
+    )
+        external
+        returns (
+            int256, // amount0Delta
+            int256 // amount1Delta
+        )
+    {
         // check for invalid receiver
-        if (params.to == address(0))
-            require(false, "CollectToZeroAddress()");
+        if (params.to == address(0)) require(false, 'CollectToZeroAddress()');
 
         // validate position ticks
-        ConstantProduct.checkTicks(params.lower, params.upper, cache.constants.tickSpacing);
+        ConstantProduct.checkTicks(
+            params.lower,
+            params.upper,
+            cache.constants.tickSpacing
+        );
 
         cache.state = globalState;
 
@@ -54,8 +72,13 @@ library MintRangeCall {
             cache.position = positions[params.positionId];
             if (cache.position.liquidity == 0)
                 require(false, 'PositionNotFound()');
-            if (PositionTokens.balanceOf(cache.constants, params.to, params.positionId) == 0)
-                require(false, 'PositionOwnerMismatch()');
+            if (
+                PositionTokens.balanceOf(
+                    cache.constants,
+                    params.to,
+                    params.positionId
+                ) == 0
+            ) require(false, 'PositionOwnerMismatch()');
             // existing position
             cache.owner = params.to;
             // set bounds as defined by position
@@ -67,16 +90,16 @@ library MintRangeCall {
                 cache.feesAccrued0,
                 cache.feesAccrued1
             ) = RangePositions.update(
-                    ticks,
-                    cache.position,
-                    cache.state,
-                    cache.constants,
-                    RangePoolStructs.UpdateParams(
-                        params.lower,
-                        params.upper,
-                        params.positionId,
-                        0
-                    )
+                ticks,
+                cache.position,
+                cache.state,
+                cache.constants,
+                RangePoolStructs.UpdateParams(
+                    params.lower,
+                    params.upper,
+                    params.positionId,
+                    0
+                )
             );
         } else {
             // create a new position
@@ -89,8 +112,14 @@ library MintRangeCall {
             cache.owner = params.to;
         }
         // set cache based on bounds
-        cache.priceLower = ConstantProduct.getPriceAtTick(cache.position.lower, cache.constants);
-        cache.priceUpper = ConstantProduct.getPriceAtTick(cache.position.upper, cache.constants);
+        cache.priceLower = ConstantProduct.getPriceAtTick(
+            cache.position.lower,
+            cache.constants
+        );
+        cache.priceUpper = ConstantProduct.getPriceAtTick(
+            cache.position.upper,
+            cache.constants
+        );
 
         // validate input amounts
         (params, cache) = RangePositions.validate(params, cache);
@@ -100,6 +129,16 @@ library MintRangeCall {
         cache.amount0 -= params.amount0.toInt128();
         cache.amount1 -= params.amount1.toInt128();
 
+        emit Mint(
+            msg.sender,
+            cache.owner,
+            cache.position.lower,
+            cache.position.upper,
+            cache.liquidityMinted.toUint128(),
+            params.amount0,
+            params.amount1
+        );
+
         emit MintRange(
             cache.owner,
             cache.position.lower,
@@ -107,25 +146,21 @@ library MintRangeCall {
             params.positionId,
             cache.liquidityMinted.toUint128(),
             -(cache.amount0 + cache.feesAccrued0), /// @dev - emit token0 balance delta
-            -(cache.amount1 + cache.feesAccrued1)  /// @dev - emit token1 balance delta
+            -(cache.amount1 + cache.feesAccrued1) /// @dev - emit token1 balance delta
         );
 
         // update position with latest fees accrued
-        cache = RangePositions.add(
-            ticks,
-            samples,
-            tickMap,
-            cache,
-            params
-        );
+        cache = RangePositions.add(ticks, samples, tickMap, cache, params);
 
         // save changes to storage before transfer out
         save(positions, globalState, cache, params.positionId);
 
         // transfer positive amounts back to user
         if (cache.feesAccrued0 > 0 || cache.feesAccrued1 > 0)
-            Collect.range(
+            CollectLib.range(
+                cache.position,
                 cache.constants,
+                cache.owner,
                 cache.owner,
                 cache.feesAccrued0,
                 cache.feesAccrued1
@@ -145,16 +180,24 @@ library MintRangeCall {
 
         // check balance after callback
         if (cache.amount0 < 0)
-            if (balance0(cache) < startBalance.amount0 + (-cache.amount0).toUint128())
-                require(false, 'MintInputAmount0TooLow()');
+            if (
+                balance0(cache) <
+                startBalance.amount0 + (-cache.amount0).toUint128()
+            ) require(false, 'MintInputAmount0TooLow()');
         if (cache.amount1 < 0)
-            if (balance1(cache) < startBalance.amount1 + (-cache.amount1).toUint128())
-                require(false, 'MintInputAmount1TooLow()');
+            if (
+                balance1(cache) <
+                startBalance.amount1 + (-cache.amount1).toUint128()
+            ) require(false, 'MintInputAmount1TooLow()');
+
+        return (
+            cache.amount0 + cache.feesAccrued0,
+            cache.amount1 + cache.feesAccrued1
+        );
     }
 
     function save(
-        mapping(uint256 => RangePoolStructs.RangePosition)
-            storage positions,
+        mapping(uint256 => RangePoolStructs.RangePosition) storage positions,
         PoolsharkStructs.GlobalState storage globalState,
         RangePoolStructs.MintRangeCache memory cache,
         uint32 positionId
@@ -165,36 +208,32 @@ library MintRangeCall {
         globalState.positionIdNext = cache.state.positionIdNext;
     }
 
-    function balance0(
-        RangePoolStructs.MintRangeCache memory cache
-    ) private view returns (uint256) {
-        (
-            bool success,
-            bytes memory data
-        ) = (cache.constants.token0)
-                               .staticcall(
-                                    abi.encodeWithSelector(
-                                        IERC20Minimal.balanceOf.selector,
-                                        address(this)
-                                    )
-                                );
+    function balance0(RangePoolStructs.MintRangeCache memory cache)
+        private
+        view
+        returns (uint256)
+    {
+        (bool success, bytes memory data) = (cache.constants.token0).staticcall(
+            abi.encodeWithSelector(
+                IERC20Minimal.balanceOf.selector,
+                address(this)
+            )
+        );
         require(success && data.length >= 32);
         return abi.decode(data, (uint256));
     }
 
-    function balance1(
-        RangePoolStructs.MintRangeCache memory cache
-    ) private view returns (uint256) {
-        (
-            bool success,
-            bytes memory data
-        ) = (cache.constants.token1)
-                               .staticcall(
-                                    abi.encodeWithSelector(
-                                        IERC20Minimal.balanceOf.selector,
-                                        address(this)
-                                    )
-                                );
+    function balance1(RangePoolStructs.MintRangeCache memory cache)
+        private
+        view
+        returns (uint256)
+    {
+        (bool success, bytes memory data) = (cache.constants.token1).staticcall(
+            abi.encodeWithSelector(
+                IERC20Minimal.balanceOf.selector,
+                address(this)
+            )
+        );
         require(success && data.length >= 32);
         return abi.decode(data, (uint256));
     }

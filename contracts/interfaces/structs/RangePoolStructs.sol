@@ -1,10 +1,9 @@
-// SPDX-License-Identifier: GPLv3
-pragma solidity 0.8.13;
+// SPDX-License-Identifier: SSPL-1.0
+pragma solidity 0.8.18;
 
 import './PoolsharkStructs.sol';
 
 interface RangePoolStructs is PoolsharkStructs {
-
     struct RangePosition {
         uint256 feeGrowthInside0Last;
         uint256 feeGrowthInside1Last;
@@ -84,12 +83,12 @@ interface RangePoolStructs is PoolsharkStructs {
         uint128 liquidity;
         uint128 amount0;
         uint128 amount1;
-        int56   tickSecondsAccum;
-        int56   tickSecondsAccumLower;
-        int56   tickSecondsAccumUpper;
-        uint32  secondsOutsideLower;
-        uint32  secondsOutsideUpper;
-        uint32  blockTimestamp;
-        int24   tick;
+        int56 tickSecondsAccum;
+        int56 tickSecondsAccumLower;
+        int56 tickSecondsAccumUpper;
+        uint32 secondsOutsideLower;
+        uint32 secondsOutsideUpper;
+        uint32 blockTimestamp;
+        int24 tick;
     }
 }

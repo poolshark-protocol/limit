@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // OpenZeppelin Contracts (last updated v4.9.0) (security/ReentrancyGuard.sol)
 
-pragma solidity 0.8.13;
+pragma solidity 0.8.18;
 
 import '../../../interfaces/structs/PoolsharkStructs.sol';
 
@@ -85,7 +85,11 @@ abstract contract LimitReentrancyGuard is PoolsharkStructs {
      * @dev Returns true if the reentrancy guard is currently set to "entered", which indicates there is a
      * `nonReentrant` function in the call stack.
      */
-    function _reentrancyGuardEntered(GlobalState storage state) internal view returns (bool) {
+    function _reentrancyGuardEntered(GlobalState storage state)
+        internal
+        view
+        returns (bool)
+    {
         return state.unlocked == _ENTERED;
     }
 }

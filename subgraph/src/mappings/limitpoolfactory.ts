@@ -1,5 +1,5 @@
 import { Address, log } from '@graphprotocol/graph-ts'
-import { PoolCreated } from '../../generated/LimitPoolFactory/LimitPoolFactory'
+import { LimitPoolCreated, PoolCreated } from '../../generated/LimitPoolFactory/LimitPoolFactory'
 import { LimitPoolTemplate, PositionERC1155Template, RangeStakerTemplate } from '../../generated/templates'
 import {
     fetchTokenSymbol,
@@ -11,7 +11,7 @@ import { safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadLimitPoolToken, sa
 import { BigInt } from '@graphprotocol/graph-ts'
 import { FACTORY_ADDRESS, ONE_BI, RANGE_STAKER_ADDRESS, STABLE_COINS, WETH_ADDRESS } from '../constants/constants'
 
-export function handlePoolCreated(event: PoolCreated): void {
+export function handlePoolCreated(event: LimitPoolCreated): void {
     // grab event parameters
     let poolAddressParam = event.params.pool
     let poolTokenParam = event.params.token

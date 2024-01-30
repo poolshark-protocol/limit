@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.13;
+pragma solidity 0.8.18;
 
 /// @notice Class with helper read functions for clone with immutable args.
 /// @author Solady (https://github.com/vectorized/solady/blob/main/src/utils/Clone.sol)
@@ -25,7 +25,11 @@ abstract contract Clone {
     }
 
     /// @dev Reads an immutable arg with type address.
-    function _getArgAddress(uint256 argOffset) internal pure returns (address arg) {
+    function _getArgAddress(uint256 argOffset)
+        internal
+        pure
+        returns (address arg)
+    {
         uint256 offset = _getImmutableArgsOffset();
         /// @solidity memory-safe-assembly
         assembly {
@@ -66,7 +70,11 @@ abstract contract Clone {
     }
 
     /// @dev Reads an immutable arg with type bytes32.
-    function _getArgBytes32(uint256 argOffset) internal pure returns (bytes32 arg) {
+    function _getArgBytes32(uint256 argOffset)
+        internal
+        pure
+        returns (bytes32 arg)
+    {
         uint256 offset = _getImmutableArgsOffset();
         /// @solidity memory-safe-assembly
         assembly {
@@ -75,7 +83,11 @@ abstract contract Clone {
     }
 
     /// @dev Reads an immutable arg with type uint256.
-    function _getArgUint256(uint256 argOffset) internal pure returns (uint256 arg) {
+    function _getArgUint256(uint256 argOffset)
+        internal
+        pure
+        returns (uint256 arg)
+    {
         uint256 offset = _getImmutableArgsOffset();
         /// @solidity memory-safe-assembly
         assembly {
@@ -84,7 +96,11 @@ abstract contract Clone {
     }
 
     /// @dev Reads an immutable arg with type uint248.
-    function _getArgUint248(uint256 argOffset) internal pure returns (uint248 arg) {
+    function _getArgUint248(uint256 argOffset)
+        internal
+        pure
+        returns (uint248 arg)
+    {
         uint256 offset = _getImmutableArgsOffset();
         /// @solidity memory-safe-assembly
         assembly {
@@ -93,7 +109,11 @@ abstract contract Clone {
     }
 
     /// @dev Reads an immutable arg with type uint240.
-    function _getArgUint240(uint256 argOffset) internal pure returns (uint240 arg) {
+    function _getArgUint240(uint256 argOffset)
+        internal
+        pure
+        returns (uint240 arg)
+    {
         uint256 offset = _getImmutableArgsOffset();
         /// @solidity memory-safe-assembly
         assembly {
@@ -102,7 +122,11 @@ abstract contract Clone {
     }
 
     /// @dev Reads an immutable arg with type uint232.
-    function _getArgUint232(uint256 argOffset) internal pure returns (uint232 arg) {
+    function _getArgUint232(uint256 argOffset)
+        internal
+        pure
+        returns (uint232 arg)
+    {
         uint256 offset = _getImmutableArgsOffset();
         /// @solidity memory-safe-assembly
         assembly {
@@ -111,7 +135,11 @@ abstract contract Clone {
     }
 
     /// @dev Reads an immutable arg with type uint224.
-    function _getArgUint224(uint256 argOffset) internal pure returns (uint224 arg) {
+    function _getArgUint224(uint256 argOffset)
+        internal
+        pure
+        returns (uint224 arg)
+    {
         uint256 offset = _getImmutableArgsOffset();
         /// @solidity memory-safe-assembly
         assembly {
@@ -120,7 +148,11 @@ abstract contract Clone {
     }
 
     /// @dev Reads an immutable arg with type uint216.
-    function _getArgUint216(uint256 argOffset) internal pure returns (uint216 arg) {
+    function _getArgUint216(uint256 argOffset)
+        internal
+        pure
+        returns (uint216 arg)
+    {
         uint256 offset = _getImmutableArgsOffset();
         /// @solidity memory-safe-assembly
         assembly {
@@ -129,7 +161,11 @@ abstract contract Clone {
     }
 
     /// @dev Reads an immutable arg with type uint208.
-    function _getArgUint208(uint256 argOffset) internal pure returns (uint208 arg) {
+    function _getArgUint208(uint256 argOffset)
+        internal
+        pure
+        returns (uint208 arg)
+    {
         uint256 offset = _getImmutableArgsOffset();
         /// @solidity memory-safe-assembly
         assembly {
@@ -138,7 +174,11 @@ abstract contract Clone {
     }
 
     /// @dev Reads an immutable arg with type uint200.
-    function _getArgUint200(uint256 argOffset) internal pure returns (uint200 arg) {
+    function _getArgUint200(uint256 argOffset)
+        internal
+        pure
+        returns (uint200 arg)
+    {
         uint256 offset = _getImmutableArgsOffset();
         /// @solidity memory-safe-assembly
         assembly {
@@ -147,7 +187,11 @@ abstract contract Clone {
     }
 
     /// @dev Reads an immutable arg with type uint192.
-    function _getArgUint192(uint256 argOffset) internal pure returns (uint192 arg) {
+    function _getArgUint192(uint256 argOffset)
+        internal
+        pure
+        returns (uint192 arg)
+    {
         uint256 offset = _getImmutableArgsOffset();
         /// @solidity memory-safe-assembly
         assembly {
@@ -156,7 +200,11 @@ abstract contract Clone {
     }
 
     /// @dev Reads an immutable arg with type uint184.
-    function _getArgUint184(uint256 argOffset) internal pure returns (uint184 arg) {
+    function _getArgUint184(uint256 argOffset)
+        internal
+        pure
+        returns (uint184 arg)
+    {
         uint256 offset = _getImmutableArgsOffset();
         /// @solidity memory-safe-assembly
         assembly {
@@ -165,7 +213,11 @@ abstract contract Clone {
     }
 
     /// @dev Reads an immutable arg with type uint176.
-    function _getArgUint176(uint256 argOffset) internal pure returns (uint176 arg) {
+    function _getArgUint176(uint256 argOffset)
+        internal
+        pure
+        returns (uint176 arg)
+    {
         uint256 offset = _getImmutableArgsOffset();
         /// @solidity memory-safe-assembly
         assembly {
@@ -174,7 +226,11 @@ abstract contract Clone {
     }
 
     /// @dev Reads an immutable arg with type uint168.
-    function _getArgUint168(uint256 argOffset) internal pure returns (uint168 arg) {
+    function _getArgUint168(uint256 argOffset)
+        internal
+        pure
+        returns (uint168 arg)
+    {
         uint256 offset = _getImmutableArgsOffset();
         /// @solidity memory-safe-assembly
         assembly {
@@ -183,7 +239,11 @@ abstract contract Clone {
     }
 
     /// @dev Reads an immutable arg with type uint160.
-    function _getArgUint160(uint256 argOffset) internal pure returns (uint160 arg) {
+    function _getArgUint160(uint256 argOffset)
+        internal
+        pure
+        returns (uint160 arg)
+    {
         uint256 offset = _getImmutableArgsOffset();
         /// @solidity memory-safe-assembly
         assembly {
@@ -192,7 +252,11 @@ abstract contract Clone {
     }
 
     /// @dev Reads an immutable arg with type uint152.
-    function _getArgUint152(uint256 argOffset) internal pure returns (uint152 arg) {
+    function _getArgUint152(uint256 argOffset)
+        internal
+        pure
+        returns (uint152 arg)
+    {
         uint256 offset = _getImmutableArgsOffset();
         /// @solidity memory-safe-assembly
         assembly {
@@ -201,7 +265,11 @@ abstract contract Clone {
     }
 
     /// @dev Reads an immutable arg with type uint144.
-    function _getArgUint144(uint256 argOffset) internal pure returns (uint144 arg) {
+    function _getArgUint144(uint256 argOffset)
+        internal
+        pure
+        returns (uint144 arg)
+    {
         uint256 offset = _getImmutableArgsOffset();
         /// @solidity memory-safe-assembly
         assembly {
@@ -210,7 +278,11 @@ abstract contract Clone {
     }
 
     /// @dev Reads an immutable arg with type uint136.
-    function _getArgUint136(uint256 argOffset) internal pure returns (uint136 arg) {
+    function _getArgUint136(uint256 argOffset)
+        internal
+        pure
+        returns (uint136 arg)
+    {
         uint256 offset = _getImmutableArgsOffset();
         /// @solidity memory-safe-assembly
         assembly {
@@ -219,7 +291,11 @@ abstract contract Clone {
     }
 
     /// @dev Reads an immutable arg with type uint128.
-    function _getArgUint128(uint256 argOffset) internal pure returns (uint128 arg) {
+    function _getArgUint128(uint256 argOffset)
+        internal
+        pure
+        returns (uint128 arg)
+    {
         uint256 offset = _getImmutableArgsOffset();
         /// @solidity memory-safe-assembly
         assembly {
@@ -228,7 +304,11 @@ abstract contract Clone {
     }
 
     /// @dev Reads an immutable arg with type uint120.
-    function _getArgUint120(uint256 argOffset) internal pure returns (uint120 arg) {
+    function _getArgUint120(uint256 argOffset)
+        internal
+        pure
+        returns (uint120 arg)
+    {
         uint256 offset = _getImmutableArgsOffset();
         /// @solidity memory-safe-assembly
         assembly {
@@ -237,7 +317,11 @@ abstract contract Clone {
     }
 
     /// @dev Reads an immutable arg with type uint112.
-    function _getArgUint112(uint256 argOffset) internal pure returns (uint112 arg) {
+    function _getArgUint112(uint256 argOffset)
+        internal
+        pure
+        returns (uint112 arg)
+    {
         uint256 offset = _getImmutableArgsOffset();
         /// @solidity memory-safe-assembly
         assembly {
@@ -246,7 +330,11 @@ abstract contract Clone {
     }
 
     /// @dev Reads an immutable arg with type uint104.
-    function _getArgUint104(uint256 argOffset) internal pure returns (uint104 arg) {
+    function _getArgUint104(uint256 argOffset)
+        internal
+        pure
+        returns (uint104 arg)
+    {
         uint256 offset = _getImmutableArgsOffset();
         /// @solidity memory-safe-assembly
         assembly {
@@ -255,7 +343,11 @@ abstract contract Clone {
     }
 
     /// @dev Reads an immutable arg with type uint96.
-    function _getArgUint96(uint256 argOffset) internal pure returns (uint96 arg) {
+    function _getArgUint96(uint256 argOffset)
+        internal
+        pure
+        returns (uint96 arg)
+    {
         uint256 offset = _getImmutableArgsOffset();
         /// @solidity memory-safe-assembly
         assembly {
@@ -264,7 +356,11 @@ abstract contract Clone {
     }
 
     /// @dev Reads an immutable arg with type uint88.
-    function _getArgUint88(uint256 argOffset) internal pure returns (uint88 arg) {
+    function _getArgUint88(uint256 argOffset)
+        internal
+        pure
+        returns (uint88 arg)
+    {
         uint256 offset = _getImmutableArgsOffset();
         /// @solidity memory-safe-assembly
         assembly {
@@ -273,7 +369,11 @@ abstract contract Clone {
     }
 
     /// @dev Reads an immutable arg with type uint80.
-    function _getArgUint80(uint256 argOffset) internal pure returns (uint80 arg) {
+    function _getArgUint80(uint256 argOffset)
+        internal
+        pure
+        returns (uint80 arg)
+    {
         uint256 offset = _getImmutableArgsOffset();
         /// @solidity memory-safe-assembly
         assembly {
@@ -282,7 +382,11 @@ abstract contract Clone {
     }
 
     /// @dev Reads an immutable arg with type uint72.
-    function _getArgUint72(uint256 argOffset) internal pure returns (uint72 arg) {
+    function _getArgUint72(uint256 argOffset)
+        internal
+        pure
+        returns (uint72 arg)
+    {
         uint256 offset = _getImmutableArgsOffset();
         /// @solidity memory-safe-assembly
         assembly {
@@ -291,7 +395,11 @@ abstract contract Clone {
     }
 
     /// @dev Reads an immutable arg with type uint64.
-    function _getArgUint64(uint256 argOffset) internal pure returns (uint64 arg) {
+    function _getArgUint64(uint256 argOffset)
+        internal
+        pure
+        returns (uint64 arg)
+    {
         uint256 offset = _getImmutableArgsOffset();
         /// @solidity memory-safe-assembly
         assembly {
@@ -300,7 +408,11 @@ abstract contract Clone {
     }
 
     /// @dev Reads an immutable arg with type uint56.
-    function _getArgUint56(uint256 argOffset) internal pure returns (uint56 arg) {
+    function _getArgUint56(uint256 argOffset)
+        internal
+        pure
+        returns (uint56 arg)
+    {
         uint256 offset = _getImmutableArgsOffset();
         /// @solidity memory-safe-assembly
         assembly {
@@ -309,7 +421,11 @@ abstract contract Clone {
     }
 
     /// @dev Reads an immutable arg with type uint48.
-    function _getArgUint48(uint256 argOffset) internal pure returns (uint48 arg) {
+    function _getArgUint48(uint256 argOffset)
+        internal
+        pure
+        returns (uint48 arg)
+    {
         uint256 offset = _getImmutableArgsOffset();
         /// @solidity memory-safe-assembly
         assembly {
@@ -318,7 +434,11 @@ abstract contract Clone {
     }
 
     /// @dev Reads an immutable arg with type uint40.
-    function _getArgUint40(uint256 argOffset) internal pure returns (uint40 arg) {
+    function _getArgUint40(uint256 argOffset)
+        internal
+        pure
+        returns (uint40 arg)
+    {
         uint256 offset = _getImmutableArgsOffset();
         /// @solidity memory-safe-assembly
         assembly {
@@ -327,7 +447,11 @@ abstract contract Clone {
     }
 
     /// @dev Reads an immutable arg with type uint32.
-    function _getArgUint32(uint256 argOffset) internal pure returns (uint32 arg) {
+    function _getArgUint32(uint256 argOffset)
+        internal
+        pure
+        returns (uint32 arg)
+    {
         uint256 offset = _getImmutableArgsOffset();
         /// @solidity memory-safe-assembly
         assembly {
@@ -336,7 +460,11 @@ abstract contract Clone {
     }
 
     /// @dev Reads an immutable arg with type uint24.
-    function _getArgUint24(uint256 argOffset) internal pure returns (uint24 arg) {
+    function _getArgUint24(uint256 argOffset)
+        internal
+        pure
+        returns (uint24 arg)
+    {
         uint256 offset = _getImmutableArgsOffset();
         /// @solidity memory-safe-assembly
         assembly {
@@ -345,7 +473,11 @@ abstract contract Clone {
     }
 
     /// @dev Reads an immutable arg with type uint16.
-    function _getArgUint16(uint256 argOffset) internal pure returns (uint16 arg) {
+    function _getArgUint16(uint256 argOffset)
+        internal
+        pure
+        returns (uint16 arg)
+    {
         uint256 offset = _getImmutableArgsOffset();
         /// @solidity memory-safe-assembly
         assembly {
@@ -366,7 +498,10 @@ abstract contract Clone {
     function _getImmutableArgsOffset() internal pure returns (uint256 offset) {
         /// @solidity memory-safe-assembly
         assembly {
-            offset := sub(calldatasize(), shr(240, calldataload(sub(calldatasize(), 2))))
+            offset := sub(
+                calldatasize(),
+                shr(240, calldataload(sub(calldatasize(), 2)))
+            )
         }
     }
 }

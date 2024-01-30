@@ -1,5 +1,5 @@
-//SPDX-License-Identifier: Unlicense
-pragma solidity 0.8.13;
+//SPDX-License-Identifier: SSPL-1.0
+pragma solidity 0.8.18;
 
 import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 
@@ -20,12 +20,12 @@ library SafeTransfers {
         uint256 amount
     ) internal {
         bool success;
+        if (amount == 0) return;
         if (token == address(0)) {
-            (success, ) = to.call{value: amount}("");
-            if (!success) require(false, "SafeTransfers::EthTransferFailed()");
+            (success, ) = to.call{value: amount}('');
+            if (!success) require(false, 'SafeTransfers::EthTransferFailed()');
             return;
         }
-        if (amount == 0) return;
         IERC20 erc20Token = IERC20(token);
         // ? We are checking the transfer, but since we are doing so in an assembly block
         // ? Slither does not pick up on that and results in a hit
@@ -49,7 +49,8 @@ library SafeTransfers {
                 success := 0
             }
         }
-        if (!success) require(false, 'TransferFailed(address(this), msg.sender');
+        if (!success)
+            require(false, 'TransferFailed(address(this), msg.sender');
     }
 
     /**
@@ -62,13 +63,15 @@ library SafeTransfers {
      *            See here: https://medium.com/coinmonks/missing-return-value-bug-at-least-130-tokens-affected-d67bf08521ca
      */
     // slither-disable-next-line assembly
-    function transferInto(address token, address sender, uint256 amount) internal returns (uint256) {
+    function transferInto(
+        address token,
+        address sender,
+        uint256 amount
+    ) internal {
         if (token == address(0)) {
-            if (msg.value < amount) require(false, 'SafeTransfers::LowEthAmountSent()');
-            return amount;
+            require(false, 'SafeTransfers::CannotTransferInEth()');
         }
         IERC20 erc20Token = IERC20(token);
-        uint256 balanceBefore = IERC20(token).balanceOf(address(this));
 
         /// @dev - msg.sender here is the pool
         erc20Token.transferFrom(sender, msg.sender, amount);
@@ -90,11 +93,7 @@ library SafeTransfers {
                 success := 0
             }
         }
-        if (!success) require(false, 'TransferFailed(msg.sender, address(this)');
-
-        // Calculate the amount that was *actually* transferred
-        uint256 balanceAfter = IERC20(token).balanceOf(address(this));
-
-        return balanceAfter - balanceBefore; // underflow already checked above, just subtract
+        if (!success)
+            require(false, 'TransferFailed(msg.sender, address(this)');
     }
 }

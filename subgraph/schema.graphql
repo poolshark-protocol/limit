@@ -201,7 +201,7 @@ type Transaction @entity {
     timestamp: BigInt!
     gasLimit: BigInt!
     gasPrice: BigInt!
-    swaps: [Swap!]! @derivedFrom(field: "transaction")
+    swaps: [Swap!]!
 }
 
 type LimitPoolType @entity {
@@ -369,5 +369,14 @@ type UserSeasonReward @entity {
     nonWhitelistedFeesUsd: BigDecimal!
     volumeTradedUsd: BigDecimal!
     stakingPoints: BigInt!
+}
+
+type VFinPosition @entity {
+    # vFinAddress + positionId
+    id: ID!
+
+    owner: Bytes!
+    positionId: BigInt!
+    vFinAddress: Bytes!
 }
 

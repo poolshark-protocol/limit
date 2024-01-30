@@ -130,6 +130,7 @@ export interface ValidateSwapParams {
     nativeOut?: boolean
     poolContract?: LimitPool
     gasUsed?: string
+    customMsgValue?: BigNumber
 }
 
 export interface ValidateBurnParams {
@@ -374,7 +375,7 @@ export async function validateSwap(params: ValidateSwapParams) {
               priceLimit: priceLimit,
               exactIn: true,
               callbackData: ethers.utils.formatBytes32String('')
-            }], {gasLimit: 3000000, value: getSwapMsgValue(nativeIn, nativeOut, amountIn)})
+            }], {gasLimit: 3000000, value: params.customMsgValue ?? getSwapMsgValue(nativeIn, nativeOut, amountIn)})
         ).to.be.revertedWith(revertMessage)
         return
     }

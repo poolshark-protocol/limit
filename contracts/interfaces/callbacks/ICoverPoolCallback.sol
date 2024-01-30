@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity 0.8.13;
+// SPDX-License-Identifier: SSPL-1.0
+pragma solidity 0.8.18;
 
 /// @title Callback for mints
 /// @notice Any contract that calls the `mint` function must implement this interface.
@@ -13,7 +13,6 @@ interface ICoverPoolMintCallback {
         bytes calldata data
     ) external;
 }
-
 
 /// @title Callback for swaps
 /// @notice Any contract that calls the `swap` function must implement this interface.

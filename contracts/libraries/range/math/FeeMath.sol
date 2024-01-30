@@ -1,19 +1,17 @@
-// SPDX-License-Identifier: GPLv3
-pragma solidity 0.8.13;
+// SPDX-License-Identifier: BUSL-1.1
+pragma solidity 0.8.18;
 
 import '../../Samples.sol';
 import '../../utils/SafeCast.sol';
-import "../../math/OverflowMath.sol";
+import '../../math/OverflowMath.sol';
+import '../../../interfaces/limit/ILimitPoolManager.sol';
 import '../../../interfaces/structs/PoolsharkStructs.sol';
-import "../../../interfaces/structs/RangePoolStructs.sol";
+import '../../../interfaces/structs/RangePoolStructs.sol';
 
 /// @notice Math library that facilitates fee handling.
 library FeeMath {
     using SafeCast for uint256;
 
-    uint256 internal constant FEE_DELTA_CONST = 0;
-    //TODO: change FEE_DELTA_CONST before launch
-    // uint256 internal constant FEE_DELTA_CONST = 5000;
     uint256 internal constant Q128 = 0x100000000000000000000000000000000;
 
     struct CalculateLocals {
@@ -33,15 +31,14 @@ library FeeMath {
         uint256 amountIn,
         uint256 amountOut,
         bool zeroForOne
-    ) internal pure returns (
-        PoolsharkStructs.SwapCache memory
-    )
-    {
+    ) internal view returns (PoolsharkStructs.SwapCache memory) {
         CalculateLocals memory locals;
         if (cache.state.pool.liquidity != 0) {
             // calculate dynamic fee
             {
-                locals.minPrice = ConstantProduct.getPrice(cache.constants.bounds.min);
+                locals.minPrice = ConstantProduct.getPrice(
+                    cache.constants.bounds.min
+                );
                 // square prices to take delta
                 locals.price = ConstantProduct.getPrice(cache.price);
                 locals.lastPrice = ConstantProduct.getPrice(cache.averagePrice);
@@ -51,13 +48,14 @@ library FeeMath {
                     locals.lastPrice = locals.minPrice;
                 // delta is % modifier on the swapFee
                 uint256 delta = OverflowMath.mulDiv(
-                        FEE_DELTA_CONST / uint16(cache.constants.tickSpacing), // higher FEE_DELTA_CONST means
-                        (                                                      // more aggressive dynamic fee
-                            locals.price > locals.lastPrice
-                                ? locals.price - locals.lastPrice
-                                : locals.lastPrice - locals.price
-                        ) * 1_000_000,
-                        locals.lastPrice 
+                    ILimitPoolManager(cache.constants.owner).feeDeltaConsts(address(this)) / // higher feeDeltaConst means
+                        uint16(cache.constants.tickSpacing), // more aggressive dynamic fee
+                    (
+                        locals.price > locals.lastPrice
+                            ? locals.price - locals.lastPrice
+                            : locals.lastPrice - locals.price
+                    ) * 1_000_000,
+                    locals.lastPrice
                 );
                 // max fee increase at 5x
                 if (delta > 4_000_000) delta = 4_000_000;
@@ -66,53 +64,98 @@ library FeeMath {
                 // adjust fee based on direction
                 if (zeroForOne == locals.feeDirection) {
                     // if swapping away from twap price, increase fee
-                    locals.swapFee = cache.constants.swapFee + OverflowMath.mulDiv(delta,cache.constants.swapFee, 1e6);
+                    locals.swapFee =
+                        cache.constants.swapFee +
+                        OverflowMath.mulDiv(
+                            delta,
+                            cache.constants.swapFee,
+                            1e6
+                        );
                 } else if (delta < 1e6) {
                     // if swapping towards twap price, decrease fee
-                    locals.swapFee = cache.constants.swapFee - OverflowMath.mulDiv(delta,cache.constants.swapFee, 1e6);
+                    locals.swapFee =
+                        cache.constants.swapFee -
+                        OverflowMath.mulDiv(
+                            delta,
+                            cache.constants.swapFee,
+                            1e6
+                        );
                 } else {
                     // if swapping towards twap price and delta > 100%, set fee to zero
                     locals.swapFee = 0;
                 }
-                // console.log('price movement', locals.lastPrice, locals.price);
-                // console.log('swap fee adjustment',cache.constants.swapFee + delta * cache.constants.swapFee / 1e6);
             }
             if (cache.exactIn) {
                 // calculate output from range liquidity
-                locals.amountRange = OverflowMath.mulDiv(amountOut, cache.state.pool.liquidity, cache.liquidity);
+                locals.amountRange = OverflowMath.mulDiv(
+                    amountOut,
+                    cache.state.pool.liquidity,
+                    cache.liquidity
+                );
                 // take enough fees to cover fee growth
-                locals.feeAmount = OverflowMath.mulDivRoundingUp(locals.amountRange, locals.swapFee, 1e6);
+                locals.feeAmount = OverflowMath.mulDivRoundingUp(
+                    locals.amountRange,
+                    locals.swapFee,
+                    1e6
+                );
                 amountOut -= locals.feeAmount;
             } else {
                 // calculate input from range liquidity
-                locals.amountRange = OverflowMath.mulDiv(amountIn, cache.state.pool.liquidity, cache.liquidity);
+                locals.amountRange = OverflowMath.mulDiv(
+                    amountIn,
+                    cache.state.pool.liquidity,
+                    cache.liquidity
+                );
                 // take enough fees to cover fee growth
-                locals.feeAmount = OverflowMath.mulDivRoundingUp(locals.amountRange, locals.swapFee, 1e6);
+                locals.feeAmount = OverflowMath.mulDivRoundingUp(
+                    locals.amountRange,
+                    locals.swapFee,
+                    1e6
+                );
                 amountIn += locals.feeAmount;
             }
             // add to total fees paid for swap
             cache.feeAmount += locals.feeAmount.toUint128();
             // load protocol fee from cache
-            // zeroForOne && exactIn   = fee on token1
             // zeroForOne && !exactIn  = fee on token0
-            // !zeroForOne && !exactIn = fee on token1
-            // !zeroForOne && exactIn  = fee on token0
-            locals.protocolFee = (zeroForOne == cache.exactIn) ? cache.state.pool.protocolSwapFee1 
-                                                               : cache.state.pool.protocolSwapFee0;
+            // zeroForOne && exactIn   = fee on token1
+            locals.protocolFee = (zeroForOne == cache.exactIn)
+                ? cache.state.pool.protocolSwapFee1
+                : cache.state.pool.protocolSwapFee0;
             // calculate fee
-            locals.protocolFeesAccrued = OverflowMath.mulDiv(locals.feeAmount, locals.protocolFee, 1e4);
+            locals.protocolFeesAccrued = OverflowMath.mulDiv(
+                locals.feeAmount,
+                locals.protocolFee,
+                1e4
+            );
             // fees for this swap step
             locals.feeAmount -= locals.protocolFeesAccrued;
             // save fee growth and protocol fees
             if (zeroForOne == cache.exactIn) {
-                cache.state.pool0.protocolFees += uint128(locals.protocolFeesAccrued);
-                cache.state.pool.feeGrowthGlobal1 += uint200(OverflowMath.mulDiv(locals.feeAmount, Q128, cache.state.pool.liquidity));
+                cache.state.pool0.protocolFees += uint128(
+                    locals.protocolFeesAccrued
+                );
+                cache.state.pool.feeGrowthGlobal1 += uint200(
+                    OverflowMath.mulDiv(
+                        locals.feeAmount,
+                        Q128,
+                        cache.state.pool.liquidity
+                    )
+                );
             } else {
-                cache.state.pool1.protocolFees += uint128(locals.protocolFeesAccrued);
-                cache.state.pool.feeGrowthGlobal0 += uint200(OverflowMath.mulDiv(locals.feeAmount, Q128, cache.state.pool.liquidity));
+                cache.state.pool1.protocolFees += uint128(
+                    locals.protocolFeesAccrued
+                );
+                cache.state.pool.feeGrowthGlobal0 += uint200(
+                    OverflowMath.mulDiv(
+                        locals.feeAmount,
+                        Q128,
+                        cache.state.pool.liquidity
+                    )
+                );
             }
         }
-        cache.input  += amountIn;
+        cache.input += amountIn;
         cache.output += amountOut;
 
         return cache;

@@ -1,9 +1,9 @@
 import { BigNumber } from 'ethers'
-import { BN_ZERO, getLiquidity, getPrice, validateBurn, validateMint, validateSwap, } from '../../../test/utils/contracts/limitpool'
+import { BN_ZERO, } from '../../../test/utils/contracts/limitpool'
 import { InitialSetup } from '../../../test/utils/setup/initialSetup'
-import { validateMint as validateMintRange, validateBurn as validateBurnRange } from '../../../test/utils/contracts/rangepool'
-import { mintSigners20 } from '../../../test/utils/token'
 import { getNonce } from '../../utils'
+import { parseUnits } from 'ethers/lib/utils'
+import { mintSigners20 } from '../../../test/utils/token'
 
 export class MintPosition {
     private initialSetup: InitialSetup
@@ -31,12 +31,12 @@ export class MintPosition {
         console.log(this.nonce)
         await this.initialSetup.readLimitPoolSetup(this.nonce)
         console.log('read positions')
-        const token0Amount = ethers.utils.parseUnits('100', await hre.props.token0.decimals())
-        const token1Amount = ethers.utils.parseUnits('100', await hre.props.token1.decimals())
 
-        await mintSigners20(hre.props.token0, token0Amount.mul(10000), [hre.props.alice])
-        await mintSigners20(hre.props.token1, token1Amount.mul(10000), [hre.props.alice])
-
+        const token0Amount = ethers.utils.parseUnits('1000', 18)
+        console.log('mint tokens', hre.props.alice.address)
+        // await mintSigners20(hre.props.token0, token0Amount.mul(10000), [hre.props.alice])
+        await mintSigners20(hre.props.token1, token0Amount, [hre.props.alice])
+        console.log('minted tokens')
         const liquidityAmount = '49802891105937278098768'
 
         // await getPrice(true)
@@ -84,59 +84,70 @@ export class MintPosition {
         // )
 
         // console.log('position snapshot', snapshot.feesOwed0.toString(), snapshot.feesOwed1.toString())
-
+        const amountIn = parseUnits('100', 18)
+        const signer = hre.props.alice
+        // let approveTxn = await hre.props.token0.connect(signer).approve(hre.props.poolRouter.address, amountIn)
+        console.log('approve tokens')
+        let approveTxn = await hre.props.token1.connect(signer).approve(hre.props.poolRouter.address, amountIn)
+        await approveTxn.wait()
         // const aliceId = await validateMintRange({
         //     signer: hre.props.alice,
-        //     recipient: '0x9dA9409D17DeA285B078af06206941C049F692Dc',
-        //     lower: '-400000',
-        //     upper: '100000',
-        //     amount0: token0Amount.mul(1000),
-        //     amount1: token1Amount.mul(1000),
-        //     balance0Decrease: BigNumber.from('624999999999999999'),
-        //     balance1Decrease: token1Amount.mul(10).sub(1),
+        //     recipient: hre.props.alice.address,
+        //     lower: '-200200',
+        //     upper: '-200000',
+        //     amount0: BN_ZERO,
+        //     amount1: amountIn,
+        //     balance0Decrease: BN_ZERO,
+        //     balance1Decrease: amountIn,
         //     liquidityIncrease: BN_ZERO,
         //     revertMessage: '',
         // })
         // return
-        // const signer = hre.props.alice
-        // let approveTxn = await hre.props.token1.connect(signer).approve(hre.props.poolRouter.address, token1Amount.mul(1000))
-        // await approveTxn.wait()
-        // // for (let i=0; i < 20; i++) {
+        // const token0Amount = ethers.utils.parseUnits('1', 16)
 
-        //     const zeroForOne = false
-        //     const amountIn = token1Amount.mul(1000)
-        //     const priceLimit = BigNumber.from('3169126500570573503741758013440')
+        // const amountIn = token0Amount
 
-        //     let txn = await hre.props.poolRouter
-        //     .connect(signer)
-        //     .multiSwapSplit(
-        //     [hre.props.limitPool.address],
-        //         [
-        //         {
-        //             to: signer.address,
-        //             priceLimit: priceLimit,
-        //             amount: amountIn,
-        //             zeroForOne: zeroForOne,
-        //             exactIn: true,
-        //             callbackData: ethers.utils.formatBytes32String('')
-        //         },
-        //         ], {gasLimit: 3000000})
-        //     await txn.wait()
+        // // // for (let i=0; i < 20; i++) {
+
+        // 0 => 1 
+        //0xe80dc9a69853483c745f8e32162f0bd5813c    b291 => new factory
+
+            const zeroForOne = true
+
+            const priceLimit = BigNumber.from('4039859466863342510789667678182')
+            console.log('before swap')
+            let txn = await hre.props.poolRouter
+            .connect(signer)
+            .multiSwapSplit(
+            ['0x02225f6a3d83648d7906a23856331c819265394d'],
+                [
+                {
+                    to: signer.address,
+                    priceLimit: priceLimit,
+                    amount: amountIn,
+                    zeroForOne: zeroForOne,
+                    exactIn: true,
+                    callbackData: ethers.utils.formatBytes32String('')
+                },
+                ])
+            await txn.wait()
         // }
+
+        // return
 
         // const globalStateAfter = (await hre.props.limitPool.globalState())
         // console.log('sample state', globalStateAfter.pool.samples.index, globalStateAfter.pool.samples.count, globalStateAfter.pool.samples.countMax, globalStateAfter.pool.tickAtPrice)
 
-        await validateSwap({
-            signer: hre.props.alice,
-            recipient: hre.props.alice.address,
-            zeroForOne: false,
-            amountIn: token1Amount.mul(100),
-            priceLimit: BigNumber.from('3256300000000000000000000'),
-            balanceInDecrease: token1Amount.mul(10000),
-            balanceOutIncrease: '15641085361593105857',
-            revertMessage:'',
-        })
+        // await validateSwap({
+        //     signer: hre.props.alice,
+        //     recipient: hre.props.alice.address,
+        //     zeroForOne: false,
+        //     amountIn: token1Amount.mul(100),
+        //     priceLimit: BigNumber.from('3256300000000000000000000'),
+        //     balanceInDecrease: token1Amount.mul(10000),
+        //     balanceOutIncrease: '15641085361593105857',
+        //     revertMessage:'',
+        // })
 
         // await validateBurn({
         //     signer: hre.props.alice,
@@ -170,7 +181,7 @@ export class MintPosition {
         // await getPrice(false, true)
         // await getLiquidity(false, true)
 
-        console.log('position minted')
+        // console.log('position minted')
     }
 
     public async postDeployment() {}

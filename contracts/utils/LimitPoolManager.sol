@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: MIT
-pragma solidity 0.8.13;
+// SPDX-License-Identifier: SSPL-1.0
+pragma solidity 0.8.18;
 
 import '../interfaces/IPool.sol';
 import '../interfaces/limit/ILimitPool.sol';
@@ -8,15 +8,60 @@ import '../interfaces/limit/ILimitPoolManager.sol';
 import '../base/events/LimitPoolManagerEvents.sol';
 import '../libraries/utils/SafeCast.sol';
 
+/*@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%%%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%#%@@@@%@@@@%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%%@@@@@@@@%%%%%%@@%==========+++**#@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@%%@@@@@@@@@@@@@@@%%##%%%@@%%%@@%%*-=====+++**#**+*#*#*#@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@=+===========+#@@@@@%#@%%%%%%*#%%%%%##%@@@@@@@@#****++#%#**#%=%@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@+-==+++***++++=++@@%%%%%%%%*****#%#*#@%@@@@@@@@@@@@@%#+#%#*##*=#@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@+=+*******+++%%##%%####++++++**@@%%@@@@@@@@@@@@@@@###*#%#+==@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@%=**##**+#%###########+====*@%@@%%@@@@@@@@@@@@@%###%@+%=+=*@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@#%%####*##*##*#**#**+=+=-=*%%%###%@@@@@@@@@@@####@#=====+*@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@#%#***#***#*****=*+=+==--=@@%#**###@@@@@@@@@@@###@@%=+++=++#@@@@*@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@##*********+***##++*+#%@*%@@@@@####@@@@#=%@@@@@@@@@@@+==++=+=%%#+*@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@##*****+**+*********++=%%%@@@@@@@@@*@@@%===@@@@@@@@@*===++=+++**#%#@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@#**++++*+++++===+***+==#%%#@@@@@@@@*##@*===+%@@@@%+==+=+++++++*%@%%@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@**++++++++====----+++====+###@@@@@@@%#%%*==++*+#+===+++++++++++*%%@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@%###*++++++====---=*@@@@+===-%@**%@@@@@@@#%%%===*+****+++*++++*+*+*#@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@*+++*+++++===--=-*@@@@@@@@=--=@@@#%@@@@@@@@#%%*++++**#+++*++**++***#*@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@%===+++++=+++===*@@@@@@@@@@=-=%@@@@@%#@@@@@@@*===*++=++*++++****+**#%+@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@*=+@@#==+==+=-=@@@%%@@@@@@@@@@@@#***%%@@@@%+===+++*+*******+**++*#%*#@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@======-==#***%#@@@@@@@@@@@##%%%%%%@#====****+*****#**###*+++#*@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@%-===*=++**###@@@@@@@@@@@@@+#%%%%@*======+*********###+++++++++%@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@%-=+#%%+*###%@@@@@@@@@@@@@@@#%#@%++=+++===**#*#****#%=====+++++++%@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@-=#****####@@@@@@@@@@@@@@@@#%@*++*#++++=+#*#####*#%%==============*@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@*=#**+*###@@@@@@@@@@@@@@@@@#%+**###**+++######%%#+-==--=-=------======#@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@++#++++*##%@@@@@@@@@@@@@@@%+*#%%######*##%#+=-=#@@@@@*----------------*@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@%+#*+++==+***#@@@@@@@@@@@%#%%####%%#*+#*++%@@@@@@@@@@@@@%+=======*@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@*+**+========------=-=%@#%%%%%%%%%%%%#%#%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@#=====-==-------=#@@@@########%%%%%%##++#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@%%##%%@@@@@@@@@@@@%#######%%#*+=++@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%#*####++++=@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%##**+=#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@***%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@*/
+
 /**
- * @dev Defines the actions which can be executed by the factory admin.
+ * @title LimitPoolManager
+ * @notice The manager for all limit pools
+ * @author Poolshark
+ * @author @alphak3y
  */
 contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
     address public owner;
     address public feeTo;
     address public factory;
-    uint16  public constant MAX_PROTOCOL_SWAP_FEE = 1e4; /// @dev - max protocol swap fee of 100%
-    uint16  public constant MAX_PROTOCOL_FILL_FEE = 1e2; /// @dev - max protocol fill fee of 1%
+    // fee delta const for dynamic fees
+    uint16 public feeDeltaConst;
+    mapping(address => uint16) poolFeeDeltaConsts;
+    // max protocol fees
+    uint16 public constant MAX_PROTOCOL_SWAP_FEE = 1e4; /// @dev - max protocol swap fee of 100%
+    uint16 public constant MAX_PROTOCOL_FILL_FEE = 1e2; /// @dev - max protocol fill fee of 1%
     // impl name => impl address
     bytes32[] _poolTypeNames;
     mapping(uint256 => address) internal _poolImpls;
@@ -48,6 +93,10 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
         emit FeeTierEnabled(1000, 10);
         emit FeeTierEnabled(3000, 30);
         emit FeeTierEnabled(10000, 100);
+
+        // set initial fee delta const
+        feeDeltaConst = 0;
+        emit FeeDeltaConstChanged(0, 0);
     }
 
     /**
@@ -68,12 +117,14 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
      * Can only be called by the current owner.
      */
     function transferOwner(address newOwner) public virtual onlyOwner {
-        if(newOwner == address(0)) require (false, 'TransferredToZeroAddress()');
+        if (newOwner == address(0))
+            require(false, 'TransferredToZeroAddress()');
         _transferOwner(newOwner);
     }
 
     function transferFeeTo(address newFeeTo) public virtual onlyOwner {
-        if(newFeeTo == address(0)) require (false, 'TransferredToZeroAddress()');
+        if (newFeeTo == address(0))
+            require(false, 'TransferredToZeroAddress()');
         _transferFeeTo(newFeeTo);
     }
 
@@ -97,10 +148,10 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
         emit FeeToTransfer(oldFeeTo, newFeeTo);
     }
 
-    function enableFeeTier(
-        uint16 swapFee,
-        int16 tickSpacing
-    ) external onlyOwner {
+    function enableFeeTier(uint16 swapFee, int16 tickSpacing)
+        external
+        onlyOwner
+    {
         if (_feeTiers[swapFee] != 0) revert FeeTierAlreadyEnabled();
         if (tickSpacing <= 0) revert InvalidTickSpacing();
         if (tickSpacing % 2 != 0) revert InvalidTickSpacing();
@@ -127,32 +178,52 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
         emit PoolTypeEnabled(poolTypeName_, poolImpl_, tokenImpl_, poolTypeId_);
     }
 
-    function setFactory(
-        address factory_
-    ) external onlyOwner {
-        if (factory != address(0)) require (false, 'FactoryAlreadySet()');
+    function setFactory(address factory_) external onlyOwner {
+        if (factory != address(0)) require(false, 'FactoryAlreadySet()');
         emit FactoryChanged(factory, factory_);
         factory = factory_;
     }
 
-    function collectProtocolFees(
-        address[] calldata pools
-    ) external onlyOwnerOrFeeTo {
-        if (pools.length == 0) require (false, 'EmptyPoolsArray()');
+    function setFeeDeltaConst(address pool, uint16 feeDeltaConst_)
+        external
+        onlyOwner
+    {
+        if (feeDeltaConst_ > 10000)
+            require(false, 'FeeDeltaConstCeilingExceeded()');
+        if (pool == address(0)) {
+            emit FeeDeltaConstChanged(feeDeltaConst, feeDeltaConst_);
+            feeDeltaConst = feeDeltaConst_;
+        } else {
+            emit PoolFeeDeltaConstChanged(
+                pool,
+                poolFeeDeltaConsts[pool],
+                feeDeltaConst_
+            );
+            poolFeeDeltaConsts[pool] = feeDeltaConst_;
+        }
+    }
+
+    function collectProtocolFees(address[] calldata pools)
+        external
+        onlyOwnerOrFeeTo
+    {
+        if (pools.length == 0) require(false, 'EmptyPoolsArray()');
         uint128[] memory token0FeesCollected = new uint128[](pools.length);
         uint128[] memory token1FeesCollected = new uint128[](pools.length);
         // pass empty fees params
         FeesParams memory feesParams;
-        for (uint i; i < pools.length;) {
-            (
-                token0FeesCollected[i],
-                token1FeesCollected[i]
-            ) = IPool(pools[i]).fees(feesParams);
+        for (uint256 i; i < pools.length; ) {
+            (token0FeesCollected[i], token1FeesCollected[i]) = IPool(pools[i])
+                .fees(feesParams);
             unchecked {
                 ++i;
             }
         }
-        emit ProtocolFeesCollected(pools, token0FeesCollected, token1FeesCollected);
+        emit ProtocolFeesCollected(
+            pools,
+            token0FeesCollected,
+            token1FeesCollected
+        );
     }
 
     // protocol fee flags
@@ -165,9 +236,9 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
         address[] calldata pools,
         FeesParams[] calldata feesParams
     ) external onlyOwner {
-        if (pools.length == 0) require (false, 'EmptyPoolsArray()');
+        if (pools.length == 0) require(false, 'EmptyPoolsArray()');
         if (pools.length != feesParams.length) {
-            require (false, 'MismatchedArrayLengths()');
+            require(false, 'MismatchedArrayLengths()');
         }
         uint128[] memory token0FeesCollected = new uint128[](pools.length);
         uint128[] memory token1FeesCollected = new uint128[](pools.length);
@@ -175,13 +246,9 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
         int16[] memory protocolSwapFees1 = new int16[](pools.length);
         int16[] memory protocolFillFees0 = new int16[](pools.length);
         int16[] memory protocolFillFees1 = new int16[](pools.length);
-        for (uint i; i < pools.length;) {
-            (
-                token0FeesCollected[i],
-                token1FeesCollected[i]
-            ) = IPool(pools[i]).fees(
-                feesParams[i]
-            );
+        for (uint256 i; i < pools.length; ) {
+            (token0FeesCollected[i], token1FeesCollected[i]) = IPool(pools[i])
+                .fees(feesParams[i]);
             if ((feesParams[i].setFeesFlags & PROTOCOL_SWAP_FEE_0) > 0) {
                 protocolSwapFees0[i] = int16(feesParams[i].protocolSwapFee0);
             } else {
@@ -228,29 +295,37 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
         );
     }
 
-    function poolTypes(
-        uint16 poolTypeId
-    ) external view returns (
-        address,
-        address
-    ) {
+    function feeDeltaConsts(address pool) external view returns (uint16) {
+        uint16 poolFeeDeltaConst = poolFeeDeltaConsts[pool];
+        if (poolFeeDeltaConst != 0) {
+            // use custom value if set
+            return poolFeeDeltaConst;
+        }
+        // else use default value
+        return feeDeltaConst;
+    }
+
+    function poolTypes(uint16 poolTypeId)
+        external
+        view
+        returns (address, address)
+    {
         return (_poolImpls[poolTypeId], _tokenImpls[poolTypeId]);
     }
 
-    function feeTiers(
-        uint16 swapFee
-    ) external view returns (
-        int16 tickSpacing
-    ) {
+    function feeTiers(uint16 swapFee)
+        external
+        view
+        returns (int16 tickSpacing)
+    {
         return _feeTiers[swapFee];
     }
-    
+
     /**
      * @dev Throws if the sender is not the owner.
      */
     function _checkOwner() internal view {
-        if (owner != msg.sender)
-            require (false, 'OwnerOnly()');
+        if (owner != msg.sender) require(false, 'OwnerOnly()');
     }
 
     /**
@@ -258,6 +333,6 @@ contract LimitPoolManager is ILimitPoolManager, LimitPoolManagerEvents {
      */
     function _checkFeeToAndOwner() internal view {
         if (feeTo != msg.sender && owner != msg.sender)
-            require (false, 'OwnerOrFeeToOnly()');
+            require(false, 'OwnerOrFeeToOnly()');
     }
 }

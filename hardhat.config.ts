@@ -14,7 +14,7 @@ const config: HardhatUserConfig = {
     solidity: {
         compilers: [
             {
-                version: '0.8.13',
+                version: '0.8.18',
                 settings: {
                     optimizer: {
                         enabled: true,
@@ -39,10 +39,23 @@ const config: HardhatUserConfig = {
             accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
             timeout: 60000,
         },
+        arb_sepolia: {
+            chainId: 421614,
+            gasPrice: 15_000_000_000,
+            url: process.env.ARBITRUM_SEPOLIA_URL || '',
+            accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+            timeout: 60000,
+        },
+        arb_one: {
+            chainId: 42161,
+            url: process.env.ARBITRUM_ONE_URL || '',
+            accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+            timeout: 60000,
+        },
         scrollSepolia: {
             chainId: 534351,
+            gasPrice: 2_000_000_000,
             url: "https://sepolia-rpc.scroll.io/" || "",
-            gasPrice: 1_500_000_000,
             accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
         },
         op_goerli: {
@@ -55,17 +68,27 @@ const config: HardhatUserConfig = {
     },
     etherscan: { 
         apiKey: {
+            arbitrumOne: process.env.ARBITRUM_ONE_API_KEY,
             arbitrumGoerli: process.env.ARBITRUM_GOERLI_API_KEY,
-            scrollSepolia: 'D62920783A4311EE9D6600155D570C742E',
+            arb_sepolia: process.env.ARBITRUM_SEPOLIA_API_KEY,
+            scrollSepolia: process.env.SCROLL_SEPOLIA_API_KEY,
         },
         customChains: [
             {
               network: 'scrollSepolia',
               chainId: 534351,
               urls: {
-                apiURL: 'https://api-sepolia.scrollscan.dev/api',
-                browserURL: 'https://api-sepolia.scrollscan.dev',
+                apiURL: 'https://api-sepolia.scrollscan.com/api',
+                browserURL: 'https://sepolia.scrollscan.com/',
               },
+            },
+            {
+                network: 'arb_sepolia',
+                chainId: 421614,
+                urls: {
+                  apiURL: 'https://api-sepolia.arbiscan.io/api',
+                  browserURL: 'https://sepolia.arbiscan.io/',
+                },
             },
         ],
     },

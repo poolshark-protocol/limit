@@ -40,6 +40,13 @@ export const NETWORK_CONFIGS: NetworkConfigs = {
         url: process.env.ARBITRUM_GOERLI_URL || '',
         accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
+    arb_one: {
+        chainId: 42161,
+        gas: 9000000,
+        gasPrice: 1_000_000_000,
+        url: process.env.ARBITRUM_ONE_URL || '',
+        accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+    },
     scrollSepolia : {
         chainId: 534353,
         gas: 9000000,

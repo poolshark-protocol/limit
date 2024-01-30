@@ -4,10 +4,10 @@ import { BIGDECIMAL_ZERO, BIGINT_ONE, BIGINT_ZERO, convertTokenToDecimal } from 
 import { ZERO_BD, TWO_BD, ONE_BI, FACTORY_ADDRESS, SEASON_1_END_TIME, SEASON_1_START_TIME } from "../../constants/constants"
 import { AmountType, findEthPerToken, getAdjustedAmounts, getEthPriceInUSD, sqrtPriceX96ToTokenPrices } from "../utils/price"
 import { updateDerivedTVLAmounts } from "../utils/tvl"
-import { Swap } from "../../../generated/LimitPoolFactory/LimitPool"
+import { Swap, SwapLimit } from "../../../generated/LimitPoolFactory/LimitPool"
 import { safeDiv } from "../utils/math"
 
-export function handleSwap(event: Swap): void {
+export function handleSwap(event: SwapLimit): void {
     let recipientParam = event.params.recipient
     let amountInParam = event.params.amountIn
     let amountOutParam = event.params.amountOut

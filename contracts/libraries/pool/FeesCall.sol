@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: MIT
-pragma solidity 0.8.13;
+// SPDX-License-Identifier: BUSL-1.1
+pragma solidity 0.8.18;
 
 import '../../interfaces/IPositionERC1155.sol';
 import '../../interfaces/structs/PoolsharkStructs.sol';
@@ -7,10 +7,9 @@ import '../../interfaces/limit/ILimitPoolManager.sol';
 import '../utils/SafeTransfers.sol';
 
 library FeesCall {
-
     // protocol fee ceilings
-    uint16  public constant MAX_PROTOCOL_SWAP_FEE = 1e4; // max protocol swap fee of 100%
-    uint16  public constant MAX_PROTOCOL_FILL_FEE = 1e2; // max protocol fill fee of 1%
+    uint16 public constant MAX_PROTOCOL_SWAP_FEE = 1e4; // max protocol swap fee of 100%
+    uint16 public constant MAX_PROTOCOL_FILL_FEE = 1e2; // max protocol fill fee of 1%
 
     // protocol fee flags
     uint8 internal constant PROTOCOL_SWAP_FEE_0 = 2**0;
@@ -21,16 +20,11 @@ library FeesCall {
     // eth address for safe withdrawal
     address public constant ethAddress = address(0);
 
-    /// @dev - LimitPoolManager (i.e. constants.owner) emits events in aggregate
-
     function perform(
         PoolsharkStructs.GlobalState storage globalState,
         PoolsharkStructs.FeesParams memory params,
         PoolsharkStructs.LimitImmutables memory constants
-    ) external returns (
-        uint128 token0Fees,
-        uint128 token1Fees
-    ) {
+    ) external returns (uint128 token0Fees, uint128 token1Fees) {
         // swap fee token0
         if ((params.setFeesFlags & PROTOCOL_SWAP_FEE_0) > 0) {
             if (params.protocolSwapFee0 > MAX_PROTOCOL_SWAP_FEE)

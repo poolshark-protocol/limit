@@ -6,7 +6,7 @@ schema:
 templates:
     - kind: ethereum/contract
       name: LimitPoolTemplate
-      network: scroll
+      network: arbitrum-one
       source:
           abi: LimitPool
       mapping:
@@ -61,7 +61,7 @@ templates:
     # ERC-1155 events
     - kind: ethereum/contract
       name: PositionERC1155Template
-      network: scroll
+      network: arbitrum-one
       source:
           abi: PositionERC1155
       mapping:
@@ -84,7 +84,7 @@ templates:
     # RangeStaker events
     - kind: ethereum/contract
       name: RangeStakerTemplate
-      network: scroll
+      network: arbitrum-one
       source:
           abi: RangeStaker
       mapping:
@@ -111,11 +111,11 @@ templates:
 dataSources:
   - kind: ethereum/contract
     name: LimitPoolFactory
-    network: scroll
+    network: arbitrum-one
     source:
-        address: '0x3fa761492f411ebc64a81fcf3292fdc0b677c00f'
+        address: '0x8bb5db1625adb4ae4beb94a188d33062303f8fb7'
         abi: LimitPoolFactory
-        startBlock: 2632885
+        startBlock: 168223582
     mapping:
         kind: ethereum/events
         apiVersion: 0.0.6
@@ -140,11 +140,11 @@ dataSources:
               handler: handlePoolCreated
   - kind: ethereum/contract
     name: LimitPoolManager
-    network: scroll
+    network: arbitrum-one
     source:
-        address: '0x334a70f0cb8b9ceee3d0f4ea232581ff3dfc6e58'
+        address: '0xc773049bf7131a5ddd85daded4397a1fd4264a3d'
         abi: LimitPoolManager
-        startBlock: 2632882
+        startBlock: 168223575
     mapping:
         kind: ethereum/events
         apiVersion: 0.0.6
@@ -175,11 +175,11 @@ dataSources:
               handler: handleProtocolSwapFeesModified
   - kind: ethereum/contract
     name: PoolsharkRouter
-    network: scroll
+    network: arbitrum-one
     source:
-        address: '0x895e1c476130cE9e1b19E01be8801f19122a958C'
+        address: '0x12b7a6dd3a3dfde6a0f112a1bd876f704d933915'
         abi: PoolsharkRouter
-        startBlock: 2633394
+        startBlock: 168223826
     mapping:
         kind: ethereum/events
         apiVersion: 0.0.6
@@ -194,12 +194,32 @@ dataSources:
             - event: RouterDeployed(address,address,address)
               handler: handleRouterDeployed
   - kind: ethereum/contract
-    name: v3EthUsdcPool
-    network: scroll
+    name: vFIN
+    network: arbitrum-one
     source:
-        address: '0x118a84e97620829a6a9666d41acc9e91edf32bd6'
+        address: '0xFA3e62Aae5DE014c4CD20377Ec90Eb8e59d31169'
+        abi: vFIN
+        startBlock: 161266335
+    mapping:
+        kind: ethereum/events
+        apiVersion: 0.0.6
+        language: wasm/assemblyscript
+        file: ./src/mappings/vfin.ts
+        entities:
+            - VestedFin
+        abis:
+            - name: vFIN
+              file: ./abis/vFIN.json
+        eventHandlers:
+            - event: Transfer(indexed address,indexed address,indexed uint256)
+              handler: handleTransfer
+  - kind: ethereum/contract
+    name: v3EthUsdcPool
+    network: arbitrum-one
+    source:
+        address: '0xc31e54c7a869b9fcbecc14363cf510d1c41fa443'
         abi: v3Pool
-        startBlock: 2632880
+        startBlock: 168223500
     mapping:
         kind: ethereum/events
         apiVersion: 0.0.6
@@ -211,7 +231,5 @@ dataSources:
             - name: v3Pool
               file: ./abis/v3Pool.json
         eventHandlers:
-            - event: Initialize(uint160,int24)
-              handler: handleV3Initialize
             - event: Swap(indexed address,indexed address,int256,int256,uint160,uint128,int24)
               handler: handleV3Swap

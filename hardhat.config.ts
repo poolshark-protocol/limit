@@ -64,13 +64,12 @@ const config: HardhatUserConfig = {
             url: "https://sepolia-rpc.scroll.io/" || "",
             accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
         },
-        op_goerli: {
-            chainId: 420,
-            gasPrice: 500,
-            url: process.env.OPTIMISM_GOERLI_URL || '',
+        mode: {
+            chainId: 34443,
+            gasPrice: 1_600_000_000,
+            url: "https://mainnet.mode.network/" || "",
             accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
-            timeout: 60000,
-        },
+        }
     },
     etherscan: { 
         apiKey: {
@@ -78,7 +77,8 @@ const config: HardhatUserConfig = {
             arbitrumGoerli: process.env.ARBITRUM_GOERLI_API_KEY,
             arb_sepolia: process.env.ARBITRUM_SEPOLIA_API_KEY,
             scrollSepolia: process.env.SCROLL_SEPOLIA_API_KEY,
-            scroll: process.env.SCROLL_API_KEY
+            scroll: process.env.SCROLL_API_KEY,
+            mode: process.env.MODE_API_KEY
         },
         customChains: [
             {
@@ -96,7 +96,15 @@ const config: HardhatUserConfig = {
                   apiURL: 'https://blockscout.scroll.io/api',
                   browserURL: 'https://blockscout.scroll.io/',
                 },
-              },
+            },
+            {
+                network: 'mode',
+                chainId: 34443,
+                urls: {
+                  apiURL: 'https://explorer.mode.network/api',
+                  browserURL: 'https://explorer.mode.network/',
+                },
+            },
             {
                 network: 'arb_sepolia',
                 chainId: 421614,

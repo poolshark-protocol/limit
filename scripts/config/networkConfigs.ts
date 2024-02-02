@@ -40,6 +40,13 @@ export const NETWORK_CONFIGS: NetworkConfigs = {
         url: process.env.SCROLL_ALPHA_URL || '',
         accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
+    mode : {
+        chainId: 34443,
+        gas: 9000000,
+        gasPrice: 4000000,
+        url: "https://mainnet.mode.network/" || "",
+        accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+    },
     /* Testnet Network Configs */
     arb_sepolia: {
         chainId: 421614,

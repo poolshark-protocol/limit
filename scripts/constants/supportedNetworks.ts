@@ -5,6 +5,7 @@ export enum SUPPORTED_NETWORKS {
     /* Mainnet Supported  Networks */
     ARB_ONE = 'arb_one',
     SCROLL = 'scroll',
+    MODE = 'mode',
 
     /* Testnet Supported  Networks */
     ARB_SEPOLIA = 'arb_sepolia',

@@ -30,10 +30,10 @@ export class InitialSetup {
 
     /// DEPLOY CONFIG
     private deployTokens = false
-    private deployContracts = true
+    private deployContracts = false
     private deployPools = true
-    private deployRouter = true
-    private deployStaker = true
+    private deployRouter = false
+    private deployStaker = false
 
     constructor() {
         this.deployAssist = new DeployAssist()
@@ -120,173 +120,174 @@ export class InitialSetup {
         // const encodedData = abiCoder.encode(["address", "address", "int16"], [hre.props.token0.address, hre.props.token1.address, 10]);
         // const signature = keccak256(encodedData);
         // console.log('encoded data:', signature);
+
         if (this.deployContracts || hre.network.name == 'hardhat') {
             // shared
-            // await this.deployAssist.deployContractWithRetry(
-            //     network,
-            //     // @ts-ignore
-            //     TickMap__factory,
-            //     'tickMapLib',
-            //     []
-            // )
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                TickMap__factory,
+                'tickMapLib',
+                []
+            )
 
-            // await this.deployAssist.deployContractWithRetry(
-            //     network,
-            //     // @ts-ignore
-            //     Ticks__factory,
-            //     'ticksLib',
-            //     [],
-            // )
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                Ticks__factory,
+                'ticksLib',
+                [],
+            )
 
-            // // limit
-            // await this.deployAssist.deployContractWithRetry(
-            //     network,
-            //     // @ts-ignore
-            //     LimitPositions__factory,
-            //     'limitPositionsLib',
-            //     [],
-            //     {
-            //         'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address
-            //     }
-            // )
+            // limit
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                LimitPositions__factory,
+                'limitPositionsLib',
+                [],
+                {
+                    'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address
+                }
+            )
 
-            // await this.deployAssist.deployContractWithRetry(
-            //     network,
-            //     // @ts-ignore
-            //     LimitPoolManager__factory,
-            //     'limitPoolManager',
-            //     []
-            // )
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                LimitPoolManager__factory,
+                'limitPoolManager',
+                []
+            )
 
-            // await this.deployAssist.deployContractWithRetry(
-            //     network,
-            //     // @ts-ignore
-            //     LimitPoolFactory__factory,
-            //     'limitPoolFactory',
-            //     [   
-            //         hre.props.limitPoolManager.address
-            //     ],
-            // )
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                LimitPoolFactory__factory,
+                'limitPoolFactory',
+                [   
+                    hre.props.limitPoolManager.address
+                ],
+            )
 
-            // await this.deployAssist.deployContractWithRetry(
-            //     network,
-            //     // @ts-ignore
-            //     TickQuoter__factory,
-            //     'tickQuoter',
-            //     [   
-            //         hre.props.limitPoolFactory.address
-            //     ],
-            // )
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                TickQuoter__factory,
+                'tickQuoter',
+                [   
+                    hre.props.limitPoolFactory.address
+                ],
+            )
 
-            // await this.deployAssist.deployContractWithRetry(
-            //     network,
-            //     // @ts-ignore
-            //     SwapCall__factory,
-            //     'swapCall',
-            //     [],
-            //     {
-            //         'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address,
-            //     }
-            // )
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                SwapCall__factory,
+                'swapCall',
+                [],
+                {
+                    'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address,
+                }
+            )
 
-            // await this.deployAssist.deployContractWithRetry(
-            //     network,
-            //     // @ts-ignore
-            //     MintRangeCall__factory,
-            //     'mintRangeCall',
-            //     []
-            // )
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                MintRangeCall__factory,
+                'mintRangeCall',
+                []
+            )
 
-            // await this.deployAssist.deployContractWithRetry(
-            //     network,
-            //     // @ts-ignore
-            //     BurnRangeCall__factory,
-            //     'burnRangeCall',
-            //     []
-            // )
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                BurnRangeCall__factory,
+                'burnRangeCall',
+                []
+            )
 
-            // await this.deployAssist.deployContractWithRetry(
-            //     network,
-            //     // @ts-ignore
-            //     MintLimitCall__factory,
-            //     'mintLimitCall',
-            //     [],
-            //     {
-            //         'contracts/libraries/limit/LimitPositions.sol:LimitPositions': hre.props.limitPositionsLib.address
-            //     }
-            // )
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                MintLimitCall__factory,
+                'mintLimitCall',
+                [],
+                {
+                    'contracts/libraries/limit/LimitPositions.sol:LimitPositions': hre.props.limitPositionsLib.address
+                }
+            )
 
-            // await this.deployAssist.deployContractWithRetry(
-            //     network,
-            //     // @ts-ignore
-            //     BurnLimitCall__factory,
-            //     'burnLimitCall',
-            //     []
-            // )
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                BurnLimitCall__factory,
+                'burnLimitCall',
+                []
+            )
 
-            // await this.deployAssist.deployContractWithRetry(
-            //     network,
-            //     // @ts-ignore
-            //     SnapshotLimitCall__factory,
-            //     'snapshotLimitCall',
-            //     []
-            // )
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                SnapshotLimitCall__factory,
+                'snapshotLimitCall',
+                []
+            )
 
-            // await this.deployAssist.deployContractWithRetry(
-            //     network,
-            //     // @ts-ignore
-            //     QuoteCall__factory,
-            //     'quoteCall',
-            //     []
-            // )
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                QuoteCall__factory,
+                'quoteCall',
+                []
+            )
             
-            // await this.deployAssist.deployContractWithRetry(
-            //     network,
-            //     // @ts-ignore
-            //     FeesCall__factory,
-            //     'feesCall',
-            //     []
-            // )
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                FeesCall__factory,
+                'feesCall',
+                []
+            )
 
-            // await this.deployAssist.deployContractWithRetry(
-            //     network,
-            //     // @ts-ignore
-            //     SampleCall__factory,
-            //     'sampleCall',
-            //     []
-            // )
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                SampleCall__factory,
+                'sampleCall',
+                []
+            )
 
-            // await this.deployAssist.deployContractWithRetry(
-            //     network,
-            //     // @ts-ignore
-            //     SnapshotRangeCall__factory,
-            //     'snapshotRangeCall',
-            //     []
-            // )
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                SnapshotRangeCall__factory,
+                'snapshotRangeCall',
+                []
+            )
 
-            // await this.deployAssist.deployContractWithRetry(
-            //     network,
-            //     // @ts-ignore
-            //     LimitPool__factory,
-            //     'limitPoolImpl',
-            //     [
-            //         hre.props.limitPoolFactory.address
-            //     ],
-            //     {
-            //         'contracts/libraries/limit/LimitPositions.sol:LimitPositions': hre.props.limitPositionsLib.address,
-            //         'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address,
-            //         'contracts/libraries/range/pool/MintRangeCall.sol:MintRangeCall': hre.props.mintRangeCall.address,
-            //         'contracts/libraries/range/pool/BurnRangeCall.sol:BurnRangeCall': hre.props.burnRangeCall.address,
-            //         'contracts/libraries/range/pool/SnapshotRangeCall.sol:SnapshotRangeCall': hre.props.snapshotRangeCall.address,
-            //         'contracts/libraries/limit/pool/MintLimitCall.sol:MintLimitCall': hre.props.mintLimitCall.address,
-            //         'contracts/libraries/limit/pool/BurnLimitCall.sol:BurnLimitCall': hre.props.burnLimitCall.address,
-            //         'contracts/libraries/limit/pool/SnapshotLimitCall.sol:SnapshotLimitCall': hre.props.snapshotLimitCall.address,
-            //         'contracts/libraries/pool/SwapCall.sol:SwapCall': hre.props.swapCall.address,
-            //         'contracts/libraries/pool/QuoteCall.sol:QuoteCall': hre.props.quoteCall.address,
-            //         'contracts/libraries/pool/FeesCall.sol:FeesCall': hre.props.feesCall.address,
-            //         'contracts/libraries/pool/SampleCall.sol:SampleCall': hre.props.sampleCall.address
-            //     }
-            // )
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                LimitPool__factory,
+                'limitPoolImpl',
+                [
+                    hre.props.limitPoolFactory.address
+                ],
+                {
+                    'contracts/libraries/limit/LimitPositions.sol:LimitPositions': hre.props.limitPositionsLib.address,
+                    'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address,
+                    'contracts/libraries/range/pool/MintRangeCall.sol:MintRangeCall': hre.props.mintRangeCall.address,
+                    'contracts/libraries/range/pool/BurnRangeCall.sol:BurnRangeCall': hre.props.burnRangeCall.address,
+                    'contracts/libraries/range/pool/SnapshotRangeCall.sol:SnapshotRangeCall': hre.props.snapshotRangeCall.address,
+                    'contracts/libraries/limit/pool/MintLimitCall.sol:MintLimitCall': hre.props.mintLimitCall.address,
+                    'contracts/libraries/limit/pool/BurnLimitCall.sol:BurnLimitCall': hre.props.burnLimitCall.address,
+                    'contracts/libraries/limit/pool/SnapshotLimitCall.sol:SnapshotLimitCall': hre.props.snapshotLimitCall.address,
+                    'contracts/libraries/pool/SwapCall.sol:SwapCall': hre.props.swapCall.address,
+                    'contracts/libraries/pool/QuoteCall.sol:QuoteCall': hre.props.quoteCall.address,
+                    'contracts/libraries/pool/FeesCall.sol:FeesCall': hre.props.feesCall.address,
+                    'contracts/libraries/pool/SampleCall.sol:SampleCall': hre.props.sampleCall.address
+                }
+            )
 
             await this.deployAssist.deployContractWithRetry(
                 network,
@@ -294,25 +295,12 @@ export class InitialSetup {
                 PositionERC1155__factory,
                 'positionERC1155',
                 [
-                    // hre.props.limitPoolFactory.address
-                    '0x3fa761492f411ebc64a81fcf3292fdc0b677c00f'
+                    hre.props.limitPoolFactory.address
                 ]
             )
 
-            const limitPoolManagerAddress = (
-                await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
-                    {
-                        networkName: hre.network.name,
-                        objectName: 'limitPoolManager',
-                    },
-                    'readLimitPoolSetup'
-                )
-            ).contractAddress
-            hre.props.limitPoolManager = await hre.ethers.getContractAt('LimitPoolManager', limitPoolManagerAddress)
-
             const enableImplTxn = await hre.props.limitPoolManager.enablePoolType(
-                // hre.props.limitPoolImpl.address,
-                '0xc1e9a857e96aeefe28f8340cf82de7801bd95a77',
+                hre.props.limitPoolImpl.address,
                 hre.props.positionERC1155.address,
                 this.constantProductString
             )
@@ -321,179 +309,183 @@ export class InitialSetup {
             hre.nonce += 1;
 
             const setFactoryTxn = await hre.props.limitPoolManager.setFactory(
-                // hre.props.limitPoolFactory.address
-                '0x3fa761492f411ebc64a81fcf3292fdc0b677c00f'
+                hre.props.limitPoolFactory.address
             )
             await setFactoryTxn.wait()
 
             hre.nonce += 1;
     
-            let limitPoolAddress; let limitPoolTokenAddress;
-    
-            if (hre.network.name == 'hardhat') {
-                // deploy weth9
-                await this.deployAssist.deployContractWithRetry(
-                    network,
-                    // @ts-ignore
-                    WETH9__factory,
-                    'weth9',
-                    []
-                )
-                // add 500 fee tier
-                let enableFeeTierTxn = await hre.props.limitPoolManager.enableFeeTier(
-                    500,
-                    10
-                );
-                await enableFeeTierTxn.wait();
-
-                hre.nonce += 1;
-
-                // add 500 fee tier
-                enableFeeTierTxn = await hre.props.limitPoolManager.enableFeeTier(
-                    800,
-                    2
-                );
-                await enableFeeTierTxn.wait();
-
-                hre.nonce += 1;
-
-                // create first limit pool
-                let createPoolTxn = await hre.props.limitPoolFactory.createLimitPool({
-                    poolTypeId: 0,
-                    tokenIn: hre.props.token0.address,
-                    tokenOut: hre.props.token1.address,
-                    swapFee: '500',
-                    startPrice: '177159557114295710296101716160'
-                });
-                await createPoolTxn.wait();
-
-                hre.nonce += 1;
-
-                // create weth limit pool
-                let wethPoollTxn = await hre.props.limitPoolFactory.createLimitPool({
-                    poolTypeId: 0,
-                    tokenIn: hre.props.weth9.address,
-                    tokenOut: hre.props.token1.address,
-                    swapFee: '500',
-                    startPrice: '3266660825699135434887405499641'
-                });
-                await wethPoollTxn.wait();
-    
-                hre.nonce += 1;
-
-                // create kyber test limit pool
-                let kyperPoolTxn = await hre.props.limitPoolFactory.createLimitPool({
-                    poolTypeId: 0,
-                    tokenIn: hre.props.token0.address,
-                    tokenOut: hre.props.token1.address,
-                    swapFee: '800',
-                    startPrice: '3266660825699135434887405499641'
-                });
-                await kyperPoolTxn.wait();
-    
-                hre.nonce += 1;
-    
-                [limitPoolAddress, limitPoolTokenAddress] = await hre.props.limitPoolFactory.getLimitPool(
-                    hre.props.token0.address,
-                    hre.props.token1.address,
-                    '500',
-                    0
-                )
-
-                let [wethPoolAddress, wethPoolTokenAddress] = await hre.props.limitPoolFactory.getLimitPool(
-                    hre.props.weth9.address,
-                    hre.props.token1.address,
-                    '500',
-                    0
-                )
-
-                hre.props.wethPool = await hre.ethers.getContractAt('LimitPool', wethPoolAddress)
-                hre.props.wethPoolToken = await hre.ethers.getContractAt('PositionERC1155', wethPoolTokenAddress)
-
-                let [kyberPoolAddress, kyberPoolTokenAddress] = await hre.props.limitPoolFactory.getLimitPool(
-                    hre.props.token0.address,
-                    hre.props.token1.address,
-                    '800',
-                    0
-                )
-
-                hre.props.kyberPool = await hre.ethers.getContractAt('LimitPool', kyberPoolAddress)
-                hre.props.kyberPoolToken = await hre.ethers.getContractAt('PositionERC1155', kyberPoolTokenAddress)
-
-            } else if (this.deployPools) {
-                const limitPoolFactoryAddress = (
-                    await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
-                        {
-                            networkName: hre.network.name,
-                            objectName: 'limitPoolFactory',
-                        },
-                        'readLimitPoolSetup'
-                    )
-                ).contractAddress
-                hre.props.limitPoolFactory = await hre.ethers.getContractAt('LimitPoolFactory', limitPoolFactoryAddress)
-
-                // create first limit pool
-                let createPoolTxn = await hre.props.limitPoolFactory.createLimitPool({
-                    poolTypeId: 0,
-                    tokenIn: hre.props.token0.address,
-                    tokenOut: hre.props.token1.address,
-                    swapFee: '3000',
-                    startPrice: '2565382193812633925403'
-                });
-                await createPoolTxn.wait();
-    
-                hre.nonce += 1;
-    
-                [limitPoolAddress, limitPoolTokenAddress] = await hre.props.limitPoolFactory.getLimitPool(
-                    hre.props.token0.address,
-                    hre.props.token1.address,
-                    '3000',
-                    0
-                )
-
-                // @dev - skip 0.3% and 1% fee tiers for now
-                // createPoolTxn = await hre.props.limitPoolFactory.createLimitPool({
-                //     poolTypeId: 0,
-                //     tokenIn: hre.props.token0.address,
-                //     tokenOut: hre.props.token1.address,
-                //     swapFee: '3000',
-                //     startPrice: '1738267302024796147492397123192298'
-                // });
-                // await createPoolTxn.wait();
-    
-                // hre.nonce += 1;
-    
-                // createPoolTxn = await hre.props.limitPoolFactory.createLimitPool({
-                //     poolTypeId: 0,
-                //     tokenIn: hre.props.token0.address,
-                //     tokenOut: hre.props.token1.address,
-                //     swapFee: '10000',
-                //     startPrice: '1738267302024796147492397123192298'
-                // });
-                // await createPoolTxn.wait();
-
-                // hre.nonce += 1;
-            }
-    
-            hre.props.limitPool = await hre.ethers.getContractAt('LimitPool', limitPoolAddress)
-            hre.props.limitPoolToken = await hre.ethers.getContractAt('PositionERC1155', limitPoolTokenAddress)
-
-            await hre.props.limitPoolToken.name()
-            await hre.props.limitPoolToken.symbol()
-    
-            await this.deployAssist.saveContractDeployment(
-                network,
-                'LimitPool',
-                'limitPool',
-                hre.props.limitPool,
-                [
-                    hre.props.token0.address,
-                    hre.props.token1.address,
-                    hre.network.name == 'hardhat' ? '500' : '3000',
-                    0
-                ]
-            )
+            
         }
+
+        let limitPoolAddress; let limitPoolTokenAddress;
+
+        console.log('deploy pools check:', this.deployPools)
+
+        if (hre.network.name == 'hardhat') {
+            // deploy weth9
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                WETH9__factory,
+                'weth9',
+                []
+            )
+            // add 500 fee tier
+            let enableFeeTierTxn = await hre.props.limitPoolManager.enableFeeTier(
+                500,
+                10
+            );
+            await enableFeeTierTxn.wait();
+
+            hre.nonce += 1;
+
+            // add 500 fee tier
+            enableFeeTierTxn = await hre.props.limitPoolManager.enableFeeTier(
+                800,
+                2
+            );
+            await enableFeeTierTxn.wait();
+
+            hre.nonce += 1;
+
+            // create first limit pool
+            let createPoolTxn = await hre.props.limitPoolFactory.createLimitPool({
+                poolTypeId: 0,
+                tokenIn: hre.props.token0.address,
+                tokenOut: hre.props.token1.address,
+                swapFee: '500',
+                startPrice: '177159557114295710296101716160'
+            });
+            await createPoolTxn.wait();
+
+            hre.nonce += 1;
+
+            // create weth limit pool
+            let wethPoollTxn = await hre.props.limitPoolFactory.createLimitPool({
+                poolTypeId: 0,
+                tokenIn: hre.props.weth9.address,
+                tokenOut: hre.props.token1.address,
+                swapFee: '500',
+                startPrice: '3266660825699135434887405499641'
+            });
+            await wethPoollTxn.wait();
+
+            hre.nonce += 1;
+
+            // create kyber test limit pool
+            let kyperPoolTxn = await hre.props.limitPoolFactory.createLimitPool({
+                poolTypeId: 0,
+                tokenIn: hre.props.token0.address,
+                tokenOut: hre.props.token1.address,
+                swapFee: '800',
+                startPrice: '3266660825699135434887405499641'
+            });
+            await kyperPoolTxn.wait();
+
+            hre.nonce += 1;
+
+            [limitPoolAddress, limitPoolTokenAddress] = await hre.props.limitPoolFactory.getLimitPool(
+                hre.props.token0.address,
+                hre.props.token1.address,
+                '500',
+                0
+            )
+
+            let [wethPoolAddress, wethPoolTokenAddress] = await hre.props.limitPoolFactory.getLimitPool(
+                hre.props.weth9.address,
+                hre.props.token1.address,
+                '500',
+                0
+            )
+
+            hre.props.wethPool = await hre.ethers.getContractAt('LimitPool', wethPoolAddress)
+            hre.props.wethPoolToken = await hre.ethers.getContractAt('PositionERC1155', wethPoolTokenAddress)
+
+            let [kyberPoolAddress, kyberPoolTokenAddress] = await hre.props.limitPoolFactory.getLimitPool(
+                hre.props.token0.address,
+                hre.props.token1.address,
+                '800',
+                0
+            )
+
+            hre.props.kyberPool = await hre.ethers.getContractAt('LimitPool', kyberPoolAddress)
+            hre.props.kyberPoolToken = await hre.ethers.getContractAt('PositionERC1155', kyberPoolTokenAddress)
+
+        } else if (this.deployPools) {
+            console.log('deploying pool')
+            const limitPoolFactoryAddress = (
+                await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
+                    {
+                        networkName: hre.network.name,
+                        objectName: 'limitPoolFactory',
+                    },
+                    'readLimitPoolSetup'
+                )
+            ).contractAddress
+            hre.props.limitPoolFactory = await hre.ethers.getContractAt('LimitPoolFactory', limitPoolFactoryAddress)
+
+            // create first limit pool
+            let createPoolTxn = await hre.props.limitPoolFactory.createLimitPool({
+                poolTypeId: 0,
+                tokenIn: hre.props.token0.address,
+                tokenOut: hre.props.token1.address,
+                swapFee: '1000',
+                startPrice: '3796647714486401291197042'
+            });
+            await createPoolTxn.wait();
+
+            hre.nonce += 1;
+
+            [limitPoolAddress, limitPoolTokenAddress] = await hre.props.limitPoolFactory.getLimitPool(
+                hre.props.token0.address,
+                hre.props.token1.address,
+                '1000',
+                0
+            )
+
+            // @dev - skip 0.3% and 1% fee tiers for now
+            // createPoolTxn = await hre.props.limitPoolFactory.createLimitPool({
+            //     poolTypeId: 0,
+            //     tokenIn: hre.props.token0.address,
+            //     tokenOut: hre.props.token1.address,
+            //     swapFee: '3000',
+            //     startPrice: '1738267302024796147492397123192298'
+            // });
+            // await createPoolTxn.wait();
+
+            // hre.nonce += 1;
+
+            // createPoolTxn = await hre.props.limitPoolFactory.createLimitPool({
+            //     poolTypeId: 0,
+            //     tokenIn: hre.props.token0.address,
+            //     tokenOut: hre.props.token1.address,
+            //     swapFee: '10000',
+            //     startPrice: '1738267302024796147492397123192298'
+            // });
+            // await createPoolTxn.wait();
+
+            // hre.nonce += 1;
+        }
+
+        hre.props.limitPool = await hre.ethers.getContractAt('LimitPool', limitPoolAddress)
+        hre.props.limitPoolToken = await hre.ethers.getContractAt('PositionERC1155', limitPoolTokenAddress)
+
+        await hre.props.limitPoolToken.name()
+        await hre.props.limitPoolToken.symbol()
+
+        await this.deployAssist.saveContractDeployment(
+            network,
+            'LimitPool',
+            'limitPool',
+            hre.props.limitPool,
+            [
+                hre.props.token0.address,
+                hre.props.token1.address,
+                hre.network.name == 'hardhat' ? '500' : '3000',
+                0
+            ]
+        )
 
         if (hre.network.name == 'hardhat' || this.deployRouter) {
             let limitPoolFactoryAddress; let coverPoolFactoryAddress; let weth9Address;

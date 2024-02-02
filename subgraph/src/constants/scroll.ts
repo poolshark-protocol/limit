@@ -37,7 +37,7 @@ export let SEASON_1_END_TIME = BigInt.fromString('1684713600') // 5-22-2024 0:00
 export let STABLE_COINS: string[] = [
     '0xca77eb3fefe3725dc33bccb54edefc3d9f764f97', // DAI
     '0x06efdbff2a14a7c8e15944d1f4a48f9f95f663a4', // USDC
-    '0xf55bec9cafdbe8730f096aa55dad6d22d44099df'  // USDT
+    '0xf55bec9cafdbe8730f096aa55dad6d22d44099df'  // USDT 
 ]
 
 // minimum eth required in pool to count usd values towards global prices 

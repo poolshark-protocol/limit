@@ -61,7 +61,7 @@ templates:
     # ERC-1155 events
     - kind: ethereum/contract
       name: PositionERC1155Template
-      network: arbitrum-one
+      network: mode
       source:
           abi: PositionERC1155
       mapping:
@@ -84,7 +84,7 @@ templates:
     # RangeStaker events
     - kind: ethereum/contract
       name: RangeStakerTemplate
-      network: arbitrum-one
+      network: mode
       source:
           abi: RangeStaker
       mapping:
@@ -111,7 +111,7 @@ templates:
 dataSources:
   - kind: ethereum/contract
     name: LimitPoolFactory
-    network: arbitrum-one
+    network: mode
     source:
         address: '0x3fa761492f411ebc64a81fcf3292fdc0b677c00f'
         abi: LimitPoolFactory
@@ -140,7 +140,7 @@ dataSources:
               handler: handlePoolCreated
   - kind: ethereum/contract
     name: LimitPoolManager
-    network: arbitrum-one
+    network: mode
     source:
         address: '0x334a70f0cb8b9ceee3d0f4ea232581ff3dfc6e58'
         abi: LimitPoolManager
@@ -175,7 +175,7 @@ dataSources:
               handler: handleProtocolSwapFeesModified
   - kind: ethereum/contract
     name: PoolsharkRouter
-    network: arbitrum-one
+    network: mode
     source:
         address: '0x33a28c58ab9c2fc5bc0ef84ca1b28763a904c4dd'
         abi: PoolsharkRouter
@@ -195,7 +195,7 @@ dataSources:
               handler: handleRouterDeployed
   - kind: ethereum/contract
     name: v3EthUsdcPool
-    network: arbitrum-one
+    network: mode
     source:
         address: '0xe0691e6803d4fa0d8fa8ee8da7667eb4a6b99415'
         abi: v3Pool

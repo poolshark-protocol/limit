@@ -28,17 +28,17 @@ export function handleBurnRange(event: BurnRange): void {
     let upper = position.upper
 
     // log burn action
-    let loadBurnLog = safeLoadBurnLog(event.transaction.hash, poolAddress, positionIdParam)
-    let burnLog = loadBurnLog.entity
-    if (!loadBurnLog.exists) {
-        burnLog.owner = msgSender
-        burnLog.recipient = recipientParam
-        burnLog.lower = lower
-        burnLog.upper = upper
-        burnLog.positionId = positionIdParam
-        burnLog.pool = poolAddress
-    }
-    burnLog.liquidityBurned = burnLog.liquidityBurned.plus(liquidityBurnedParam)
+    // let loadBurnLog = safeLoadBurnLog(event.transaction.hash, poolAddress, positionIdParam)
+    // let burnLog = loadBurnLog.entity
+    // if (!loadBurnLog.exists) {
+    //     burnLog.owner = msgSender
+    //     burnLog.recipient = recipientParam
+    //     burnLog.lower = lower
+    //     burnLog.upper = upper
+    //     burnLog.positionId = positionIdParam
+    //     burnLog.pool = poolAddress
+    // }
+    // burnLog.liquidityBurned = burnLog.liquidityBurned.plus(liquidityBurnedParam)
 
     let loadBasePrice = safeLoadBasePrice('eth')
     let loadLimitPool = safeLoadLimitPool(poolAddress)
@@ -52,16 +52,16 @@ export function handleBurnRange(event: BurnRange): void {
     let token0 = loadToken0.entity
     let token1 = loadToken1.entity
 
-    let loadLowerTick = safeLoadRangeTick(
-        poolAddress,
-        lower
-    )
-    let loadUpperTick = safeLoadRangeTick(
-        poolAddress,
-        upper
-    )
-    let lowerTick = loadLowerTick.entity
-    let upperTick = loadUpperTick.entity
+    // let loadLowerTick = safeLoadRangeTick(
+    //     poolAddress,
+    //     lower
+    // )
+    // let loadUpperTick = safeLoadRangeTick(
+    //     poolAddress,
+    //     upper
+    // )
+    // let lowerTick = loadLowerTick.entity
+    // let upperTick = loadUpperTick.entity
 
     // convert amounts to decimal values
     let amount0 = convertTokenToDecimal(amount0Param, token0.decimals)
@@ -79,18 +79,18 @@ export function handleBurnRange(event: BurnRange): void {
         position.save()
     }
 
-    if (lowerTick.liquidityAbsolute.equals(liquidityBurnedParam)) {
-        store.remove('RangeTick', lowerTick.id)
-    } else {
-        lowerTick.liquidityDelta = lowerTick.liquidityDelta.minus(liquidityBurnedParam)
-        lowerTick.liquidityAbsolute = lowerTick.liquidityAbsolute.minus(liquidityBurnedParam)
-    }
-    if (upperTick.liquidityAbsolute.equals(liquidityBurnedParam)) {
-        store.remove('RangeTick', upperTick.id)
-    } else {
-        upperTick.liquidityDelta = upperTick.liquidityDelta.plus(liquidityBurnedParam)
-        upperTick.liquidityAbsolute = upperTick.liquidityAbsolute.minus(liquidityBurnedParam)
-    }
+    // if (lowerTick.liquidityAbsolute.equals(liquidityBurnedParam)) {
+    //     store.remove('RangeTick', lowerTick.id)
+    // } else {
+    //     lowerTick.liquidityDelta = lowerTick.liquidityDelta.minus(liquidityBurnedParam)
+    //     lowerTick.liquidityAbsolute = lowerTick.liquidityAbsolute.minus(liquidityBurnedParam)
+    // }
+    // if (upperTick.liquidityAbsolute.equals(liquidityBurnedParam)) {
+    //     store.remove('RangeTick', upperTick.id)
+    // } else {
+    //     upperTick.liquidityDelta = upperTick.liquidityDelta.plus(liquidityBurnedParam)
+    //     upperTick.liquidityAbsolute = upperTick.liquidityAbsolute.minus(liquidityBurnedParam)
+    // }
 
     token0.txnCount = token0.txnCount.plus(ONE_BI)
     token1.txnCount = token1.txnCount.plus(ONE_BI)
@@ -145,12 +145,12 @@ export function handleBurnRange(event: BurnRange): void {
 
     // tvlUpdateLog.save()
 
-    burnLog.save()
+    // burnLog.save()
     basePrice.save()
     pool.save()
     factory.save()
     token0.save()
     token1.save()
-    lowerTick.save()
-    upperTick.save()
+    // lowerTick.save()
+    // upperTick.save()
 }

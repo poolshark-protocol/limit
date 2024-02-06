@@ -19,15 +19,15 @@ export function handleInitialize(event: InitializeLimit): void {
 
     let loadToken0 = safeLoadToken(pool.token0)
     let loadToken1 = safeLoadToken(pool.token1)
-    let loadMinRangeTick = safeLoadRangeTick(poolAddress, min)
-    let loadMaxRangeTick = safeLoadRangeTick(poolAddress, max)
+    // let loadMinRangeTick = safeLoadRangeTick(poolAddress, min)
+    // let loadMaxRangeTick = safeLoadRangeTick(poolAddress, max)
     let loadMinLimitTick = safeLoadLimitTick(poolAddress, min)
     let loadMaxLimitTick = safeLoadLimitTick(poolAddress, max)
 
     let token0 = loadToken0.entity
     let token1 = loadToken1.entity
-    let minRangeTick = loadMinRangeTick.entity
-    let maxRangeTick = loadMaxRangeTick.entity
+    // let minRangeTick = loadMinRangeTick.entity
+    // let maxRangeTick = loadMaxRangeTick.entity
     let minLimitTick = loadMinLimitTick.entity
     let maxLimitTick = loadMaxLimitTick.entity
 
@@ -50,16 +50,12 @@ export function handleInitialize(event: InitializeLimit): void {
     token0.usdPrice = token0.ethPrice.times(basePrice.USD)
     token1.usdPrice = token1.ethPrice.times(basePrice.USD)
 
-    if (token1.symbol == 'WBTC') {
-        log.info('USDC price at pool creation time: {}', [token1.usdPrice.toString()])
-    }
-
     pool.save()
     token0.save()
     token1.save()
     basePrice.save()
-    minRangeTick.save()
-    maxRangeTick.save()
+    // minRangeTick.save()
+    // maxRangeTick.save()
     minLimitTick.save()
     maxLimitTick.save()
 }

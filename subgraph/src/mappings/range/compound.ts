@@ -36,11 +36,11 @@ export function handleCompoundRange(event: CompoundRange): void {
     let loadLimitPoolFactory = safeLoadLimitPoolFactory(pool.factory)
     let loadToken0 = safeLoadToken(pool.token0)
     let loadToken1 = safeLoadToken(pool.token1)
-    let loadLowerTick = safeLoadRangeTick(poolAddress, lower)
-    let loadUpperTick = safeLoadRangeTick(poolAddress, upper)
+    // let loadLowerTick = safeLoadRangeTick(poolAddress, lower)
+    // let loadUpperTick = safeLoadRangeTick(poolAddress, upper)
 
-    let lowerTick = loadLowerTick.entity
-    let upperTick = loadUpperTick.entity
+    // let lowerTick = loadLowerTick.entity
+    // let upperTick = loadUpperTick.entity
     let factory = loadLimitPoolFactory.entity
     let token0 = loadToken0.entity
     let token1 = loadToken1.entity
@@ -49,11 +49,11 @@ export function handleCompoundRange(event: CompoundRange): void {
         //throw an error
     }
 
-    lowerTick.liquidityAbsolute = lowerTick.liquidityAbsolute.plus(liquidityCompoundedParam)
-    upperTick.liquidityAbsolute = upperTick.liquidityAbsolute.plus(liquidityCompoundedParam)
+    // lowerTick.liquidityAbsolute = lowerTick.liquidityAbsolute.plus(liquidityCompoundedParam)
+    // upperTick.liquidityAbsolute = upperTick.liquidityAbsolute.plus(liquidityCompoundedParam)
 
-    lowerTick.liquidityDelta = lowerTick.liquidityDelta.plus(liquidityCompoundedParam)
-    upperTick.liquidityDelta = upperTick.liquidityDelta.minus(liquidityCompoundedParam)
+    // lowerTick.liquidityDelta = lowerTick.liquidityDelta.plus(liquidityCompoundedParam)
+    // upperTick.liquidityDelta = upperTick.liquidityDelta.minus(liquidityCompoundedParam)
 
     // convert amounts to decimal values
     position.liquidity = position.liquidity.plus(liquidityCompoundedParam)
@@ -76,7 +76,7 @@ export function handleCompoundRange(event: CompoundRange): void {
     token1.save()
     factory.save()
     position.save()
-    lowerTick.save()
-    upperTick.save()
+    // lowerTick.save()
+    // upperTick.save()
     // compoundLog.save()
 }

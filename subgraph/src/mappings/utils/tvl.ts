@@ -46,8 +46,8 @@ export function updateDerivedTVLAmounts(
       factory
     }
   }
-  log.info('token0 ethPrice: {} :: basePrice: {}', [token0.ethPrice.toString(), basePrice.USD.toString()])
-  log.info('token1 ethPrice: {} :: basePrice: {}', [token1.ethPrice.toString(), basePrice.USD.toString()])
+  // log.info('token0 ethPrice: {} :: basePrice: {}', [token0.ethPrice.toString(), basePrice.USD.toString()])
+  // log.info('token1 ethPrice: {} :: basePrice: {}', [token1.ethPrice.toString(), basePrice.USD.toString()])
   // Update token TVL values.
   token0.totalValueLockedUsd = token0.totalValueLocked.times(token0.ethPrice.times(basePrice.USD))
   token1.totalValueLockedUsd = token1.totalValueLocked.times(token1.ethPrice.times(basePrice.USD))

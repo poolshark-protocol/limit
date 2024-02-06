@@ -18,7 +18,6 @@ import { findEthPerToken } from '../utils/price'
 import { MintRange } from '../../../generated/LimitPoolFactory/LimitPool'
 
 export function handleMintRange(event: MintRange): void {
-    //TODO: fix event to emit 'recipient' and make new deployment
     let recipientParam = event.params.recipient
     let lowerParam = event.params.lower
     let upperParam = event.params.upper 
@@ -58,26 +57,26 @@ export function handleMintRange(event: MintRange): void {
     // mintLog.liquidityMinted = mintLog.liquidityMinted.plus(liquidityMintedParam)
     // mintLog.save()
 
-    let loadLowerTick = safeLoadRangeTick(
-        poolAddress,
-        lower
-    )
-    let loadUpperTick = safeLoadRangeTick(
-        poolAddress,
-        upper
-    )
+    // let loadLowerTick = safeLoadRangeTick(
+    //     poolAddress,
+    //     lower
+    // )
+    // let loadUpperTick = safeLoadRangeTick(
+    //     poolAddress,
+    //     upper
+    // )
     let loadPosition = safeLoadRangePosition(
         poolAddress,
         positionIdParam
     )
     let position = loadPosition.entity
-    let lowerTick = loadLowerTick.entity
-    let upperTick = loadUpperTick.entity
+    // let lowerTick = loadLowerTick.entity
+    // let upperTick = loadUpperTick.entity
 
-    lowerTick.liquidityDelta = lowerTick.liquidityDelta.plus(liquidityMintedParam)
-    upperTick.liquidityDelta = upperTick.liquidityDelta.minus(liquidityMintedParam)
-    lowerTick.liquidityAbsolute = lowerTick.liquidityAbsolute.plus(liquidityMintedParam)
-    upperTick.liquidityAbsolute = upperTick.liquidityAbsolute.plus(liquidityMintedParam)
+    // lowerTick.liquidityDelta = lowerTick.liquidityDelta.plus(liquidityMintedParam)
+    // upperTick.liquidityDelta = upperTick.liquidityDelta.minus(liquidityMintedParam)
+    // lowerTick.liquidityAbsolute = lowerTick.liquidityAbsolute.plus(liquidityMintedParam)
+    // upperTick.liquidityAbsolute = upperTick.liquidityAbsolute.plus(liquidityMintedParam)
 
     position.lower = lower
     position.upper = upper
@@ -152,17 +151,13 @@ export function handleMintRange(event: MintRange): void {
     }
     position.liquidity = position.liquidity.plus(liquidityMintedParam)
     pool.liquidityGlobal = pool.liquidityGlobal.plus(liquidityMintedParam)
-
-    if (token1.symbol == 'USDC') {
-        log.info('USDC price at mint time: {}', [token1.usdPrice.toString()])
-    }
     
     basePrice.save()
     pool.save()
     factory.save()
     token0.save()
     token1.save()
-    lowerTick.save()
-    upperTick.save()
+    // lowerTick.save()
+    // upperTick.save()
     position.save() 
 }

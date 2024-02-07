@@ -3,7 +3,7 @@ import { Token } from "../../generated/schema"
 import { STABLE_POOL_ADDRESS, STABLE_IS_TOKEN_0, STABLE_TOKEN_DECIMALS } from "../constants/constants"
 import { safeLoadBasePrice, safeLoadLimitPool } from "./utils/loads"
 import { sqrtPriceX96ToTokenPrices } from "./utils/price"
-import { Initialize, Swap } from "../../generated/v3EthUsdcPool/v3Pool"
+import { Initialize, Swap } from "../../generated/v3EthStablePool/v3Pool"
 
 export function handleV3Initialize(event: Initialize): void {
     let loadPool = safeLoadLimitPool(STABLE_POOL_ADDRESS)

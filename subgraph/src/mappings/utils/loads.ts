@@ -84,11 +84,11 @@ export function safeLoadBasePrice(name: string, stablePool: LimitPool | null = n
     }
 
     if (stablePool !== null) {
-        log.info("pool data: {}", [stablePool.id])
+        // log.info("pool data: {}", [stablePool.id])
         // only non-null when updating v3 pool price
         basePriceEntity.USD = getEthPriceInUSD(stablePool)
     } else {
-        log.info("pool data is null", [])
+        // log.info("pool data is null", [])
     }
 
     return {
@@ -137,7 +137,6 @@ export function safeLoadToken(address: string): LoadTokenRet {
 
     if (!tokenEntity) {
         tokenEntity = new Token(address)
-        log.info('{}', [address])
         let tokenAddress = Address.fromString(address)
 
         tokenEntity.symbol = fetchTokenSymbol(tokenAddress)

@@ -214,7 +214,7 @@ dataSources:
             - event: Transfer(indexed address,indexed address,indexed uint256)
               handler: handleTransfer
   - kind: ethereum/contract
-    name: v3EthUsdcPool
+    name: v3EthStablePool
     network: arbitrum-sepolia
     source:
         address: '0x02225f6a3d83648d7906a23856331c819265394d'
@@ -224,7 +224,7 @@ dataSources:
         kind: ethereum/events
         apiVersion: 0.0.6
         language: wasm/assemblyscript
-        file: ./src/mappings/v3Pool.ts
+        file: ./src/mappings/v3pool.ts
         entities:
             - BasePrice
         abis:

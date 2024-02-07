@@ -194,12 +194,12 @@ dataSources:
             - event: RouterDeployed(address,address,address)
               handler: handleRouterDeployed
   - kind: ethereum/contract
-    name: v3EthUsdcPool
+    name: v3EthStablePool
     network: mode-mainnet
     source:
-        address: '0xe0691e6803d4fa0d8fa8ee8da7667eb4a6b99415'
+        address: '0xb5fd40e12a35c6afe8dcc48544082ef2cc371aa5'
         abi: v3Pool
-        startBlock: 3372329
+        startBlock: 3492287
     mapping:
         kind: ethereum/events
         apiVersion: 0.0.6

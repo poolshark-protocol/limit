@@ -214,7 +214,7 @@ dataSources:
             - event: Transfer(indexed address,indexed address,indexed uint256)
               handler: handleTransfer
   - kind: ethereum/contract
-    name: v3EthUsdcPool
+    name: v3EthStablePool
     network: scroll-sepolia
     source:
         address: '0xea578474c65f859739c8ec362543eedc04f0d48e'
@@ -224,7 +224,7 @@ dataSources:
         kind: ethereum/events
         apiVersion: 0.0.6
         language: wasm/assemblyscript
-        file: ./src/mappings/v3Pool.ts
+        file: ./src/mappings/v3pool.ts
         entities:
             - BasePrice
         abis:

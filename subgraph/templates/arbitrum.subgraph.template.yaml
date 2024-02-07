@@ -214,7 +214,7 @@ dataSources:
             - event: Transfer(indexed address,indexed address,indexed uint256)
               handler: handleTransfer
   - kind: ethereum/contract
-    name: v3EthUsdcPool
+    name: v3EthStablePool
     network: arbitrum-one
     source:
         address: '0xc31e54c7a869b9fcbecc14363cf510d1c41fa443'
@@ -224,7 +224,7 @@ dataSources:
         kind: ethereum/events
         apiVersion: 0.0.6
         language: wasm/assemblyscript
-        file: ./src/mappings/v3Pool.ts
+        file: ./src/mappings/v3pool.ts
         entities:
             - BasePrice
         abis:

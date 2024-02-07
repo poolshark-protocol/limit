@@ -27,10 +27,12 @@ export let WHITELISTED_TOKENS: string[] = [
 //TODO: incentivizing only FIN - WETH 0.3% for now
 
 export let WHITELISTED_PAIRS: string[] = [
+  '0xb5fd40e12a35c6afe8dcc48544082ef2cc371aa5', // WETH-USDT 0.1%
+  '0xe0691e6803d4fa0d8fa8ee8da7667eb4a6b99415', // WETH-USDC 0.1%
 ]
 
-export let SEASON_1_START_TIME = BigInt.fromString('1709794800') // 3-07-2024 0:00 GMT
-export let SEASON_1_END_TIME = BigInt.fromString('1723010400') // 8-07-2024 0:00 GMT
+export let SEASON_1_START_TIME = BigInt.fromString('0') // 2-09-2024 15:00 GMT - 1707516000
+export let SEASON_1_END_TIME = BigInt.fromString('1710021600') // 3-09-2024 15:00 GMT - 1710021600
 
 // used for safe eth pricing 
 export let STABLE_COINS: string[] = [

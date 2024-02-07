@@ -61,17 +61,17 @@ export function handleStakeRangeAccrued(event: StakeRangeAccrued): void {
     let token1Fees = convertTokenToDecimal(feeGrowth1AccruedParam, token1.decimals)
 
     const feeGrowthAccruedUsd = token0Fees.times(token0.usdPrice).plus(token1Fees.times(token1.usdPrice))
-    
 
-    if (WHITELISTED_PAIRS.includes(pool.token0.concat('-').concat(pool.token1))) {
+    if (WHITELISTED_PAIRS.includes(pool.id)) {
         // whitelisted pairs
         userSeasonReward.whitelistedFeesUsd = userSeasonReward.whitelistedFeesUsd.plus(feeGrowthAccruedUsd)
         totalSeasonReward.whitelistedFeesUsd = totalSeasonReward.whitelistedFeesUsd.plus(feeGrowthAccruedUsd)
-    } else if (WHITELISTED_TOKENS.includes(pool.token0) || WHITELISTED_TOKENS.includes(pool.token1)) {
-        // non-whitelisted pair w/ whitelisted base asset
-        userSeasonReward.nonWhitelistedFeesUsd = userSeasonReward.nonWhitelistedFeesUsd.plus(feeGrowthAccruedUsd)
-        totalSeasonReward.nonWhitelistedFeesUsd = totalSeasonReward.nonWhitelistedFeesUsd.plus(feeGrowthAccruedUsd)
-    }
+    } 
+    // else if (WHITELISTED_TOKENS.includes(pool.token0) || WHITELISTED_TOKENS.includes(pool.token1)) {
+    //     // non-whitelisted pair w/ whitelisted base asset
+    //     userSeasonReward.nonWhitelistedFeesUsd = userSeasonReward.nonWhitelistedFeesUsd.plus(feeGrowthAccruedUsd)
+    //     totalSeasonReward.nonWhitelistedFeesUsd = totalSeasonReward.nonWhitelistedFeesUsd.plus(feeGrowthAccruedUsd)
+    // }
 
     if (event.block.timestamp.ge(SEASON_1_START_TIME) && event.block.timestamp.le(SEASON_1_END_TIME)) {
         totalSeasonReward.save() // 1

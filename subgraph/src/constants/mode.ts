@@ -14,14 +14,14 @@ export const STABLE_IS_TOKEN_0 = false
 export const STABLE_TOKEN_DECIMALS = '6'
 
 // chain WETH address
-export let WETH_ADDRESS = '0x82af49447d8a07e3bd95bd0d56f35241523fbab1'
+export let WETH_ADDRESS = '0x4200000000000000000000000000000000000006'
 
 // tokens where USD value is safe to use for globals
 export let WHITELISTED_TOKENS: string[] = [
   '0x4200000000000000000000000000000000000006', // WETH
-  '0xe7798f023fc62146e8aa1b36da45fb70855a77ea', // DAI
   '0xd988097fb8612cc24eec14542bc03424c656005f', // USDC
-  '0xf0f161fda2712db8b566946122a5af183995e2ed'  // USDT
+  '0xf0f161fda2712db8b566946122a5af183995e2ed', // USDT
+  '0xe7798f023fc62146e8aa1b36da45fb70855a77ea', // DAI
 ]
 
 //TODO: incentivizing only FIN - WETH 0.3% for now
@@ -34,10 +34,9 @@ export let SEASON_1_END_TIME = BigInt.fromString('1723010400') // 8-07-2024 0:00
 
 // used for safe eth pricing 
 export let STABLE_COINS: string[] = [
-    '0xda10009cbd5d07dd0cecc66161fc93d7c9000da1', // DAI
-    '0xaf88d065e77c8cc2239327c5edb3a432268e5831', // USDC
-    '0xff970a61a04b1ca14834a43f5de4533ebddb5cc8', // USDC.e
-    '0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9'  // USDT
+  '0xd988097fb8612cc24eec14542bc03424c656005f', // USDC
+  '0xf0f161fda2712db8b566946122a5af183995e2ed', // USDT
+  '0xe7798f023fc62146e8aa1b36da45fb70855a77ea', // DAI
 ]
 
 // minimum eth required in pool to count usd values towards global prices 

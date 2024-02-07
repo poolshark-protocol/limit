@@ -80,6 +80,8 @@ export function safeLoadBasePrice(name: string, stablePool: LimitPool | null = n
 
     if (!basePriceEntity) {
         basePriceEntity = new BasePrice(name)
+        basePriceEntity.USD = BIGDECIMAL_ZERO
+
         exists = false
     }
 

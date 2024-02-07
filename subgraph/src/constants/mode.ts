@@ -6,7 +6,7 @@ import { LimitPoolFactory as FactoryContract } from '../../generated/templates/L
 export let FACTORY_ADDRESS = '0x3fa761492f411ebc64a81fcf3292fdc0b677c00f'
 export let RANGE_STAKER_ADDRESS = '0x58d8235108e12e6b725a53b57cd0b00c5edee0da'
 // used for safe eth pricing
-export const STABLE_POOL_ADDRESS = '0xe0691e6803d4fa0d8fa8ee8da7667eb4a6b99415'
+export const STABLE_POOL_ADDRESS = '0xb5fd40e12a35c6afe8dcc48544082ef2cc371aa5'
 // --------------  END REQUIRED CONFIG PER DEPLOYMENT  --------------
 
 // determines which token to use for eth <-> usd rate, true means stable is token0 in pool above 

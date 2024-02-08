@@ -29,8 +29,8 @@ export let WHITELISTED_PAIRS: string[] = [
   '0x622fa26556cbc082816311c0b22c668a4a566fe5', // WETH-USDT 0.1%
 ]
 
-export let SEASON_1_START_TIME = BigInt.fromString('1707836400') // 02-13-2024 0:00 GMT
-export let SEASON_1_END_TIME = BigInt.fromString('1709996400') // 3-09-2024 0:00 GMT
+export let SEASON_1_START_TIME = BigInt.fromString('0') // 02-13-2024 0:00 GMT - 1707836400
+export let SEASON_1_END_TIME = BigInt.fromString('1709996400') // 3-09-2024 0:00 GMT - 1709996400
 
 // used for safe eth pricing 
 export let STABLE_COINS: string[] = [

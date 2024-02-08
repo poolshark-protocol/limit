@@ -1,5 +1,5 @@
 import { Address, BigDecimal, BigInt, Bytes, ethereum, log } from '@graphprotocol/graph-ts'
-import { LimitPool, LimitPoolFactory, LimitPoolManager, LimitPosition, Token, FeeTier, BasePrice, RangePosition, RangeTick, Transaction, LimitTick, Swap, CompoundRangeLog, MintRangeLog, BurnRangeLog, PoolRouter, TvlUpdateLog, HistoricalOrder, TotalSeasonReward, UserSeasonReward, LimitPoolToken, VFinPosition } from '../../../generated/schema'
+import { LimitPool, LimitPoolFactory, LimitPoolManager, LimitPosition, Token, FeeTier, BasePrice, RangePosition, RangeTick, Transaction, LimitTick, Swap, CompoundRangeLog, MintRangeLog, BurnRangeLog, PoolRouter, TvlUpdateLog, HistoricalOrder, TotalSeasonReward, UserSeasonReward, LimitPoolToken, VFinPosition, LimitPoolHourData } from '../../../generated/schema'
 import { FACTORY_ADDRESS, ONE_BD } from '../../constants/constants'
 import {
     fetchTokenSymbol,
@@ -226,6 +226,9 @@ export function safeLoadLimitPool(poolAddress: string): LoadLimitPoolRet {
         limitPoolEntity.totalValueLocked1 = BIGDECIMAL_ZERO
         limitPoolEntity.totalValueLockedUsd = BIGDECIMAL_ZERO
         limitPoolEntity.totalValueLockedEth = BIGDECIMAL_ZERO
+
+        limitPoolEntity.last24HoursIndex =  BIGINT_ZERO
+        limitPoolEntity.last24HoursPoolData = new Array<string>()
 
         exists = false
     }

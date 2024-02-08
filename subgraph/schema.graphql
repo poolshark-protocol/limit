@@ -127,6 +127,21 @@ type LimitPool @entity {
     createdAtBlockNumber: BigInt!
     updatedAtTimestamp: BigInt!
     updatedAtBlockNumber: BigInt!
+
+    # candle data
+    last24HoursIndex: BigInt!
+    last24HoursPoolData: [LimitPoolHourData!]!
+}
+
+type LimitPoolHourData @entity {
+    # day timestamp
+    id: ID!
+
+    # volume in USD
+    volumeUSD: BigDecimal!
+
+    # fees in USD
+    feesUSD: BigDecimal!
 }
 
 type LimitPoolToken @entity {

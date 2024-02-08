@@ -6,6 +6,7 @@ import { AmountType, findEthPerToken, getAdjustedAmounts, getEthPriceInUSD, sqrt
 import { updateDerivedTVLAmounts } from "../utils/tvl"
 import { Swap, SwapLimit } from "../../../generated/LimitPoolFactory/LimitPool"
 import { safeDiv } from "../utils/math"
+import { updatePoolHourData } from "../utils/candles"
 
 export function handleSwap(event: SwapLimit): void {
     let recipientParam = event.params.recipient
@@ -81,8 +82,6 @@ export function handleSwap(event: SwapLimit): void {
     let volumeAmounts: AmountType = getAdjustedAmounts(amount0Abs, token0, amount1Abs, token1, basePrice)
     let volumeEth = volumeAmounts.eth.div(TWO_BD)
     let volumeUsd = volumeAmounts.usd.div(TWO_BD)
-    //TODO: not being indexed for now
-    let volumeUsdUntracked = volumeAmounts.usdUntracked.div(TWO_BD)
 
     let feesEth: BigDecimal
     let feesUsd: BigDecimal
@@ -123,6 +122,16 @@ export function handleSwap(event: SwapLimit): void {
     token1.volumeUsd = token1.volumeUsd.plus(volumeUsd)
     token1.volumeEth = token1.volumeEth.plus(volumeEth)
 
+    // save each hour until we reach 24 hours
+    pool = updatePoolHourData(pool)
+    
+    // update next index on rotation
+
+    // then chop off oldest hour and start tracking new one
+
+    // query from client side and add up all volume and fees
+
+
     // let loadTvlUpdateLog = safeLoadTvlUpdateLog(event.transaction.hash, poolAddress)
     // let tvlUpdateLog = loadTvlUpdateLog.entity
 
@@ -142,10 +151,6 @@ export function handleSwap(event: SwapLimit): void {
     // tvlUpdateLog.amountUsdTotal = pool.totalValueLockedUsd
 
     // tvlUpdateLog.save()
-
-    if (token1.symbol == 'USDC') {
-        log.info('USDC price at swap time: {}', [token1.usdPrice.toString()])
-    }
 
     // update historical order data
     if ((zeroForOneParam ? amount0Abs : amount1Abs).gt(BIGDECIMAL_ZERO)) {

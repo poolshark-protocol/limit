@@ -1,8 +1,8 @@
-import { safeLoadRangePosition, safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadToken, safeLoadCompoundRangeLog, safeLoadRangeTick } from "../utils/loads"
+import { safeLoadRangePosition, safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadToken, safeLoadCompoundRangeLog, safeLoadRangeTick, safeLoadTvlUpdateLog } from "../utils/loads"
 import {
     BigInt
 } from '@graphprotocol/graph-ts'
-import { BIGINT_ONE } from "../utils/helpers"
+import { BIGDECIMAL_ZERO, BIGINT_ONE, BIGINT_ZERO } from "../utils/helpers"
 import { CompoundRange } from "../../../generated/LimitPoolFactory/LimitPool"
 
 export function handleCompoundRange(event: CompoundRange): void {
@@ -70,6 +70,23 @@ export function handleCompoundRange(event: CompoundRange): void {
     token0.txnCount = token0.txnCount.plus(BIGINT_ONE)
     token1.txnCount = token1.txnCount.plus(BIGINT_ONE)
     factory.txnCount = factory.txnCount.plus(BIGINT_ONE)
+
+    let loadTvlUpdateLog = safeLoadTvlUpdateLog(event.transaction.hash, poolAddress)
+    let tvlUpdateLog = loadTvlUpdateLog.entity
+
+    tvlUpdateLog.pool = poolAddress
+    tvlUpdateLog.eventName = "CompoundRange"
+    tvlUpdateLog.txnHash = event.transaction.hash
+    tvlUpdateLog.txnBlockNumber = event.block.number
+    tvlUpdateLog.amount0Change = BIGDECIMAL_ZERO
+    tvlUpdateLog.amount1Change = BIGDECIMAL_ZERO
+    tvlUpdateLog.amount0Total = pool.totalValueLocked0
+    tvlUpdateLog.amount1Total = pool.totalValueLocked1
+    tvlUpdateLog.token0UsdPrice = token0.usdPrice
+    tvlUpdateLog.token1UsdPrice = token1.usdPrice
+    tvlUpdateLog.amountUsdChange = BIGDECIMAL_ZERO
+
+    tvlUpdateLog.save()
 
     pool.save()
     token0.save()

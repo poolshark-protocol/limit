@@ -104,16 +104,16 @@ export function handleBurnRange(event: BurnRange): void {
     token1.usdPrice = token1.ethPrice.times(basePrice.USD)
 
     // tvl updates
-    let oldPoolTotalValueLockedEth = pool.totalValueLockedEth
-    token0.totalValueLocked = token0.totalValueLocked.minus(amount0)
-    token1.totalValueLocked = token1.totalValueLocked.minus(amount1)
-    pool.totalValueLocked0 = pool.totalValueLocked0.minus(amount0)
-    pool.totalValueLocked1 = pool.totalValueLocked1.minus(amount1)
-    let updateTvlRet = updateDerivedTVLAmounts(token0, token1, pool, factory, basePrice, oldPoolTotalValueLockedEth)
-    token0 = updateTvlRet.token0
-    token1 = updateTvlRet.token1
-    pool = updateTvlRet.pool
-    factory = updateTvlRet.factory
+    // let oldPoolTotalValueLockedEth = pool.totalValueLockedEth
+    // token0.totalValueLocked = token0.totalValueLocked.minus(amount0)
+    // token1.totalValueLocked = token1.totalValueLocked.minus(amount1)
+    // pool.totalValueLocked0 = pool.totalValueLocked0.minus(amount0)
+    // pool.totalValueLocked1 = pool.totalValueLocked1.minus(amount1)
+    // let updateTvlRet = updateDerivedTVLAmounts(token0, token1, pool, factory, basePrice, oldPoolTotalValueLockedEth)
+    // token0 = updateTvlRet.token0
+    // token1 = updateTvlRet.token1
+    // pool = updateTvlRet.pool
+    // factory = updateTvlRet.factory
 
     if (
         pool.tickAtPrice !== null &&

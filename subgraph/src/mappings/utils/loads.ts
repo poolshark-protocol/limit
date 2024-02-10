@@ -227,7 +227,7 @@ export function safeLoadLimitPool(poolAddress: string): LoadLimitPoolRet {
         limitPoolEntity.totalValueLockedUsd = BIGDECIMAL_ZERO
         limitPoolEntity.totalValueLockedEth = BIGDECIMAL_ZERO
 
-        limitPoolEntity.last24HoursIndex =  BIGINT_ZERO
+        limitPoolEntity.last24HoursNextIndex =  0
         limitPoolEntity.last24HoursPoolData = new Array<string>()
 
         exists = false
@@ -235,6 +235,36 @@ export function safeLoadLimitPool(poolAddress: string): LoadLimitPoolRet {
 
     return {
         entity: limitPoolEntity,
+        exists: exists,
+    }
+}
+
+class LoadLimitPoolHourData {
+    entity: LimitPoolHourData
+    exists: boolean
+}
+export function safeLoadLimitPoolHourData(poolAddress: string, blockTimestamp: BigInt): LoadLimitPoolHourData {
+    let exists = true
+
+    let hourDataIndex = blockTimestamp.div(BigInt.fromString('3600')) // get unique hour index
+
+    let limitPoolHourDataId = poolAddress.concat('-').concat(hourDataIndex.toString())
+    let limitPoolHourDataEntity = LimitPoolHourData.load(limitPoolHourDataId)
+
+    if (!limitPoolHourDataEntity) {
+        limitPoolHourDataEntity = new LimitPoolHourData(limitPoolHourDataId)
+
+        limitPoolHourDataEntity.pool = poolAddress
+        limitPoolHourDataEntity.volumeUSD = BIGDECIMAL_ZERO
+        limitPoolHourDataEntity.feesUSD = BIGDECIMAL_ZERO
+        // round to start of hour
+        limitPoolHourDataEntity.startTimestamp = hourDataIndex.times(BigInt.fromString('3600'))
+
+        exists = false
+    }
+
+    return {
+        entity: limitPoolHourDataEntity,
         exists: exists,
     }
 }

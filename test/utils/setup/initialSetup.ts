@@ -320,8 +320,6 @@ export class InitialSetup {
 
         let limitPoolAddress; let limitPoolTokenAddress;
 
-        console.log('deploy pools check:', this.deployPools)
-
         if (hre.network.name == 'hardhat') {
             // deploy weth9
             await this.deployAssist.deployContractWithRetry(

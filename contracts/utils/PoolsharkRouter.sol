@@ -456,70 +456,86 @@ contract PoolsharkRouter is
         }
     }
 
-    function multiSwapSplit(address[] memory pools, SwapParams[] memory params)
+    function multiSwapSplit(
+        address[] memory pools,
+        SwapParams memory params
+        // uint128 amountRequired,
+        // uint32 deadline
+    )
         external
         payable
     {
-        if (pools.length != params.length)
-            require(false, 'InputArrayLengthsMismatch()');
-        for (uint256 i = 0; i < pools.length; ) {
-            if (i > 0) {
-                if (params[i].zeroForOne != params[0].zeroForOne)
-                    require(false, 'ZeroForOneParamMismatch()');
-                if (params[i].exactIn != params[0].exactIn)
-                    require(false, 'ExactInParamMismatch()');
-                if (params[i].amount != params[0].amount)
-                    require(false, 'AmountParamMisMatch()');
-            }
-            unchecked {
-                ++i;
-            }
-        }
-        for (uint256 i = 0; i < pools.length && params[0].amount > 0; ) {
+        // checkDeadline(deadline);
+        uint128 amountTotal;
+        for (uint256 i = 0; i < pools.length && params.amount > 0; ) {
             // if msg.value > 0 we either need to wrap or unwrap the native gas token
-            params[i].callbackData = abi.encode(
+            params.callbackData = abi.encode(
                 SwapCallbackData({
                     sender: msg.sender,
-                    recipient: params[i].to,
+                    recipient: params.to,
                     wrapped: msg.value > 0
                 })
             );
             if (msg.value > 0) {
                 IPool pool = IPool(pools[i]);
-                address tokenIn = params[i].zeroForOne
+                address tokenIn = params.zeroForOne
                     ? pool.token0()
                     : pool.token1();
-                address tokenOut = params[i].zeroForOne
+                address tokenOut = params.zeroForOne
                     ? pool.token1()
                     : pool.token0();
                 if (tokenOut == wethAddress) {
                     // send weth to router for unwrapping
-                    params[i].to = address(this);
+                    params.to = address(this);
                 } else if (tokenIn != wethAddress) {
                     require(false, 'NonNativeTokenPair()');
                 }
             }
             (int256 amount0Delta, int256 amount1Delta) = IPool(pools[i]).swap(
-                params[i]
+                params
             );
             // if there is another pool to swap against
             if ((i + 1) < pools.length) {
                 // calculate amount left and set for next call
-                if (params[0].zeroForOne && params[0].exactIn) {
-                    params[0].amount -= (-amount0Delta).toUint256().toUint128();
-                } else if (params[0].zeroForOne && !params[0].exactIn) {
-                    params[0].amount -= (amount1Delta).toUint256().toUint128();
-                } else if (!params[0].zeroForOne && !params[0].exactIn) {
-                    params[0].amount -= (amount0Delta).toUint256().toUint128();
-                } else if (!params[0].zeroForOne && params[0].exactIn) {
-                    params[0].amount -= (-amount1Delta).toUint256().toUint128();
+                if (params.zeroForOne) {
+                    if (params.exactIn) {
+                        // tokenIn / token0 spent
+                        params.amount -= (-amount0Delta).toUint256().toUint128();
+                        // tokenOut / token1 received
+                        amountTotal += (amount1Delta).toUint256().toUint128();
+                    } else {
+                        // tokenOut / token1 received
+                        params.amount -= (amount1Delta).toUint256().toUint128();
+                        // tokenIn / token1 spent
+                        amountTotal += (-amount0Delta).toUint256().toUint128();
+                    }
+                } else {
+                    if (params.exactIn) {
+                        // tokenIn / token1 spent
+                        params.amount -= (-amount1Delta).toUint256().toUint128();
+                        // tokenOut / token0 received
+                        amountTotal += (amount0Delta).toUint256().toUint128();
+                    } else {
+                        // tokenOut / token0 received
+                        params.amount -= (amount0Delta).toUint256().toUint128();
+                        // tokenIn / token1 spent
+                        amountTotal += (-amount1Delta).toUint256().toUint128();
+                    }
                 }
-                params[i + 1].amount = params[0].amount;
             }
             unchecked {
                 ++i;
             }
         }
+        // if (params.exactIn) {
+        //     if (amountTotal < amountRequired) {
+        //         require(false, 'PoolsharkRouter::AmountOutBelowRequired()');
+        //     }
+        // } else {
+        //     if (amountTotal > amountRequired) {
+        //         require(false, 'PoolsharkRouter::AmountInAboveRequired()');
+        //     }
+        // }
         refundEth();
     }
 
@@ -534,7 +550,7 @@ contract PoolsharkRouter is
         amountIns = new uint128[](pools.length);
         amountOuts = new uint128[](pools.length);
         for (uint256 i = 0; i < pools.length; ) {
-            if (pools[i] == address(0)) require(false, 'InvalidPoolAddress()');
+            if (pools[i] == address(0)) require(false, 'PoolsharkRouter::InvalidPoolAddress()');
             (amountIns[i], amountOuts[i]) = ILimitPoolView(pools[i])
                 .snapshotLimit(params[i]);
             unchecked {
@@ -858,6 +874,14 @@ contract PoolsharkRouter is
         // revert on sender mismatch
         if (msg.sender != predictedAddress)
             require(false, 'InvalidCallerAddress()');
+    }
+
+    function checkDeadline(
+        uint32 deadline
+    ) private view {
+        if (block.timestamp > deadline) {
+            require(false, 'PoolsharkRouter::DeadlineExpired()');
+        }
     }
 
     function canonicalCoverPoolsOnly(

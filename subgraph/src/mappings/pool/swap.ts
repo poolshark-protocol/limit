@@ -123,7 +123,7 @@ export function handleSwap(event: SwapLimit): void {
     token1.volumeEth = token1.volumeEth.plus(volumeEth)
 
     // save each hour until we reach 24 hours
-    pool = updatePoolHourData(pool)
+    pool = updatePoolHourData(pool, event.block.timestamp, volumeUsd, feesUsd)
     
     // update next index on rotation
 

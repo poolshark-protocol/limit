@@ -261,14 +261,14 @@ export async function validateSwap(params: ValidateSwapParams) {
       .connect(signer)
       .multiSwapSplit(
       [poolContract.address],  
-      [{
+      {
         to: signer.address,
         zeroForOne: zeroForOne,
         amount: amount,
         priceLimit: sqrtPriceLimitX96,
         exactIn: params.exactIn ?? true,
         callbackData: ethers.utils.formatBytes32String('')
-      }], {gasLimit: 10000000})
+      }, {gasLimit: 10000000})
     await txn.wait()
   } else {
     await expect(
@@ -276,14 +276,14 @@ export async function validateSwap(params: ValidateSwapParams) {
       .connect(signer)
       .multiSwapSplit(
       [poolContract.address],  
-        [{
+        {
           to: signer.address,
           zeroForOne: zeroForOne,
           amount: amount,
           priceLimit: sqrtPriceLimitX96,
           exactIn: params.exactIn ?? true,
           callbackData: ethers.utils.formatBytes32String('')
-        }])
+        })
     ).to.be.revertedWith(revertMessage)
     return
   }

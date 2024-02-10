@@ -119,17 +119,16 @@ export class MintPosition {
             let txn = await hre.props.poolRouter
             .connect(signer)
             .multiSwapSplit(
-            ['0x50456024eEd7921FC69298a8B742598bAd35582a'],
-                [
-                {
-                    to: signer.address,
-                    priceLimit: priceLimit,
-                    amount: amountIn,
-                    zeroForOne: zeroForOne,
-                    exactIn: true,
-                    callbackData: ethers.utils.formatBytes32String('')
-                },
-                ])
+            ['0x50456024eEd7921FC69298a8B742598bAd35582a'], 
+            {
+                to: signer.address,
+                priceLimit: priceLimit,
+                amount: amountIn,
+                zeroForOne: zeroForOne,
+                exactIn: true,
+                callbackData: ethers.utils.formatBytes32String('')
+            },
+            )
             await txn.wait()
         // }
 

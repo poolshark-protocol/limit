@@ -335,16 +335,7 @@ export async function validateSwap(params: ValidateSwapParams) {
             let txn = await hre.props.poolRouter
             .connect(signer)
             .multiSwapSplit(
-            [poolContract.address, poolContract.address],
-                [{
-                    to: recipient,
-                    priceLimit: zeroForOne ? (await (poolContract.globalState())).pool0.price
-                                           : (await (poolContract.globalState())).pool1.price,
-                    amount: amountIn,
-                    zeroForOne: zeroForOne,
-                    exactIn: true,
-                    callbackData: ethers.utils.formatBytes32String('')
-                },
+                [poolContract.address, poolContract.address],
                 {
                     to: recipient,
                     priceLimit: priceLimit,
@@ -353,7 +344,11 @@ export async function validateSwap(params: ValidateSwapParams) {
                     exactIn: true,
                     callbackData: ethers.utils.formatBytes32String('')
                 },
-                ], {gasLimit: 3000000, value: getSwapMsgValue(nativeIn, nativeOut, amountIn)})
+                {
+                    gasLimit: 3000000,
+                    value: getSwapMsgValue(nativeIn, nativeOut, amountIn)
+                }
+            )
             if (splitInto == 1) {
                 const receipt = await txn.wait();
             }
@@ -368,14 +363,14 @@ export async function validateSwap(params: ValidateSwapParams) {
             .connect(signer)
             .multiSwapSplit(
             [poolContract.address],  
-            [{
+            {
               to: recipient,
               zeroForOne: zeroForOne,
               amount: amountIn,
               priceLimit: priceLimit,
               exactIn: true,
               callbackData: ethers.utils.formatBytes32String('')
-            }], {gasLimit: 3000000, value: params.customMsgValue ?? getSwapMsgValue(nativeIn, nativeOut, amountIn)})
+            }, {gasLimit: 3000000, value: params.customMsgValue ?? getSwapMsgValue(nativeIn, nativeOut, amountIn)})
         ).to.be.revertedWith(revertMessage)
         return
     }

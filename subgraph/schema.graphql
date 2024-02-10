@@ -129,19 +129,25 @@ type LimitPool @entity {
     updatedAtBlockNumber: BigInt!
 
     # candle data
-    last24HoursIndex: BigInt!
+    last24HoursNextIndex: Int8!
     last24HoursPoolData: [LimitPoolHourData!]!
 }
 
 type LimitPoolHourData @entity {
-    # day timestamp
+    # hour start
     id: ID!
+
+    # address of pool
+    pool: LimitPool!
 
     # volume in USD
     volumeUSD: BigDecimal!
 
     # fees in USD
     feesUSD: BigDecimal!
+
+    # unix timestamp for start of hour
+    startTimestamp: BigInt!
 }
 
 type LimitPoolToken @entity {

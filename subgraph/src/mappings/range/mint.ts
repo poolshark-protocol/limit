@@ -157,7 +157,5 @@ export function handleMintRange(event: MintRange): void {
     factory.save()
     token0.save()
     token1.save()
-    // lowerTick.save()
-    // upperTick.save()
     position.save() 
 }

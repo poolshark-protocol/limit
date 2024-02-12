@@ -6,7 +6,7 @@ import { LimitPool } from '../../../typechain';
 import { gasUsed } from '../blocks';
 const { mine } = require("@nomicfoundation/hardhat-network-helpers");
 
-export const Q64x96 = BigNumber.from('2').pow(96)
+export const Q96 = BigNumber.from('2').pow(96)
 export const BN_ZERO = BigNumber.from('0')
 export const BN_ONE = BigNumber.from('1')
 export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
@@ -261,7 +261,7 @@ export async function validateSwap(params: ValidateSwapParams) {
     let amountInQuoted
     let amountOutQuoted
     let priceAfterQuoted
-
+    const blockTimestamp = (await ethers.provider.getBlock('latest')).timestamp;
     let etherUsed = BN_ZERO
 
     if (revertMessage == '') {
@@ -328,7 +328,12 @@ export async function validateSwap(params: ValidateSwapParams) {
             priceAfterQuoted = poolPrice
         }
 
+
         // console.log('quote results', amountInQuoted.toString(), amountOutQuoted.toString(), priceAfterQuoted.toString())
+
+        const exchangeRateLimit = amountInQuoted?.gt(BN_ZERO) ? amountOutQuoted.mul(Q96).div(amountInQuoted) : BN_ZERO
+
+        // console.log('amount quoted:', amountInQuoted.toString(), amountOutQuoted.toString())
 
         if (splitInto > 1) await ethers.provider.send("evm_setAutomine", [false]);
         for (let i = 0; i < splitInto; i++) {
@@ -344,6 +349,8 @@ export async function validateSwap(params: ValidateSwapParams) {
                     exactIn: true,
                     callbackData: ethers.utils.formatBytes32String('')
                 },
+                exchangeRateLimit,
+                blockTimestamp + 1,
                 {
                     gasLimit: 3000000,
                     value: getSwapMsgValue(nativeIn, nativeOut, amountIn)
@@ -362,15 +369,19 @@ export async function validateSwap(params: ValidateSwapParams) {
             hre.props.poolRouter
             .connect(signer)
             .multiSwapSplit(
-            [poolContract.address],  
-            {
-              to: recipient,
-              zeroForOne: zeroForOne,
-              amount: amountIn,
-              priceLimit: priceLimit,
-              exactIn: true,
-              callbackData: ethers.utils.formatBytes32String('')
-            }, {gasLimit: 3000000, value: params.customMsgValue ?? getSwapMsgValue(nativeIn, nativeOut, amountIn)})
+                [poolContract.address],  
+                {
+                    to: recipient,
+                    zeroForOne: zeroForOne,
+                    amount: amountIn,
+                    priceLimit: priceLimit,
+                    exactIn: true,
+                    callbackData: ethers.utils.formatBytes32String('')
+                },
+                0,
+                blockTimestamp + 1,
+                {gasLimit: 3000000, value: params.customMsgValue ?? getSwapMsgValue(nativeIn, nativeOut, amountIn)}
+            )
         ).to.be.revertedWith(revertMessage)
         return
     }

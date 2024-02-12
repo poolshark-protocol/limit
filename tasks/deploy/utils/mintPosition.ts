@@ -128,6 +128,8 @@ export class MintPosition {
                 exactIn: true,
                 callbackData: ethers.utils.formatBytes32String('')
             },
+            parseUnits('100', 18), // exchangeRateLimit = amountOut * Q96 / amountIn
+            2e18                   // deadline
             )
             await txn.wait()
         // }

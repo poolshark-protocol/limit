@@ -175,6 +175,7 @@ describe('RangePool Exact In Tests', function () {
 
   it('pool - Should not skip crossing tick - kyber exploit', async function () {
     if (debugMode) console.log('kyber pool:', hre.props.kyberPool.address, hre.props.kyberPoolToken.address)
+
     await validateSwap({
       signer: hre.props.alice,
       recipient: hre.props.alice.address,
@@ -186,6 +187,7 @@ describe('RangePool Exact In Tests', function () {
       poolContract: hre.props.kyberPool,
       revertMessage: '',
     })
+
     const aliceId = await validateMint({
       signer: hre.props.alice,
       recipient: hre.props.alice.address,
@@ -200,6 +202,7 @@ describe('RangePool Exact In Tests', function () {
       poolTokenContract: hre.props.kyberPoolToken,
       revertMessage: '',
     })
+
     await validateBurn({
       signer: hre.props.alice,
       recipient: hre.props.alice.address,
@@ -213,6 +216,7 @@ describe('RangePool Exact In Tests', function () {
       poolTokenContract: hre.props.kyberPoolToken,
       revertMessage: '',
     })
+
     await validateSwap({
       signer: hre.props.alice,
       recipient: hre.props.alice.address,
@@ -224,6 +228,7 @@ describe('RangePool Exact In Tests', function () {
       poolContract: hre.props.kyberPool,
       revertMessage: '',
     })
+
     await validateSwap({
       signer: hre.props.alice,
       recipient: hre.props.alice.address,

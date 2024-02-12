@@ -38,6 +38,7 @@ contract PoolsharkRouter is
     address public immutable wethAddress;
     address public immutable limitPoolFactory;
     address public immutable coverPoolFactory;
+    uint256 internal constant Q96 = 0x1000000000000000000000000;
 
     event RouterDeployed(
         address router,
@@ -456,17 +457,23 @@ contract PoolsharkRouter is
         }
     }
 
+    struct MultiSwapSplitLocals {
+        uint256 exchangeRate;
+        uint128 amountIn;
+        uint128 amountOut;
+    }
+
     function multiSwapSplit(
         address[] memory pools,
-        SwapParams memory params
-        // uint128 amountRequired,
-        // uint32 deadline
+        SwapParams memory params,
+        uint160 exchangeRateLimit,
+        uint32 deadline
     )
         external
         payable
     {
-        // checkDeadline(deadline);
-        uint128 amountTotal;
+        checkDeadline(deadline);
+        MultiSwapSplitLocals memory locals;
         for (uint256 i = 0; i < pools.length && params.amount > 0; ) {
             // if msg.value > 0 we either need to wrap or unwrap the native gas token
             params.callbackData = abi.encode(
@@ -498,28 +505,36 @@ contract PoolsharkRouter is
             if ((i + 1) < pools.length) {
                 // calculate amount left and set for next call
                 if (params.zeroForOne) {
+                    // get token amounts
+                    uint128 amount0 = (-amount0Delta).toUint256().toUint128();
+                    uint128 amount1 = (amount1Delta).toUint256().toUint128();
+
+                    // update for exchange rate
+                    locals.amountIn += amount0;
+                    locals.amountOut += amount1;
+
                     if (params.exactIn) {
                         // tokenIn / token0 spent
-                        params.amount -= (-amount0Delta).toUint256().toUint128();
-                        // tokenOut / token1 received
-                        amountTotal += (amount1Delta).toUint256().toUint128();
+                        params.amount -= amount0;
                     } else {
                         // tokenOut / token1 received
-                        params.amount -= (amount1Delta).toUint256().toUint128();
-                        // tokenIn / token1 spent
-                        amountTotal += (-amount0Delta).toUint256().toUint128();
+                        params.amount -= amount1;
                     }
                 } else {
+                    // get token amounts
+                    uint128 amount0 = (amount0Delta).toUint256().toUint128();
+                    uint128 amount1 = (-amount1Delta).toUint256().toUint128();
+
+                    // update for exchange rate
+                    locals.amountIn += amount1;
+                    locals.amountOut += amount0;
+
                     if (params.exactIn) {
                         // tokenIn / token1 spent
                         params.amount -= (-amount1Delta).toUint256().toUint128();
-                        // tokenOut / token0 received
-                        amountTotal += (amount0Delta).toUint256().toUint128();
                     } else {
                         // tokenOut / token0 received
                         params.amount -= (amount0Delta).toUint256().toUint128();
-                        // tokenIn / token1 spent
-                        amountTotal += (-amount1Delta).toUint256().toUint128();
                     }
                 }
             }
@@ -527,15 +542,12 @@ contract PoolsharkRouter is
                 ++i;
             }
         }
-        // if (params.exactIn) {
-        //     if (amountTotal < amountRequired) {
-        //         require(false, 'PoolsharkRouter::AmountOutBelowRequired()');
-        //     }
-        // } else {
-        //     if (amountTotal > amountRequired) {
-        //         require(false, 'PoolsharkRouter::AmountInAboveRequired()');
-        //     }
-        // }
+        if (locals.amountIn > 0) {
+            locals.exchangeRate = locals.amountOut * Q96 / locals.amountIn;
+            if (locals.exchangeRate < exchangeRateLimit) {
+                require(false, 'PoolsharkRouter::ExchangeRateLimitExceeded()');
+            }
+        }
         refundEth();
     }
 
@@ -880,7 +892,7 @@ contract PoolsharkRouter is
         uint32 deadline
     ) private view {
         if (block.timestamp > deadline) {
-            require(false, 'PoolsharkRouter::DeadlineExpired()');
+            require(false, 'PoolsharkRouter::DeadlineExceeded()');
         }
     }
 

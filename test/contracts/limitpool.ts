@@ -4227,7 +4227,7 @@ describe('LimitPool Tests', function () {
 
         const alicePositionLiquidity = await getPositionLiquidity(false, aliceId);
         expect(alicePositionLiquidity).to.eq(aliceLiquidity);
- 
+
         await validateSwap({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
@@ -4403,6 +4403,7 @@ describe('LimitPool Tests', function () {
         //
         // Additionally, this state will arise on common day-to-day use, making the pools virtually unusable over a non-trivial
         // amount of time.
+        console.log('swap 4')
         await validateSwap({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,

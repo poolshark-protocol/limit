@@ -5,7 +5,7 @@ import { LimitPool, PositionERC1155 } from '../../../typechain'
 import { BN_ONE, RangePoolState, RangeStake, RangeTick, Tick } from './limitpool'
 import { getMintRangeInputData } from './poolsharkrouter'
 
-export const Q64x96 = BigNumber.from('2').pow(96)
+export const Q96 = BigNumber.from('2').pow(96)
 export const BN_ZERO = BigNumber.from('0')
 export interface Position {
   feeGrowthInside0Last: BigNumber
@@ -232,6 +232,7 @@ export async function validateSwap(params: ValidateSwapParams) {
   const outAmount = quote[1]
   const priceAfterQuote = quote[2]
 
+
   let balanceInBefore
   let balanceOutBefore
   if (zeroForOne) {
@@ -256,6 +257,9 @@ export async function validateSwap(params: ValidateSwapParams) {
     await approve1Txn.wait()
   }
 
+  const blockTimestamp = (await ethers.provider.getBlock('latest')).timestamp;
+  const exchangeRateLimit = inAmount?.gt(BN_ZERO) ? outAmount.mul(Q96).div(inAmount) : BN_ZERO
+
   if (revertMessage == '') {
     let txn = await hre.props.poolRouter
       .connect(signer)
@@ -268,14 +272,17 @@ export async function validateSwap(params: ValidateSwapParams) {
         priceLimit: sqrtPriceLimitX96,
         exactIn: params.exactIn ?? true,
         callbackData: ethers.utils.formatBytes32String('')
-      }, {gasLimit: 10000000})
+      },
+      exchangeRateLimit,
+      blockTimestamp + 1,
+      {gasLimit: 10000000})
     await txn.wait()
   } else {
     await expect(
       hre.props.poolRouter
       .connect(signer)
       .multiSwapSplit(
-      [poolContract.address],  
+        [poolContract.address],  
         {
           to: signer.address,
           zeroForOne: zeroForOne,
@@ -283,7 +290,10 @@ export async function validateSwap(params: ValidateSwapParams) {
           priceLimit: sqrtPriceLimitX96,
           exactIn: params.exactIn ?? true,
           callbackData: ethers.utils.formatBytes32String('')
-        })
+        },
+        exchangeRateLimit,
+        blockTimestamp + 1
+      )
     ).to.be.revertedWith(revertMessage)
     return
   }

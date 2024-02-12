@@ -57,13 +57,14 @@ export function handleBurnLimit(event: BurnLimit): void {
     let loadOrder = safeLoadHistoricalOrder(tokenIn.id, tokenOut.id, poolAddress, position.positionId.toString()) // 9
     let order = loadOrder.entity
 
-    if (!loadPosition.exists || !loadOrder.exists) {
+    if (!loadPosition.exists) {
         //throw an error
         return;
     }
-
-    order.touches = order.touches.plus(BIGINT_ONE)
-    order.usdValue = order.usdValue.plus(amountIn.times(tokenIn.usdPrice))
+    if (loadOrder.exists) {
+        order.touches = order.touches.plus(BIGINT_ONE)
+        order.usdValue = order.usdValue.plus(amountIn.times(tokenIn.usdPrice))
+    }
     
     // increment position amounts
     position.amountFilled = position.amountFilled.plus(tokenInClaimedParam)
@@ -73,12 +74,14 @@ export function handleBurnLimit(event: BurnLimit): void {
             (zeroForOneParam ? newClaim.equals(upper) : newClaim.equals(lower))) {
         if (!loadOrder.exists) {
             // throw an error
+        } else {
+            order.completedAtTimestamp = event.block.timestamp
+            order.amountIn = order.amountIn.plus(convertTokenToDecimal(position.amountIn, tokenOut.decimals))
+            order.amountOut = order.amountOut.plus(convertTokenToDecimal(position.amountFilled, tokenIn.decimals))
+            order.averagePrice = safeDiv(order.amountOut, order.amountIn)
+            order.completed = true
+            order.save()    // 9
         }
-        order.completedAtTimestamp = event.block.timestamp
-        order.amountIn = order.amountIn.plus(convertTokenToDecimal(position.amountIn, tokenOut.decimals))
-        order.amountOut = order.amountOut.plus(convertTokenToDecimal(position.amountFilled, tokenIn.decimals))
-        order.averagePrice = safeDiv(order.amountOut, order.amountIn)
-        order.completed = true
         store.remove('LimitPosition', position.id)
     } else {
         position.liquidity = position.liquidity.minus(liquidityBurnedParam)
@@ -209,5 +212,5 @@ export function handleBurnLimit(event: BurnLimit): void {
     factory.save() // 5
     tokenIn.save() // 7
     tokenOut.save() // 8
-    order.save()    // 9
+
 }

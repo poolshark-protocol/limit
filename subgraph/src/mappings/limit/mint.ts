@@ -176,25 +176,24 @@ export function handleMintLimit(event: MintLimit): void {
     pool = updateTvlRet.pool
     factory = updateTvlRet.factory
 
-    // let loadTvlUpdateLog = safeLoadTvlUpdateLog(event.transaction.hash, poolAddress)
-    // let tvlUpdateLog = loadTvlUpdateLog.entity
+    let loadTvlUpdateLog = safeLoadTvlUpdateLog(event.transaction.hash, poolAddress)
+    let tvlUpdateLog = loadTvlUpdateLog.entity
 
-    // tvlUpdateLog.pool = poolAddress
-    // tvlUpdateLog.eventName = "MintLimit"
-    // tvlUpdateLog.txnHash = event.transaction.hash
-    // tvlUpdateLog.txnBlockNumber = event.block.number
-    // tvlUpdateLog.amount0Change = zeroForOneParam ? amountIn : amountOut.neg()
-    // tvlUpdateLog.amount1Change = zeroForOneParam ? amountOut.neg() : amountIn
-    // tvlUpdateLog.amount0Total = pool.totalValueLocked0
-    // tvlUpdateLog.amount1Total = pool.totalValueLocked1
-    // tvlUpdateLog.token0UsdPrice = zeroForOneParam ? tokenIn.usdPrice : tokenOut.usdPrice
-    // tvlUpdateLog.token1UsdPrice = zeroForOneParam ? tokenOut.usdPrice : tokenIn.usdPrice
-    // tvlUpdateLog.amountUsdChange = amountIn
-    // .times(tokenIn.ethPrice.times(basePrice.USD))
-    // .minus(amountOut.times(tokenOut.ethPrice.times(basePrice.USD)))
-    // tvlUpdateLog.amountUsdTotal = pool.totalValueLockedUsd
+    tvlUpdateLog.pool = poolAddress
+    tvlUpdateLog.eventName = "MintLimit"
+    tvlUpdateLog.txnHash = event.transaction.hash
+    tvlUpdateLog.txnBlockNumber = event.block.number
+    tvlUpdateLog.amount0Change = zeroForOneParam ? amountIn : BIGDECIMAL_ZERO
+    tvlUpdateLog.amount1Change = zeroForOneParam ? BIGDECIMAL_ZERO : amountIn
+    tvlUpdateLog.amount0Total = pool.totalValueLocked0
+    tvlUpdateLog.amount1Total = pool.totalValueLocked1
+    tvlUpdateLog.token0UsdPrice = zeroForOneParam ? tokenIn.usdPrice : tokenOut.usdPrice
+    tvlUpdateLog.token1UsdPrice = zeroForOneParam ? tokenOut.usdPrice : tokenIn.usdPrice
+    tvlUpdateLog.amountUsdChange = amountIn
+    .times(tokenIn.ethPrice.times(basePrice.USD))
+    tvlUpdateLog.amountUsdTotal = pool.totalValueLockedUsd
 
-    // tvlUpdateLog.save()
+    tvlUpdateLog.save()
 
     basePrice.save() // 3
     pool.save() // 4

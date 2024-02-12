@@ -1,6 +1,4 @@
 import { SyncRangeTick } from "../../../generated/LimitPoolFactory/LimitPool"
-import { safeLoadRangeTick } from "../utils/loads"
-import { BigInt } from "@graphprotocol/graph-ts"
 
 export function handleSyncRangeTick(event: SyncRangeTick): void {
     // let feeGrowthOutside0Param = event.params.feeGrowthOutside0

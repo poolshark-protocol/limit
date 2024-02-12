@@ -167,26 +167,27 @@ export function handleBurnLimit(event: BurnLimit): void {
     pool = updateTvlRet.pool
     factory = updateTvlRet.factory
 
-    // let loadTvlUpdateLog = safeLoadTvlUpdateLog(event.transaction.hash, poolAddress)
-    // let tvlUpdateLog = loadTvlUpdateLog.entity
+    if (pool.id == '0x55da7d4ae164a4eba4ce5e31e4460177c2ca4c81') { 
+        let loadTvlUpdateLog = safeLoadTvlUpdateLog(event.transaction.hash, poolAddress)
+        let tvlUpdateLog = loadTvlUpdateLog.entity
 
-    // tvlUpdateLog.pool = poolAddress
-    // tvlUpdateLog.eventName = "BurnRange"
-    // tvlUpdateLog.txnHash = event.transaction.hash
-    // tvlUpdateLog.txnBlockNumber = event.block.number
-    // tvlUpdateLog.amount0Change = zeroForOneParam ? amountOut.neg() : amountIn.neg()
-    // tvlUpdateLog.amount1Change = zeroForOneParam ? amountIn.neg() : amountOut.neg()
-    // tvlUpdateLog.amount0Total = pool.totalValueLocked0
-    // tvlUpdateLog.amount1Total = pool.totalValueLocked1
-    // tvlUpdateLog.token0UsdPrice = zeroForOneParam ? tokenOut.usdPrice : tokenIn.usdPrice
-    // tvlUpdateLog.token1UsdPrice = zeroForOneParam ? tokenIn.usdPrice : tokenOut.usdPrice
-    // tvlUpdateLog.amountUsdChange = amountIn
-    // .times(tokenIn.ethPrice.times(basePrice.USD))
-    // .plus(amountOut.times(tokenOut.ethPrice.times(basePrice.USD))).neg()
-    // tvlUpdateLog.amountUsdTotal = pool.totalValueLockedUsd
+        tvlUpdateLog.pool = poolAddress
+        tvlUpdateLog.eventName = "BurnLimit"
+        tvlUpdateLog.txnHash = event.transaction.hash
+        tvlUpdateLog.txnBlockNumber = event.block.number
+        tvlUpdateLog.amount0Change = zeroForOneParam ? amountOut.neg() : amountIn.neg()
+        tvlUpdateLog.amount1Change = zeroForOneParam ? amountIn.neg() : amountOut.neg()
+        tvlUpdateLog.amount0Total = pool.totalValueLocked0
+        tvlUpdateLog.amount1Total = pool.totalValueLocked1
+        tvlUpdateLog.token0UsdPrice = zeroForOneParam ? tokenOut.usdPrice : tokenIn.usdPrice
+        tvlUpdateLog.token1UsdPrice = zeroForOneParam ? tokenIn.usdPrice : tokenOut.usdPrice
+        tvlUpdateLog.amountUsdChange = amountIn
+        .times(tokenIn.ethPrice.times(basePrice.USD))
+        .plus(amountOut.times(tokenOut.ethPrice.times(basePrice.USD))).neg()
+        tvlUpdateLog.amountUsdTotal = pool.totalValueLockedUsd
 
-    // tvlUpdateLog.save()
-
+        tvlUpdateLog.save()
+    }
     // update season 1 rewards
     if (event.block.timestamp.ge(SEASON_1_START_TIME) && event.block.timestamp.le(SEASON_1_END_TIME)) {
         // update season rewards if between start and end time

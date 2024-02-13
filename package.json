@@ -1,5 +1,24 @@
 {
-    "name": "poolshark-protocol",
+    "name": "@poolshark/limit",
+    "description": "🦈 Poolshark Limit Protocol 🦈",
+    "license": "BUSL-1.1",
+    "publishConfig": {
+        "access": "public"
+    },
+    "keywords": [
+        "poolshark",
+        "limit"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/poolshark-protocol/limit.git"
+    },
+    "files": [
+        "contracts/",
+        "artifacts/"
+    ],
+    "version": "1.0.2",
+    "main": "index.js",
     "scripts": {
         "format": "npx prettier --write .",
         "format:check": "npx prettier --check '*/**/*.{js,sol,json,md,ts}'",
@@ -50,10 +69,9 @@
         "typechain": "5.2.0",
         "typescript": "4.8.3"
     },
-    "version": "1.0.0",
-    "description": "",
-    "main": "index.js",
-    "keywords": [],
-    "author": "",
-    "license": "ISC"
+    "bugs": {
+        "url": "https://github.com/poolshark-protocol/limit/issues"
+    },
+    "homepage": "https://github.com/poolshark-protocol/limit#readme",
+    "author": "alphak3y"
 }

@@ -14,8 +14,8 @@ This will allow the smart contracts to verify the correct claim tick.
 
 ### Installation
 ```
-git clone https://github.com/poolshark-protocol/cover
-cd cover
+git clone https://github.com/poolshark-protocol/limit
+cd limit
 yarn install
 ```
 
@@ -31,9 +31,9 @@ yarn compile
 yarn test
 ```
 
-Contracts can be deployed onto Arbitrum Goerli using the deploy script:
+Contracts can be deployed onto Arbitrum Sepolia using the deploy script:
 ```
-npx hardhat deploy-coverpools --network arb_goerli
+npx hardhat deploy-limitpools --network arb_sepolia
 ```
 
 ### Contracts
@@ -51,7 +51,7 @@ _ERC-165: Standard Interface Detection_
 
 _ERC-1155: Multi Token Standard_
 
-#### Cover Pool Factory
+#### Limit Pool Factory
 The factory which handles the deployment of new Limit Pools. The factory works by cloning the implementation contract to match a given Limit pool type. Each pool type has its own unique implementation, which can have varying details such as AMM curve math (i.e. Constant Product, Constant Sum, etc.), or other unique design choices.
 
 ##### Supported Interfaces

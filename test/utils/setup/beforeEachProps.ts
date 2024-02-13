@@ -32,6 +32,8 @@ export interface BeforeEachProps {
     limitPool: LimitPool
     wethPool: LimitPool
     wethPoolToken: PositionERC1155
+    wbtcPool: LimitPool
+    wbtcPoolToken: PositionERC1155
     limitPoolImpl: LimitPool
     limitPoolToken: PositionERC1155
     kyberPool: LimitPool
@@ -96,6 +98,8 @@ export class GetBeforeEach {
         let limitPool: LimitPool
         let wethPool: LimitPool
         let wethPoolToken: PositionERC1155
+        let wbtcPool: LimitPool
+        let wbtcPoolToken: PositionERC1155
         let limitPoolImpl: LimitPool
         let limitPoolToken: PositionERC1155
         let kyberPool: LimitPool
@@ -125,6 +129,8 @@ export class GetBeforeEach {
         //shared
         let tokenA: Token20
         let tokenB: Token20
+        let tokenC: Token20
+        let wbtc: Token20
         let token0: Token20
         let token1: Token20
         let weth9: WETH9
@@ -138,6 +144,8 @@ export class GetBeforeEach {
             limitPool,
             wethPool,
             wethPoolToken,
+            wbtcPool,
+            wbtcPoolToken,
             limitPoolImpl,
             limitPoolToken,
             kyberPool,

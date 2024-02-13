@@ -31,8 +31,8 @@ export class InitialSetup {
     /// DEPLOY CONFIG
     private deployTokens = false
     private deployContracts = false
-    private deployPools = true
-    private deployRouter = false
+    private deployPools = false
+    private deployRouter = true
     private deployStaker = false
 
     constructor() {
@@ -371,6 +371,18 @@ export class InitialSetup {
 
             hre.nonce += 1;
 
+            // create wbtc limit pool
+            let wbtcPoolTxn = await hre.props.limitPoolFactory.createLimitPool({
+                poolTypeId: 0,
+                tokenIn: hre.props.weth9.address,
+                tokenOut: hre.props.token1.address,
+                swapFee: '1000',
+                startPrice: '3543191142285914327220224'
+            });
+            await wbtcPoolTxn.wait();
+            
+            hre.nonce += 1;
+
             // create kyber test limit pool
             let kyperPoolTxn = await hre.props.limitPoolFactory.createLimitPool({
                 poolTypeId: 0,
@@ -399,6 +411,16 @@ export class InitialSetup {
 
             hre.props.wethPool = await hre.ethers.getContractAt('LimitPool', wethPoolAddress)
             hre.props.wethPoolToken = await hre.ethers.getContractAt('PositionERC1155', wethPoolTokenAddress)
+
+            let [wbtcPoolAddress, wbtcPoolTokenAddress] = await hre.props.limitPoolFactory.getLimitPool(
+                hre.props.weth9.address,
+                hre.props.token1.address,
+                '1000',
+                0
+            )
+
+            hre.props.wbtcPool = await hre.ethers.getContractAt('LimitPool', wbtcPoolAddress)
+            hre.props.wbtcPoolToken = await hre.ethers.getContractAt('PositionERC1155', wbtcPoolTokenAddress)
 
             let [kyberPoolAddress, kyberPoolTokenAddress] = await hre.props.limitPoolFactory.getLimitPool(
                 hre.props.token0.address,
@@ -441,49 +463,25 @@ export class InitialSetup {
                 '1000',
                 0
             )
-
-            // @dev - skip 0.3% and 1% fee tiers for now
-            // createPoolTxn = await hre.props.limitPoolFactory.createLimitPool({
-            //     poolTypeId: 0,
-            //     tokenIn: hre.props.token0.address,
-            //     tokenOut: hre.props.token1.address,
-            //     swapFee: '3000',
-            //     startPrice: '1738267302024796147492397123192298'
-            // });
-            // await createPoolTxn.wait();
-
-            // hre.nonce += 1;
-
-            // createPoolTxn = await hre.props.limitPoolFactory.createLimitPool({
-            //     poolTypeId: 0,
-            //     tokenIn: hre.props.token0.address,
-            //     tokenOut: hre.props.token1.address,
-            //     swapFee: '10000',
-            //     startPrice: '1738267302024796147492397123192298'
-            // });
-            // await createPoolTxn.wait();
-
-            // hre.nonce += 1;
         }
 
-        hre.props.limitPool = await hre.ethers.getContractAt('LimitPool', limitPoolAddress)
-        hre.props.limitPoolToken = await hre.ethers.getContractAt('PositionERC1155', limitPoolTokenAddress)
+        if (hre.network.name == 'hardhat' || this.deployPools) {
+            hre.props.limitPool = await hre.ethers.getContractAt('LimitPool', limitPoolAddress)
+            hre.props.limitPoolToken = await hre.ethers.getContractAt('PositionERC1155', limitPoolTokenAddress)
 
-        await hre.props.limitPoolToken.name()
-        await hre.props.limitPoolToken.symbol()
-
-        await this.deployAssist.saveContractDeployment(
-            network,
-            'LimitPool',
-            'limitPool',
-            hre.props.limitPool,
-            [
-                hre.props.token0.address,
-                hre.props.token1.address,
-                hre.network.name == 'hardhat' ? '500' : '3000',
-                0
-            ]
-        )
+            await this.deployAssist.saveContractDeployment(
+                network,
+                'LimitPool',
+                'limitPool',
+                hre.props.limitPool,
+                [
+                    hre.props.token0.address,
+                    hre.props.token1.address,
+                    '1000',
+                    0
+                ]
+            )
+        }
 
         if (hre.network.name == 'hardhat' || this.deployRouter) {
             let limitPoolFactoryAddress; let coverPoolFactoryAddress; let weth9Address;
@@ -492,6 +490,7 @@ export class InitialSetup {
                 coverPoolFactoryAddress = '0x0000000000000000000000000000000000000000'
                 weth9Address = hre.props.weth9.address
             } else {
+                console.log('read addresses')
                 limitPoolFactoryAddress = (
                     await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
                         {

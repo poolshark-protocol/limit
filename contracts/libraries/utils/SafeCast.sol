@@ -74,4 +74,33 @@ library SafeCast {
     function toUint16(uint256 y) internal pure returns (uint16 z) {
         if ((z = uint16(y)) != y) require(false, 'Uint256ToUint16:Overflow()');
     }
+
+    function safeMinusInt56(
+        int56 valueA,
+        int56 valueB
+    ) internal pure returns (int56) {
+        if (valueB >= 0) {
+            // check for underflow if valueB gt 0
+            if (valueA < type(int56).min + valueB) {
+                return type(int56).min;
+            }
+        } else {
+            // check for overflow if valueB lt 0
+            if (valueA > type(int56).max + valueB) {
+                return type(int56).max;
+            }
+        }
+        return valueA - valueB;
+    }
+
+    function safeMinusUint160(
+        uint160 valueA,
+        uint160 valueB
+    ) internal pure returns (uint160) {
+        // check for underflow
+        if (valueA >= valueB) {
+            return valueA - valueB;
+        }
+        return 0;
+    }
 }

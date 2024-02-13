@@ -13,6 +13,8 @@ import '../Samples.sol';
 
 /// @notice Position management library for ranged liquidity.
 library RangePositions {
+    using SafeCast for int56;
+    using SafeCast for uint160;
     using SafeCast for uint256;
     using SafeCast for uint128;
     using SafeCast for int256;
@@ -450,9 +452,10 @@ library RangePositions {
         if (cache.tick < cache.position.lower) {
             // lower accum values are greater
             return (
-                cache.tickSecondsAccumLower - cache.tickSecondsAccumUpper,
-                cache.secondsPerLiquidityAccumLower -
-                    cache.secondsPerLiquidityAccumUpper,
+                cache.tickSecondsAccumLower.safeMinusInt56(
+                    cache.tickSecondsAccumUpper),
+                cache.secondsPerLiquidityAccumLower.safeMinusUint160(
+                    cache.secondsPerLiquidityAccumUpper),
                 cache.amount0,
                 cache.amount1
             );
@@ -474,21 +477,25 @@ library RangePositions {
                     0
                 );
             return (
-                cache.tickSecondsAccum -
-                    cache.tickSecondsAccumLower -
-                    cache.tickSecondsAccumUpper,
-                cache.secondsPerLiquidityAccum -
-                    cache.secondsPerLiquidityAccumLower -
-                    cache.secondsPerLiquidityAccumUpper,
+                cache.tickSecondsAccum.safeMinusInt56(
+                    cache.tickSecondsAccumLower
+                ).safeMinusInt56(
+                    cache.tickSecondsAccumUpper),
+                cache.secondsPerLiquidityAccum.safeMinusUint160(
+                    cache.secondsPerLiquidityAccumLower
+                ).safeMinusUint160(
+                    cache.secondsPerLiquidityAccumUpper
+                ),
                 cache.amount0,
                 cache.amount1
             );
         } else {
             // upper accum values are greater
             return (
-                cache.tickSecondsAccumUpper - cache.tickSecondsAccumLower,
-                cache.secondsPerLiquidityAccumUpper -
-                    cache.secondsPerLiquidityAccumLower,
+                cache.tickSecondsAccumUpper.safeMinusInt56(
+                    cache.tickSecondsAccumLower),
+                cache.secondsPerLiquidityAccumUpper.safeMinusUint160(
+                    cache.secondsPerLiquidityAccumLower),
                 cache.amount0,
                 cache.amount1
             );

@@ -14,6 +14,8 @@ import './limit/EpochMap.sol';
 import './limit/LimitTicks.sol';
 
 library Ticks {
+    using SafeCast for int56;
+    using SafeCast for uint160;
     using SafeCast for uint256;
 
     // cross flags
@@ -531,13 +533,15 @@ library Ticks {
                     crossTick.feeGrowthOutside0;
                 crossTick.feeGrowthOutside1 =
                     cache.state.pool.feeGrowthGlobal1 -
-                    crossTick.feeGrowthOutside1;
+                        crossTick.feeGrowthOutside1;
                 crossTick.tickSecondsAccumOutside =
-                    cache.tickSecondsAccum -
-                    crossTick.tickSecondsAccumOutside;
+                    cache.tickSecondsAccum.safeMinusInt56(
+                        crossTick.tickSecondsAccumOutside
+                    );
                 crossTick.secondsPerLiquidityAccumOutside =
-                    cache.secondsPerLiquidityAccum -
-                    crossTick.secondsPerLiquidityAccumOutside;
+                    cache.secondsPerLiquidityAccum.safeMinusUint160(
+                        crossTick.secondsPerLiquidityAccumOutside
+                    );
                 ticks[cache.crossTick].range = crossTick;
                 int128 liquidityDelta = crossTick.liquidityDelta;
                 // emit custom event
@@ -931,4 +935,6 @@ library Ticks {
         }
         return cache;
     }
+
+
 }

@@ -7,6 +7,8 @@ import '../interfaces/range/IRangePool.sol';
 import '../interfaces/structs/RangePoolStructs.sol';
 
 library Samples {
+    using SafeCast for int56;
+    using SafeCast for uint160;
     using SafeCast for uint256;
 
     uint8 internal constant TIME_DELTA_MAX = 6;
@@ -123,33 +125,33 @@ library Samples {
         }
         if (secondsAgo[secondsAgo.length - 1] > secondsAgo[0]) {
             averageTick = int24(
-                (tickSecondsAccum[0] -
-                    tickSecondsAccum[secondsAgo.length - 1]) /
-                    int32(secondsAgo[secondsAgo.length - 1] - secondsAgo[0])
+                (tickSecondsAccum[0].safeMinusInt56(
+                    tickSecondsAccum[secondsAgo.length - 1])
+                ) / int32(secondsAgo[secondsAgo.length - 1] - secondsAgo[0])
             );
             averagePrice = ConstantProduct.getPriceAtTick(
                 averageTick,
                 params.constants
             );
             averageLiquidity = uint128(
-                (secondsPerLiquidityAccum[0] -
-                    secondsPerLiquidityAccum[secondsAgo.length - 1]) *
-                    (secondsAgo[secondsAgo.length - 1] - secondsAgo[0])
+                (secondsPerLiquidityAccum[0].safeMinusUint160(
+                    secondsPerLiquidityAccum[secondsAgo.length - 1])
+                ) * (secondsAgo[secondsAgo.length - 1] - secondsAgo[0])
             );
         } else {
             averageTick = int24(
-                (tickSecondsAccum[secondsAgo.length - 1] -
-                    tickSecondsAccum[0]) /
-                    int32(secondsAgo[0] - secondsAgo[secondsAgo.length - 1])
+                (tickSecondsAccum[secondsAgo.length - 1].safeMinusInt56(
+                    tickSecondsAccum[0])
+                ) / int32(secondsAgo[0] - secondsAgo[secondsAgo.length - 1])
             );
             averagePrice = ConstantProduct.getPriceAtTick(
                 averageTick,
                 params.constants
             );
             averageLiquidity = uint128(
-                (secondsPerLiquidityAccum[secondsAgo.length - 1] -
-                    secondsPerLiquidityAccum[0]) *
-                    (secondsAgo[0] - secondsAgo[secondsAgo.length - 1])
+                (secondsPerLiquidityAccum[secondsAgo.length - 1].safeMinusUint160(
+                    secondsPerLiquidityAccum[0])
+                ) * (secondsAgo[0] - secondsAgo[secondsAgo.length - 1])
             );
         }
     }
@@ -230,14 +232,15 @@ library Samples {
             );
             return (
                 firstSample.tickSecondsAccum +
-                    ((secondSample.tickSecondsAccum -
-                        firstSample.tickSecondsAccum) / sampleTimeDelta) *
-                    targetDelta,
+                    ((secondSample.tickSecondsAccum.safeMinusInt56(
+                        firstSample.tickSecondsAccum)
+                    ) / sampleTimeDelta) * targetDelta,
                 firstSample.secondsPerLiquidityAccum +
                     uint160(
                         (uint256(
-                            secondSample.secondsPerLiquidityAccum -
+                            secondSample.secondsPerLiquidityAccum.safeMinusUint160(
                                 firstSample.secondsPerLiquidityAccum
+                            )
                         ) * uint256(uint56(targetDelta))) /
                             uint32(sampleTimeDelta)
                     )
@@ -303,7 +306,7 @@ library Samples {
         uint32 timeDeltaMax,
         PoolsharkStructs.LimitImmutables memory constants
     ) private pure returns (uint160 averagePrice) {
-        int56 tickSecondsAccumDiff = tickSecondsAccum - tickSecondsAccumBase;
+        int56 tickSecondsAccumDiff = tickSecondsAccum.safeMinusInt56(tickSecondsAccumBase);
         int24 averageTick;
         if (timeDelta == timeDeltaMax) {
             averageTick = int24(tickSecondsAccumDiff / int32(timeDelta));

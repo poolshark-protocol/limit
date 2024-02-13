@@ -4403,7 +4403,6 @@ describe('LimitPool Tests', function () {
         //
         // Additionally, this state will arise on common day-to-day use, making the pools virtually unusable over a non-trivial
         // amount of time.
-        console.log('swap 4')
         await validateSwap({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,

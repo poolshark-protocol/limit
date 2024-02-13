@@ -84,8 +84,8 @@ describe('Samples Tests', function () {
         if (debugMode) await getSample(debugMode)
 
         await validateSample({
-            secondsPerLiquidityAccum: '3062541302288446171170371466885913903104',
-            tickSecondsAccum: '144855',
+            secondsPerLiquidityAccum: '3402823669209384634633746074317682114560',
+            tickSecondsAccum: '160950',
             averagePrice: '177157928842132501967358423881',
             averageLiquidity: '0',
             averageTick: 16095
@@ -107,8 +107,8 @@ describe('Samples Tests', function () {
         if (debugMode) await getSample(debugMode)
 
         await validateSample({
-            secondsPerLiquidityAccum: '4083388403051261561560495289181218537472',
-            tickSecondsAccum: '193140',
+            secondsPerLiquidityAccum: '4423670769972200025023869896612986748928',
+            tickSecondsAccum: '209235',
             averagePrice: '177157928842132501967358423881',
             averageLiquidity: '0',
             averageTick: 16095
@@ -126,8 +126,8 @@ describe('Samples Tests', function () {
         })
 
         await validateSample({
-            secondsPerLiquidityAccum: '4083388403051261561575713179260813421667',
-            tickSecondsAccum: '225330',
+            secondsPerLiquidityAccum: '4423670769972200025039087786692581633123',
+            tickSecondsAccum: '241425',
             averagePrice: '177157928842132501967358423881',
             averageLiquidity: '30435780159189768390',
             averageTick: 16095
@@ -147,8 +147,8 @@ describe('Samples Tests', function () {
         })
 
         await validateSample({
-            secondsPerLiquidityAccum: '4083388403051261561590931069340408305862',
-            tickSecondsAccum: '225408',
+            secondsPerLiquidityAccum: '4423670769972200025054305676772176517318',
+            tickSecondsAccum: '241503',
             averagePrice: '79382800422362568253159300200',
             averageLiquidity: '30435780159189768390',
             averageTick: 39
@@ -168,8 +168,8 @@ describe('Samples Tests', function () {
         })
 
         await validateSample({
-            secondsPerLiquidityAccum: '4083388403051261561606148959420003190057',
-            tickSecondsAccum: '225566',
+            secondsPerLiquidityAccum: '4423670769972200025069523566851771401513',
+            tickSecondsAccum: '241661',
             averagePrice: '79541716941062961637430132579',
             averageLiquidity: '30435780159189768390',
             averageTick: 79
@@ -189,8 +189,8 @@ describe('Samples Tests', function () {
         })
 
         await validateSample({
-            secondsPerLiquidityAccum: '4083388403051261561606148959420003190057',
-            tickSecondsAccum: '225566',
+            secondsPerLiquidityAccum: '4423670769972200025069523566851771401513',
+            tickSecondsAccum: '241661',
             averagePrice: '79382800422362568253159300200',
             averageLiquidity: '15217890079594884196',
             averageTick: 39

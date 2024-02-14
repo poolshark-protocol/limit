@@ -38,12 +38,8 @@ library Claims {
         if (params.zeroForOne) {
             // pool price is past claim tick
             if (cache.pool.price >= cache.priceClaim) {
-                console.logInt(params.claim);
-                console.log('zeroForOne', cache.pool.price, cache.priceClaim);
                 // pool price is between lower and upper
                 if (cache.pool.price <= cache.priceUpper) {
-                    console.log('inside pool price check', cache.pool.price, cache.priceUpper);
-                    console.logInt(cache.pool.tickAtPrice);
                     cache.priceClaim = cache.pool.price;
                     params.claim = TickMap.roundBack(
                         cache.pool.tickAtPrice,
@@ -53,7 +49,6 @@ library Claims {
                     );
                     if (params.claim < cache.position.lower)
                         params.claim = cache.position.lower;
-                    console.logInt(params.claim);
                 } else {
                     cache.priceClaim = cache.priceUpper;
                     params.claim = cache.position.upper;
@@ -180,10 +175,7 @@ library Claims {
                 }
             }
         }
-        console.log('claim tick');
-        console.logInt(params.claim);
         if (cache.search) {
-            console.log('searching for claim tick');
             (params, cache, claimTickEpoch) = search(
                 ticks,
                 tickMap,

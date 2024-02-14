@@ -27,12 +27,14 @@ export class InitialSetup {
     private contractDeploymentsJson: ContractDeploymentsJson
     private contractDeploymentsKeys: ContractDeploymentsKeys
     private constantProductString: string
+    private constantProductString2: string
 
     /// DEPLOY CONFIG
     private deployTokens = false
     private deployContracts = false
-    private deployPools = false
-    private deployRouter = true
+    private deployFactory = false
+    private deployPools = true
+    private deployRouter = false
     private deployStaker = false
 
     constructor() {
@@ -40,6 +42,7 @@ export class InitialSetup {
         this.contractDeploymentsJson = new ContractDeploymentsJson()
         this.contractDeploymentsKeys = new ContractDeploymentsKeys()
         this.constantProductString = ethers.utils.formatBytes32String('CONSTANT-PRODUCT')
+        this.constantProductString2 = ethers.utils.formatBytes32String('CONSTANT-PRODUCT-1.1')
     }
 
     public async initialLimitPoolSetup(): Promise<number> {
@@ -151,23 +154,47 @@ export class InitialSetup {
                 }
             )
 
-            await this.deployAssist.deployContractWithRetry(
-                network,
-                // @ts-ignore
-                LimitPoolManager__factory,
-                'limitPoolManager',
-                []
-            )
+            if (hre.network.name == 'hardhat' || this.deployFactory) {
+                await this.deployAssist.deployContractWithRetry(
+                    network,
+                    // @ts-ignore
+                    LimitPoolManager__factory,
+                    'limitPoolManager',
+                    []
+                )
+    
+                await this.deployAssist.deployContractWithRetry(
+                    network,
+                    // @ts-ignore
+                    LimitPoolFactory__factory,
+                    'limitPoolFactory',
+                    [   
+                        hre.props.limitPoolManager.address
+                    ],
+                )
+            } else {
+                const limitPoolFactoryAddress = (
+                    await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
+                        {
+                            networkName: hre.network.name,
+                            objectName: 'limitPoolFactory',
+                        },
+                        'readLimitPoolSetup'
+                    )
+                ).contractAddress
+                const limitPoolManagerAddress = (
+                    await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
+                        {
+                            networkName: hre.network.name,
+                            objectName: 'limitPoolManager',
+                        },
+                        'readLimitPoolSetup'
+                    )
+                ).contractAddress
+                hre.props.limitPoolFactory = await hre.ethers.getContractAt('LimitPoolFactory', limitPoolFactoryAddress)
+                hre.props.limitPoolManager = await hre.ethers.getContractAt('LimitPoolManager', limitPoolManagerAddress)
+            }
 
-            await this.deployAssist.deployContractWithRetry(
-                network,
-                // @ts-ignore
-                LimitPoolFactory__factory,
-                'limitPoolFactory',
-                [   
-                    hre.props.limitPoolManager.address
-                ],
-            )
 
             await this.deployAssist.deployContractWithRetry(
                 network,
@@ -302,20 +329,18 @@ export class InitialSetup {
             const enableImplTxn = await hre.props.limitPoolManager.enablePoolType(
                 hre.props.limitPoolImpl.address,
                 hre.props.positionERC1155.address,
-                this.constantProductString
+                this.constantProductString2
             )
             await enableImplTxn.wait();
 
             hre.nonce += 1;
 
-            const setFactoryTxn = await hre.props.limitPoolManager.setFactory(
-                hre.props.limitPoolFactory.address
-            )
-            await setFactoryTxn.wait()
+            // const setFactoryTxn = await hre.props.limitPoolManager.setFactory(
+            //     hre.props.limitPoolFactory.address
+            // )
+            // await setFactoryTxn.wait()
 
-            hre.nonce += 1;
-    
-            
+            // hre.nonce += 1;        
         }
 
         let limitPoolAddress; let limitPoolTokenAddress;
@@ -445,13 +470,35 @@ export class InitialSetup {
             ).contractAddress
             hre.props.limitPoolFactory = await hre.ethers.getContractAt('LimitPoolFactory', limitPoolFactoryAddress)
 
-            // create first limit pool
+            // WETH - USDC
             let createPoolTxn = await hre.props.limitPoolFactory.createLimitPool({
-                poolTypeId: 0,
+                poolTypeId: 1,
                 tokenIn: hre.props.token0.address,
                 tokenOut: hre.props.token1.address,
                 swapFee: '1000',
-                startPrice: '3796647714486401291197042'
+                startPrice: '4154759893461157894803014'
+            });
+            await createPoolTxn.wait();
+
+            hre.nonce += 1;
+            // WETH - USDT
+            createPoolTxn = await hre.props.limitPoolFactory.createLimitPool({
+                poolTypeId: 1,
+                tokenIn: hre.props.token0.address,
+                tokenOut: '0xf0f161fda2712db8b566946122a5af183995e2ed',
+                swapFee: '1000',
+                startPrice: '4154759893461157894803014'
+            });
+            await createPoolTxn.wait();
+
+            hre.nonce += 1;
+            // USDC - USDT
+            createPoolTxn = await hre.props.limitPoolFactory.createLimitPool({
+                poolTypeId: 1,
+                tokenIn: '0xf0f161fda2712db8b566946122a5af183995e2ed',
+                tokenOut: hre.props.token1.address,
+                swapFee: '1000',
+                startPrice: '79228162514264337593543950336'
             });
             await createPoolTxn.wait();
 

@@ -189,6 +189,12 @@ library Claims {
             params.claim != cache.position.upper &&
             params.claim != cache.position.lower
         ) {
+            claimTickEpoch = EpochMap.get(
+                params.claim,
+                params.zeroForOne,
+                tickMap,
+                cache.constants
+            );
             // check epochLast on claim tick
             if (claimTickEpoch <= cache.position.epochLast)
                 require(false, 'ClaimTick::TickNotCrossed()');
@@ -203,7 +209,7 @@ library Claims {
         PoolsharkStructs.BurnLimitParams memory params,
         LimitPoolStructs.BurnLimitCache memory cache,
         PoolsharkStructs.LimitImmutables memory constants
-    ) internal view returns (LimitPoolStructs.BurnLimitCache memory) {
+    ) internal pure returns (LimitPoolStructs.BurnLimitCache memory) {
         // if half tick priceAt > 0 add amountOut to amountOutClaimed
         // set claimPriceLast if zero
         if (!cache.position.crossedInto) {

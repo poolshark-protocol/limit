@@ -76,7 +76,7 @@ describe('WbtcPool Tests', function () {
         if (debugMode) await getLiquidity(false, true)
     })
 
-    it.only('pool - should try to replicate burnLimit txn', async function () {
+    it.skip('pool - should try to replicate burnLimit txn', async function () {
         debugMode = true
         const isWethToken0 = hre.props.weth9.address == (await hre.props.wbtcPool.token0())
 

@@ -495,8 +495,14 @@ library TickMap {
             roundedTick,
             constants
         );
+        // 100 -> 180 token0 -> token1
+        // 180 -> 100 token1 -> token0
+        // at price, return early
         if (price == roundedTickPrice) return roundedTick;
         if (zeroForOne) {
+            // price at -100.5; roundedTick at -100
+            if (tick == roundedTick && price > roundedTickPrice)
+                return roundedTick;
             // round down if negative
             if (roundedTick < 0 || (roundedTick == 0 && tick < 0))
                 roundedTick -= constants.tickSpacing;

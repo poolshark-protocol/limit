@@ -71,24 +71,22 @@ export function handleCompoundRange(event: CompoundRange): void {
     token1.txnCount = token1.txnCount.plus(BIGINT_ONE)
     factory.txnCount = factory.txnCount.plus(BIGINT_ONE)
 
-    if (pool.id == '0x55da7d4ae164a4eba4ce5e31e4460177c2ca4c81') {
-        let loadTvlUpdateLog = safeLoadTvlUpdateLog(event.transaction.hash, poolAddress)
-        let tvlUpdateLog = loadTvlUpdateLog.entity
-    
-        tvlUpdateLog.pool = poolAddress
-        tvlUpdateLog.eventName = "CompoundRange"
-        tvlUpdateLog.txnHash = event.transaction.hash
-        tvlUpdateLog.txnBlockNumber = event.block.number
-        tvlUpdateLog.amount0Change = BIGDECIMAL_ZERO
-        tvlUpdateLog.amount1Change = BIGDECIMAL_ZERO
-        tvlUpdateLog.amount0Total = pool.totalValueLocked0
-        tvlUpdateLog.amount1Total = pool.totalValueLocked1
-        tvlUpdateLog.token0UsdPrice = token0.usdPrice
-        tvlUpdateLog.token1UsdPrice = token1.usdPrice
-        tvlUpdateLog.amountUsdChange = BIGDECIMAL_ZERO
-    
-        tvlUpdateLog.save()
-    }
+    // let loadTvlUpdateLog = safeLoadTvlUpdateLog(event.transaction.hash, poolAddress)
+    // let tvlUpdateLog = loadTvlUpdateLog.entity
+
+    // tvlUpdateLog.pool = poolAddress
+    // tvlUpdateLog.eventName = "CompoundRange"
+    // tvlUpdateLog.txnHash = event.transaction.hash
+    // tvlUpdateLog.txnBlockNumber = event.block.number
+    // tvlUpdateLog.amount0Change = BIGDECIMAL_ZERO
+    // tvlUpdateLog.amount1Change = BIGDECIMAL_ZERO
+    // tvlUpdateLog.amount0Total = pool.totalValueLocked0
+    // tvlUpdateLog.amount1Total = pool.totalValueLocked1
+    // tvlUpdateLog.token0UsdPrice = token0.usdPrice
+    // tvlUpdateLog.token1UsdPrice = token1.usdPrice
+    // tvlUpdateLog.amountUsdChange = BIGDECIMAL_ZERO
+
+    // tvlUpdateLog.save()
 
     pool.save()
     token0.save()

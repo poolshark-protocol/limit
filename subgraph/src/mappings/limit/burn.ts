@@ -1,4 +1,4 @@
-import { store, BigInt } from "@graphprotocol/graph-ts"
+import { store, BigInt, log } from "@graphprotocol/graph-ts"
 import { BurnLimit } from "../../../generated/LimitPoolFactory/LimitPool"
 import { FACTORY_ADDRESS, ONE_BI, SEASON_1_END_TIME, SEASON_1_START_TIME } from "../../constants/constants"
 import { BIGINT_ONE, BIGINT_ZERO, convertTokenToDecimal } from "../utils/helpers"
@@ -170,7 +170,7 @@ export function handleBurnLimit(event: BurnLimit): void {
     pool = updateTvlRet.pool
     factory = updateTvlRet.factory
 
-    if (pool.id == '0x55da7d4ae164a4eba4ce5e31e4460177c2ca4c81') { 
+    if (newClaim < lower || newClaim > upper) { 
         let loadTvlUpdateLog = safeLoadTvlUpdateLog(event.transaction.hash, poolAddress)
         let tvlUpdateLog = loadTvlUpdateLog.entity
 

@@ -26,13 +26,7 @@ library Claims {
             LimitPoolStructs.BurnLimitCache memory
         )
     {
-        if (
-            params.claim < cache.position.lower ||
-            params.claim > cache.position.upper
-        ) require(false, 'ClaimTick::OutsidePositionBounds()');
-
-        if (params.claim % (cache.constants.tickSpacing / 2) != 0)
-            require(false, 'ClaimTick::NotHalfTickOrFullTick()');
+        checkClaimTick(params, cache);
 
         uint32 claimTickEpoch = EpochMap.get(
             params.claim,
@@ -42,8 +36,14 @@ library Claims {
         );
 
         if (params.zeroForOne) {
+            // pool price is past claim tick
             if (cache.pool.price >= cache.priceClaim) {
+                console.logInt(params.claim);
+                console.log('zeroForOne', cache.pool.price, cache.priceClaim);
+                // pool price is between lower and upper
                 if (cache.pool.price <= cache.priceUpper) {
+                    console.log('inside pool price check', cache.pool.price, cache.priceUpper);
+                    console.logInt(cache.pool.tickAtPrice);
                     cache.priceClaim = cache.pool.price;
                     params.claim = TickMap.roundBack(
                         cache.pool.tickAtPrice,
@@ -51,6 +51,9 @@ library Claims {
                         params.zeroForOne,
                         cache.priceClaim
                     );
+                    if (params.claim < cache.position.lower)
+                        params.claim = cache.position.lower;
+                    console.logInt(params.claim);
                 } else {
                     cache.priceClaim = cache.priceUpper;
                     params.claim = cache.position.upper;
@@ -77,6 +80,8 @@ library Claims {
                         params.zeroForOne,
                         cache.priceClaim
                     );
+                    if (params.claim > cache.position.upper)
+                        params.claim = cache.position.upper;
                 } else {
                     cache.priceClaim = cache.priceLower;
                     params.claim = cache.position.lower;
@@ -175,8 +180,10 @@ library Claims {
                 }
             }
         }
-
+        console.log('claim tick');
+        console.logInt(params.claim);
         if (cache.search) {
+            console.log('searching for claim tick');
             (params, cache, claimTickEpoch) = search(
                 ticks,
                 tickMap,
@@ -195,6 +202,8 @@ library Claims {
                 require(false, 'ClaimTick::TickNotCrossed()');
         }
 
+        checkClaimTick(params, cache);
+
         return (params, cache);
     }
 
@@ -202,7 +211,7 @@ library Claims {
         PoolsharkStructs.BurnLimitParams memory params,
         LimitPoolStructs.BurnLimitCache memory cache,
         PoolsharkStructs.LimitImmutables memory constants
-    ) internal pure returns (LimitPoolStructs.BurnLimitCache memory) {
+    ) internal view returns (LimitPoolStructs.BurnLimitCache memory) {
         // if half tick priceAt > 0 add amountOut to amountOutClaimed
         // set claimPriceLast if zero
         if (!cache.position.crossedInto) {
@@ -502,5 +511,20 @@ library Claims {
         else params.claim = locals.searchTick;
 
         return (params, cache, locals.claimTickEpoch);
+    }
+
+    function checkClaimTick(
+        PoolsharkStructs.BurnLimitParams memory params,
+        LimitPoolStructs.BurnLimitCache memory cache
+    ) internal pure {
+        // revert if final claim is outside bounds
+        if (params.claim % (cache.constants.tickSpacing / 2) != 0)
+            require(false, 'ClaimTick::NotHalfTickOrFullTick()');
+
+        // revert if final claim is outside bounds
+        if (
+            params.claim < cache.position.lower ||
+            params.claim > cache.position.upper
+        ) require(false, 'ClaimTick::OutsidePositionBounds()');
     }
 }

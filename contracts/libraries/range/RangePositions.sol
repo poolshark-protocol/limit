@@ -435,14 +435,14 @@ library RangePositions {
         // calcuate fees earned
         cache.amount0 += uint128(
             OverflowMath.mulDiv(
-                rangeFeeGrowth0 - cache.position.feeGrowthInside0Last,
+                rangeFeeGrowth0.safeMinusUint256(cache.position.feeGrowthInside0Last),
                 cache.position.liquidity,
                 Q128
             )
         );
         cache.amount1 += uint128(
             OverflowMath.mulDiv(
-                rangeFeeGrowth1 - cache.position.feeGrowthInside1Last,
+                rangeFeeGrowth1.safeMinusUint256(cache.position.feeGrowthInside1Last),
                 cache.position.liquidity,
                 Q128
             )

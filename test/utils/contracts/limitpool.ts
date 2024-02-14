@@ -131,6 +131,7 @@ export interface ValidateSwapParams {
     poolContract?: LimitPool
     gasUsed?: string
     customMsgValue?: BigNumber
+    exactIn?: boolean
 }
 
 export interface ValidateBurnParams {
@@ -227,6 +228,7 @@ export async function validateSwap(params: ValidateSwapParams) {
     const nativeOut = params.nativeOut ?? false
     const poolContract = params.poolContract ?? hre.props.limitPool
     const gasUsed = params.gasUsed ? BigNumber.from(params.gasUsed) : BN_ZERO
+    const exactIn = params.exactIn ?? true
 
     let balanceInBefore
     let balanceOutBefore
@@ -284,39 +286,11 @@ export async function validateSwap(params: ValidateSwapParams) {
         //     ],
         //     false
         // )
-        // const quote = await hre.props.poolRouter.multiQuote(
-        //     [
-        //         "0x5c83c95242e7c36a26e50e2de8d95198cab6aabb",
-        //         "0x7af8be3e1f0d7de23649e9ad146be3b5433fb4ee",
-        //         "0x83e8902a1b28faedc9d09ce1a45671be424efaf3"
-        //     ],
-        //     [
-        //         {
-        //             priceLimit: priceLimit,
-        //             amount: amountIn,
-        //             zeroForOne: zeroForOne,
-        //             exactIn: true
-        //         },
-        //         {
-        //             priceLimit: priceLimit,
-        //             amount: amountIn,
-        //             zeroForOne: zeroForOne,
-        //             exactIn: true
-        //         },
-        //         {
-        //             priceLimit: priceLimit,
-        //             amount: amountIn,
-        //             zeroForOne: zeroForOne,
-        //             exactIn: true
-        //         }
-        //     ],
-        //     true
-        // )
         const quote = await poolContract.quote({
             priceLimit: priceLimit,
             amount: amountIn,
             zeroForOne: zeroForOne,
-            exactIn: true
+            exactIn: exactIn
         })
         if (quote.length > 0) {
             amountInQuoted = quote[0]
@@ -346,7 +320,7 @@ export async function validateSwap(params: ValidateSwapParams) {
                     priceLimit: priceLimit,
                     amount: amountIn,
                     zeroForOne: zeroForOne,
-                    exactIn: true,
+                    exactIn: exactIn,
                     callbackData: ethers.utils.formatBytes32String('')
                 },
                 exchangeRateLimit,
@@ -375,7 +349,7 @@ export async function validateSwap(params: ValidateSwapParams) {
                     zeroForOne: zeroForOne,
                     amount: amountIn,
                     priceLimit: priceLimit,
-                    exactIn: true,
+                    exactIn: exactIn,
                     callbackData: ethers.utils.formatBytes32String('')
                 },
                 0,

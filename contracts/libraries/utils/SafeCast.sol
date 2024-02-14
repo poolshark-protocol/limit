@@ -103,4 +103,35 @@ library SafeCast {
         }
         return 0;
     }
+
+    function safeMinusUint256(
+        uint256 valueA,
+        uint256 valueB
+    ) internal pure returns (uint256) {
+        // check for underflow
+        if (valueA >= valueB) {
+            return valueA - valueB;
+        }
+        return 0;
+    }
+
+    function safeMinusFees0(
+        uint200 valueA,
+        uint200 valueB
+    ) internal pure returns (uint200 valueC) {
+        if (valueA >= valueB) {
+            return valueA - valueB;
+        }
+        require (false, 'FeeGrowthGlobal0Underflow()');
+    }
+
+    function safeMinusFees1(
+        uint200 valueA,
+        uint200 valueB
+    ) internal pure returns (uint200 valueC) {
+        if (valueA >= valueB) {
+            return valueA - valueB;
+        }
+        require (false, 'FeeGrowthGlobal1Underflow()');
+    }
 }

@@ -16,6 +16,7 @@ import './limit/LimitTicks.sol';
 library Ticks {
     using SafeCast for int56;
     using SafeCast for uint160;
+    using SafeCast for uint200;
     using SafeCast for uint256;
 
     // cross flags
@@ -529,11 +530,13 @@ library Ticks {
                     cache.crossTick
                 ].range;
                 crossTick.feeGrowthOutside0 =
-                    cache.state.pool.feeGrowthGlobal0 -
-                    crossTick.feeGrowthOutside0;
+                    cache.state.pool.feeGrowthGlobal0.safeMinusFees0(
+                        crossTick.feeGrowthOutside0
+                    );
                 crossTick.feeGrowthOutside1 =
-                    cache.state.pool.feeGrowthGlobal1 -
-                        crossTick.feeGrowthOutside1;
+                    cache.state.pool.feeGrowthGlobal1.safeMinusFees1(
+                        crossTick.feeGrowthOutside1
+                    );
                 crossTick.tickSecondsAccumOutside =
                     cache.tickSecondsAccum.safeMinusInt56(
                         crossTick.tickSecondsAccumOutside

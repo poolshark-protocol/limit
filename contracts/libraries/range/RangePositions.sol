@@ -15,6 +15,7 @@ import '../Samples.sol';
 library RangePositions {
     using SafeCast for int56;
     using SafeCast for uint160;
+    using SafeCast for uint200;
     using SafeCast for uint256;
     using SafeCast for uint128;
     using SafeCast for int256;
@@ -318,7 +319,7 @@ library RangePositions {
 
         int128 amount0Fees = OverflowMath
             .mulDiv(
-                rangeFeeGrowth0 - position.feeGrowthInside0Last,
+                rangeFeeGrowth0.safeMinusUint256(position.feeGrowthInside0Last),
                 uint256(position.liquidity),
                 Q128
             )
@@ -327,7 +328,7 @@ library RangePositions {
 
         int128 amount1Fees = OverflowMath
             .mulDiv(
-                rangeFeeGrowth1 - position.feeGrowthInside1Last,
+                rangeFeeGrowth1.safeMinusUint256(position.feeGrowthInside1Last),
                 position.liquidity,
                 Q128
             )

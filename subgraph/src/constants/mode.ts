@@ -32,7 +32,11 @@ export let WHITELISTED_PAIRS: string[] = [
   // Type 1
   '0x6c827ff250027187a180c059b20299fe3fd35622', // WETH-USDT 0.1%
   '0x3ce675d43195e506e7da2ad4905b178371124eba', // WETH-USDC 0.1%
-  '0xe63a6865626c6cfdfcb559ef9592df86d7b0e8e7' // USDC-USDT 0.1%
+  '0xe63a6865626c6cfdfcb559ef9592df86d7b0e8e7', // USDC-USDT 0.1%
+  // Type 2
+  '0xfc16003afdff37580c9de7deeeb87f9c65b6908a', // WETH-USDT 0.1%
+  '0xc20b141edd79f912897651eba9a2bca6b17dc7f1', // WETH-USDC 0.1%
+  '0x7efec766f18d4b79abf5b550bfe59a1bffb37d95', // USDC-USDT 0.1%
 ]
 
 export let SEASON_1_START_TIME = BigInt.fromString('1707490800') // 2-09-2024 15:00 GMT - 1707490800

@@ -335,12 +335,14 @@ export class InitialSetup {
 
             hre.nonce += 1;
 
-            // const setFactoryTxn = await hre.props.limitPoolManager.setFactory(
-            //     hre.props.limitPoolFactory.address
-            // )
-            // await setFactoryTxn.wait()
-
-            // hre.nonce += 1;        
+            if (hre.network.name == 'hardhat' || this.deployFactory) {
+                const setFactoryTxn = await hre.props.limitPoolManager.setFactory(
+                    hre.props.limitPoolFactory.address
+                )
+                await setFactoryTxn.wait()
+    
+                hre.nonce += 1;
+            }
         }
 
         let limitPoolAddress; let limitPoolTokenAddress;
@@ -472,7 +474,7 @@ export class InitialSetup {
 
             // WETH - USDC
             let createPoolTxn = await hre.props.limitPoolFactory.createLimitPool({
-                poolTypeId: 1,
+                poolTypeId: 2,
                 tokenIn: hre.props.token0.address,
                 tokenOut: hre.props.token1.address,
                 swapFee: '1000',
@@ -483,7 +485,7 @@ export class InitialSetup {
             hre.nonce += 1;
             // WETH - USDT
             createPoolTxn = await hre.props.limitPoolFactory.createLimitPool({
-                poolTypeId: 1,
+                poolTypeId: 2,
                 tokenIn: hre.props.token0.address,
                 tokenOut: '0xf0f161fda2712db8b566946122a5af183995e2ed',
                 swapFee: '1000',
@@ -494,15 +496,13 @@ export class InitialSetup {
             hre.nonce += 1;
             // USDC - USDT
             createPoolTxn = await hre.props.limitPoolFactory.createLimitPool({
-                poolTypeId: 1,
+                poolTypeId: 2,
                 tokenIn: '0xf0f161fda2712db8b566946122a5af183995e2ed',
                 tokenOut: hre.props.token1.address,
                 swapFee: '1000',
                 startPrice: '79228162514264337593543950336'
             });
             await createPoolTxn.wait();
-
-            hre.nonce += 1;
 
             [limitPoolAddress, limitPoolTokenAddress] = await hre.props.limitPoolFactory.getLimitPool(
                 hre.props.token0.address,

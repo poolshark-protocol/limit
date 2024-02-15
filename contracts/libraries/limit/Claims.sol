@@ -135,7 +135,6 @@ library Claims {
                     );
                     if (claimTickNextEpoch > cache.position.epochLast) {
                         ///@dev - next tick in range should not have been crossed
-                        // require (false, 'ClaimTick::NextTickAlreadyCrossed()');
                         cache.search = true;
                     }
                 }
@@ -189,13 +188,6 @@ library Claims {
             params.claim != cache.position.upper &&
             params.claim != cache.position.lower
         ) {
-            claimTickEpoch = EpochMap.get(
-                params.claim,
-                params.zeroForOne,
-                tickMap,
-                cache.constants
-            );
-            // check epochLast on claim tick
             if (claimTickEpoch <= cache.position.epochLast)
                 require(false, 'ClaimTick::TickNotCrossed()');
         }

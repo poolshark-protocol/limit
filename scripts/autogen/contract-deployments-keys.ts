@@ -3,50 +3,6 @@ import { ContractDeploymentsKey } from '../util/files/contractDeploymentsJson'
 export const CONTRACT_DEPLOYMENT_KEYS: ContractDeploymentsKey[] = [
     {
         networkName: 'mode',
-        objectName: 'poolRouter'
-    },
-    {
-        networkName: 'mode',
-        objectName: 'tickMapLib'
-    },
-    {
-        networkName: 'mode',
-        objectName: 'ticksLib'
-    },
-    {
-        networkName: 'mode',
-        objectName: 'limitPositionsLib'
-    },
-    {
-        networkName: 'mode',
-        objectName: 'tickMapLib'
-    },
-    {
-        networkName: 'mode',
-        objectName: 'ticksLib'
-    },
-    {
-        networkName: 'mode',
-        objectName: 'limitPositionsLib'
-    },
-    {
-        networkName: 'mode',
-        objectName: 'tickQuoter'
-    },
-    {
-        networkName: 'mode',
-        objectName: 'swapCall'
-    },
-    {
-        networkName: 'mode',
-        objectName: 'mintRangeCall'
-    },
-    {
-        networkName: 'mode',
-        objectName: 'burnRangeCall'
-    },
-    {
-        networkName: 'mode',
         objectName: 'tickMapLib'
     },
     {

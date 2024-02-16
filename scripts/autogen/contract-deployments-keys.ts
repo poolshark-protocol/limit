@@ -2,71 +2,83 @@ import { ContractDeploymentsKey } from '../util/files/contractDeploymentsJson'
 
 export const CONTRACT_DEPLOYMENT_KEYS: ContractDeploymentsKey[] = [
     {
-        networkName: 'mode',
+        networkName: 'arb_one',
         objectName: 'tickMapLib'
     },
     {
-        networkName: 'mode',
+        networkName: 'arb_one',
         objectName: 'ticksLib'
     },
     {
-        networkName: 'mode',
+        networkName: 'arb_one',
         objectName: 'limitPositionsLib'
     },
     {
-        networkName: 'mode',
+        networkName: 'arb_one',
         objectName: 'tickQuoter'
     },
     {
-        networkName: 'mode',
+        networkName: 'arb_one',
         objectName: 'swapCall'
     },
     {
-        networkName: 'mode',
+        networkName: 'arb_one',
         objectName: 'mintRangeCall'
     },
     {
-        networkName: 'mode',
+        networkName: 'arb_one',
         objectName: 'burnRangeCall'
     },
     {
-        networkName: 'mode',
+        networkName: 'arb_one',
         objectName: 'mintLimitCall'
     },
     {
-        networkName: 'mode',
+        networkName: 'arb_one',
         objectName: 'burnLimitCall'
     },
     {
-        networkName: 'mode',
+        networkName: 'arb_one',
         objectName: 'snapshotLimitCall'
     },
     {
-        networkName: 'mode',
+        networkName: 'arb_one',
         objectName: 'quoteCall'
     },
     {
-        networkName: 'mode',
+        networkName: 'arb_one',
         objectName: 'feesCall'
     },
     {
-        networkName: 'mode',
+        networkName: 'arb_one',
         objectName: 'sampleCall'
     },
     {
-        networkName: 'mode',
+        networkName: 'arb_one',
+        objectName: 'tickMapLib'
+    },
+    {
+        networkName: 'arb_one',
+        objectName: 'ticksLib'
+    },
+    {
+        networkName: 'arb_one',
         objectName: 'snapshotRangeCall'
     },
     {
-        networkName: 'mode',
+        networkName: 'arb_one',
         objectName: 'limitPoolImpl'
     },
     {
-        networkName: 'mode',
+        networkName: 'arb_one',
         objectName: 'positionERC1155'
     },
     {
-        networkName: 'mode',
+        networkName: 'arb_one',
+        objectName: 'limitPool'
+    },
+    {
+        networkName: 'arb_one',
         objectName: 'limitPool'
     },
 ];

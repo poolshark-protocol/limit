@@ -33,6 +33,7 @@ export class InitialSetup {
     private deployTokens = false
     private deployContracts = false
     private deployFactory = false
+    private deployLibs = false
     private deployPools = false
     private savePool = true
     private deployRouter = false
@@ -119,7 +120,7 @@ export class InitialSetup {
             this.deployAssist.deleteContractDeployment(network, 'tokenB')
         }
 
-        if (!this.deployFactory) {
+        if (hre.network.name != 'hardhat' && !this.deployFactory) {
             const limitPoolFactoryAddress = (
                 await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
                     {
@@ -149,255 +150,256 @@ export class InitialSetup {
         // console.log('encoded data:', signature);
 
         if (this.deployContracts || hre.network.name == 'hardhat') {
-            // shared
-            // await this.deployAssist.deployContractWithRetry(
-            //     network,
-            //     // @ts-ignore
-            //     TickMap__factory,
-            //     'tickMapLib',
-            //     []
-            // )
-
-            // await this.deployAssist.deployContractWithRetry(
-            //     network,
-            //     // @ts-ignore
-            //     Ticks__factory,
-            //     'ticksLib',
-            //     [],
-            // )
-
-            // limit
-            // await this.deployAssist.deployContractWithRetry(
-            //     network,
-            //     // @ts-ignore
-            //     LimitPositions__factory,
-            //     'limitPositionsLib',
-            //     [],
-            //     {
-            //         'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address
-            //     }
-            // )
-
-            if (hre.network.name == 'hardhat' || this.deployFactory) {
+            if (hre.network.name == 'hardhat' || this.deployLibs) {
+                // shared
                 await this.deployAssist.deployContractWithRetry(
                     network,
                     // @ts-ignore
-                    LimitPoolManager__factory,
-                    'limitPoolManager',
+                    TickMap__factory,
+                    'tickMapLib',
                     []
                 )
-    
+
                 await this.deployAssist.deployContractWithRetry(
                     network,
                     // @ts-ignore
-                    LimitPoolFactory__factory,
-                    'limitPoolFactory',
+                    Ticks__factory,
+                    'ticksLib',
+                    [],
+                )
+
+                await this.deployAssist.deployContractWithRetry(
+                    network,
+                    // @ts-ignore
+                    LimitPositions__factory,
+                    'limitPositionsLib',
+                    [],
+                    {
+                        'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address
+                    }
+                )
+
+                if (hre.network.name == 'hardhat' || this.deployFactory) {
+                    await this.deployAssist.deployContractWithRetry(
+                        network,
+                        // @ts-ignore
+                        LimitPoolManager__factory,
+                        'limitPoolManager',
+                        []
+                    )
+        
+                    await this.deployAssist.deployContractWithRetry(
+                        network,
+                        // @ts-ignore
+                        LimitPoolFactory__factory,
+                        'limitPoolFactory',
+                        [   
+                            hre.props.limitPoolManager.address
+                        ],
+                    )
+                }
+
+
+                await this.deployAssist.deployContractWithRetry(
+                    network,
+                    // @ts-ignore
+                    TickQuoter__factory,
+                    'tickQuoter',
                     [   
-                        hre.props.limitPoolManager.address
+                        hre.props.limitPoolFactory.address
                     ],
                 )
+
+                await this.deployAssist.deployContractWithRetry(
+                    network,
+                    // @ts-ignore
+                    SwapCall__factory,
+                    'swapCall',
+                    [],
+                    {
+                        'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address,
+                    }
+                )
+
+                await this.deployAssist.deployContractWithRetry(
+                    network,
+                    // @ts-ignore
+                    MintRangeCall__factory,
+                    'mintRangeCall',
+                    []
+                )
+
+                await this.deployAssist.deployContractWithRetry(
+                    network,
+                    // @ts-ignore
+                    BurnRangeCall__factory,
+                    'burnRangeCall',
+                    []
+                )
+
+                await this.deployAssist.deployContractWithRetry(
+                    network,
+                    // @ts-ignore
+                    MintLimitCall__factory,
+                    'mintLimitCall',
+                    [],
+                    {
+                        'contracts/libraries/limit/LimitPositions.sol:LimitPositions': hre.props.limitPositionsLib.address
+                    }
+                )
+
+                await this.deployAssist.deployContractWithRetry(
+                    network,
+                    // @ts-ignore
+                    BurnLimitCall__factory,
+                    'burnLimitCall',
+                    []
+                )
+
+                await this.deployAssist.deployContractWithRetry(
+                    network,
+                    // @ts-ignore
+                    SnapshotLimitCall__factory,
+                    'snapshotLimitCall',
+                    []
+                )
+
+                await this.deployAssist.deployContractWithRetry(
+                    network,
+                    // @ts-ignore
+                    QuoteCall__factory,
+                    'quoteCall',
+                    []
+                )
+                
+                await this.deployAssist.deployContractWithRetry(
+                    network,
+                    // @ts-ignore
+                    FeesCall__factory,
+                    'feesCall',
+                    []
+                )
+
+                await this.deployAssist.deployContractWithRetry(
+                    network,
+                    // @ts-ignore
+                    SampleCall__factory,
+                    'sampleCall',
+                    []
+                )
+            } else {
+                const limitPositionsLibAddress = (
+                    await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
+                        {
+                            networkName: hre.network.name,
+                            objectName: 'limitPositionsLib',
+                        },
+                        'readLimitPoolSetup'
+                    )
+                ).contractAddress
+        
+                const ticksLibAddress = (
+                    await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
+                        {
+                            networkName: hre.network.name,
+                            objectName: 'ticksLib',
+                        },
+                        'readLimitPoolSetup'
+                    )
+                ).contractAddress
+        
+                const mintRangeCallAddress = (
+                    await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
+                        {
+                            networkName: hre.network.name,
+                            objectName: 'mintRangeCall',
+                        },
+                        'readLimitPoolSetup'
+                    )
+                ).contractAddress
+                const burnRangeCallAddress = (
+                    await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
+                        {
+                            networkName: hre.network.name,
+                            objectName: 'burnRangeCall',
+                        },
+                        'readLimitPoolSetup'
+                    )
+                ).contractAddress
+                const snapshotRangeCallAddress = (
+                    await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
+                        {
+                            networkName: hre.network.name,
+                            objectName: 'snapshotRangeCall',
+                        },
+                        'readLimitPoolSetup'
+                    )
+                ).contractAddress
+        
+                const mintLimitCallAddress = (
+                    await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
+                        {
+                            networkName: hre.network.name,
+                            objectName: 'mintLimitCall',
+                        },
+                        'readLimitPoolSetup'
+                    )
+                ).contractAddress
+                const burnLimitCallAddress = (
+                    await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
+                        {
+                            networkName: hre.network.name,
+                            objectName: 'burnLimitCall',
+                        },
+                        'readLimitPoolSetup'
+                    )
+                ).contractAddress
+                const snapshotLimitCallAddress = (
+                    await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
+                        {
+                            networkName: hre.network.name,
+                            objectName: 'snapshotLimitCall',
+                        },
+                        'readLimitPoolSetup'
+                    )
+                ).contractAddress
+                const swapCallAddress = (
+                    await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
+                        {
+                            networkName: hre.network.name,
+                            objectName: 'swapCall',
+                        },
+                        'readLimitPoolSetup'
+                    )
+                ).contractAddress
+                const quoteCallAddress = (
+                    await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
+                        {
+                            networkName: hre.network.name,
+                            objectName: 'quoteCall',
+                        },
+                        'readLimitPoolSetup'
+                    )
+                ).contractAddress
+                const feesCallAddress = (
+                    await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
+                        {
+                            networkName: hre.network.name,
+                            objectName: 'feesCall',
+                        },
+                        'readLimitPoolSetup'
+                    )
+                ).contractAddress
+                const sampleCallAddress = (
+                    await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
+                        {
+                            networkName: hre.network.name,
+                            objectName: 'sampleCall',
+                        },
+                        'readLimitPoolSetup'
+                    )
+                ).contractAddress
             }
-
-
-            // await this.deployAssist.deployContractWithRetry(
-            //     network,
-            //     // @ts-ignore
-            //     TickQuoter__factory,
-            //     'tickQuoter',
-            //     [   
-            //         hre.props.limitPoolFactory.address
-            //     ],
-            // )
-
-            // await this.deployAssist.deployContractWithRetry(
-            //     network,
-            //     // @ts-ignore
-            //     SwapCall__factory,
-            //     'swapCall',
-            //     [],
-            //     {
-            //         'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address,
-            //     }
-            // )
-
-            // await this.deployAssist.deployContractWithRetry(
-            //     network,
-            //     // @ts-ignore
-            //     MintRangeCall__factory,
-            //     'mintRangeCall',
-            //     []
-            // )
-
-            // await this.deployAssist.deployContractWithRetry(
-            //     network,
-            //     // @ts-ignore
-            //     BurnRangeCall__factory,
-            //     'burnRangeCall',
-            //     []
-            // )
-
-            // await this.deployAssist.deployContractWithRetry(
-            //     network,
-            //     // @ts-ignore
-            //     MintLimitCall__factory,
-            //     'mintLimitCall',
-            //     [],
-            //     {
-            //         'contracts/libraries/limit/LimitPositions.sol:LimitPositions': hre.props.limitPositionsLib.address
-            //     }
-            // )
-
-            // await this.deployAssist.deployContractWithRetry(
-            //     network,
-            //     // @ts-ignore
-            //     BurnLimitCall__factory,
-            //     'burnLimitCall',
-            //     []
-            // )
-
-            // await this.deployAssist.deployContractWithRetry(
-            //     network,
-            //     // @ts-ignore
-            //     SnapshotLimitCall__factory,
-            //     'snapshotLimitCall',
-            //     []
-            // )
-
-            // await this.deployAssist.deployContractWithRetry(
-            //     network,
-            //     // @ts-ignore
-            //     QuoteCall__factory,
-            //     'quoteCall',
-            //     []
-            // )
-            
-            // await this.deployAssist.deployContractWithRetry(
-            //     network,
-            //     // @ts-ignore
-            //     FeesCall__factory,
-            //     'feesCall',
-            //     []
-            // )
-
-            // await this.deployAssist.deployContractWithRetry(
-            //     network,
-            //     // @ts-ignore
-            //     SampleCall__factory,
-            //     'sampleCall',
-            //     []
-            // )
-
-            const limitPositionsLibAddress = (
-                await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
-                    {
-                        networkName: hre.network.name,
-                        objectName: 'limitPositionsLib',
-                    },
-                    'readLimitPoolSetup'
-                )
-            ).contractAddress
-    
-            const ticksLibAddress = (
-                await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
-                    {
-                        networkName: hre.network.name,
-                        objectName: 'ticksLib',
-                    },
-                    'readLimitPoolSetup'
-                )
-            ).contractAddress
-    
-            const mintRangeCallAddress = (
-                await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
-                    {
-                        networkName: hre.network.name,
-                        objectName: 'mintRangeCall',
-                    },
-                    'readLimitPoolSetup'
-                )
-            ).contractAddress
-            const burnRangeCallAddress = (
-                await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
-                    {
-                        networkName: hre.network.name,
-                        objectName: 'burnRangeCall',
-                    },
-                    'readLimitPoolSetup'
-                )
-            ).contractAddress
-            const snapshotRangeCallAddress = (
-                await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
-                    {
-                        networkName: hre.network.name,
-                        objectName: 'snapshotRangeCall',
-                    },
-                    'readLimitPoolSetup'
-                )
-            ).contractAddress
-    
-            const mintLimitCallAddress = (
-                await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
-                    {
-                        networkName: hre.network.name,
-                        objectName: 'mintLimitCall',
-                    },
-                    'readLimitPoolSetup'
-                )
-            ).contractAddress
-            const burnLimitCallAddress = (
-                await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
-                    {
-                        networkName: hre.network.name,
-                        objectName: 'burnLimitCall',
-                    },
-                    'readLimitPoolSetup'
-                )
-            ).contractAddress
-            const snapshotLimitCallAddress = (
-                await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
-                    {
-                        networkName: hre.network.name,
-                        objectName: 'snapshotLimitCall',
-                    },
-                    'readLimitPoolSetup'
-                )
-            ).contractAddress
-            const swapCallAddress = (
-                await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
-                    {
-                        networkName: hre.network.name,
-                        objectName: 'swapCall',
-                    },
-                    'readLimitPoolSetup'
-                )
-            ).contractAddress
-            const quoteCallAddress = (
-                await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
-                    {
-                        networkName: hre.network.name,
-                        objectName: 'quoteCall',
-                    },
-                    'readLimitPoolSetup'
-                )
-            ).contractAddress
-            const feesCallAddress = (
-                await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
-                    {
-                        networkName: hre.network.name,
-                        objectName: 'feesCall',
-                    },
-                    'readLimitPoolSetup'
-                )
-            ).contractAddress
-            const sampleCallAddress = (
-                await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
-                    {
-                        networkName: hre.network.name,
-                        objectName: 'sampleCall',
-                    },
-                    'readLimitPoolSetup'
-                )
-            ).contractAddress
 
             await this.deployAssist.deployContractWithRetry(
                 network,
@@ -416,18 +418,18 @@ export class InitialSetup {
                     hre.props.limitPoolFactory.address
                 ],
                 {
-                    'contracts/libraries/limit/LimitPositions.sol:LimitPositions': limitPositionsLibAddress,
-                    'contracts/libraries/Ticks.sol:Ticks': ticksLibAddress,
-                    'contracts/libraries/range/pool/MintRangeCall.sol:MintRangeCall': mintRangeCallAddress,
-                    'contracts/libraries/range/pool/BurnRangeCall.sol:BurnRangeCall': burnRangeCallAddress,
-                    'contracts/libraries/range/pool/SnapshotRangeCall.sol:SnapshotRangeCall': snapshotRangeCallAddress,
-                    'contracts/libraries/limit/pool/MintLimitCall.sol:MintLimitCall': mintLimitCallAddress,
-                    'contracts/libraries/limit/pool/BurnLimitCall.sol:BurnLimitCall': burnLimitCallAddress,
-                    'contracts/libraries/limit/pool/SnapshotLimitCall.sol:SnapshotLimitCall': snapshotLimitCallAddress,
-                    'contracts/libraries/pool/SwapCall.sol:SwapCall': swapCallAddress,
-                    'contracts/libraries/pool/QuoteCall.sol:QuoteCall': quoteCallAddress,
-                    'contracts/libraries/pool/FeesCall.sol:FeesCall': feesCallAddress,
-                    'contracts/libraries/pool/SampleCall.sol:SampleCall': sampleCallAddress
+                    'contracts/libraries/limit/LimitPositions.sol:LimitPositions': hre.props.limitPositionsLib.address,
+                    'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address,
+                    'contracts/libraries/range/pool/MintRangeCall.sol:MintRangeCall': hre.props.mintRangeCall.address,
+                    'contracts/libraries/range/pool/BurnRangeCall.sol:BurnRangeCall': hre.props.burnRangeCall.address,
+                    'contracts/libraries/range/pool/SnapshotRangeCall.sol:SnapshotRangeCall': hre.props.snapshotRangeCall.address,
+                    'contracts/libraries/limit/pool/MintLimitCall.sol:MintLimitCall': hre.props.mintLimitCall.address,
+                    'contracts/libraries/limit/pool/BurnLimitCall.sol:BurnLimitCall': hre.props.burnLimitCall.address,
+                    'contracts/libraries/limit/pool/SnapshotLimitCall.sol:SnapshotLimitCall': hre.props.snapshotLimitCall.address,
+                    'contracts/libraries/pool/SwapCall.sol:SwapCall': hre.props.swapCall.address,
+                    'contracts/libraries/pool/QuoteCall.sol:QuoteCall': hre.props.quoteCall.address,
+                    'contracts/libraries/pool/FeesCall.sol:FeesCall': hre.props.feesCall.address,
+                    'contracts/libraries/pool/SampleCall.sol:SampleCall': hre.props.sampleCall.address
                 }
             )
 
@@ -462,7 +464,7 @@ export class InitialSetup {
 
         let limitPoolAddress; let limitPoolTokenAddress;
 
-        if (this.savePool) {
+        if (hre.network.name != "hardhat" && this.savePool) {
             [limitPoolAddress, limitPoolTokenAddress] = await hre.props.limitPoolFactory.getLimitPool(
                 hre.props.token0.address,
                 hre.props.token1.address,

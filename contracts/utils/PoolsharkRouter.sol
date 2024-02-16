@@ -479,7 +479,7 @@ contract PoolsharkRouter is
             params.callbackData = abi.encode(
                 SwapCallbackData({
                     sender: msg.sender,
-                    recipient: params.to,
+                    recipient: msg.sender,
                     wrapped: msg.value > 0
                 })
             );
@@ -800,7 +800,7 @@ contract PoolsharkRouter is
         // read pool price
         RangePoolState memory tgePoolState;
         (tgePoolState, , , , , , ) = IPool(tgePool).globalState();
-        uint160 expectedPoolPrice = 2172618421097231267834892073346;
+        uint160 expectedPoolPrice = 3013153469169582542317810169392;
         if (tgePoolState.price < expectedPoolPrice) {
             // move pool price up if below
             SwapParams memory swapParams = SwapParams({
@@ -850,8 +850,8 @@ contract PoolsharkRouter is
             lower: 54000,
             upper: 77040,
             positionId: 0,
-            amount0: 39168000000000000000,
-            amount1: 33000000000000000000000,
+            amount0: 11665000000000000000,
+            amount1: 61859373607150190000000,
             callbackData: abi.encode(callbackData)
         });
         IRangePool(tgePool).mintRange(mintRangeParams);

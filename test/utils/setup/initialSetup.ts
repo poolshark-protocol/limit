@@ -35,8 +35,8 @@ export class InitialSetup {
     private deployFactory = false
     private deployLibs = false
     private deployPools = false
-    private savePool = true
-    private deployRouter = false
+    private savePool = false
+    private deployRouter = true
     private deployStaker = false
 
     constructor() {

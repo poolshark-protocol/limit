@@ -66,7 +66,6 @@ const config: HardhatUserConfig = {
         },
         mode: {
             chainId: 34443,
-            gasPrice: 1_600_000_000,
             url: "https://mainnet.mode.network/" || "",
             accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
         }

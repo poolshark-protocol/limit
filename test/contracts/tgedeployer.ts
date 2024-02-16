@@ -106,18 +106,18 @@ describe('TGE Deployment Tests', function () {
     await mintSigners20(hre.props.token0, tokenAmount.mul(55000), [hre.props.alice, hre.props.bob])
     await mintSigners20(hre.props.token1, tokenAmount.mul(55000), [hre.props.alice, hre.props.bob])
 
-    const aliceLiquidity = BigNumber.from('2572549719381782803480')
+    const aliceLiquidity = BigNumber.from('2308624900389010944902')
 
-    const amount0 = BigNumber.from('39168000000000000000')
-    const amount1 = BigNumber.from('32271546804490624383438')
+    const amount0 = BigNumber.from('11665000000000000000')
+    const amount1 = BigNumber.from('53453024454721149275452')
 
     const aliceId = await validateDeployTge({
         signer: hre.props.alice,
         recipient: hre.props.alice.address,
         lower: '54000', // $10 per FIN
         upper: '77040', // $1 per FIN
-        amount0: parseUnits('41', 18),
-        amount1: parseUnits('34000', 18),
+        amount0: parseUnits('12', 18),
+        amount1: parseUnits('62000', 18),
         balance0Decrease: amount0, // TODO: change to correct value
         balance1Decrease: amount1, // 52k FIN
         liquidityIncrease: aliceLiquidity,

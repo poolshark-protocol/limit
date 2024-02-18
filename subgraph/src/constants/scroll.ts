@@ -27,6 +27,7 @@ export let WHITELISTED_TOKENS: string[] = [
 
 export let WHITELISTED_PAIRS: string[] = [
   '0x622fa26556cbc082816311c0b22c668a4a566fe5', // WETH-USDT 0.1%
+  '0xb14917888ba92937be3d89094f83a62904ebc9dd', // WETH-USDT 0.1%
 ]
 
 export let SEASON_1_START_TIME = BigInt.fromString('0') // 02-13-2024 0:00 GMT - 1707836400

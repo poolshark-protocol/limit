@@ -34,9 +34,9 @@ export class InitialSetup {
     private deployContracts = false
     private deployFactory = false
     private deployLibs = false
-    private deployPools = false
-    private savePool = false
-    private deployRouter = true
+    private deployPools = true
+    private savePool = true
+    private deployRouter = false
     private deployStaker = false
 
     constructor() {
@@ -288,6 +288,7 @@ export class InitialSetup {
                     []
                 )
             } else {
+            }
                 const limitPositionsLibAddress = (
                     await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
                         {
@@ -399,7 +400,7 @@ export class InitialSetup {
                         'readLimitPoolSetup'
                     )
                 ).contractAddress
-            }
+            
 
             await this.deployAssist.deployContractWithRetry(
                 network,
@@ -418,18 +419,18 @@ export class InitialSetup {
                     hre.props.limitPoolFactory.address
                 ],
                 {
-                    'contracts/libraries/limit/LimitPositions.sol:LimitPositions': hre.props.limitPositionsLib.address,
-                    'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address,
-                    'contracts/libraries/range/pool/MintRangeCall.sol:MintRangeCall': hre.props.mintRangeCall.address,
-                    'contracts/libraries/range/pool/BurnRangeCall.sol:BurnRangeCall': hre.props.burnRangeCall.address,
-                    'contracts/libraries/range/pool/SnapshotRangeCall.sol:SnapshotRangeCall': hre.props.snapshotRangeCall.address,
-                    'contracts/libraries/limit/pool/MintLimitCall.sol:MintLimitCall': hre.props.mintLimitCall.address,
-                    'contracts/libraries/limit/pool/BurnLimitCall.sol:BurnLimitCall': hre.props.burnLimitCall.address,
-                    'contracts/libraries/limit/pool/SnapshotLimitCall.sol:SnapshotLimitCall': hre.props.snapshotLimitCall.address,
-                    'contracts/libraries/pool/SwapCall.sol:SwapCall': hre.props.swapCall.address,
-                    'contracts/libraries/pool/QuoteCall.sol:QuoteCall': hre.props.quoteCall.address,
-                    'contracts/libraries/pool/FeesCall.sol:FeesCall': hre.props.feesCall.address,
-                    'contracts/libraries/pool/SampleCall.sol:SampleCall': hre.props.sampleCall.address
+                    'contracts/libraries/limit/LimitPositions.sol:LimitPositions': limitPositionsLibAddress,
+                    'contracts/libraries/Ticks.sol:Ticks': ticksLibAddress,
+                    'contracts/libraries/range/pool/MintRangeCall.sol:MintRangeCall': mintRangeCallAddress,
+                    'contracts/libraries/range/pool/BurnRangeCall.sol:BurnRangeCall': burnRangeCallAddress,
+                    'contracts/libraries/range/pool/SnapshotRangeCall.sol:SnapshotRangeCall': snapshotRangeCallAddress,
+                    'contracts/libraries/limit/pool/MintLimitCall.sol:MintLimitCall': mintLimitCallAddress,
+                    'contracts/libraries/limit/pool/BurnLimitCall.sol:BurnLimitCall': burnLimitCallAddress,
+                    'contracts/libraries/limit/pool/SnapshotLimitCall.sol:SnapshotLimitCall': snapshotLimitCallAddress,
+                    'contracts/libraries/pool/SwapCall.sol:SwapCall': swapCallAddress,
+                    'contracts/libraries/pool/QuoteCall.sol:QuoteCall': quoteCallAddress,
+                    'contracts/libraries/pool/FeesCall.sol:FeesCall': feesCallAddress,
+                    'contracts/libraries/pool/SampleCall.sol:SampleCall': sampleCallAddress
                 }
             )
 
@@ -468,7 +469,7 @@ export class InitialSetup {
             [limitPoolAddress, limitPoolTokenAddress] = await hre.props.limitPoolFactory.getLimitPool(
                 hre.props.token0.address,
                 hre.props.token1.address,
-                '3000',
+                '1000',
                 2
             )
         }
@@ -598,13 +599,13 @@ export class InitialSetup {
             ).contractAddress
             hre.props.limitPoolFactory = await hre.ethers.getContractAt('LimitPoolFactory', limitPoolFactoryAddress)
 
-            // FIN - WETH
+            // USDT - WETH
             let createPoolTxn = await hre.props.limitPoolFactory.createLimitPool({
                 poolTypeId: 2,
                 tokenIn: hre.props.token0.address,
                 tokenOut: hre.props.token1.address,
-                swapFee: '3000',
-                startPrice: '3081445955259148781088762081714'
+                swapFee: '1000',
+                startPrice: '4223219604090376338327815'
             });
             await createPoolTxn.wait();
 

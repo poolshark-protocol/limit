@@ -92,8 +92,8 @@ const config: HardhatUserConfig = {
                 network: 'scroll',
                 chainId: 534352,
                 urls: {
-                  apiURL: 'https://blockscout.scroll.io/api',
-                  browserURL: 'https://blockscout.scroll.io/',
+                  apiURL: 'https://api.scrollscan.com/api',
+                  browserURL: 'https://scrollscan.com/',
                 },
             },
             {

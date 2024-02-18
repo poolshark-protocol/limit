@@ -30,6 +30,8 @@ export let WHITELISTED_PAIRS: string[] = [
   '0xb14917888ba92937be3d89094f83a62904ebc9dd', // WETH-USDT 0.1%
 ]
 
+export let BLACKLISTED_ADDRESSES: string[] = []
+
 export let SEASON_1_START_TIME = BigInt.fromString('0') // 02-13-2024 0:00 GMT - 1707836400
 export let SEASON_1_END_TIME = BigInt.fromString('1709996400') // 3-09-2024 0:00 GMT - 1709996400
 

@@ -26,9 +26,9 @@ export let WHITELISTED_TOKENS: string[] = [
   '0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9'  // USDT
 ]
 
-//TODO: incentivizing only FIN - WETH 0.3% for now
-
 export let WHITELISTED_PAIRS: string[] = [
+  // Type 0
+  '0xa43ddbcc4b78512c316bd7091b4c60f06db0fe42', // FIN-WETH 0.3%
   // Type 2
   '0x7b47619045ae93f9311d0562a43c244c42bfe485', // FIN-WETH 0.3%
 ]
@@ -37,8 +37,8 @@ export let BLACKLISTED_ADDRESSES: string[] = [
   '0xf37a475c178dfbec96088fa7904a861336002c6a' // FIN Safe
 ]
 
-export let SEASON_1_START_TIME = BigInt.fromString('1674345600') // 1-22-2024 0:00 GMT
-export let SEASON_1_END_TIME = BigInt.fromString('1684713600') // 5-22-2024 0:00 GMT
+export let SEASON_1_START_TIME = BigInt.fromString('1707490800') // 2-09-2024 15:00 GMT - 1707490800
+export let SEASON_1_END_TIME = BigInt.fromString('1709996400')   // 3-09-2024 15:00 GMT - 1709996400
 
 // used for safe eth pricing 
 export let STABLE_COINS: string[] = [

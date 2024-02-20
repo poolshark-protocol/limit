@@ -2,6 +2,7 @@ import { safeLoadLimitPool, safeLoadRangePosition, safeLoadToken, safeLoadTotalS
 import { FeeToTransfer, OwnerTransfer, StakeRange, StakeRangeAccrued, UnstakeRange } from '../../../generated/templates/RangeStakerTemplate/RangeStaker'
 import { BLACKLISTED_ADDRESSES, FACTORY_ADDRESS, SEASON_1_END_TIME, SEASON_1_START_TIME, WHITELISTED_PAIRS, WHITELISTED_TOKENS } from '../../constants/constants'
 import { convertTokenToDecimal } from '../utils/helpers'
+import { log } from '@graphprotocol/graph-ts'
 
 export function handleFeeToTransfer(event: FeeToTransfer): void {
 

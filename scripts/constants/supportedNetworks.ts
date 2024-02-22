@@ -10,11 +10,13 @@ export enum SUPPORTED_NETWORKS {
     /* Testnet Supported  Networks */
     ARB_SEPOLIA = 'arb_sepolia',
     SCROLL_SEPOLIA = 'scrollSepolia',
+    STEER_DEVNET = 'steer_devnet',
 }
 
 export enum TESTNET_NETWORKS {
     ARB_SEPOLIA = 'arb_sepolia',
-    SCROLL_SEPOLIA = 'scrollSepolia'
+    SCROLL_SEPOLIA = 'scrollSepolia',
+    STEER_DEVNET = 'steer_devnet'
 }
 
 export enum LOCAL_NETWORKS {

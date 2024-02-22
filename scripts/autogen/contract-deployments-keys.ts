@@ -97,8 +97,4 @@ export const CONTRACT_DEPLOYMENT_KEYS: ContractDeploymentsKey[] = [
         networkName: 'scroll',
         objectName: 'limitPool'
     },
-    {
-        networkName: 'scroll',
-        objectName: 'limitPool'
-    },
 ];

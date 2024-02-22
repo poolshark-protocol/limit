@@ -48,6 +48,10 @@ describe('LimitPool Tests', function () {
 
     before(async function () {
         await gBefore()
+        console.log(await hre.network.provider.request({
+            method: "evm_snapshot",
+            params: [],
+        }));
         let currentBlock = await ethers.provider.getBlockNumber()
         const pool0: LimitPoolState = (await hre.props.limitPool.globalState()).pool0
         const liquidity = pool0.liquidity

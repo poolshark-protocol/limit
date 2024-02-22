@@ -131,25 +131,25 @@ export function handleSwap(event: SwapLimit): void {
 
     // query from client side and add up all volume and fees
 
-    // let loadTvlUpdateLog = safeLoadTvlUpdateLog(event.transaction.hash, poolAddress)
-    // let tvlUpdateLog = loadTvlUpdateLog.entity
+    let loadTvlUpdateLog = safeLoadTvlUpdateLog(event.transaction.hash, poolAddress)
+    let tvlUpdateLog = loadTvlUpdateLog.entity
 
-    // tvlUpdateLog.pool = poolAddress
-    // tvlUpdateLog.eventName = "Swap"
-    // tvlUpdateLog.txnHash = event.transaction.hash
-    // tvlUpdateLog.txnBlockNumber = event.block.number
-    // tvlUpdateLog.amount0Change = amount0
-    // tvlUpdateLog.amount1Change = amount1
-    // tvlUpdateLog.amount0Total = pool.totalValueLocked0
-    // tvlUpdateLog.amount1Total = pool.totalValueLocked1
-    // tvlUpdateLog.token0UsdPrice = token0.usdPrice
-    // tvlUpdateLog.token1UsdPrice = token1.usdPrice
-    // tvlUpdateLog.amountUsdChange = amount0
-    // .times(token0.ethPrice.times(basePrice.USD))
-    // .plus(amount1.times(token1.ethPrice.times(basePrice.USD)))
-    // tvlUpdateLog.amountUsdTotal = pool.totalValueLockedUsd
+    tvlUpdateLog.pool = poolAddress
+    tvlUpdateLog.eventName = "Swap"
+    tvlUpdateLog.txnHash = event.transaction.hash
+    tvlUpdateLog.txnBlockNumber = event.block.number
+    tvlUpdateLog.amount0Change = amount0
+    tvlUpdateLog.amount1Change = amount1
+    tvlUpdateLog.amount0Total = pool.totalValueLocked0
+    tvlUpdateLog.amount1Total = pool.totalValueLocked1
+    tvlUpdateLog.token0UsdPrice = token0.usdPrice
+    tvlUpdateLog.token1UsdPrice = token1.usdPrice
+    tvlUpdateLog.amountUsdChange = amount0
+    .times(token0.ethPrice.times(basePrice.USD))
+    .plus(amount1.times(token1.ethPrice.times(basePrice.USD)))
+    tvlUpdateLog.amountUsdTotal = pool.totalValueLockedUsd
 
-    // tvlUpdateLog.save()
+    tvlUpdateLog.save()
     
     // update historical order data
     if ((zeroForOneParam ? amount0Abs : amount1Abs).gt(BIGDECIMAL_ZERO)) {

@@ -123,23 +123,23 @@ export function handleMintRange(event: MintRange): void {
     pool = updateTvlRet.pool
     factory = updateTvlRet.factory
     
-    // let loadTvlUpdateLog = safeLoadTvlUpdateLog(event.transaction.hash, poolAddress)
-    // let tvlUpdateLog = loadTvlUpdateLog.entity
+    let loadTvlUpdateLog = safeLoadTvlUpdateLog(event.transaction.hash, poolAddress)
+    let tvlUpdateLog = loadTvlUpdateLog.entity
 
-    // tvlUpdateLog.pool = poolAddress
-    // tvlUpdateLog.eventName = "MintRange"
-    // tvlUpdateLog.txnHash = event.transaction.hash
-    // tvlUpdateLog.txnBlockNumber = event.block.number
-    // tvlUpdateLog.amount0Change = amount0
-    // tvlUpdateLog.amount1Change = amount1
-    // tvlUpdateLog.amount0Total = pool.totalValueLocked0
-    // tvlUpdateLog.amount1Total = pool.totalValueLocked1
-    // tvlUpdateLog.token0UsdPrice = token0.usdPrice
-    // tvlUpdateLog.token1UsdPrice = token1.usdPrice
-    // tvlUpdateLog.amountUsdChange = amountUsd
-    // tvlUpdateLog.amountUsdTotal = pool.totalValueLockedUsd
+    tvlUpdateLog.pool = poolAddress
+    tvlUpdateLog.eventName = "MintRange"
+    tvlUpdateLog.txnHash = event.transaction.hash
+    tvlUpdateLog.txnBlockNumber = event.block.number
+    tvlUpdateLog.amount0Change = amount0
+    tvlUpdateLog.amount1Change = amount1
+    tvlUpdateLog.amount0Total = pool.totalValueLocked0
+    tvlUpdateLog.amount1Total = pool.totalValueLocked1
+    tvlUpdateLog.token0UsdPrice = token0.usdPrice
+    tvlUpdateLog.token1UsdPrice = token1.usdPrice
+    tvlUpdateLog.amountUsdChange = amountUsd
+    tvlUpdateLog.amountUsdTotal = pool.totalValueLockedUsd
 
-    // tvlUpdateLog.save()
+    tvlUpdateLog.save()
 
     if (
         pool.tickAtPrice !== null &&

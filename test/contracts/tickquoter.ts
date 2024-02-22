@@ -80,6 +80,7 @@ describe('TickQuoter Tests', function () {
     const bobLiquidity = BigNumber.from('12891478442546858467877')
     const bobLiquidity2 = BigNumber.from('4901161634764542438930')
 
+    // move pool to exact price
     await validateSwap({
         signer: hre.props.alice,
         recipient: hre.props.alice.address,
@@ -92,6 +93,8 @@ describe('TickQuoter Tests', function () {
     })
   
     if (debugMode) await getPrice()
+
+    // mint from 500 to 1000
     const aliceId = await validateMint({
       signer: hre.props.alice,
       recipient: hre.props.alice.address,
@@ -106,6 +109,7 @@ describe('TickQuoter Tests', function () {
       collectRevertMessage: ''
     })
 
+    // swap
     await validateSwap({
       signer: hre.props.alice,
       recipient: hre.props.alice.address,
@@ -117,6 +121,7 @@ describe('TickQuoter Tests', function () {
       revertMessage: '',
     })
 
+    // mint from 600 to 800
     const bobId = await validateMint({
       signer: hre.props.bob,
       recipient: hre.props.bob.address,

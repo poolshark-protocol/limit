@@ -68,6 +68,12 @@ const config: HardhatUserConfig = {
             chainId: 34443,
             url: "https://mainnet.mode.network/" || "",
             accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+        },
+        steer_devnet: {
+            chainId: 42161,
+            gasPrice: 2_000_000_000,
+            url: "https://rpc.vnet.tenderly.co/devnet/poolshark/e629040a-9f64-4a04-98e0-6b61541c01a5" || "",
+            accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
         }
     },
     etherscan: { 

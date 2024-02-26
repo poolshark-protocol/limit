@@ -30,10 +30,10 @@ export class InitialSetup {
     private constantProductString2: string
 
     /// DEPLOY CONFIG
-    private deployTokens = true
-    private deployContracts = true
-    private deployFactory = true
-    private deployLibs = true
+    private deployTokens = false
+    private deployContracts = false
+    private deployFactory = false
+    private deployLibs = false
     private deployPools = true
     private savePool = true
     private deployRouter = true
@@ -142,6 +142,9 @@ export class InitialSetup {
             hre.props.limitPoolFactory = await hre.ethers.getContractAt('LimitPoolFactory', limitPoolFactoryAddress)
             hre.props.limitPoolManager = await hre.ethers.getContractAt('LimitPoolManager', limitPoolManagerAddress)
         }
+
+        
+        let limitPoolAddress; let limitPoolTokenAddress;
 
         // Encode the function parameters
         // const abiCoder = new ethers.utils.AbiCoder();
@@ -444,7 +447,25 @@ export class InitialSetup {
                 ]
             )
 
-            const enableImplTxn = await hre.props.limitPoolManager.enablePoolType(
+            let enableImplTxn = await hre.props.limitPoolManager.enablePoolType(
+                hre.props.limitPoolImpl.address,
+                hre.props.positionERC1155.address,
+                this.constantProductString2
+            )
+            await enableImplTxn.wait();
+
+            hre.nonce += 1;
+
+            enableImplTxn = await hre.props.limitPoolManager.enablePoolType(
+                hre.props.limitPoolImpl.address,
+                hre.props.positionERC1155.address,
+                this.constantProductString2
+            )
+            await enableImplTxn.wait();
+
+            hre.nonce += 1;
+
+            enableImplTxn = await hre.props.limitPoolManager.enablePoolType(
                 hre.props.limitPoolImpl.address,
                 hre.props.positionERC1155.address,
                 this.constantProductString2
@@ -462,8 +483,6 @@ export class InitialSetup {
                 hre.nonce += 1;
             }
         }
-
-        let limitPoolAddress; let limitPoolTokenAddress;
 
         if (hre.network.name != "hardhat" && this.savePool) {
             [limitPoolAddress, limitPoolTokenAddress] = await hre.props.limitPoolFactory.getLimitPool(
@@ -588,6 +607,17 @@ export class InitialSetup {
 
         } else if (this.deployPools) {
             console.log('deploying pool')
+            const weth9Address = (
+                await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
+                    {
+                        networkName: hre.network.name,
+                        objectName: 'weth9',
+                    },
+                    'readLimitPoolSetup'
+                )
+            ).contractAddress
+            hre.props.weth9 = await hre.ethers.getContractAt('WETH9', weth9Address)
+
             const limitPoolFactoryAddress = (
                 await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
                     {
@@ -598,37 +628,42 @@ export class InitialSetup {
                 )
             ).contractAddress
             hre.props.limitPoolFactory = await hre.ethers.getContractAt('LimitPoolFactory', limitPoolFactoryAddress)
-
-            // USDT - WETH
-            let createPoolTxn = await hre.props.limitPoolFactory.createLimitPool({
-                poolTypeId: 2,
-                tokenIn: hre.props.token0.address,
-                tokenOut: hre.props.token1.address,
-                swapFee: '1000',
-                startPrice: '4223219604090376338327815'
-            });
-            await createPoolTxn.wait();
-
-            hre.nonce += 1;
-
-            // // WETH - USDC
+            console.log('pool 1')
+            // WINJ - USDT
             // let createPoolTxn = await hre.props.limitPoolFactory.createLimitPool({
             //     poolTypeId: 2,
-            //     tokenIn: hre.props.token0.address,
+            //     tokenIn: hre.props.weth9.address,
             //     tokenOut: hre.props.token1.address,
             //     swapFee: '1000',
-            //     startPrice: '4154759893461157894803014'
+            //     startPrice: '4418394386777293208160381'
             // });
             // await createPoolTxn.wait();
 
             // hre.nonce += 1;
-            // // WETH - USDT
+
+            console.log('pool 2')
+
+            // WINJ - USDC
+            // let createPoolTxn = await hre.props.limitPoolFactory.createLimitPool({
+            //     poolTypeId: 2,
+            //     tokenIn: hre.props.weth9.address,
+            //     tokenOut: hre.props.token0.address,
+            //     swapFee: '1000',
+            //     startPrice: '4418394386777293208160381'
+            // });
+            // await createPoolTxn.wait();
+
+            // hre.nonce += 1;
+
+            console.log('pool 3')
+
+            // USDC - USDT
             // createPoolTxn = await hre.props.limitPoolFactory.createLimitPool({
             //     poolTypeId: 2,
             //     tokenIn: hre.props.token0.address,
-            //     tokenOut: '0xf0f161fda2712db8b566946122a5af183995e2ed',
+            //     tokenOut: hre.props.token1.address,
             //     swapFee: '1000',
-            //     startPrice: '4154759893461157894803014'
+            //     startPrice: '79228162514264337593543950336'
             // });
             // await createPoolTxn.wait();
 
@@ -645,15 +680,16 @@ export class InitialSetup {
 
             // hre.nonce += 1;
 
+
+        }
+
+        if (hre.network.name == 'hardhat' || this.deployPools || this.savePool) {
             [limitPoolAddress, limitPoolTokenAddress] = await hre.props.limitPoolFactory.getLimitPool(
                 hre.props.token0.address,
                 hre.props.token1.address,
                 '1000',
                 2
             )
-        }
-
-        if (hre.network.name == 'hardhat' || this.deployPools || this.savePool) {
             hre.props.limitPool = await hre.ethers.getContractAt('LimitPool', limitPoolAddress)
             hre.props.limitPoolToken = await hre.ethers.getContractAt('PositionERC1155', limitPoolTokenAddress)
 

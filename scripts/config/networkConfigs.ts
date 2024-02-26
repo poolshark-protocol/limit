@@ -33,14 +33,14 @@ export const NETWORK_CONFIGS: NetworkConfigs = {
         url: process.env.ARBITRUM_ONE_URL || '',
         accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
-    scroll : {
+    scroll: {
         chainId: 534352,
         gas: 9000000,
         gasPrice: 4000000,
         url: process.env.SCROLL_ALPHA_URL || '',
         accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
-    mode : {
+    mode: {
         chainId: 34443,
         gas: 9000000,
         gasPrice: 4000000,
@@ -55,14 +55,14 @@ export const NETWORK_CONFIGS: NetworkConfigs = {
         url: process.env.ARBITRUM_GOERLI_URL || '',
         accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
-    scrollSepolia : {
+    scrollSepolia: {
         chainId: 534353,
         gas: 9000000,
         gasPrice: 4000000,
         url: process.env.SCROLL_ALPHA_URL || '',
         accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
-    steer_devnet : {
+    inEvm: {
         chainId: 534353,
         gas: 9000000,
         gasPrice: 4000000,

@@ -69,10 +69,9 @@ const config: HardhatUserConfig = {
             url: "https://mainnet.mode.network/" || "",
             accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
         },
-        steer_devnet: {
-            chainId: 42161,
-            gasPrice: 2_000_000_000,
-            url: "https://rpc.vnet.tenderly.co/devnet/poolshark/e629040a-9f64-4a04-98e0-6b61541c01a5" || "",
+        inEvm: {
+            url: "https://inevm.calderachain.xyz/http", 
+            chainId: 2525,
             accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
         }
     },
@@ -83,7 +82,8 @@ const config: HardhatUserConfig = {
             arb_sepolia: process.env.ARBITRUM_SEPOLIA_API_KEY,
             scrollSepolia: process.env.SCROLL_SEPOLIA_API_KEY,
             scroll: process.env.SCROLL_API_KEY,
-            mode: process.env.MODE_API_KEY
+            mode: process.env.MODE_API_KEY,
+            inEvm: process.env.IN_EVM_API_KEY,
         },
         customChains: [
             {
@@ -106,8 +106,18 @@ const config: HardhatUserConfig = {
                 network: 'mode',
                 chainId: 34443,
                 urls: {
-                  apiURL: 'https://explorer.mode.network/api',
-                  browserURL: 'https://explorer.mode.network/',
+                //   apiURL: 'https://explorer.mode.network/api',
+                // browserURL: 'https://explorer.mode.network/',
+                  apiURL: 'https://api.routescan.io/v2/network/mainnet/evm/34443/etherscan',
+                  browserURL: 'https://modescan.io/',
+                },
+            },
+            {
+                network: 'inEvm',
+                chainId: 2525,
+                urls: {
+                    apiURL: 'https://explorer.inevm.com/api',
+                    browserURL: 'https://explorer.inevm.com/',
                 },
             },
             {

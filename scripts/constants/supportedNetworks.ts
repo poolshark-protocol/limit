@@ -6,17 +6,16 @@ export enum SUPPORTED_NETWORKS {
     ARB_ONE = 'arb_one',
     SCROLL = 'scroll',
     MODE = 'mode',
+    INEVM = 'inEvm',
 
     /* Testnet Supported  Networks */
     ARB_SEPOLIA = 'arb_sepolia',
     SCROLL_SEPOLIA = 'scrollSepolia',
-    STEER_DEVNET = 'steer_devnet',
 }
 
 export enum TESTNET_NETWORKS {
     ARB_SEPOLIA = 'arb_sepolia',
     SCROLL_SEPOLIA = 'scrollSepolia',
-    STEER_DEVNET = 'steer_devnet'
 }
 
 export enum LOCAL_NETWORKS {

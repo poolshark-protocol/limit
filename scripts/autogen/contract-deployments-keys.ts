@@ -2,99 +2,87 @@ import { ContractDeploymentsKey } from '../util/files/contractDeploymentsJson'
 
 export const CONTRACT_DEPLOYMENT_KEYS: ContractDeploymentsKey[] = [
     {
-        networkName: 'scroll',
-        objectName: 'poolRouter'
-    },
-    {
-        networkName: 'scroll',
+        networkName: 'inEvm',
         objectName: 'tickMapLib'
     },
     {
-        networkName: 'scroll',
+        networkName: 'inEvm',
         objectName: 'ticksLib'
     },
     {
-        networkName: 'scroll',
+        networkName: 'inEvm',
         objectName: 'limitPositionsLib'
     },
     {
-        networkName: 'scroll',
+        networkName: 'inEvm',
+        objectName: 'limitPoolManager'
+    },
+    {
+        networkName: 'inEvm',
+        objectName: 'limitPoolFactory'
+    },
+    {
+        networkName: 'inEvm',
         objectName: 'tickQuoter'
     },
     {
-        networkName: 'scroll',
+        networkName: 'inEvm',
         objectName: 'swapCall'
     },
     {
-        networkName: 'scroll',
+        networkName: 'inEvm',
         objectName: 'mintRangeCall'
     },
     {
-        networkName: 'scroll',
+        networkName: 'inEvm',
         objectName: 'burnRangeCall'
     },
     {
-        networkName: 'scroll',
+        networkName: 'inEvm',
         objectName: 'mintLimitCall'
     },
     {
-        networkName: 'scroll',
+        networkName: 'inEvm',
         objectName: 'burnLimitCall'
     },
     {
-        networkName: 'scroll',
+        networkName: 'inEvm',
         objectName: 'snapshotLimitCall'
     },
     {
-        networkName: 'scroll',
+        networkName: 'inEvm',
         objectName: 'quoteCall'
     },
     {
-        networkName: 'scroll',
+        networkName: 'inEvm',
         objectName: 'feesCall'
     },
     {
-        networkName: 'scroll',
+        networkName: 'inEvm',
         objectName: 'sampleCall'
     },
     {
-        networkName: 'scroll',
+        networkName: 'inEvm',
         objectName: 'snapshotRangeCall'
     },
     {
-        networkName: 'scroll',
-        objectName: 'snapshotRangeCall'
-    },
-    {
-        networkName: 'scroll',
-        objectName: 'snapshotRangeCall'
-    },
-    {
-        networkName: 'scroll',
+        networkName: 'inEvm',
         objectName: 'limitPoolImpl'
     },
     {
-        networkName: 'scroll',
+        networkName: 'inEvm',
         objectName: 'positionERC1155'
     },
     {
-        networkName: 'scroll',
-        objectName: 'snapshotRangeCall'
-    },
-    {
-        networkName: 'scroll',
-        objectName: 'limitPoolImpl'
-    },
-    {
-        networkName: 'scroll',
-        objectName: 'positionERC1155'
-    },
-    {
-        networkName: 'scroll',
+        networkName: 'inEvm',
         objectName: 'limitPool'
     },
     {
-        networkName: 'scroll',
-        objectName: 'limitPool'
+        networkName: 'inEvm',
+        objectName: 'poolRouter'
+    },
+    {
+        networkName: 'inEvm',
+        objectName: 'rangeStaker'
     },
 ];

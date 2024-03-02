@@ -4,6 +4,7 @@ import { sign } from 'crypto';
 import { BigNumber, Contract } from 'ethers'
 import { LimitPool, PositionERC1155 } from '../../../typechain';
 import { gasUsed } from '../blocks';
+import { getMintLimitInputData } from './poolsharkrouter';
 const { mine } = require("@nomicfoundation/hardhat-network-helpers");
 
 export const Q96 = BigNumber.from('2').pow(96)
@@ -87,6 +88,15 @@ export interface RangeStake {
     isStaked: boolean
 }
 
+export interface LimitStake {
+    pool: string
+    owner: string
+    liquidity: BigNumber
+    positionId: number
+    zeroForOne: boolean
+    isStaked: boolean
+}
+
 export interface LimitTick {
     priceAt: BigNumber
     liquidityDelta: BigNumber
@@ -115,6 +125,7 @@ export interface ValidateMintParams {
     positionId?: number
     poolContract?: LimitPool
     poolTokenContract?: PositionERC1155
+    stake?: boolean
 }
 
 export interface ValidateSwapParams {
@@ -156,6 +167,33 @@ export interface ValidateBurnParams {
     positionLiquidityChange?: string
     compareSnapshot?: boolean
     recipient?: string
+    revertMessage: string
+    poolContract?: LimitPool
+    poolTokenContract?: PositionERC1155
+    staked?: boolean
+}
+
+export interface ValidateStakeParams {
+    signer: SignerWithAddress
+    recipient: string
+    positionId: number
+    claim: number
+    zeroForOne: boolean
+    balance0Increase?: BigNumber
+    balance1Increase?: BigNumber
+    revertMessage: string
+    poolContract?: LimitPool
+    poolTokenContract?: PositionERC1155
+}
+
+export interface ValidateUnstakeParams {
+    signer: SignerWithAddress
+    recipient: string
+    positionId: number
+    claim: number
+    zeroForOne: boolean
+    balance0Increase?: BigNumber
+    balance1Increase?: BigNumber
     revertMessage: string
     poolContract?: LimitPool
     poolTokenContract?: PositionERC1155
@@ -418,6 +456,7 @@ export async function validateMint(params: ValidateMintParams): Promise<number> 
     const poolTokenContract = params.poolTokenContract ?? hre.props.limitPoolToken
     const expectedPositionId = params.positionId ? params.positionId
                                                  : (await poolContract.globalState()).positionIdNext
+    const stake = params.stake ?? false
 
     let balanceInBefore
     let balanceOutBefore
@@ -443,7 +482,7 @@ export async function validateMint(params: ValidateMintParams): Promise<number> 
     let positionTokens: Contract
     let positionTokenBalanceBefore: BigNumber
     positionTokens = await hre.ethers.getContractAt('PositionERC1155', poolTokenContract.address);
-    positionTokenBalanceBefore = await positionTokens.balanceOf(signer.address, expectedPositionId);
+    positionTokenBalanceBefore = await positionTokens.balanceOf(stake ? hre.props.limitStaker.address : signer.address, expectedPositionId);
     let liquidityGlobalBefore = (await poolContract.globalState()).liquidityGlobal
     if (zeroForOne) {
         lowerTickBefore = (await poolContract.ticks(expectedLower ? expectedLower : lower)).limit
@@ -473,24 +512,28 @@ export async function validateMint(params: ValidateMintParams): Promise<number> 
                         upper: upper,
                         zeroForOne: zeroForOne,
                         mintPercent: mintPercent,
-                        callbackData: ethers.utils.formatBytes32String('')
+                        callbackData: getMintLimitInputData(stake)
                     }
-                ], {gasLimit: 3000000})
+                ], {gasLimit: 3_000_000})
         await txn.wait()
     } else {
         await expect(
-            hre.props.limitPool
-                .connect(params.signer)
-                .mintLimit({
-                    to: recipient,
-                    positionId: positionId,
-                    lower: lower,
-                    upper: upper,
-                    amount: amountDesired,
-                    zeroForOne: zeroForOne,
-                    mintPercent: BN_ZERO,
-                    callbackData: ethers.utils.formatBytes32String('')
-                })
+            hre.props.poolRouter
+            .connect(params.signer)
+            .multiMintLimit(
+                [poolContract.address],
+                [
+                    {
+                        to: recipient,
+                        amount: amountDesired,
+                        positionId: positionId,
+                        lower: lower,
+                        upper: upper,
+                        zeroForOne: zeroForOne,
+                        mintPercent: mintPercent,
+                        callbackData: getMintLimitInputData(stake)
+                    }
+                ], {gasLimit: 3_000_000})
         ).to.be.revertedWith(revertMessage)
         return expectedPositionId
     }
@@ -513,7 +556,7 @@ export async function validateMint(params: ValidateMintParams): Promise<number> 
     let positionAfter: LimitPosition
     let positionTokenBalanceAfter: BigNumber
     positionTokens = await hre.ethers.getContractAt('PositionERC1155', poolTokenContract.address);
-    positionTokenBalanceAfter = await positionTokens.balanceOf(signer.address, expectedPositionId);
+    positionTokenBalanceAfter = await positionTokens.balanceOf(stake ? hre.props.limitStaker.address : signer.address, expectedPositionId);
     let liquidityGlobalAfter = (await poolContract.globalState()).liquidityGlobal
     if (zeroForOne) {
         lowerTickAfter = (await poolContract.ticks(expectedLower ? expectedLower : lower)).limit
@@ -529,7 +572,7 @@ export async function validateMint(params: ValidateMintParams): Promise<number> 
         )
     }
     if (!params.positionId && positionAfter.liquidity.gt(BN_ZERO))
-        expect(positionTokenBalanceAfter.sub(positionTokenBalanceBefore)).to.be.equal(BigNumber.from(1))
+        expect(positionTokenBalanceAfter.sub(positionTokenBalanceBefore)).to.be.equal(BN_ONE)
 
     if (zeroForOne) {
         //liquidity change for lower should be -liquidityAmount
@@ -570,6 +613,20 @@ export async function validateMint(params: ValidateMintParams): Promise<number> 
     const positionLiquidityChange = params.positionLiquidityChange ? BigNumber.from(params.positionLiquidityChange) : liquidityIncrease
     expect(positionAfter.liquidity.sub(positionBefore.liquidity)).to.be.equal(positionLiquidityChange)
     expect(liquidityGlobalAfter.sub(liquidityGlobalBefore)).to.be.equal(positionLiquidityChange)
+    if (stake) {
+        // check fg0/1 and liquidity match
+        const stakeKey = ethers.utils.keccak256(ethers.utils.defaultAbiCoder.encode(
+          ["address", "uint32"], // encode as address array
+          [ poolContract.address, expectedPositionId ]
+        ))
+        const limitStake: LimitStake = await hre.props.limitStaker.limitStakes(stakeKey)
+        expect(positionAfter.liquidity).to.be.equal(limitStake.liquidity)
+        expect(limitStake.positionId).to.be.equal(expectedPositionId)
+        expect(limitStake.pool).to.be.equal(poolContract.address)
+        expect(limitStake.isStaked).to.be.equal(true)
+        expect(limitStake.zeroForOne).to.be.equal(params.zeroForOne)
+        expect(limitStake.owner).to.be.equal(params.recipient)
+      }
     return expectedPositionId
 }
 
@@ -594,6 +651,7 @@ export async function validateBurn(params: ValidateBurnParams) {
     const compareSnapshot = params.compareSnapshot ? params.compareSnapshot : true
     const poolContract = params.poolContract ?? hre.props.limitPool
     const poolTokenContract = params.poolTokenContract ?? hre.props.limitPoolToken
+    const staked = params.staked ?? false
 
     let balanceInBefore
     let balanceOutBefore
@@ -614,7 +672,7 @@ export async function validateBurn(params: ValidateBurnParams) {
     let positionTokens: Contract
     let positionTokenBalanceBefore: BigNumber
     positionTokens = await hre.ethers.getContractAt('PositionERC1155', poolTokenContract.address);
-    positionTokenBalanceBefore = await positionTokens.balanceOf(signer.address, params.positionId);
+    positionTokenBalanceBefore = await positionTokens.balanceOf(staked ? hre.props.limitStaker.address : signer.address, params.positionId);
     let liquidityGlobalBefore = (await poolContract.globalState()).liquidityGlobal
     if (zeroForOne) {
         lowerTickBefore = (await poolContract.ticks(expectedLower ?? lower)).limit
@@ -642,14 +700,14 @@ export async function validateBurn(params: ValidateBurnParams) {
         [poolContract.address],
         [    
             {
-                owner: signer.address,
+                owner: staked ? hre.props.limitStaker.address : signer.address,
                 positionId: params.positionId,
                 claim: claim,
                 zeroForOne: zeroForOne,
                 burnPercent: liquidityPercent
             }
-        ])
-        const burnTxn = await poolContract
+        ], {gasLimit: 3_000_000})
+        const burnTxn = !staked ? await poolContract
             .connect(signer)
             .burnLimit({
                 to: recipient,
@@ -658,10 +716,22 @@ export async function validateBurn(params: ValidateBurnParams) {
                 zeroForOne: zeroForOne,
                 burnPercent: liquidityPercent,
             }, {gasLimit: 3_000_000})
+        : await hre.props.limitStaker
+        .connect(signer)
+        .burnLimitStake(
+            poolContract.address,
+            {
+                to: recipient,
+                positionId: params.positionId,
+                claim: claim,
+                zeroForOne: zeroForOne,
+                burnPercent: liquidityPercent,
+            }
+            , {gasLimit: 3_000_000})
         await burnTxn.wait()
     } else {
         await expect(
-            poolContract
+            !staked ? poolContract
                 .connect(signer)
                 .burnLimit({
                     to: recipient,
@@ -669,7 +739,19 @@ export async function validateBurn(params: ValidateBurnParams) {
                     claim: claim,
                     zeroForOne: zeroForOne,
                     burnPercent: liquidityPercent,
-                })
+                }, {gasLimit: 3_000_000})
+            : hre.props.limitStaker
+            .connect(signer)
+            .burnLimitStake(
+                poolContract.address,
+                {
+                    to: recipient,
+                    positionId: params.positionId,
+                    claim: claim,
+                    zeroForOne: zeroForOne,
+                    burnPercent: liquidityPercent,
+                }
+                , {gasLimit: 3_000_000})
         ).to.be.revertedWith(revertMessage)
         return
     }
@@ -777,6 +859,161 @@ export async function validateBurn(params: ValidateBurnParams) {
     )
     expect(liquidityGlobalAfter.sub(liquidityGlobalBefore)).to.be.equal(BN_ZERO.sub(positionLiquidityChange))
 }
+
+export async function validateStake(params: ValidateStakeParams) {
+    const signer = params.signer
+    // let liquidityAmount = params.liquidityAmount
+    const balance0Increase = params.balance0Increase ?? BN_ZERO
+    const balance1Increase = params.balance1Increase ?? BN_ZERO
+    const revertMessage = params.revertMessage
+    const poolContract = params.poolContract ?? hre.props.limitPool
+    const poolTokenContract = hre.props.limitPoolToken
+  
+    let balance0Before
+    let balance1Before
+    const token0 = await hre.ethers.getContractAt('Token20', await poolContract.token0())
+    const token1 = await hre.ethers.getContractAt('Token20', await poolContract.token1())
+    balance0Before = await token0.balanceOf(signer.address)
+    balance1Before = await token1.balanceOf(signer.address)
+  
+    let lowerTickBefore: RangeTick
+    let upperTickBefore: RangeTick
+    let positionBefore: LimitPosition
+    let positionToken: PositionERC1155
+    let positionTokenBalanceBefore: BigNumber
+    let positionTokenTotalSupply: BigNumber
+    // check position token balance
+    positionToken = poolTokenContract
+    positionTokenBalanceBefore = await positionToken.balanceOf(hre.props.limitStaker.address, params.positionId);
+    positionBefore = params.zeroForOne 
+                        ? await poolContract.positions0(params.positionId)
+                        : await poolContract.positions1(params.positionId)
+    let positionSnapshot: [BigNumber, BigNumber, BigNumber, BigNumber]
+    const approveTxn = await poolTokenContract.connect(signer).setApprovalForAll(hre.props.limitStaker.address, true)
+    if (revertMessage == '') {
+      positionSnapshot = await poolContract.snapshotRange(params.positionId)
+      const unstakeTxn = await hre.props.limitStaker
+        .connect(signer)
+        .stakeLimit({
+          to: params.recipient,
+          pool: hre.props.limitPool.address,
+          positionId: params.positionId,
+          zeroForOne: params.zeroForOne
+      })
+      await unstakeTxn.wait()
+    } else {
+      await expect(
+        hre.props.limitStaker.connect(signer)
+        .stakeLimit({
+          to: params.recipient,
+          pool: hre.props.limitPool.address,
+          positionId: params.positionId,
+          zeroForOne: params.zeroForOne
+      })
+      ).to.be.revertedWith(revertMessage)
+      return
+    }
+  
+    let balance0After
+    let balance1After
+    balance0After = await token0.balanceOf(signer.address)
+    balance1After = await token1.balanceOf(signer.address)
+  
+    expect(balance0After.sub(balance0Before)).to.be.equal(balance0Increase)
+    expect(balance1After.sub(balance1Before)).to.be.equal(balance1Increase)
+  
+    let lowerTickAfter: RangeTick
+    let upperTickAfter: RangeTick
+    let positionAfter: LimitPosition
+    let positionTokenBalanceAfter: BigNumber
+    // check position token balance after
+    positionTokenBalanceAfter = await positionToken.balanceOf(hre.props.limitStaker.address, params.positionId);
+    positionAfter = params.zeroForOne 
+                        ? await poolContract.positions0(params.positionId)
+                        : await poolContract.positions1(params.positionId)
+    expect(positionTokenBalanceAfter.sub(positionTokenBalanceBefore)).to.be.equal(BN_ONE)
+  }
+
+export async function validateUnstake(params: ValidateUnstakeParams) {
+    const signer = params.signer
+    // let liquidityAmount = params.liquidityAmount
+    const balance0Increase = params.balance0Increase ?? BN_ZERO
+    const balance1Increase = params.balance1Increase ?? BN_ZERO
+    const revertMessage = params.revertMessage
+    const poolContract = params.poolContract ?? hre.props.limitPool
+    const poolTokenContract = hre.props.limitPoolToken
+  
+    let balance0Before
+    let balance1Before
+    const token0 = await hre.ethers.getContractAt('Token20', await poolContract.token0())
+    const token1 = await hre.ethers.getContractAt('Token20', await poolContract.token1())
+    balance0Before = await token0.balanceOf(signer.address)
+    balance1Before = await token1.balanceOf(signer.address)
+  
+    let lowerTickBefore: RangeTick
+    let upperTickBefore: RangeTick
+    let positionBefore: LimitPosition
+    let positionToken: PositionERC1155
+    let positionTokenBalanceBefore: BigNumber
+    let positionTokenTotalSupply: BigNumber
+    // check position token balance
+    positionToken = poolTokenContract
+    positionTokenBalanceBefore = await positionToken.balanceOf(signer.address, params.positionId);
+    positionBefore = params.zeroForOne 
+                        ? await poolContract.positions0(params.positionId)
+                        : await poolContract.positions1(params.positionId)
+    let positionSnapshot: [BigNumber, BigNumber, BigNumber, BigNumber]
+  
+    if (revertMessage == '') {
+      // positionSnapshot = await poolContract.snapshotRange(params.positionId)
+      const unstakeTxn = await hre.props.limitStaker
+        .connect(signer)
+        .unstakeLimit({
+          to: params.recipient,
+          pool: hre.props.limitPool.address,
+          positionId: params.positionId,
+          claim: params.claim,
+          zeroForOne: params.zeroForOne
+      })
+      await unstakeTxn.wait()
+    } else {
+      await expect(
+        hre.props.limitStaker
+        .connect(signer)
+        .unstakeLimit({
+          to: params.recipient,
+          pool: hre.props.limitPool.address,
+          positionId: params.positionId,
+          claim: params.claim,
+          zeroForOne: params.zeroForOne
+      })
+      ).to.be.revertedWith(revertMessage)
+      return
+    }
+  
+    let balance0After
+    let balance1After
+    balance0After = await token0.balanceOf(signer.address)
+    balance1After = await token1.balanceOf(signer.address)
+  
+    expect(balance0After.sub(balance0Before)).to.be.equal(balance0Increase)
+    expect(balance1After.sub(balance1Before)).to.be.equal(balance1Increase)
+  
+    let lowerTickAfter: RangeTick
+    let upperTickAfter: RangeTick
+    let positionAfter: LimitPosition
+    let positionTokenBalanceAfter: BigNumber
+    // check position token balance after
+    positionTokenBalanceAfter = await positionToken.balanceOf(signer.address, params.positionId);
+    positionAfter = params.zeroForOne 
+                        ? await poolContract.positions0(params.positionId)
+                        : await poolContract.positions1(params.positionId)
+    if (positionAfter.liquidity.gt(BN_ZERO))
+        expect(positionTokenBalanceAfter.sub(positionTokenBalanceBefore)).to.be.equal(BN_ONE)
+    else {
+        expect(positionTokenBalanceAfter.sub(positionTokenBalanceBefore)).to.be.equal(BN_ZERO)
+    }
+  }
 
 export function getSwapMsgValue(nativeIn: boolean, nativeOut: boolean, amountIn: BigNumber): BigNumber {
     if (nativeIn) {

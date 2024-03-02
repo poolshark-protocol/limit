@@ -3,6 +3,7 @@ pragma solidity 0.8.18;
 
 import '../interfaces/IPool.sol';
 import '../interfaces/staking/IRangeStaker.sol';
+import '../interfaces/staking/ILimitStaker.sol';
 import '../interfaces/IWETH9.sol';
 import '../interfaces/range/IRangePool.sol';
 import '../interfaces/limit/ILimitPool.sol';
@@ -50,6 +51,10 @@ contract PoolsharkRouter is
         address staker;
     }
 
+    struct MintLimitInputData {
+        address staker;
+    }
+
     struct MintRangeCallbackData {
         address sender;
         address recipient;
@@ -58,6 +63,7 @@ contract PoolsharkRouter is
 
     struct MintLimitCallbackData {
         address sender;
+        address recipient;
         bool wrapped;
     }
 
@@ -335,13 +341,36 @@ contract PoolsharkRouter is
         if (pools.length != params.length)
             require(false, 'InputArrayLengthsMismatch()');
         for (uint256 i = 0; i < pools.length; ) {
-            params[i].callbackData = abi.encode(
-                MintLimitCallbackData({
-                    sender: msg.sender,
-                    wrapped: msg.value > 0
-                })
-            );
+            address staker;
+            MintLimitCallbackData
+                    memory callbackData = MintLimitCallbackData({
+                        sender: msg.sender,
+                        recipient: params[i].to,
+                        wrapped: msg.value > 0
+                    });
+            staker = abi
+                .decode(params[i].callbackData, (MintLimitInputData))
+                .staker;
+            if (staker != address(0)) {
+                params[i].to = staker;
+            }
+            params[i].callbackData = abi.encode(callbackData);
             ILimitPool(pools[i]).mintLimit(params[i]);
+            if (staker != address(0)) {
+                ILimitStaker(staker).stakeLimit(
+                    StakeLimitParams({
+                        to: abi
+                            .decode(
+                                params[i].callbackData,
+                                (MintLimitCallbackData)
+                            )
+                            .recipient,
+                        pool: pools[i],
+                        positionId: params[i].positionId,
+                        zeroForOne: params[i].zeroForOne
+                    })
+                );
+            }
             unchecked {
                 ++i;
             }
@@ -357,21 +386,22 @@ contract PoolsharkRouter is
             require(false, 'InputArrayLengthsMismatch()');
         for (uint256 i = 0; i < pools.length; ) {
             address staker;
-            {
-                MintRangeCallbackData
-                    memory callbackData = MintRangeCallbackData({
-                        sender: msg.sender,
-                        recipient: params[i].to,
-                        wrapped: msg.value > 0
-                    });
-                staker = abi
-                    .decode(params[i].callbackData, (MintRangeInputData))
-                    .staker;
-                if (staker != address(0)) {
-                    params[i].to = staker;
-                }
-                params[i].callbackData = abi.encode(callbackData);
+            MintRangeCallbackData
+                memory callbackData = MintRangeCallbackData({
+                    sender: msg.sender,
+                    recipient: params[i].to,
+                    wrapped: msg.value > 0
+                });
+            staker = abi
+                .decode(
+                    params[i].callbackData,
+                    (MintRangeInputData)
+                )
+                .staker;
+            if (staker != address(0)) {
+                params[i].to = staker;
             }
+            params[i].callbackData = abi.encode(callbackData);
             IRangePool(pools[i]).mintRange(params[i]);
             if (staker != address(0)) {
                 IRangeStaker(staker).stakeRange(
@@ -474,8 +504,9 @@ contract PoolsharkRouter is
     {
         checkDeadline(deadline);
         MultiSwapSplitLocals memory locals;
-        for (uint256 i = 0; i < pools.length && params.amount > 0; ) {
+        for (uint256 i = 0; i < pools.length && params.amount > 0;) {
             // if msg.value > 0 we either need to wrap or unwrap the native gas token
+            params.to = msg.sender;
             params.callbackData = abi.encode(
                 SwapCallbackData({
                     sender: msg.sender,
@@ -590,26 +621,24 @@ contract PoolsharkRouter is
         }
         // mint initial range positions
         for (uint256 i = 0; i < mintRangeParams.length; ) {
+            mintRangeParams[i].positionId = 0;
             address staker;
-            {
-                mintRangeParams[i].positionId = 0;
-                MintRangeCallbackData
-                    memory callbackData = MintRangeCallbackData({
-                        sender: msg.sender,
-                        recipient: mintRangeParams[i].to,
-                        wrapped: msg.value > 0
-                    });
-                staker = abi
-                    .decode(
-                        mintRangeParams[i].callbackData,
-                        (MintRangeInputData)
-                    )
-                    .staker;
-                if (staker != address(0)) {
-                    mintRangeParams[i].to = staker;
-                }
-                mintRangeParams[i].callbackData = abi.encode(callbackData);
+            MintRangeCallbackData
+                memory callbackData = MintRangeCallbackData({
+                    sender: msg.sender,
+                    recipient: mintRangeParams[i].to,
+                    wrapped: msg.value > 0
+                });
+            staker = abi
+                .decode(
+                    mintRangeParams[i].callbackData,
+                    (MintRangeInputData)
+                )
+                .staker;
+            if (staker != address(0)) {
+                mintRangeParams[i].to = staker;
             }
+            mintRangeParams[i].callbackData = abi.encode(callbackData);
             try IRangePool(pool).mintRange(mintRangeParams[i]) {} catch {}
             if (staker != address(0)) {
                 IRangeStaker(staker).stakeRange(
@@ -632,12 +661,20 @@ contract PoolsharkRouter is
         // mint initial limit positions
         for (uint256 i = 0; i < mintLimitParams.length; ) {
             mintLimitParams[i].positionId = 0;
+            address staker;
             mintLimitParams[i].callbackData = abi.encode(
                 MintLimitCallbackData({
                     sender: msg.sender,
+                    recipient: mintLimitParams[i].to,
                     wrapped: msg.value > 0
                 })
             );
+            staker = abi
+                .decode(mintLimitParams[i].callbackData, (MintLimitInputData))
+                .staker;
+            if (staker != address(0)) {
+                mintLimitParams[i].to = staker;
+            }
             ILimitPool(pool).mintLimit(mintLimitParams[i]);
             unchecked {
                 ++i;

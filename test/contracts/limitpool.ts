@@ -8012,17 +8012,17 @@ describe('LimitPool Tests', function () {
             upperTickCleared: true,
             revertMessage: "CollectToZeroAddress()",
         });
-
-        await validateSwap({
-            signer: hre.props.alice,
-            recipient: ZERO_ADDRESS,
-            zeroForOne: true,
-            amountIn: BigNumber.from("20"),
-            priceLimit: minPrice,
-            balanceInDecrease: '20',
-            balanceOutIncrease: '18',
-            revertMessage: 'CollectToZeroAddress()',
-        })
+        //TODO: router hardcodes params.to as msg.sender
+        // await validateSwap({
+        //     signer: hre.props.alice,
+        //     recipient: ZERO_ADDRESS,
+        //     zeroForOne: true,
+        //     amountIn: BigNumber.from("20"),
+        //     priceLimit: minPrice,
+        //     balanceInDecrease: '20',
+        //     balanceOutIncrease: '18',
+        //     revertMessage: 'CollectToZeroAddress()',
+        // })
     });
 
     it("pool0 - Should revert on no position found or owner mismatch", async function () {

@@ -504,7 +504,7 @@ export async function validateBurn(params: ValidateBurnParams) {
         to: recipient,
         positionId: params.positionId,
         burnPercent: burnPercent ?? BN_ZERO
-    })
+    }, {gasLimit: 3_000_000})
     : await hre.props.rangeStaker
     .connect(signer)
     .burnRangeStake(
@@ -522,7 +522,7 @@ export async function validateBurn(params: ValidateBurnParams) {
         to: recipient,
         positionId: params.positionId,
         burnPercent: burnPercent ?? BN_ZERO,
-      })
+      }, {gasLimit: 3_000_000})
     : hre.props.rangeStaker
       .connect(signer)
       .burnRangeStake(

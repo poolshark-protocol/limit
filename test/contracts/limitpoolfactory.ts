@@ -127,7 +127,7 @@ describe('LimitPoolFactory Tests', function () {
             hre.props.limitPoolFactory
                 .connect(hre.props.admin)
                 .createLimitPool({
-                    poolTypeId: 1,
+                    poolTypeId: 100,
                     tokenIn: hre.props.token1.address,
                     tokenOut: hre.props.token0.address,
                     swapFee: '500',

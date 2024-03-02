@@ -29,6 +29,32 @@ export function getMintRangeInputData(stake: boolean): any {
         return ethers.utils.formatBytes32String('')
 }
 
+export function getMintLimitInputData(stake: boolean): any {
+  if (stake)
+      return ethers.utils.defaultAbiCoder.encode(
+          [
+              {
+                  components: [
+                      {
+                          internalType: "address",
+                          name: "staker",
+                          type: "address",
+                      },
+                  ],
+                  name: "params",
+                  type: "tuple",
+              }
+          ],
+          [
+              {
+                  staker: hre.props.limitStaker.address
+              }
+          ]
+      )
+  else
+      return ethers.utils.formatBytes32String('')
+}
+
 export async function validateDeployTge(params: ValidateMintParams): Promise<number> {
     const signer = params.signer
     const recipient = params.recipient

@@ -390,6 +390,21 @@ interface PoolsharkStructs {
         uint32 positionId;
     }
 
+    struct StakeLimitParams {
+        address to;
+        address pool;
+        uint32 positionId;
+        bool zeroForOne;
+    }
+
+    struct UnstakeLimitParams {
+        address to;
+        address pool;
+        uint32 positionId;
+        int24 claim;
+        bool zeroForOne;
+    }
+
     struct StakeFinParams {
         address to;
         uint128 amount;

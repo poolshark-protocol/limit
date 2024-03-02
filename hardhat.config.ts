@@ -41,7 +41,6 @@ const config: HardhatUserConfig = {
         },
         arb_sepolia: {
             chainId: 421614,
-            gasPrice: 15_000_000_000,
             url: process.env.ARBITRUM_SEPOLIA_URL || '',
             accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
             timeout: 60000,
@@ -106,10 +105,10 @@ const config: HardhatUserConfig = {
                 network: 'mode',
                 chainId: 34443,
                 urls: {
-                //   apiURL: 'https://explorer.mode.network/api',
-                // browserURL: 'https://explorer.mode.network/',
-                  apiURL: 'https://api.routescan.io/v2/network/mainnet/evm/34443/etherscan',
-                  browserURL: 'https://modescan.io/',
+                    apiURL: 'https://explorer.mode.network/api',
+                    browserURL: 'https://explorer.mode.network/',
+                //   apiURL: 'https://api.routescan.io/v2/network/mainnet/evm/34443/etherscan',
+                //   browserURL: 'https://modescan.io/',
                 },
             },
             {

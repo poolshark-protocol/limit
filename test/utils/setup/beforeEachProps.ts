@@ -20,6 +20,7 @@ import {
     WETH9,
     RangeStaker,
     TickQuoter,
+    LimitStaker,
 } from '../../../typechain'
 import { InitialSetup } from './initialSetup'
 import { MintRangeCall } from '../../../typechain'
@@ -55,6 +56,7 @@ export interface BeforeEachProps {
     positionERC1155: PositionERC1155
     snapshotRangeCall: SnapshotRangeCall
     rangeStaker: RangeStaker
+    limitStaker: LimitStaker
     //limit
     burnLimitCall: BurnLimitCall
     mintLimitCall: MintLimitCall
@@ -121,6 +123,7 @@ export class GetBeforeEach {
         let positionERC1155: PositionERC1155
         let snapshotRangeCall: SnapshotRangeCall
         let rangeStaker: RangeStaker
+        let limitStaker: LimitStaker
         //limit
         let burnLimitCall: BurnLimitCall
         let mintLimitCall: MintLimitCall
@@ -167,6 +170,7 @@ export class GetBeforeEach {
             rangePositionsLib,
             positionERC1155,
             rangeStaker,
+            limitStaker,
             //limit
             burnLimitCall,
             mintLimitCall,

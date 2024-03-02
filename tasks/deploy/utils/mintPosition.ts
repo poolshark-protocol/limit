@@ -39,9 +39,12 @@ export class MintPosition {
         // console.log('minted tokens')
         const liquidityAmount = '49802891105937278098768'
 
+        console.log('state query:', hre.props.limitPool.address)
+        console.log('tick query', await hre.props.limitPool.snapshotRange(1))
+        return
         // await getPrice(true)
     // 0x65f5B282E024e3d6CaAD112e848dEc3317dB0902
-    // 0x1DcF623EDf118E4B21b4C5Dc263bb735E170F9B8
+    // 0x1DcF623EDf118E4B21b4C5Dc263bb7435E170F9B8
     // 0x9dA9409D17DeA285B078af06206941C049F692Dc
     // 0xBd5db4c7D55C086107f4e9D17c4c34395D1B1E1E
         // await validateMint({
@@ -87,9 +90,9 @@ export class MintPosition {
         const amountIn = parseUnits('100', 18)
         const signer = hre.props.alice
         // let approveTxn = await hre.props.token0.connect(signer).approve(hre.props.poolRouter.address, amountIn)
-        console.log('approve tokens')
-        let approveTxn = await hre.props.token1.connect(signer).approve(hre.props.poolRouter.address, amountIn)
-        await approveTxn.wait()
+        // console.log('approve tokens')
+        // let approveTxn = await hre.props.token1.connect(signer).approve(hre.props.poolRouter.address, amountIn)
+        // await approveTxn.wait()
         // const aliceId = await validateMintRange({
         //     signer: hre.props.alice,
         //     recipient: hre.props.alice.address,
@@ -112,26 +115,26 @@ export class MintPosition {
         // 0 => 1 
         //0xe80dc9a69853483c745f8e32162f0bd5813c    b291 => new factory
 
-            const zeroForOne = false
+            // const zeroForOne = false
 
-            const priceLimit = BigNumber.from('1644512651807278503717224857536888')
-            console.log('before swap')
-            let txn = await hre.props.poolRouter
-            .connect(signer)
-            .multiSwapSplit(
-            ['0x50456024eEd7921FC69298a8B742598bAd35582a'], 
-            {
-                to: signer.address,
-                priceLimit: priceLimit,
-                amount: amountIn,
-                zeroForOne: zeroForOne,
-                exactIn: true,
-                callbackData: ethers.utils.formatBytes32String('')
-            },
-            parseUnits('100', 18), // exchangeRateLimit = amountOut * Q96 / amountIn
-            2e18                   // deadline
-            )
-            await txn.wait()
+            // const priceLimit = BigNumber.from('1644512651807278503717224857536888')
+            // console.log('before swap')
+            // let txn = await hre.props.poolRouter
+            // .connect(signer)
+            // .multiSwapSplit(
+            // ['0x50456024eEd7921FC69298a8B742598bAd35582a'], 
+            // {
+            //     to: signer.address,
+            //     priceLimit: priceLimit,
+            //     amount: amountIn,
+            //     zeroForOne: zeroForOne,
+            //     exactIn: true,
+            //     callbackData: ethers.utils.formatBytes32String('')
+            // },
+            // parseUnits('100', 18), // exchangeRateLimit = amountOut * Q96 / amountIn
+            // 2e18                   // deadline
+            // )
+            // await txn.wait()
         // }
 
         // return

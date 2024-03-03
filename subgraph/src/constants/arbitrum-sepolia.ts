@@ -22,6 +22,9 @@ export let WHITELISTED_TOKENS: string[] = [
   '0x9f479560cd8a531e6c0fe04521cb246264fe6b71', // DAI
 ]
 
+export let BLACKLISTED_ADDRESSES: string[] = [
+]
+
 //TODO: incentivizing only FIN - WETH 0.3% for now
 
 export let WHITELISTED_PAIRS: string[] = [

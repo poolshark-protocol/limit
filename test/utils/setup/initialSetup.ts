@@ -37,8 +37,8 @@ export class InitialSetup {
     private deployPools = false
     private savePool = false
     private deployRouter = true
-    private deployRangeStaker = false
-    private deployLimitStaker = false
+    private deployRangeStaker = true
+    private deployLimitStaker = true
 
     constructor() {
         this.deployAssist = new DeployAssist()
@@ -451,16 +451,7 @@ export class InitialSetup {
             let enableImplTxn = await hre.props.limitPoolManager.enablePoolType(
                 hre.props.limitPoolImpl.address,
                 hre.props.positionERC1155.address,
-                this.constantProductString2
-            )
-            await enableImplTxn.wait();
-
-            hre.nonce += 1;
-
-            enableImplTxn = await hre.props.limitPoolManager.enablePoolType(
-                hre.props.limitPoolImpl.address,
-                hre.props.positionERC1155.address,
-                this.constantProductString2
+                this.constantProductString
             )
             await enableImplTxn.wait();
 
@@ -624,17 +615,17 @@ export class InitialSetup {
             ).contractAddress
             hre.props.limitPoolFactory = await hre.ethers.getContractAt('LimitPoolFactory', limitPoolFactoryAddress)
             console.log('pool 1')
-            // WINJ - USDT
-            // let createPoolTxn = await hre.props.limitPoolFactory.createLimitPool({
-            //     poolTypeId: 2,
-            //     tokenIn: hre.props.weth9.address,
-            //     tokenOut: hre.props.token1.address,
-            //     swapFee: '1000',
-            //     startPrice: '4418394386777293208160381'
-            // });
-            // await createPoolTxn.wait();
+            // WETH - USDT
+            let createPoolTxn = await hre.props.limitPoolFactory.createLimitPool({
+                poolTypeId: 2,
+                tokenIn: hre.props.token0.address,
+                tokenOut: hre.props.token1.address,
+                swapFee: '1000',
+                startPrice: '4619756043376610443875320'
+            });
+            await createPoolTxn.wait();
 
-            // hre.nonce += 1;
+            hre.nonce += 1;
 
             console.log('pool 2')
 

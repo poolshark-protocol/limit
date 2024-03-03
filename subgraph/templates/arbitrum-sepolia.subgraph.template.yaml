@@ -177,7 +177,7 @@ dataSources:
     name: PoolsharkRouter
     network: arbitrum-sepolia
     source:
-        address: '0x33df95efe07a3b3e69ba31438ae511d360d89b32'
+        address: '0x4255e7a88bae87d2a5ff3ba317c6d512562f7078'
         abi: PoolsharkRouter
         startBlock: 5789931
     mapping:
@@ -217,7 +217,7 @@ dataSources:
     name: v3EthStablePool
     network: arbitrum-sepolia
     source:
-        address: '0x02225f6a3d83648d7906a23856331c819265394d'
+        address: '0x58801ff62fdff4e23007a563c8c0e7ce799d598b'
         abi: v3Pool
         startBlock: 5789922
     mapping:

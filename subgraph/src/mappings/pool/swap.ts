@@ -1,7 +1,7 @@
 import { BigDecimal, BigInt, log } from "@graphprotocol/graph-ts"
 import { safeLoadBasePrice, safeLoadHistoricalOrder, safeLoadLimitPool, safeLoadLimitPoolFactory, safeLoadSwap, safeLoadToken, safeLoadTotalSeasonReward, safeLoadTransaction, safeLoadTvlUpdateLog, safeLoadUserSeasonReward } from "../utils/loads"
 import { BIGDECIMAL_ZERO, BIGINT_ONE, BIGINT_ZERO, convertTokenToDecimal } from "../utils/helpers"
-import { ZERO_BD, TWO_BD, ONE_BI, FACTORY_ADDRESS, SEASON_1_END_TIME, SEASON_1_START_TIME } from "../../constants/constants"
+import { ZERO_BD, TWO_BD, ONE_BI, FACTORY_ADDRESS } from "../../constants/constants"
 import { AmountType, findEthPerToken, getAdjustedAmounts, getEthPriceInUSD, sqrtPriceX96ToTokenPrices } from "../utils/price"
 import { updateDerivedTVLAmounts } from "../utils/tvl"
 import { Swap, SwapLimit } from "../../../generated/LimitPoolFactory/LimitPool"
@@ -180,25 +180,25 @@ export function handleSwap(event: SwapLimit): void {
     }
 
     // update season 1 rewards
-    if (event.block.timestamp.ge(SEASON_1_START_TIME) && event.block.timestamp.le(SEASON_1_END_TIME)) {
-        let loadTotalSeasonReward = safeLoadTotalSeasonReward(FACTORY_ADDRESS)
-        let loadUserSeasonReward = safeLoadUserSeasonReward(event.transaction.from.toHex())
+    // if (event.block.timestamp.ge(SEASON_1_START_TIME) && event.block.timestamp.le(SEASON_1_END_TIME)) {
+    //     let loadTotalSeasonReward = safeLoadTotalSeasonReward(FACTORY_ADDRESS)
+    //     let loadUserSeasonReward = safeLoadUserSeasonReward(event.transaction.from.toHex())
 
-        let totalSeasonReward = loadTotalSeasonReward.entity
-        let userSeasonReward = loadUserSeasonReward.entity
+    //     let totalSeasonReward = loadTotalSeasonReward.entity
+    //     let userSeasonReward = loadUserSeasonReward.entity
 
-        if (zeroForOneParam) {
-            const amount1Usd = amount1Abs.times(token1.usdPrice)
-            userSeasonReward.volumeTradedUsd = userSeasonReward.volumeTradedUsd.plus(amount1Usd)
-            totalSeasonReward.volumeTradedUsd = totalSeasonReward.volumeTradedUsd.plus(amount1Usd)
-        } else {
-            const amount0Usd = amount0Abs.times(token0.usdPrice)
-            userSeasonReward.volumeTradedUsd = userSeasonReward.volumeTradedUsd.plus(amount0Usd)
-            totalSeasonReward.volumeTradedUsd = totalSeasonReward.volumeTradedUsd.plus(amount0Usd)
-        }
-        totalSeasonReward.save()
-        userSeasonReward.save()
-    }
+    //     if (zeroForOneParam) {
+    //         const amount1Usd = amount1Abs.times(token1.usdPrice)
+    //         userSeasonReward.volumeTradedUsd = userSeasonReward.volumeTradedUsd.plus(amount1Usd)
+    //         totalSeasonReward.volumeTradedUsd = totalSeasonReward.volumeTradedUsd.plus(amount1Usd)
+    //     } else {
+    //         const amount0Usd = amount0Abs.times(token0.usdPrice)
+    //         userSeasonReward.volumeTradedUsd = userSeasonReward.volumeTradedUsd.plus(amount0Usd)
+    //         totalSeasonReward.volumeTradedUsd = totalSeasonReward.volumeTradedUsd.plus(amount0Usd)
+    //     }
+    //     totalSeasonReward.save()
+    //     userSeasonReward.save()
+    // }
 
     //TODO: add hour and daily data
     basePrice.save()

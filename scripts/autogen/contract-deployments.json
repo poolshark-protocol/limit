@@ -896,13 +896,13 @@
         },
         "poolRouter": {
             "contractName": "PoolsharkRouter",
-            "contractAddress": "0x4255e7a88bae87d2a5ff3ba317c6d512562f7078",
+            "contractAddress": "0xa801ca07b20ef56251739d9b3197bfd02cfa20e8",
             "constructorArguments": [
                 "0x8e40c68b7546efd009a1a300c92e25da3c8725dc",
                 "0x0000000000000000000000000000000000000000",
                 "0x414b73f989e7ca0653b5c98186749a348405e6d5"
             ],
-            "created": "2024-03-03T14:37:56.627Z"
+            "created": "2024-03-03T17:03:38.882Z"
         },
         "rangeStaker": {
             "contractName": "RangeStaker",

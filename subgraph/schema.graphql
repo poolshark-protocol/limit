@@ -376,6 +376,9 @@ type TotalSeasonReward @entity {
     # factoryAddress
     id: ID!
 
+    season: BigInt!
+    block: BigInt!
+
     whitelistedFeesUsd: BigDecimal!
     nonWhitelistedFeesUsd: BigDecimal!
     volumeTradedUsd: BigDecimal!
@@ -385,6 +388,9 @@ type TotalSeasonReward @entity {
 type UserSeasonReward @entity {
     # userAddress
     id: ID!
+
+    season: BigInt!
+    block: BigInt!
 
     whitelistedFeesUsd: BigDecimal!
     nonWhitelistedFeesUsd: BigDecimal!

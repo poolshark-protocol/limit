@@ -1,6 +1,7 @@
 /* eslint-disable */
 import { BigInt, BigDecimal, Address } from '@graphprotocol/graph-ts'
 import { LimitPoolFactory as FactoryContract } from '../../generated/templates/LimitPoolTemplate/LimitPoolFactory'
+import { SeasonReward } from '../mappings/utils/types'
 
 // -------------- START REQUIRED CONFIG PER DEPLOYMENT --------------
 export let FACTORY_ADDRESS = '0x8e40c68b7546efd009a1a300c92e25da3c8725dc'
@@ -16,22 +17,25 @@ export const STABLE_TOKEN_DECIMALS = '18'
 // chain WETH address
 export let WETH_ADDRESS = '0x414b73f989e7ca0653b5c98186749a348405e6d5'
 
+export let SEASON_0_BLOCK_1: SeasonReward = {
+  WHITELISTED_PAIRS: [],
+  BLACKLISTED_ADDRESSES: [],
+  START_TIME: BigInt.fromString('1707490800'), // 2-09-2024 15:00 GMT - 1707490800
+  END_TIME: BigInt.fromString('1709996400')    // 3-09-2024 15:00 GMT - 1709996400
+}
+
+export let SEASON_0_BLOCK_2: SeasonReward = {
+  WHITELISTED_PAIRS: [],
+  BLACKLISTED_ADDRESSES: [],
+  START_TIME: BigInt.fromString('1709996400'), // 3-09-2024 15:00 GMT - 1709996400
+  END_TIME: BigInt.fromString('1712674800')    // 4-09-2024 15:00 GMT - 1712674800
+}
+
 // tokens where USD value is safe to use for globals
 export let WHITELISTED_TOKENS: string[] = [
   '0x414b73f989e7ca0653b5c98186749a348405e6d5', // WETH
   '0x9f479560cd8a531e6c0fe04521cb246264fe6b71', // DAI
 ]
-
-export let BLACKLISTED_ADDRESSES: string[] = [
-]
-
-//TODO: incentivizing only FIN - WETH 0.3% for now
-
-export let WHITELISTED_PAIRS: string[] = [
-]
-
-export let SEASON_1_START_TIME = BigInt.fromString('1574345600') // 11-1-2019 0:00 GMT
-export let SEASON_1_END_TIME = BigInt.fromString('1684713600') // 5-22-2024 0:00 GMT
 
 // used for safe eth pricing 
 export let STABLE_COINS: string[] = [

@@ -1,6 +1,7 @@
 /* eslint-disable */
 import { BigInt, BigDecimal, Address } from '@graphprotocol/graph-ts'
 import { LimitPoolFactory as FactoryContract } from '../../generated/templates/LimitPoolTemplate/LimitPoolFactory'
+import { SeasonReward } from '../mappings/utils/types'
 
 // -------------- START REQUIRED CONFIG PER DEPLOYMENT --------------
 export let FACTORY_ADDRESS = '0x3fa761492f411ebc64a81fcf3292fdc0b677c00f'
@@ -25,15 +26,25 @@ export let WHITELISTED_TOKENS: string[] = [
   '0xf55bec9cafdbe8730f096aa55dad6d22d44099df'  // USDT
 ]
 
-export let WHITELISTED_PAIRS: string[] = [
-  '0x622fa26556cbc082816311c0b22c668a4a566fe5', // WETH-USDT 0.1%
-  '0xb14917888ba92937be3d89094f83a62904ebc9dd', // WETH-USDT 0.1%
-]
+export let SEASON_0_BLOCK_1: SeasonReward = {
+  WHITELISTED_PAIRS: [
+    '0x622fa26556cbc082816311c0b22c668a4a566fe5', // WETH-USDT 0.1%
+    '0xb14917888ba92937be3d89094f83a62904ebc9dd', // WETH-USDT 0.1%
+  ],
+  BLACKLISTED_ADDRESSES: [],
+  START_TIME: BigInt.fromString('1707490800'), // 2-09-2024 15:00 GMT - 1707490800
+  END_TIME: BigInt.fromString('1709996400')    // 3-09-2024 15:00 GMT - 1709996400
+}
 
-export let BLACKLISTED_ADDRESSES: string[] = []
-
-export let SEASON_1_START_TIME = BigInt.fromString('0') // 02-13-2024 0:00 GMT - 1707836400
-export let SEASON_1_END_TIME = BigInt.fromString('1709996400') // 3-09-2024 0:00 GMT - 1709996400
+export let SEASON_0_BLOCK_2: SeasonReward = {
+  WHITELISTED_PAIRS: [
+    // Type 2
+    '0xb14917888ba92937be3d89094f83a62904ebc9dd', // WETH-USDT 0.1%
+  ],
+  BLACKLISTED_ADDRESSES: [],
+  START_TIME: BigInt.fromString('1709996400'), // 3-09-2024 15:00 GMT - 1709996400
+  END_TIME: BigInt.fromString('1712674800')    // 4-09-2024 15:00 GMT - 1712674800
+}
 
 // used for safe eth pricing 
 export let STABLE_COINS: string[] = [

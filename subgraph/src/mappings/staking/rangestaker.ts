@@ -1,6 +1,6 @@
 import { safeLoadLimitPool, safeLoadRangePosition, safeLoadToken, safeLoadTotalSeasonReward, safeLoadUserSeasonReward } from '../utils/loads'
 import { FeeToTransfer, OwnerTransfer, StakeRange, StakeRangeAccrued, UnstakeRange } from '../../../generated/templates/RangeStakerTemplate/RangeStaker'
-import { BLACKLISTED_ADDRESSES, FACTORY_ADDRESS, SEASON_1_END_TIME, SEASON_1_START_TIME, WHITELISTED_PAIRS, WHITELISTED_TOKENS } from '../../constants/constants'
+import { SEASON_0_BLOCK_1, SEASON_0_BLOCK_2, FACTORY_ADDRESS } from '../../constants/constants'
 import { convertTokenToDecimal } from '../utils/helpers'
 import { log } from '@graphprotocol/graph-ts'
 
@@ -59,26 +59,41 @@ export function handleStakeRangeAccrued(event: StakeRangeAccrued): void {
 
     const feeGrowthAccruedUsd = token0Fees.times(token0.usdPrice).plus(token1Fees.times(token1.usdPrice))
 
-    if (WHITELISTED_PAIRS.includes(pool.id) && !BLACKLISTED_ADDRESSES.includes(position.owner.toHex())) {
-        let loadUserSeasonReward = safeLoadUserSeasonReward(position.owner.toHex()) // 1
-        let loadTotalSeasonReward = safeLoadTotalSeasonReward(FACTORY_ADDRESS) // 2
+    // season 0 - block 1
+    if (event.block.timestamp.ge(SEASON_0_BLOCK_1.START_TIME) && event.block.timestamp.le(SEASON_0_BLOCK_1.END_TIME)) {
+        if (SEASON_0_BLOCK_1.WHITELISTED_PAIRS.includes(pool.id) && !SEASON_0_BLOCK_1.BLACKLISTED_ADDRESSES.includes(position.owner.toHex())) {
+            let loadUserSeasonReward = safeLoadUserSeasonReward(position.owner.toHex(), "0", "1") // 1
+            let loadTotalSeasonReward = safeLoadTotalSeasonReward(FACTORY_ADDRESS, "0", "1") // 2
 
-        let userSeasonReward = loadUserSeasonReward.entity
-        let totalSeasonReward = loadTotalSeasonReward.entity
-        // whitelisted pairs
-        userSeasonReward.whitelistedFeesUsd = userSeasonReward.whitelistedFeesUsd.plus(feeGrowthAccruedUsd)
-        totalSeasonReward.whitelistedFeesUsd = totalSeasonReward.whitelistedFeesUsd.plus(feeGrowthAccruedUsd)
+            let userSeasonReward = loadUserSeasonReward.entity
+            let totalSeasonReward = loadTotalSeasonReward.entity
 
-        if (event.block.timestamp.ge(SEASON_1_START_TIME) && event.block.timestamp.le(SEASON_1_END_TIME)) {
+            // whitelisted pairs
+            userSeasonReward.whitelistedFeesUsd = userSeasonReward.whitelistedFeesUsd.plus(feeGrowthAccruedUsd)
+            totalSeasonReward.whitelistedFeesUsd = totalSeasonReward.whitelistedFeesUsd.plus(feeGrowthAccruedUsd)
+
             totalSeasonReward.save() // 1
             userSeasonReward.save() // 2
         }
     }
-    // else if (WHITELISTED_TOKENS.includes(pool.token0) || WHITELISTED_TOKENS.includes(pool.token1)) {
-    //     // non-whitelisted pair w/ whitelisted base asset
-    //     userSeasonReward.nonWhitelistedFeesUsd = userSeasonReward.nonWhitelistedFeesUsd.plus(feeGrowthAccruedUsd)
-    //     totalSeasonReward.nonWhitelistedFeesUsd = totalSeasonReward.nonWhitelistedFeesUsd.plus(feeGrowthAccruedUsd)
-    // }
+
+    // season 0 - block 2
+    if (event.block.timestamp.ge(SEASON_0_BLOCK_2.START_TIME) && event.block.timestamp.le(SEASON_0_BLOCK_2.END_TIME)) {
+        if (SEASON_0_BLOCK_2.WHITELISTED_PAIRS.includes(pool.id) && !SEASON_0_BLOCK_2.BLACKLISTED_ADDRESSES.includes(position.owner.toHex())) {
+            let loadUserSeasonReward = safeLoadUserSeasonReward(position.owner.toHex(), "0", "2") // 1
+            let loadTotalSeasonReward = safeLoadTotalSeasonReward(FACTORY_ADDRESS, "0", "2") // 2
+
+            let userSeasonReward = loadUserSeasonReward.entity
+            let totalSeasonReward = loadTotalSeasonReward.entity
+
+            // whitelisted pairs
+            userSeasonReward.whitelistedFeesUsd = userSeasonReward.whitelistedFeesUsd.plus(feeGrowthAccruedUsd)
+            totalSeasonReward.whitelistedFeesUsd = totalSeasonReward.whitelistedFeesUsd.plus(feeGrowthAccruedUsd)
+
+            totalSeasonReward.save() // 1
+            userSeasonReward.save() // 2
+        }
+    }
 }
 
 export function handleUnstakeRange(event: UnstakeRange): void {

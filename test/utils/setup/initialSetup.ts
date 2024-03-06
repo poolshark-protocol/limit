@@ -37,8 +37,8 @@ export class InitialSetup {
     private deployPools = false
     private savePool = false
     private deployRouter = true
-    private deployRangeStaker = true
-    private deployLimitStaker = true
+    private deployRangeStaker = false
+    private deployLimitStaker = false
 
     constructor() {
         this.deployAssist = new DeployAssist()

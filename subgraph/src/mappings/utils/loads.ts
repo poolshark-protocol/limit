@@ -787,13 +787,18 @@ class LoadTotalSeasonRewardRet {
     entity: TotalSeasonReward
     exists: boolean
 }
-export function safeLoadTotalSeasonReward(factoryAddress: string): LoadTotalSeasonRewardRet {
+export function safeLoadTotalSeasonReward(factoryAddress: string, season: string, block: string): LoadTotalSeasonRewardRet {
     let exists = true
 
-    let totalSeasonRewardEntity = TotalSeasonReward.load(factoryAddress)
+    let totalSeasonRewardId = factoryAddress.concat('-').concat(season).concat('-').concat(block)
+
+    let totalSeasonRewardEntity = TotalSeasonReward.load(totalSeasonRewardId)
 
     if (!totalSeasonRewardEntity) {
-        totalSeasonRewardEntity = new TotalSeasonReward(factoryAddress)
+        totalSeasonRewardEntity = new TotalSeasonReward(totalSeasonRewardId)
+
+        totalSeasonRewardEntity.season = BigInt.fromString(season)
+        totalSeasonRewardEntity.block = BigInt.fromString(block)
 
         totalSeasonRewardEntity.whitelistedFeesUsd = BIGDECIMAL_ZERO
         totalSeasonRewardEntity.nonWhitelistedFeesUsd = BIGDECIMAL_ZERO
@@ -813,13 +818,18 @@ class LoadUserSeasonRewardRet {
     entity: UserSeasonReward
     exists: boolean
 }
-export function safeLoadUserSeasonReward(userAddress: string): LoadUserSeasonRewardRet {
+export function safeLoadUserSeasonReward(userAddress: string, season: string, block: string): LoadUserSeasonRewardRet {
     let exists = true
 
-    let userSeasonRewardEntity = UserSeasonReward.load(userAddress)
+    const userSeasonRewardId = userAddress.concat('-').concat(season).concat('-').concat(block)
+
+    let userSeasonRewardEntity = UserSeasonReward.load(userSeasonRewardId)
 
     if (!userSeasonRewardEntity) {
-        userSeasonRewardEntity = new UserSeasonReward(userAddress)
+        userSeasonRewardEntity = new UserSeasonReward(userSeasonRewardId)
+
+        userSeasonRewardEntity.season = BigInt.fromString(season)
+        userSeasonRewardEntity.block = BigInt.fromString(block)
 
         userSeasonRewardEntity.whitelistedFeesUsd = BIGDECIMAL_ZERO
         userSeasonRewardEntity.nonWhitelistedFeesUsd = BIGDECIMAL_ZERO

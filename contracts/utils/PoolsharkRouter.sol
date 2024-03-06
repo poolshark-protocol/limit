@@ -639,21 +639,22 @@ contract PoolsharkRouter is
                 mintRangeParams[i].to = staker;
             }
             mintRangeParams[i].callbackData = abi.encode(callbackData);
-            try IRangePool(pool).mintRange(mintRangeParams[i]) {} catch {}
-            if (staker != address(0)) {
-                IRangeStaker(staker).stakeRange(
-                    StakeRangeParams({
-                        to: abi
-                            .decode(
-                                mintRangeParams[i].callbackData,
-                                (MintRangeCallbackData)
-                            )
-                            .recipient,
-                        pool: pool,
-                        positionId: 0
-                    })
-                );
-            }
+            try IRangePool(pool).mintRange(mintRangeParams[i]) {
+                if (staker != address(0)) {
+                    IRangeStaker(staker).stakeRange(
+                        StakeRangeParams({
+                            to: abi
+                                .decode(
+                                    mintRangeParams[i].callbackData,
+                                    (MintRangeCallbackData)
+                                )
+                                .recipient,
+                            pool: pool,
+                            positionId: 0
+                        })
+                    );
+                }
+            } catch {}
             unchecked {
                 ++i;
             }
@@ -662,20 +663,36 @@ contract PoolsharkRouter is
         for (uint256 i = 0; i < mintLimitParams.length; ) {
             mintLimitParams[i].positionId = 0;
             address staker;
-            mintLimitParams[i].callbackData = abi.encode(
-                MintLimitCallbackData({
-                    sender: msg.sender,
-                    recipient: mintLimitParams[i].to,
-                    wrapped: msg.value > 0
-                })
-            );
+            MintLimitCallbackData
+                    memory callbackData = MintLimitCallbackData({
+                        sender: msg.sender,
+                        recipient: mintLimitParams[i].to,
+                        wrapped: msg.value > 0
+                    });
             staker = abi
                 .decode(mintLimitParams[i].callbackData, (MintLimitInputData))
                 .staker;
             if (staker != address(0)) {
                 mintLimitParams[i].to = staker;
             }
-            ILimitPool(pool).mintLimit(mintLimitParams[i]);
+            mintLimitParams[i].callbackData = abi.encode(callbackData);
+            try ILimitPool(pool).mintLimit(mintLimitParams[i]) {
+                if (staker != address(0)) {
+                    ILimitStaker(staker).stakeLimit(
+                        StakeLimitParams({
+                            to: abi
+                                .decode(
+                                    mintLimitParams[i].callbackData,
+                                    (MintLimitCallbackData)
+                                )
+                                .recipient,
+                            pool: pool,
+                            positionId: mintLimitParams[i].positionId,
+                            zeroForOne: mintLimitParams[i].zeroForOne
+                        })
+                    );
+                }
+            } catch {}
             unchecked {
                 ++i;
             }

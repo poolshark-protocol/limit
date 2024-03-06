@@ -1,6 +1,7 @@
 /* eslint-disable */
 import { BigInt, BigDecimal, Address } from '@graphprotocol/graph-ts'
 import { LimitPoolFactory as FactoryContract } from '../../generated/templates/LimitPoolTemplate/LimitPoolFactory'
+import { SeasonReward } from '../mappings/utils/types'
 
 // -------------- START REQUIRED CONFIG PER DEPLOYMENT --------------
 export let FACTORY_ADDRESS = '0x3fa761492f411ebc64a81fcf3292fdc0b677c00f'
@@ -24,23 +25,37 @@ export let WHITELISTED_TOKENS: string[] = [
   '0xe7798f023fc62146e8aa1b36da45fb70855a77ea', // DAI
 ]
 
-export let WHITELISTED_PAIRS: string[] = [
-  // Type 0
-  '0xb5fd40e12a35c6afe8dcc48544082ef2cc371aa5', // WETH-USDT 0.1%
-  '0xe0691e6803d4fa0d8fa8ee8da7667eb4a6b99415', // WETH-USDC 0.1%
-  '0x1a4cadc783f06829df1cff5db0df7288d716c5a1',  // USDC-USDT 0.1%
-  // Type 1
-  '0x6c827ff250027187a180c059b20299fe3fd35622', // WETH-USDT 0.1%
-  '0x3ce675d43195e506e7da2ad4905b178371124eba', // WETH-USDC 0.1%
-  '0xe63a6865626c6cfdfcb559ef9592df86d7b0e8e7', // USDC-USDT 0.1%
-  // Type 2
-  '0xfc16003afdff37580c9de7deeeb87f9c65b6908a', // WETH-USDT 0.1%
-  '0xc20b141edd79f912897651eba9a2bca6b17dc7f1', // WETH-USDC 0.1%
-  '0x7efec766f18d4b79abf5b550bfe59a1bffb37d95', // USDC-USDT 0.1%
-]
+export let SEASON_0_BLOCK_1: SeasonReward = {
+  WHITELISTED_PAIRS: [
+    // Type 0
+    '0xb5fd40e12a35c6afe8dcc48544082ef2cc371aa5', // WETH-USDT 0.1%
+    '0xe0691e6803d4fa0d8fa8ee8da7667eb4a6b99415', // WETH-USDC 0.1%
+    '0x1a4cadc783f06829df1cff5db0df7288d716c5a1',  // USDC-USDT 0.1%
+    // Type 1
+    '0x6c827ff250027187a180c059b20299fe3fd35622', // WETH-USDT 0.1%
+    '0x3ce675d43195e506e7da2ad4905b178371124eba', // WETH-USDC 0.1%
+    '0xe63a6865626c6cfdfcb559ef9592df86d7b0e8e7', // USDC-USDT 0.1%
+    // Type 2
+    '0xfc16003afdff37580c9de7deeeb87f9c65b6908a', // WETH-USDT 0.1%
+    '0xc20b141edd79f912897651eba9a2bca6b17dc7f1', // WETH-USDC 0.1%
+    '0x7efec766f18d4b79abf5b550bfe59a1bffb37d95', // USDC-USDT 0.1%
+  ],
+  BLACKLISTED_ADDRESSES: [],
+  START_TIME: BigInt.fromString('1707490800'), // 2-09-2024 15:00 GMT - 1707490800
+  END_TIME: BigInt.fromString('1709996400')    // 3-09-2024 15:00 GMT - 1709996400
+}
 
-export let SEASON_1_START_TIME = BigInt.fromString('1707490800') // 2-09-2024 15:00 GMT - 1707490800
-export let SEASON_1_END_TIME = BigInt.fromString('1709996400')   // 3-09-2024 15:00 GMT - 1709996400
+export let SEASON_0_BLOCK_2: SeasonReward = {
+  WHITELISTED_PAIRS: [
+    // Type 2
+    '0xfc16003afdff37580c9de7deeeb87f9c65b6908a', // WETH-USDT 0.1%
+    '0xc20b141edd79f912897651eba9a2bca6b17dc7f1', // WETH-USDC 0.1%
+    '0x7efec766f18d4b79abf5b550bfe59a1bffb37d95', // USDC-USDT 0.1%
+  ],
+  BLACKLISTED_ADDRESSES: [],
+  START_TIME: BigInt.fromString('1709996400'), // 3-09-2024 15:00 GMT - 1709996400
+  END_TIME: BigInt.fromString('1712674800')    // 4-09-2024 15:00 GMT - 1712674800
+}
 
 // used for safe eth pricing 
 export let STABLE_COINS: string[] = [

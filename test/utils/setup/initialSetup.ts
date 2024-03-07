@@ -34,8 +34,8 @@ export class InitialSetup {
     private deployContracts = false
     private deployFactory = false
     private deployLibs = false
-    private deployPools = false
-    private savePool = false
+    private deployPools = true
+    private savePool = true
     private deployRouter = true
     private deployRangeStaker = false
     private deployLimitStaker = false
@@ -615,13 +615,14 @@ export class InitialSetup {
             ).contractAddress
             hre.props.limitPoolFactory = await hre.ethers.getContractAt('LimitPoolFactory', limitPoolFactoryAddress)
             console.log('pool 1')
-            // WETH - USDT
+
+            // WINJ - USDC
             let createPoolTxn = await hre.props.limitPoolFactory.createLimitPool({
                 poolTypeId: 2,
                 tokenIn: hre.props.token0.address,
-                tokenOut: hre.props.token1.address,
+                tokenOut: hre.props.weth9.address,
                 swapFee: '1000',
-                startPrice: '4619756043376610443875320'
+                startPrice: '525540175778231015357799'
             });
             await createPoolTxn.wait();
 
@@ -629,17 +630,17 @@ export class InitialSetup {
 
             console.log('pool 2')
 
-            // WINJ - USDC
-            // let createPoolTxn = await hre.props.limitPoolFactory.createLimitPool({
-            //     poolTypeId: 2,
-            //     tokenIn: hre.props.weth9.address,
-            //     tokenOut: hre.props.token0.address,
-            //     swapFee: '1000',
-            //     startPrice: '4418394386777293208160381'
-            // });
-            // await createPoolTxn.wait();
+            // WINJ - USDT
+            createPoolTxn = await hre.props.limitPoolFactory.createLimitPool({
+                poolTypeId: 2,
+                tokenIn: hre.props.weth9.address,
+                tokenOut: hre.props.token1.address,
+                swapFee: '1000',
+                startPrice: '525540175778231015357799'
+            });
+            await createPoolTxn.wait();
 
-            // hre.nonce += 1;
+            hre.nonce += 1;
 
             console.log('pool 3')
 

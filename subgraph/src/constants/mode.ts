@@ -42,7 +42,7 @@ export let SEASON_0_BLOCK_1: SeasonReward = {
   ],
   BLACKLISTED_ADDRESSES: [],
   START_TIME: BigInt.fromString('1707490800'), // 2-09-2024 15:00 GMT - 1707490800
-  END_TIME: BigInt.fromString('1709996400')    // 3-09-2024 15:00 GMT - 1709996400
+  END_TIME: BigInt.fromString('1710514800')    // 3-15-2024 15:00 GMT - 1710514800
 }
 
 export let SEASON_0_BLOCK_2: SeasonReward = {
@@ -53,7 +53,7 @@ export let SEASON_0_BLOCK_2: SeasonReward = {
     '0x7efec766f18d4b79abf5b550bfe59a1bffb37d95', // USDC-USDT 0.1%
   ],
   BLACKLISTED_ADDRESSES: [],
-  START_TIME: BigInt.fromString('1709996400'), // 3-09-2024 15:00 GMT - 1709996400
+  START_TIME: BigInt.fromString('1710514800'), // 3-15-2024 15:00 GMT - 1710514800
   END_TIME: BigInt.fromString('1712674800')    // 4-09-2024 15:00 GMT - 1712674800
 }
 

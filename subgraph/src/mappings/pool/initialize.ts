@@ -4,6 +4,7 @@ import { safeLoadBasePrice, safeLoadLimitPool, safeLoadLimitTick, safeLoadRangeT
 import { sqrtPriceX96ToTokenPrices, findEthPerToken } from "../utils/price"
 
 export function handleInitialize(event: InitializeLimit): void {
+    // EVENT PARAMS
     let minTickParam = event.params.minTick
     let maxTickParam = event.params.maxTick
     let startPriceParam = event.params.startPrice
@@ -13,6 +14,7 @@ export function handleInitialize(event: InitializeLimit): void {
     let min = BigInt.fromI32(minTickParam)
     let max = BigInt.fromI32(maxTickParam)
 
+    // LOAD ENTITIES
     let loadLimitPool = safeLoadLimitPool(poolAddress)
 
     let pool = loadLimitPool.entity

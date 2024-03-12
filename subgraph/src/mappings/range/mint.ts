@@ -97,9 +97,6 @@ export function handleMintRange(event: MintRange): void {
 
     let amount0 = convertTokenToDecimal(amount0DeltaParam, token0.decimals)
     let amount1 = convertTokenToDecimal(amount1DeltaParam, token1.decimals)
-    let amountUsd = amount0
-    .times(token0.ethPrice.times(basePrice.USD))
-    .plus(amount1.times(token1.ethPrice.times(basePrice.USD)))
     
     token0.txnCount = token0.txnCount.plus(ONE_BI)
     token1.txnCount = token1.txnCount.plus(ONE_BI)
@@ -111,6 +108,9 @@ export function handleMintRange(event: MintRange): void {
     token1.ethPrice = findEthPerToken(token1, token0, pool, basePrice)
     token0.usdPrice = token0.ethPrice.times(basePrice.USD)
     token1.usdPrice = token1.ethPrice.times(basePrice.USD)
+    let amountUsd = amount0
+    .times(token0.ethPrice.times(basePrice.USD))
+    .plus(amount1.times(token1.ethPrice.times(basePrice.USD)))
 
     let oldPoolTVLETH = pool.totalValueLockedEth
     token0.totalValueLocked = token0.totalValueLocked.plus(amount0)

@@ -1,0 +1,184 @@
+[
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "previousFactory",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newFactory",
+        "type": "address"
+      }
+    ],
+    "name": "FactoryChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint16",
+        "name": "swapFee",
+        "type": "uint16"
+      },
+      {
+        "indexed": false,
+        "internalType": "int16",
+        "name": "tickSpacing",
+        "type": "int16"
+      }
+    ],
+    "name": "FeeTierEnabled",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "previousFeeTo",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newFeeTo",
+        "type": "address"
+      }
+    ],
+    "name": "FeeToTransfer",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "previousOwner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnerTransfer",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "poolTypeName",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "poolImpl",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "tokenImpl",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint16",
+        "name": "poolTypeId",
+        "type": "uint16"
+      }
+    ],
+    "name": "PoolTypeEnabled",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address[]",
+        "name": "pools",
+        "type": "address[]"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128[]",
+        "name": "token0FeesCollected",
+        "type": "uint128[]"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128[]",
+        "name": "token1FeesCollected",
+        "type": "uint128[]"
+      }
+    ],
+    "name": "ProtocolFeesCollected",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address[]",
+        "name": "pools",
+        "type": "address[]"
+      },
+      {
+        "indexed": false,
+        "internalType": "int16[]",
+        "name": "protocolFillFees0",
+        "type": "int16[]"
+      },
+      {
+        "indexed": false,
+        "internalType": "int16[]",
+        "name": "protocolFillFees1",
+        "type": "int16[]"
+      }
+    ],
+    "name": "ProtocolFillFeesModified",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address[]",
+        "name": "pools",
+        "type": "address[]"
+      },
+      {
+        "indexed": false,
+        "internalType": "int16[]",
+        "name": "protocolSwapFees0",
+        "type": "int16[]"
+      },
+      {
+        "indexed": false,
+        "internalType": "int16[]",
+        "name": "protocolSwapFees1",
+        "type": "int16[]"
+      }
+    ],
+    "name": "ProtocolSwapFeesModified",
+    "type": "event"
+  }
+]

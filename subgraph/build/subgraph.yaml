@@ -1,0 +1,237 @@
+specVersion: 0.0.4
+description: Poolshark is a Directional Liquidity AMM allowing LPs to capture directional strength.
+repository: https://github.com/poolshark-protocol/limit
+schema:
+  file: schema.graphql
+templates:
+  - kind: ethereum/contract
+    name: LimitPoolTemplate
+    network: arbitrum-one
+    source:
+      abi: LimitPool
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      file: templates/LimitPoolTemplate/LimitPoolTemplate.wasm
+      entities:
+        - Token
+        - LimitPool
+        - Position
+      abis:
+        - name: LimitPool
+          file: LimitPoolTemplate/abis/LimitPool.json
+        - name: LimitPoolFactory
+          file: LimitPoolTemplate/abis/LimitPoolFactory.json
+        - name: ERC20
+          file: LimitPoolTemplate/abis/ERC20.json
+        - name: ERC20SymbolBytes
+          file: LimitPoolTemplate/abis/ERC20SymbolBytes.json
+        - name: ERC20NameBytes
+          file: LimitPoolTemplate/abis/ERC20NameBytes.json
+      eventHandlers:
+        - event: InitializeLimit(int24,int24,uint160,int24)
+          handler: handleInitialize
+        - event: SwapLimit(indexed
+            address,uint256,uint256,uint200,uint200,uint160,uint128,uint128,int24,indexed
+            bool,indexed bool)
+          handler: handleSwap
+        - event: MintLimit(indexed address,int24,int24,bool,uint32,uint32,uint128,uint128)
+          handler: handleMintLimit
+        - event: SampleCountIncreased(uint16)
+          handler: handleSampleCountIncreased
+        - event: SampleRecorded(int56,uint160)
+          handler: handleSampleRecorded
+        - event: MintRange(indexed address,int24,int24,indexed uint32,uint128,int128,int128)
+          handler: handleMintRange
+        - event: BurnRange(indexed address,indexed uint256,uint128,int128,int128)
+          handler: handleBurnRange
+        - event: CompoundRange(indexed uint32,uint128)
+          handler: handleCompoundRange
+        - event: SyncRangeTick(uint200,uint200,int24)
+          handler: handleSyncRangeTick
+        - event: BurnLimit(indexed
+            address,uint32,int24,int24,int24,int24,bool,uint128,uint128,uint128)
+          handler: handleBurnLimit
+        - event: SyncLimitPool(uint160,uint128,uint32,int24,bool)
+          handler: handleSyncLimitPool
+        - event: SyncLimitLiquidity(uint128,int24,bool)
+          handler: handleSyncLimitLiquidity
+        - event: SyncLimitTick(uint32,int24,bool)
+          handler: handleSyncLimitTick
+        - event: Collect(indexed address,address,indexed int24,indexed int24,uint128,uint128)
+          handler: handleCollect
+  - kind: ethereum/contract
+    name: PositionERC1155Template
+    network: arbitrum-one
+    source:
+      abi: PositionERC1155
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      file: templates/PositionERC1155Template/PositionERC1155Template.wasm
+      entities:
+        - Token
+        - RangePool
+        - RangePosition
+      abis:
+        - name: PositionERC1155
+          file: PositionERC1155Template/abis/PositionERC1155.json
+      eventHandlers:
+        - event: TransferSingle(indexed address,indexed address,indexed address,uint256,uint256)
+          handler: handleTransferSingle
+        - event: TransferBatch(indexed address,indexed address,indexed address,uint256[],uint256[])
+          handler: handleTransferBatch
+  - kind: ethereum/contract
+    name: RangeStakerTemplate
+    network: arbitrum-one
+    source:
+      abi: RangeStaker
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      file: templates/RangeStakerTemplate/RangeStakerTemplate.wasm
+      entities:
+        - RangeStake
+      abis:
+        - name: RangeStaker
+          file: RangeStakerTemplate/abis/RangeStaker.json
+      eventHandlers:
+        - event: FeeToTransfer(indexed address,indexed address)
+          handler: handleFeeToTransfer
+        - event: OwnerTransfer(indexed address,indexed address)
+          handler: handleOwnerTransfer
+        - event: StakeRange(address,uint32,address,uint256,uint256,uint128)
+          handler: handleStakeRange
+        - event: StakeRangeAccrued(address,uint32,uint256,uint256)
+          handler: handleStakeRangeAccrued
+        - event: UnstakeRange(address,uint32,address)
+          handler: handleUnstakeRange
+dataSources:
+  - kind: ethereum/contract
+    name: LimitPoolFactory
+    network: arbitrum-one
+    source:
+      address: "0x8bb5db1625adb4ae4beb94a188d33062303f8fb7"
+      abi: LimitPoolFactory
+      startBlock: 168223582
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      file: LimitPoolFactory/LimitPoolFactory.wasm
+      entities:
+        - Token
+        - LimitPool
+      abis:
+        - name: LimitPool
+          file: LimitPoolFactory/abis/LimitPool.json
+        - name: LimitPoolFactory
+          file: LimitPoolFactory/abis/LimitPoolFactory.json
+        - name: ERC20
+          file: LimitPoolFactory/abis/ERC20.json
+        - name: ERC20SymbolBytes
+          file: LimitPoolFactory/abis/ERC20SymbolBytes.json
+        - name: ERC20NameBytes
+          file: LimitPoolFactory/abis/ERC20NameBytes.json
+      eventHandlers:
+        - event: LimitPoolCreated(address,address,indexed address,indexed address,indexed
+            uint16,int16,uint16)
+          handler: handlePoolCreated
+  - kind: ethereum/contract
+    name: LimitPoolManager
+    network: arbitrum-one
+    source:
+      address: "0xc773049bf7131a5ddd85daded4397a1fd4264a3d"
+      abi: LimitPoolManager
+      startBlock: 168223575
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      file: LimitPoolManager/LimitPoolManager.wasm
+      entities:
+        - LimitPool
+        - LimitPoolFactory
+      abis:
+        - name: LimitPoolManager
+          file: LimitPoolManager/abis/LimitPoolManager.json
+      eventHandlers:
+        - event: FeeTierEnabled(uint16,int16)
+          handler: handleFeeTierEnabled
+        - event: PoolTypeEnabled(bytes32,address,address,uint16)
+          handler: handlePoolTypeEnabled
+        - event: FactoryChanged(indexed address,indexed address)
+          handler: handleFactoryChanged
+        - event: FeeToTransfer(indexed address,indexed address)
+          handler: handleFeeToTransfer
+        - event: OwnerTransfer(indexed address,indexed address)
+          handler: handleOwnerTransfer
+        - event: ProtocolFeesCollected(address[],uint128[],uint128[])
+          handler: handleProtocolFeesCollected
+        - event: ProtocolFillFeesModified(address[],int16[],int16[])
+          handler: handleProtocolFillFeesModified
+        - event: ProtocolSwapFeesModified(address[],int16[],int16[])
+          handler: handleProtocolSwapFeesModified
+  - kind: ethereum/contract
+    name: PoolsharkRouter
+    network: arbitrum-one
+    source:
+      address: "0x12b7a6dd3a3dfde6a0f112a1bd876f704d933915"
+      abi: PoolsharkRouter
+      startBlock: 168223826
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      file: PoolsharkRouter/PoolsharkRouter.wasm
+      entities:
+        - PoolsharkRouter
+      abis:
+        - name: PoolsharkRouter
+          file: PoolsharkRouter/abis/PoolsharkRouter.json
+      eventHandlers:
+        - event: RouterDeployed(address,address,address)
+          handler: handleRouterDeployed
+  - kind: ethereum/contract
+    name: vFIN
+    network: arbitrum-one
+    source:
+      address: "0xFA3e62Aae5DE014c4CD20377Ec90Eb8e59d31169"
+      abi: vFIN
+      startBlock: 161266335
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      file: vFIN/vFIN.wasm
+      entities:
+        - VestedFin
+      abis:
+        - name: vFIN
+          file: vFIN/abis/vFIN.json
+      eventHandlers:
+        - event: Transfer(indexed address,indexed address,indexed uint256)
+          handler: handleTransfer
+  - kind: ethereum/contract
+    name: v3EthStablePool
+    network: arbitrum-one
+    source:
+      address: "0xc31e54c7a869b9fcbecc14363cf510d1c41fa443"
+      abi: v3Pool
+      startBlock: 168223500
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      file: v3EthStablePool/v3EthStablePool.wasm
+      entities:
+        - BasePrice
+      abis:
+        - name: v3Pool
+          file: v3EthStablePool/abis/v3Pool.json
+      eventHandlers:
+        - event: Swap(indexed address,indexed address,int256,int256,uint160,uint128,int24)
+          handler: handleV3Swap

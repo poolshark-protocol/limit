@@ -35,7 +35,7 @@ export function createMintRange(
     )
     handleMintRangeMock([newMintRangeEvent])
 
-    return
+    return newMintRangeEvent
 }
 
 function handleMintRangeMock(events: MintRange[]): void {

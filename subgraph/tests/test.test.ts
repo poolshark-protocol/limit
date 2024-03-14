@@ -1,6 +1,6 @@
 import { ZERO_ADDRESS } from '../src/constants/arbitrum'
 import { safeLoadLimitPoolFactory } from '../src/mappings/utils/loads'
-import { createLimitPoolCreated } from './utils/pools'
+import { createLimitPool } from './utils/pools'
 import { Address, ethereum, BigInt } from '@graphprotocol/graph-ts'
 import {
     assert,
@@ -11,7 +11,7 @@ import {
     test,
 } from 'matchstick-as/assembly/index'
 
-test('Pool create', () => {
+test('Limit Pool create', () => {
     clearStore()
 
     // Assuming these represent actual pool addresses
@@ -72,7 +72,7 @@ test('Pool create', () => {
     const tickSpacing = BigInt.fromI32(10).toString() // Can be a string if schema expects string
     const poolTypeId = BigInt.fromI32(10).toString() // Replace with actual pool type ID
 
-    let pool = createLimitPoolCreated(
+    let pool = createLimitPool(
         poolAddress,
         poolTokenAddress,
         tokenA,

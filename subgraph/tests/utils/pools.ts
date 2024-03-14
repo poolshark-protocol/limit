@@ -3,14 +3,14 @@ import { handlePoolCreated } from '../../src/mappings/limitpoolfactory'
 import { ethereum, Address, BigInt, Bytes } from '@graphprotocol/graph-ts'
 import { newMockEvent } from 'matchstick-as'
 
-export function createLimitPoolCreated(
-    pool: string, // Assuming it's already an address string
-    poolToken: string, // Assuming it's already an address string
-    token0: string, // Assuming it's already an address string
-    token1: string, // Assuming it's already an address string
-    swapFee: string, // Assuming conversion from i32 to string
-    tickSpacing: string, // Assuming conversion from i32 to string
-    poolTypeId: string // Assuming conversion from i32 to string
+export function createLimitPool(
+    pool: string,
+    poolToken: string,
+    token0: string,
+    token1: string,
+    swapFee: string,
+    tickSpacing: string,
+    poolTypeId: string
 ): LimitPoolCreated {
     let eventParamKeys = new Array<string>()
     let eventParamValues = new Array<ethereum.Value>()
@@ -41,7 +41,7 @@ export function createLimitPoolCreated(
         ethereum.Value.fromI32(BigInt.fromString(poolTypeId).toI32())
     ) // Cast to i32 (assuming schema expects i32)
 
-    let newLimitPoolCreatedEvent = createLimitPoolCreatedEvent(
+    let newLimitPoolCreatedEvent = createLimitPoolEvent(
         eventParamKeys,
         eventParamValues
     )
@@ -55,7 +55,7 @@ function handleNewLimitPoolCreated(events: LimitPoolCreated[]): void {
     })
 }
 
-function createLimitPoolCreatedEvent(
+function createLimitPoolEvent(
     eventParamKeys: Array<string>,
     eventParamValues: Array<ethereum.Value>
 ): LimitPoolCreated {

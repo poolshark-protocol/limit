@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: SSPL-1.0
-pragma solidity 0.8.18;
+pragma solidity 0.8.21;
 
 library String {
     bytes16 private constant alphabet = '0123456789abcdef';

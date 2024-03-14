@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.18;
+pragma solidity 0.8.21;
 
 /// @notice Minimal proxy library.
 /// @author Solady (https://github.com/vectorized/solady/blob/main/src/utils/LibClone.sol)

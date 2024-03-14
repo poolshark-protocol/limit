@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: SSPL-1.0
-pragma solidity 0.8.18;
+pragma solidity 0.8.21;
 
 /// @title Callback for mints
 /// @notice Any contract that calls the `mint` function must implement this interface.

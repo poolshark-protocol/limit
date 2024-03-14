@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: SSPL-1.0
 
-pragma solidity 0.8.18;
+pragma solidity 0.8.21;
 
 import '../interfaces/IPool.sol';
 import '../base/storage/PositionERC1155Immutables.sol';

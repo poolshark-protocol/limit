@@ -29,19 +29,19 @@ export function createMintRange(
     )
     eventParamKeys.push('positionId')
     eventParamValues.push(
-        ethereum.Value.fromAddress(Address.fromString(positionId))
+        ethereum.Value.fromUnsignedBigInt(BigInt.fromString(positionId))
     )
     eventParamKeys.push('liquidityMinted')
     eventParamValues.push(
-        ethereum.Value.fromI32(BigInt.fromString(liquidityMinted).toI32())
+        ethereum.Value.fromUnsignedBigInt(BigInt.fromString(liquidityMinted))
     )
     eventParamKeys.push('amount0Delta')
     eventParamValues.push(
-        ethereum.Value.fromI32(BigInt.fromString(amount0Delta).toI32())
+        ethereum.Value.fromUnsignedBigInt(BigInt.fromString(amount0Delta))
     )
     eventParamKeys.push('amount1Delta')
     eventParamValues.push(
-        ethereum.Value.fromI32(BigInt.fromString(amount1Delta).toI32())
+        ethereum.Value.fromUnsignedBigInt(BigInt.fromString(amount1Delta))
     )
     let newMintRangeEvent = createMintRangeEvent(
         eventParamKeys,

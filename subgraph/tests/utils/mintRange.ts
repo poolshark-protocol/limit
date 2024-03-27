@@ -1,6 +1,6 @@
 import { MintRange } from '../../generated/LimitPoolFactory/LimitPool'
 import { handleMintRange } from '../../src/mappings/limitpool'
-import { ethereum } from '@graphprotocol/graph-ts'
+import { Address, ethereum, BigInt } from '@graphprotocol/graph-ts'
 import { newMockEvent } from 'matchstick-as'
 
 // Mock the MintRange class
@@ -16,19 +16,33 @@ export function createMintRange(
     let eventParamKeys = new Array<string>()
     let eventParamValues = new Array<ethereum.Value>()
     eventParamKeys.push('recipient')
-    eventParamValues.push(ethereum.Value.fromString(recipient))
+    eventParamValues.push(
+        ethereum.Value.fromAddress(Address.fromString(recipient))
+    )
     eventParamKeys.push('lower')
-    eventParamValues.push(ethereum.Value.fromI32(parseInt(lower, 10)))
+    eventParamValues.push(
+        ethereum.Value.fromI32(BigInt.fromString(lower).toI32())
+    )
     eventParamKeys.push('upper')
-    eventParamValues.push(ethereum.Value.fromI32(parseInt(upper, 10)))
+    eventParamValues.push(
+        ethereum.Value.fromI32(BigInt.fromString(upper).toI32())
+    )
     eventParamKeys.push('positionId')
-    eventParamValues.push(ethereum.Value.fromString(positionId))
+    eventParamValues.push(
+        ethereum.Value.fromAddress(Address.fromString(positionId))
+    )
     eventParamKeys.push('liquidityMinted')
-    eventParamValues.push(ethereum.Value.fromI32(parseInt(liquidityMinted, 10)))
+    eventParamValues.push(
+        ethereum.Value.fromI32(BigInt.fromString(liquidityMinted).toI32())
+    )
     eventParamKeys.push('amount0Delta')
-    eventParamValues.push(ethereum.Value.fromI32(parseInt(amount0Delta, 10)))
+    eventParamValues.push(
+        ethereum.Value.fromI32(BigInt.fromString(amount0Delta).toI32())
+    )
     eventParamKeys.push('amount1Delta')
-    eventParamValues.push(ethereum.Value.fromI32(parseInt(amount1Delta, 10)))
+    eventParamValues.push(
+        ethereum.Value.fromI32(BigInt.fromString(amount1Delta).toI32())
+    )
     let newMintRangeEvent = createMintRangeEvent(
         eventParamKeys,
         eventParamValues

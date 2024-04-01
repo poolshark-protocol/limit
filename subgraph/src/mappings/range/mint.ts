@@ -1,6 +1,6 @@
-import {
-    BigInt, log,
-} from '@graphprotocol/graph-ts'
+import { MintRange } from '../../../generated/LimitPoolFactory/LimitPool'
+import { ONE_BI } from '../../constants/constants'
+import { BIGINT_ONE, convertTokenToDecimal } from '../utils/helpers'
 import {
     safeLoadLimitPool,
     safeLoadRangePosition,
@@ -11,16 +11,17 @@ import {
     safeLoadMintRangeLog,
     safeLoadTvlUpdateLog,
 } from '../utils/loads'
-import { BIGINT_ONE, convertTokenToDecimal } from '../utils/helpers'
-import { ONE_BI } from '../../constants/constants'
-import { updateDerivedTVLAmounts } from '../utils/tvl'
 import { findEthPerToken } from '../utils/price'
-import { MintRange } from '../../../generated/LimitPoolFactory/LimitPool'
+import { updateDerivedTVLAmounts } from '../utils/tvl'
+import { BigInt, log } from '@graphprotocol/graph-ts'
 
 export function handleMintRange(event: MintRange): void {
+    //log.info('recipient: {}', [event.params.recipient.toHex()])
+    //log.info('poolAdress: {}', [event.address.toHex()])
+
     let recipientParam = event.params.recipient
     let lowerParam = event.params.lower
-    let upperParam = event.params.upper 
+    let upperParam = event.params.upper
     let positionIdParam = event.params.positionId
     let liquidityMintedParam = event.params.liquidityMinted
     let amount0DeltaParam = event.params.amount0Delta
@@ -65,10 +66,7 @@ export function handleMintRange(event: MintRange): void {
     //     poolAddress,
     //     upper
     // )
-    let loadPosition = safeLoadRangePosition(
-        poolAddress,
-        positionIdParam
-    )
+    let loadPosition = safeLoadRangePosition(poolAddress, positionIdParam)
     let position = loadPosition.entity
     // let lowerTick = loadLowerTick.entity
     // let upperTick = loadUpperTick.entity
@@ -97,7 +95,7 @@ export function handleMintRange(event: MintRange): void {
 
     let amount0 = convertTokenToDecimal(amount0DeltaParam, token0.decimals)
     let amount1 = convertTokenToDecimal(amount1DeltaParam, token1.decimals)
-    
+
     token0.txnCount = token0.txnCount.plus(ONE_BI)
     token1.txnCount = token1.txnCount.plus(ONE_BI)
     pool.txnCount = pool.txnCount.plus(ONE_BI)
@@ -109,25 +107,35 @@ export function handleMintRange(event: MintRange): void {
     token0.usdPrice = token0.ethPrice.times(basePrice.USD)
     token1.usdPrice = token1.ethPrice.times(basePrice.USD)
     let amountUsd = amount0
-    .times(token0.ethPrice.times(basePrice.USD))
-    .plus(amount1.times(token1.ethPrice.times(basePrice.USD)))
+        .times(token0.ethPrice.times(basePrice.USD))
+        .plus(amount1.times(token1.ethPrice.times(basePrice.USD)))
 
     let oldPoolTVLETH = pool.totalValueLockedEth
     token0.totalValueLocked = token0.totalValueLocked.plus(amount0)
     token1.totalValueLocked = token1.totalValueLocked.plus(amount1)
     pool.totalValueLocked0 = pool.totalValueLocked0.plus(amount0)
     pool.totalValueLocked1 = pool.totalValueLocked1.plus(amount1)
-    let updateTvlRet = updateDerivedTVLAmounts(token0, token1, pool, factory, basePrice, oldPoolTVLETH)
+    let updateTvlRet = updateDerivedTVLAmounts(
+        token0,
+        token1,
+        pool,
+        factory,
+        basePrice,
+        oldPoolTVLETH
+    )
     token0 = updateTvlRet.token0
     token1 = updateTvlRet.token1
     pool = updateTvlRet.pool
     factory = updateTvlRet.factory
-    
-    let loadTvlUpdateLog = safeLoadTvlUpdateLog(event.transaction.hash, poolAddress)
+
+    let loadTvlUpdateLog = safeLoadTvlUpdateLog(
+        event.transaction.hash,
+        poolAddress
+    )
     let tvlUpdateLog = loadTvlUpdateLog.entity
 
     tvlUpdateLog.pool = poolAddress
-    tvlUpdateLog.eventName = "MintRange"
+    tvlUpdateLog.eventName = 'MintRange'
     tvlUpdateLog.txnHash = event.transaction.hash
     tvlUpdateLog.txnBlockNumber = event.block.number
     tvlUpdateLog.amount0Change = amount0
@@ -145,17 +153,17 @@ export function handleMintRange(event: MintRange): void {
         pool.tickAtPrice !== null &&
         lower.le(pool.tickAtPrice) &&
         upper.gt(pool.tickAtPrice)
-      ) {
+    ) {
         pool.liquidity = pool.liquidity.plus(liquidityMintedParam)
         pool.poolLiquidity = pool.poolLiquidity.plus(liquidityMintedParam)
     }
     position.liquidity = position.liquidity.plus(liquidityMintedParam)
     pool.liquidityGlobal = pool.liquidityGlobal.plus(liquidityMintedParam)
-    
+
     basePrice.save()
     pool.save()
     factory.save()
     token0.save()
     token1.save()
-    position.save() 
+    position.save()
 }

@@ -1,6 +1,30 @@
-import { Address, BigDecimal, BigInt, Bytes, ethereum, log } from '@graphprotocol/graph-ts'
-import { LimitPool, LimitPoolFactory, LimitPoolManager, LimitPosition, Token, FeeTier, BasePrice, RangePosition, RangeTick, Transaction, LimitTick, Swap, CompoundRangeLog, MintRangeLog, BurnRangeLog, PoolRouter, TvlUpdateLog, HistoricalOrder, TotalSeasonReward, UserSeasonReward, LimitPoolToken, VFinPosition, LimitPoolHourData } from '../../../generated/schema'
+import {
+    LimitPool,
+    LimitPoolFactory,
+    LimitPoolManager,
+    LimitPosition,
+    Token,
+    FeeTier,
+    BasePrice,
+    RangePosition,
+    RangeTick,
+    Transaction,
+    LimitTick,
+    Swap,
+    CompoundRangeLog,
+    MintRangeLog,
+    BurnRangeLog,
+    PoolRouter,
+    TvlUpdateLog,
+    HistoricalOrder,
+    TotalSeasonReward,
+    UserSeasonReward,
+    LimitPoolToken,
+    VFinPosition,
+    LimitPoolHourData,
+} from '../../../generated/schema'
 import { FACTORY_ADDRESS, ONE_BD } from '../../constants/constants'
+import { ZERO_ADDRESS } from '../../constants/constants'
 import {
     fetchTokenSymbol,
     fetchTokenName,
@@ -11,13 +35,22 @@ import {
 } from './helpers'
 import { bigDecimalExponated, safeDiv } from './math'
 import { getEthPriceInUSD } from './price'
-import { ZERO_ADDRESS } from '../../constants/constants'
+import {
+    Address,
+    BigDecimal,
+    BigInt,
+    Bytes,
+    ethereum,
+    log,
+} from '@graphprotocol/graph-ts'
 
 class LoadLimitPoolFactoryRet {
     entity: LimitPoolFactory
     exists: boolean
 }
-export function safeLoadLimitPoolFactory(factoryAddress: string): LoadLimitPoolFactoryRet {
+export function safeLoadLimitPoolFactory(
+    factoryAddress: string
+): LoadLimitPoolFactoryRet {
     let exists = true
     let limitPoolFactoryEntity = LimitPoolFactory.load(factoryAddress)
 
@@ -73,7 +106,10 @@ class LoadBasePriceRet {
     entity: BasePrice
     exists: boolean
 }
-export function safeLoadBasePrice(name: string, stablePool: LimitPool | null = null): LoadBasePriceRet {
+export function safeLoadBasePrice(
+    name: string,
+    stablePool: LimitPool | null = null
+): LoadBasePriceRet {
     let exists = true
 
     let basePriceEntity = BasePrice.load(name)
@@ -134,7 +170,7 @@ class LoadTokenRet {
 }
 export function safeLoadToken(address: string): LoadTokenRet {
     let exists = true
-
+    //log.info('loading token: {}', [address])
     let tokenEntity = Token.load(address)
 
     if (!tokenEntity) {
@@ -149,7 +185,7 @@ export function safeLoadToken(address: string): LoadTokenRet {
         tokenEntity.usdPrice = BIGDECIMAL_ZERO
 
         tokenEntity.pools = new Array<string>()
-        
+
         tokenEntity.volume = BIGDECIMAL_ZERO
         tokenEntity.volumeUsd = BIGDECIMAL_ZERO
         tokenEntity.volumeEth = BIGDECIMAL_ZERO
@@ -180,6 +216,7 @@ class LoadLimitPoolRet {
 export function safeLoadLimitPool(poolAddress: string): LoadLimitPoolRet {
     let exists = true
     let limitPoolEntity = LimitPool.load(poolAddress)
+    //log.info('poolAdress safe load limit: {}', [poolAddress])
 
     if (!limitPoolEntity) {
         limitPoolEntity = new LimitPool(poolAddress)
@@ -227,7 +264,7 @@ export function safeLoadLimitPool(poolAddress: string): LoadLimitPoolRet {
         limitPoolEntity.totalValueLockedUsd = BIGDECIMAL_ZERO
         limitPoolEntity.totalValueLockedEth = BIGDECIMAL_ZERO
 
-        limitPoolEntity.last24HoursNextIndex =  0
+        limitPoolEntity.last24HoursNextIndex = 0
         limitPoolEntity.last24HoursPoolData = new Array<string>()
 
         exists = false
@@ -243,12 +280,17 @@ class LoadLimitPoolHourData {
     entity: LimitPoolHourData
     exists: boolean
 }
-export function safeLoadLimitPoolHourData(poolAddress: string, blockTimestamp: BigInt): LoadLimitPoolHourData {
+export function safeLoadLimitPoolHourData(
+    poolAddress: string,
+    blockTimestamp: BigInt
+): LoadLimitPoolHourData {
     let exists = true
 
     let hourDataIndex = blockTimestamp.div(BigInt.fromString('3600')) // get unique hour index
 
-    let limitPoolHourDataId = poolAddress.concat('-').concat(hourDataIndex.toString())
+    let limitPoolHourDataId = poolAddress
+        .concat('-')
+        .concat(hourDataIndex.toString())
     let limitPoolHourDataEntity = LimitPoolHourData.load(limitPoolHourDataId)
 
     if (!limitPoolHourDataEntity) {
@@ -258,7 +300,9 @@ export function safeLoadLimitPoolHourData(poolAddress: string, blockTimestamp: B
         limitPoolHourDataEntity.volumeUSD = BIGDECIMAL_ZERO
         limitPoolHourDataEntity.feesUSD = BIGDECIMAL_ZERO
         // round to start of hour
-        limitPoolHourDataEntity.startTimestamp = hourDataIndex.times(BigInt.fromString('3600'))
+        limitPoolHourDataEntity.startTimestamp = hourDataIndex.times(
+            BigInt.fromString('3600')
+        )
 
         exists = false
     }
@@ -273,7 +317,9 @@ class LoadLimitPoolTokenRet {
     entity: LimitPoolToken
     exists: boolean
 }
-export function safeLoadLimitPoolToken(poolTokenAddress: string): LoadLimitPoolTokenRet {
+export function safeLoadLimitPoolToken(
+    poolTokenAddress: string
+): LoadLimitPoolTokenRet {
     let exists = true
     let limitPoolTokenEntity = LimitPoolToken.load(poolTokenAddress)
 
@@ -302,8 +348,7 @@ export function safeLoadLimitPosition(
     let exists = true
     let fromToken: string
 
-    let limitPositionId = poolAddress
-        .concat(positionId.toString())
+    let limitPositionId = poolAddress.concat(positionId.toString())
 
     let positionEntity = LimitPosition.load(limitPositionId)
 
@@ -348,8 +393,7 @@ export function safeLoadRangePosition(
     let exists = true
     let fromToken: string
 
-    let rangePositionId = poolAddress
-        .concat(positionId.toString())
+    let rangePositionId = poolAddress.concat(positionId.toString())
 
     let positionEntity = RangePosition.load(rangePositionId)
 
@@ -414,12 +458,16 @@ class LoadSwapRet {
     entity: Swap
     exists: boolean
 }
-export function safeLoadSwap(event: ethereum.Event, pool: LimitPool): LoadSwapRet {
+export function safeLoadSwap(
+    event: ethereum.Event,
+    pool: LimitPool
+): LoadSwapRet {
     let exists = true
 
-    let swapId = event.transaction.hash.toHex()
-                 .concat('-')
-                 .concat(pool.txnCount.toString())
+    let swapId = event.transaction.hash
+        .toHex()
+        .concat('-')
+        .concat(pool.txnCount.toString())
     let swapEntity = Swap.load(swapId)
 
     if (!swapEntity) {
@@ -478,11 +526,13 @@ class LoadRangeTickRet {
     entity: RangeTick
     exists: boolean
 }
-export function safeLoadRangeTick(address: string, index: BigInt): LoadRangeTickRet {
+export function safeLoadRangeTick(
+    address: string,
+    index: BigInt
+): LoadRangeTickRet {
     let exists = true
 
-    let tickId = address
-    .concat(index.toString())
+    let tickId = address.concat(index.toString())
 
     let tickEntity = RangeTick.load(tickId)
 
@@ -491,7 +541,10 @@ export function safeLoadRangeTick(address: string, index: BigInt): LoadRangeTick
         tickEntity.pool = address
         tickEntity.index = index
         // 1.0001^tick is token1/token0.
-        tickEntity.price0 = bigDecimalExponated(BigDecimal.fromString('1.0001'), BigInt.fromI32(tickEntity.index.toI32()))
+        tickEntity.price0 = bigDecimalExponated(
+            BigDecimal.fromString('1.0001'),
+            BigInt.fromI32(tickEntity.index.toI32())
+        )
         tickEntity.price1 = safeDiv(ONE_BD, tickEntity.price0)
 
         tickEntity.liquidityDelta = BIGINT_ZERO
@@ -513,11 +566,13 @@ class LoadLimitTickRet {
     entity: LimitTick
     exists: boolean
 }
-export function safeLoadLimitTick(address: string, index: BigInt): LoadLimitTickRet {
+export function safeLoadLimitTick(
+    address: string,
+    index: BigInt
+): LoadLimitTickRet {
     let exists = true
 
-    let tickId = address
-    .concat(index.toString())
+    let tickId = address.concat(index.toString())
 
     let tickEntity = LimitTick.load(tickId)
 
@@ -527,7 +582,10 @@ export function safeLoadLimitTick(address: string, index: BigInt): LoadLimitTick
         tickEntity.index = index
         // 1.0001^tick is token1/token0.
         tickEntity.active = true
-        tickEntity.price0 = bigDecimalExponated(BigDecimal.fromString('1.0001'), BigInt.fromI32(tickEntity.index.toI32()))
+        tickEntity.price0 = bigDecimalExponated(
+            BigDecimal.fromString('1.0001'),
+            BigInt.fromI32(tickEntity.index.toI32())
+        )
         tickEntity.price1 = safeDiv(ONE_BD, tickEntity.price0)
 
         tickEntity.liquidityDelta = BIGINT_ZERO
@@ -572,7 +630,10 @@ class LoadVFinPositionRet {
     entity: VFinPosition
     exists: boolean
 }
-export function safeLoadVFinPosition(vFinAddress: string, positionId: BigInt): LoadVFinPositionRet {
+export function safeLoadVFinPosition(
+    vFinAddress: string,
+    positionId: BigInt
+): LoadVFinPositionRet {
     let exists = true
 
     let vFinPositionId = vFinAddress.concat(positionId.toString())
@@ -599,12 +660,13 @@ class LoadTvlUpdateLog {
     entity: TvlUpdateLog
     exists: boolean
 }
-export function safeLoadTvlUpdateLog(txnHash: Bytes, pool: string): LoadTvlUpdateLog {
+export function safeLoadTvlUpdateLog(
+    txnHash: Bytes,
+    pool: string
+): LoadTvlUpdateLog {
     let exists = true
 
-    let tvlUpdateLogId = txnHash.toString()
-                    .concat('-')
-                    .concat(pool)
+    let tvlUpdateLogId = txnHash.toString().concat('-').concat(pool)
 
     let tvlUpdateLogEntity = TvlUpdateLog.load(tvlUpdateLogId)
 
@@ -612,7 +674,7 @@ export function safeLoadTvlUpdateLog(txnHash: Bytes, pool: string): LoadTvlUpdat
         tvlUpdateLogEntity = new TvlUpdateLog(tvlUpdateLogId)
 
         tvlUpdateLogEntity.pool = ZERO_ADDRESS
-        tvlUpdateLogEntity.eventName = "default"
+        tvlUpdateLogEntity.eventName = 'default'
         tvlUpdateLogEntity.txnHash = Bytes.fromHexString(ZERO_ADDRESS)
         tvlUpdateLogEntity.txnBlockNumber = BIGINT_ZERO
         tvlUpdateLogEntity.amount0Change = BIGDECIMAL_ZERO
@@ -637,20 +699,25 @@ class LoadMintRangeLogRet {
     entity: MintRangeLog
     exists: boolean
 }
-export function safeLoadMintRangeLog(txnHash: Bytes, pool: string, positionId: BigInt): LoadMintRangeLogRet {
+export function safeLoadMintRangeLog(
+    txnHash: Bytes,
+    pool: string,
+    positionId: BigInt
+): LoadMintRangeLogRet {
     let exists = true
 
-    let mintRangeLogId = txnHash.toString()
-                    .concat('-')
-                    .concat(pool)
-                    .concat('-')
-                    .concat(positionId.toString())
+    let mintRangeLogId = txnHash
+        .toString()
+        .concat('-')
+        .concat(pool)
+        .concat('-')
+        .concat(positionId.toString())
 
     let mintRangeLogEntity = MintRangeLog.load(mintRangeLogId)
 
     if (!mintRangeLogEntity) {
         mintRangeLogEntity = new MintRangeLog(mintRangeLogId)
-        
+
         mintRangeLogEntity.sender = Bytes.fromHexString(ZERO_ADDRESS)
         mintRangeLogEntity.recipient = Bytes.fromHexString(ZERO_ADDRESS)
         mintRangeLogEntity.lower = BIGINT_ZERO
@@ -672,14 +739,19 @@ class LoadBurnLogRet {
     entity: BurnRangeLog
     exists: boolean
 }
-export function safeLoadBurnLog(txnHash: Bytes, pool: string, positionId: BigInt): LoadBurnLogRet {
+export function safeLoadBurnLog(
+    txnHash: Bytes,
+    pool: string,
+    positionId: BigInt
+): LoadBurnLogRet {
     let exists = true
 
-    let burnRangeLogId = txnHash.toString()
-                    .concat('-')
-                    .concat(pool)
-                    .concat('-')
-                    .concat(positionId.toString())
+    let burnRangeLogId = txnHash
+        .toString()
+        .concat('-')
+        .concat(pool)
+        .concat('-')
+        .concat(positionId.toString())
 
     let burnRangeLogEntity = BurnRangeLog.load(burnRangeLogId)
 
@@ -707,14 +779,19 @@ class LoadCompoundRangeLogRet {
     entity: CompoundRangeLog
     exists: boolean
 }
-export function safeLoadCompoundRangeLog(txnHash: Bytes, pool: string, positionId: BigInt): LoadCompoundRangeLogRet {
+export function safeLoadCompoundRangeLog(
+    txnHash: Bytes,
+    pool: string,
+    positionId: BigInt
+): LoadCompoundRangeLogRet {
     let exists = true
 
-    let compoundLogId = txnHash.toString()
-                    .concat('-')
-                    .concat(pool)
-                    .concat('-')
-                    .concat(positionId.toString())
+    let compoundLogId = txnHash
+        .toString()
+        .concat('-')
+        .concat(pool)
+        .concat('-')
+        .concat(positionId.toString())
 
     let compoundLogEntity = CompoundRangeLog.load(compoundLogId)
 
@@ -739,16 +816,21 @@ class LoadHistoricalOrderRet {
     entity: HistoricalOrder
     exists: boolean
 }
-export function safeLoadHistoricalOrder(tokenInAddress: string, tokenOutAddress: string, poolAddress: string, txnHashOrPositionId: string): LoadHistoricalOrderRet {
+export function safeLoadHistoricalOrder(
+    tokenInAddress: string,
+    tokenOutAddress: string,
+    poolAddress: string,
+    txnHashOrPositionId: string
+): LoadHistoricalOrderRet {
     let exists = true
 
     let historicalOrderId = tokenInAddress
-                            .concat('-')
-                            .concat(tokenOutAddress)
-                            .concat('-')
-                            .concat(poolAddress)
-                            .concat('-')
-                            .concat(txnHashOrPositionId)
+        .concat('-')
+        .concat(tokenOutAddress)
+        .concat('-')
+        .concat(poolAddress)
+        .concat('-')
+        .concat(txnHashOrPositionId)
 
     let historicalOrderEntity = HistoricalOrder.load(historicalOrderId)
 
@@ -787,10 +869,18 @@ class LoadTotalSeasonRewardRet {
     entity: TotalSeasonReward
     exists: boolean
 }
-export function safeLoadTotalSeasonReward(factoryAddress: string, season: string, block: string): LoadTotalSeasonRewardRet {
+export function safeLoadTotalSeasonReward(
+    factoryAddress: string,
+    season: string,
+    block: string
+): LoadTotalSeasonRewardRet {
     let exists = true
 
-    let totalSeasonRewardId = factoryAddress.concat('-').concat(season).concat('-').concat(block)
+    let totalSeasonRewardId = factoryAddress
+        .concat('-')
+        .concat(season)
+        .concat('-')
+        .concat(block)
 
     let totalSeasonRewardEntity = TotalSeasonReward.load(totalSeasonRewardId)
 
@@ -818,10 +908,18 @@ class LoadUserSeasonRewardRet {
     entity: UserSeasonReward
     exists: boolean
 }
-export function safeLoadUserSeasonReward(userAddress: string, season: string, block: string): LoadUserSeasonRewardRet {
+export function safeLoadUserSeasonReward(
+    userAddress: string,
+    season: string,
+    block: string
+): LoadUserSeasonRewardRet {
     let exists = true
 
-    const userSeasonRewardId = userAddress.concat('-').concat(season).concat('-').concat(block)
+    const userSeasonRewardId = userAddress
+        .concat('-')
+        .concat(season)
+        .concat('-')
+        .concat(block)
 
     let userSeasonRewardEntity = UserSeasonReward.load(userSeasonRewardId)
 

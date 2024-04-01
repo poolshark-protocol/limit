@@ -1,10 +1,11 @@
 import { MintRange } from '../../generated/LimitPoolFactory/LimitPool'
 import { handleMintRange } from '../../src/mappings/limitpool'
 import { Address, ethereum, BigInt } from '@graphprotocol/graph-ts'
-import { newMockEvent } from 'matchstick-as'
+import { log, newMockEvent } from 'matchstick-as'
 
 // Mock the MintRange class
 export function createMintRange(
+    poolAddress: string,
     recipient: string,
     lower: string,
     upper: string,
@@ -47,8 +48,8 @@ export function createMintRange(
         eventParamKeys,
         eventParamValues
     )
+    newMintRangeEvent.address = Address.fromString(poolAddress)
     handleMintRangeMock([newMintRangeEvent])
-
     return newMintRangeEvent
 }
 
@@ -63,6 +64,7 @@ function createMintRangeEvent(
     eventParamValues: Array<ethereum.Value>
 ): MintRange {
     let mockEvent = newMockEvent()
+    //log.info('address mock event: {}', [mockEvent.address.toHex()])
     let newMintRangeEvent = new MintRange(
         mockEvent.address,
         mockEvent.logIndex,
@@ -73,5 +75,13 @@ function createMintRangeEvent(
         mockEvent.parameters,
         mockEvent.receipt
     )
+    newMintRangeEvent.parameters = new Array()
+    for (let i = 0, k = eventParamKeys.length; i < k; ++i) {
+        let eventParam = new ethereum.EventParam(
+            eventParamKeys[i],
+            eventParamValues[i]
+        )
+        newMintRangeEvent.parameters.push(eventParam)
+    }
     return newMintRangeEvent
 }

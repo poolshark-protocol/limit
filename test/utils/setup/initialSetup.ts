@@ -34,11 +34,11 @@ export class InitialSetup {
     private deployContracts = false
     private deployFactory = false
     private deployLibs = false
-    private deployPools = true
-    private savePool = true
+    private deployPools = false
+    private savePool = false
     private deployRouter = true
     private deployRangeStaker = false
-    private deployLimitStaker = false
+    private deployLimitStaker = true
 
     constructor() {
         this.deployAssist = new DeployAssist()

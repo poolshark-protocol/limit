@@ -626,7 +626,7 @@ export async function validateMint(params: ValidateMintParams): Promise<number> 
         expect(limitStake.isStaked).to.be.equal(true)
         expect(limitStake.zeroForOne).to.be.equal(params.zeroForOne)
         expect(limitStake.owner).to.be.equal(params.recipient)
-      }
+    }
     return expectedPositionId
 }
 

@@ -530,13 +530,13 @@
         },
         "poolRouter": {
             "contractName": "PoolsharkRouter",
-            "contractAddress": "0x54f66fb1b1776670a512b6a9e61a94e6c2dcd512",
+            "contractAddress": "0xc56ed22b43e2df491b15fb49a738378586746cf3",
             "constructorArguments": [
                 "0x3fa761492f411ebc64a81fcf3292fdc0b677c00f",
                 "0x0000000000000000000000000000000000000000",
                 "0x4200000000000000000000000000000000000006"
             ],
-            "created": "2024-02-26T13:21:31.964Z"
+            "created": "2024-03-14T22:51:25.963Z"
         },
         "rangeStaker": {
             "contractName": "RangeStaker",
@@ -561,6 +561,18 @@
             ],
             "created": "2024-02-15T13:34:35.828Z",
             "previous": "0xe0691e6803d4fa0d8fa8ee8da7667eb4a6b99415"
+        },
+        "limitStaker": {
+            "contractName": "LimitStaker",
+            "contractAddress": "0x1d884d21b6637b9cc2b56b5f2badf6e1f103dc8c",
+            "constructorArguments": [
+                {
+                    "limitPoolFactory": "0x3fa761492f411ebc64a81fcf3292fdc0b677c00f",
+                    "startTime": 0,
+                    "endTime": 2000707154
+                }
+            ],
+            "created": "2024-03-14T22:51:30.709Z"
         }
     },
     "scrollSepolia": {

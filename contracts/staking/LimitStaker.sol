@@ -135,9 +135,8 @@ contract LimitStaker is LimitStakerEvents, PoolsharkStructs, ReentrancyGuard {
             );
         }
 
-        // start tracking fee growth from after compound
+        // start tracking fills after previous fills
         if (!locals.stake.isStaked) {
-            // update position to exclude previous fills
             ILimitPool(params.pool).burnLimit(
                 BurnLimitParams({
                     to: locals.stake.owner,
@@ -245,7 +244,6 @@ contract LimitStaker is LimitStakerEvents, PoolsharkStructs, ReentrancyGuard {
                 1
             );
         }
-
 
         // mark position unstaked
         locals.stake.liquidity = 0;

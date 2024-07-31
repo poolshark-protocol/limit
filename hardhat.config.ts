@@ -105,10 +105,10 @@ const config: HardhatUserConfig = {
                 network: 'mode',
                 chainId: 34443,
                 urls: {
-                    apiURL: 'https://explorer.mode.network/api',
-                    browserURL: 'https://explorer.mode.network/',
-                //   apiURL: 'https://api.routescan.io/v2/network/mainnet/evm/34443/etherscan',
-                //   browserURL: 'https://modescan.io/',
+                    // apiURL: 'https://explorer.mode.network/api',
+                    // browserURL: 'https://explorer.mode.network/',
+                  apiURL: 'https://api.routescan.io/v2/network/mainnet/evm/34443/etherscan',
+                  browserURL: 'https://modescan.io/',
                 },
             },
             {
